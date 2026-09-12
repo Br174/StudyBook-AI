@@ -2,7 +2,7 @@ import {
   buildStudyBook as buildBaseStudyBook,
   refineParagraphWithAi,
   summaryLevels,
-} from './studyEngineV08.js';
+} from './studyEngineV11.js';
 
 const QA_STOP_WORDS = new Set([
   'anche','che','chi','come','con','cosa','da','dal','dalla','dalle','dei','del','della','delle','di','e','ed','era','essere','gli','ha','hanno','i','il','in','la','le','lo','ma','nel','nella','nelle','non','o','per','più','quale','quali','quando','questo','questa','questi','queste','se','si','sia','sono','su','tra','un','una','uno','al','alla','alle','ai','agli','dai','dagli','dopo','prima','poi','molto','molti','molte','ogni','solo','sua','suo','sue','suoi','loro','può','puo','viene','vengono','del','dello','degli','delle'
@@ -197,7 +197,7 @@ export async function buildStudyBook(documentData, options = {}) {
   const divisor = totalChapters || 1;
   return {
     ...baseBook,
-    version: Math.max(Number(baseBook?.version || 0), 7),
+    version: Math.max(Number(baseBook?.version || 0), 8),
     chapters,
     quality: {
       ...(baseBook?.quality || {}),
