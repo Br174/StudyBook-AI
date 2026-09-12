@@ -7,6 +7,16 @@ function countParagraphs(chapters) {
   return chapters.reduce((total, chapter) => total + chapter.paragraphs.length, 0);
 }
 
+function importStatus(update) {
+  if (!update) return 'Analisi del documento…';
+  if (update.phase === 'extract') return `Lettura PDF · pagina ${update.done}/${update.total}`;
+  if (update.phase === 'ocr-loading') return 'Avvio OCR per le pagine scansionate…';
+  if (update.phase === 'ocr-page') return `OCR · ${update.done}/${update.total} pagine · pagina ${update.pageNumber}`;
+  if (update.phase === 'ocr-recognize') return `OCR · riconoscimento ${Math.round((update.fraction || 0) * 100)}%`;
+  if (update.phase === 'complete') return 'Ricostruzione della struttura…';
+  return 'Analisi del documento…';
+}
+
 export default function App() {
   const [documentData, setDocumentData] = useState(null);
   const [studyBook, setStudyBook] = useState(null);
@@ -18,6 +28,7 @@ export default function App() {
   const [dsaMode, setDsaMode] = useState(true);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [generating, setGenerating] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const paragraphCount = useMemo(
     () => (documentData ? countParagraphs(documentData.chapters) : 0),
@@ -32,15 +43,34 @@ export default function App() {
     setStatus('Analisi del documento…');
     setFileName(file.name);
     setStudyBook(null);
+    setDocumentData(null);
     setProgress({ done: 0, total: 0 });
+    setImporting(true);
+
     try {
-      const parsed = await readSourceFile(file);
+      const parsed = await readSourceFile(file, {
+        autoOcr: true,
+        onProgress(update) {
+          setStatus(importStatus(update));
+        },
+      });
       setDocumentData(parsed);
       setSelectedChapter(0);
-      setStatus('Documento analizzato');
+      const recovered = parsed.ocrApplied?.length || 0;
+      const unresolved = parsed.needsOcr?.length || 0;
+      if (unresolved) {
+        setStatus(`Documento analizzato · OCR recuperato su ${recovered} pagine · ${unresolved} da verificare`);
+      } else if (recovered) {
+        setStatus(`Documento analizzato · OCR completato su ${recovered} pagine`);
+      } else {
+        setStatus('Documento analizzato');
+      }
     } catch (err) {
       setError(err.message || 'Errore durante la lettura del documento.');
       setStatus('Errore');
+    } finally {
+      setImporting(false);
+      event.target.value = '';
     }
   }
 
@@ -89,11 +119,11 @@ export default function App() {
     <main className="app-shell">
       <header className="hero">
         <div>
-          <span className="eyebrow">STUDYBOOK AI · v0.2</span>
+          <span className="eyebrow">STUDYBOOK AI · v0.3</span>
           <h1>Trasforma un libro in un libro di studio.</h1>
           <p>
-            Importa il documento, riconosci capitoli e paragrafi, genera una sintesi strutturata,
-            attiva la modalità DSA e ricostruisci un nuovo libro esportabile.
+            Importa il documento, recupera anche le pagine scansionate con OCR, riconosci capitoli e paragrafi,
+            genera una sintesi strutturata e ricostruisci un nuovo libro esportabile.
           </p>
         </div>
         <div className="status-pill">{status}</div>
@@ -102,11 +132,16 @@ export default function App() {
       <section className="panel import-panel">
         <div>
           <h2>1. Importa il libro</h2>
-          <p>PDF e TXT sono già attivi. Le pagine con poco testo vengono segnalate per il futuro passaggio OCR.</p>
+          <p>PDF, TXT e immagini. Nei PDF, le pagine prive di testo vengono riconosciute automaticamente con OCR italiano/inglese.</p>
         </div>
-        <label className="upload-button">
-          Scegli file
-          <input type="file" accept=".pdf,.txt,application/pdf,text/plain" onChange={handleFile} />
+        <label className={importing ? 'upload-button disabled' : 'upload-button'}>
+          {importing ? 'Analisi in corso…' : 'Scegli file'}
+          <input
+            type="file"
+            accept=".pdf,.txt,.png,.jpg,.jpeg,.webp,application/pdf,text/plain,image/png,image/jpeg,image/webp"
+            onChange={handleFile}
+            disabled={importing}
+          />
         </label>
         {fileName && <div className="file-name">{fileName}</div>}
         {error && <div className="error-box">{error}</div>}
@@ -117,7 +152,8 @@ export default function App() {
           <section className="stats-grid">
             <article className="stat-card"><span>Capitoli</span><strong>{documentData.chapters.length}</strong></article>
             <article className="stat-card"><span>Paragrafi</span><strong>{paragraphCount}</strong></article>
-            <article className="stat-card"><span>Pagine con possibile OCR</span><strong>{documentData.needsOcr.length}</strong></article>
+            <article className="stat-card"><span>Pagine recuperate con OCR</span><strong>{documentData.ocrApplied?.length || 0}</strong></article>
+            <article className="stat-card"><span>Pagine da verificare</span><strong>{documentData.needsOcr.length}</strong></article>
           </section>
 
           <section className="panel study-controls">
@@ -233,10 +269,17 @@ export default function App() {
         </>
       )}
 
-      {!documentData && (
+      {!documentData && !importing && (
         <section className="empty-state panel">
-          <h2>La base del progetto è pronta</h2>
-          <p>Carica un documento per iniziare dalla struttura reale del libro.</p>
+          <h2>Carica un libro per iniziare</h2>
+          <p>La struttura viene analizzata prima della creazione del libro di studio.</p>
+        </section>
+      )}
+
+      {importing && (
+        <section className="empty-state panel">
+          <h2>{status}</h2>
+          <p>L'OCR viene attivato solo sulle pagine che non contengono testo digitale sufficiente.</p>
         </section>
       )}
     </main>
