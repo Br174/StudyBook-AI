@@ -4,6 +4,7 @@ import {
   readSourceFile as readLegacySourceFile,
   splitIntoParagraphs,
 } from './documentParser.js';
+import { extractPdfVisualAssets } from './pdfVisuals.js';
 
 const MAX_MEDIA_ITEMS = 40;
 const MAX_SINGLE_MEDIA_BASE64 = 5_500_000;
@@ -243,7 +244,13 @@ async function parseDocx(file, { onProgress } = {}) {
       const rows = docxTableRows(node);
       if (!rows.length) return;
       tableIndex += 1;
-      assets.push({ type: 'table', name: `Tabella ${tableIndex}`, rows, sourcePath: 'word/document.xml' });
+      assets.push({
+        type: 'table',
+        name: `Tabella ${tableIndex}`,
+        rows,
+        sourcePath: 'word/document.xml',
+        sourcePart: 'word/document.xml',
+      });
       blocks.push({ type: 'table', text: tableText(rows), sourcePart: 'word/document.xml' });
     }
   });
@@ -255,7 +262,7 @@ async function parseDocx(file, { onProgress } = {}) {
 
   for (const path of mediaEntries) {
     try {
-      const asset = await zipImageAsset(zip.file(path), path, { sourcePart: 'DOCX' });
+      const asset = await zipImageAsset(zip.file(path), path, { sourcePart: 'word/document.xml' });
       if (asset) assets.push(asset);
     } catch {
       // Un'immagine corrotta non deve bloccare l'import del libro.
@@ -348,7 +355,13 @@ async function parseEpub(file, { onProgress } = {}) {
         const rows = epubTableRows(node);
         if (!rows.length) continue;
         tableIndex += 1;
-        assets.push({ type: 'table', name: `Tabella ${tableIndex}`, rows, sourcePath: partPath });
+        assets.push({
+          type: 'table',
+          name: `Tabella ${tableIndex}`,
+          rows,
+          sourcePath: partPath,
+          sourcePart: partPath,
+        });
         blocks.push({ type: 'table', text: tableText(rows), sourcePart: partPath });
         continue;
       }
@@ -410,6 +423,7 @@ async function enrichImageSource(file, options) {
         dataUrl,
         sourcePath: file.name,
         sourcePart: 'immagine importata',
+        sourcePage: 1,
       }];
       parsed.structure = { ...(parsed.structure || {}), assetCount: 1, imageCount: 1, tableCount: 0 };
     }
@@ -420,15 +434,41 @@ async function enrichImageSource(file, options) {
   return parsed;
 }
 
+async function enrichPdfSource(file, options = {}) {
+  const parsed = await readLegacySourceFile(file, options);
+  let visualResult = { assets: [], detected: 0, truncated: 0 };
+  try {
+    visualResult = await extractPdfVisualAssets(file, options);
+  } catch {
+    // Il testo/OCR del PDF resta utilizzabile anche se il recupero visuale fallisce.
+  }
+
+  const combined = [...(parsed.assets || []), ...(visualResult.assets || [])];
+  const assets = trimAssets(combined);
+  const droppedByTrim = Math.max(0, combined.length - assets.length);
+  const pageCount = parsed.structure?.pageCount || parsed.pages?.length || 0;
+
+  return {
+    ...parsed,
+    sourceFormat: 'pdf',
+    assets,
+    assetsTruncated: Number(parsed.assetsTruncated || 0) + Number(visualResult.truncated || 0) + droppedByTrim,
+    visualPagesDetected: visualResult.detected || 0,
+    structure: makeStructure(parsed.chapters || [], assets, pageCount),
+  };
+}
+
 export async function readSourceFile(file, options = {}) {
   const name = String(file?.name || '').toLowerCase();
   if (name.endsWith('.docx')) return parseDocx(file, options);
   if (name.endsWith('.epub')) return parseEpub(file, options);
   if (/\.(png|jpe?g|webp)$/i.test(name)) return enrichImageSource(file, options);
+  if (name.endsWith('.pdf')) return enrichPdfSource(file, options);
+
   const parsed = await readLegacySourceFile(file, options);
   return {
     ...parsed,
-    sourceFormat: name.endsWith('.pdf') ? 'pdf' : name.endsWith('.txt') ? 'txt' : parsed.sourceFormat,
+    sourceFormat: name.endsWith('.txt') ? 'txt' : parsed.sourceFormat,
     assets: parsed.assets || [],
   };
 }
