@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks';
 import { detectChaptersFromPages } from '../src/lib/documentParserV10.js';
-import { buildStudyBook } from '../src/lib/studyEngineV09.js';
+import { buildStudyBook } from '../src/lib/studyEngineV10.js';
 
 const TOTAL_PAGES = 600;
 const INDEX_PAGES = 6;
@@ -150,6 +150,7 @@ assert(lastTotal === parsedParagraphs && lastProgress === parsedParagraphs, `Pro
 assert(book.quality?.paragraphs === parsedParagraphs, 'Metriche qualità non coerenti con i paragrafi elaborati.');
 assert(book.quality?.localParagraphs === parsedParagraphs, 'Lo stress test locale non deve riportare paragrafi AI.');
 assert((book.quality?.glossaryEntries || 0) >= Math.floor(parsedParagraphs * 0.8), 'Il glossario contestuale è stato perso su troppi paragrafi.');
+assert(book.quality?.chapterAudit?.chaptersAudited === CHAPTERS, 'Il controllo capitolo-per-capitolo non è stato eseguito su tutti i capitoli.');
 
 for (const chapter of book.chapters) {
   for (const paragraph of chapter.paragraphs) {
@@ -170,6 +171,7 @@ console.log(JSON.stringify({
   sections: documentData.structure.sectionCount,
   paragraphs: parsedParagraphs,
   glossaryEntries: book.quality?.glossaryEntries || 0,
+  chaptersAudited: book.quality?.chapterAudit?.chaptersAudited || 0,
   parseMs: Math.round(parseMs),
   buildMs: Math.round(buildMs),
   heapGrowthMb: megabytes(heapGrowth),
