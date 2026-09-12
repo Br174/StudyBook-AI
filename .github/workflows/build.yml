@@ -22,6 +22,8 @@ jobs:
         run: node --check api/summarize.js && node --check api/refine.js && node --check api/explain.js
       - name: Test AI resilience
         run: node scripts/test-ai-resilience.mjs
+      - name: Test long-paragraph engine
+        run: node scripts/test-long-paragraph-engine.mjs
       - name: Stress test 600-page text pipeline
         run: node scripts/stress-large-book.mjs
       - name: Build
