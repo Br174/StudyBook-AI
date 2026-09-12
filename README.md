@@ -6,7 +6,7 @@ StudyBook AI trasforma libri, documenti e fotografie di pagine in un nuovo testo
 
 **Libro / PDF / DOCX / EPUB / TXT / fotografia → analisi → OCR se serve → struttura gerarchica → capitoli → sezioni → paragrafi → sintesi conservativa → DSA → controllo completezza → studio interattivo / export**
 
-## Stato attuale · v0.11
+## Stato attuale · v0.15
 
 Il progetto madre include:
 
@@ -114,3 +114,10 @@ Questo repository è la base ufficiale del progetto. L'esperimento Replit resta 
 ### Scanner persistente v0.14
 
 Le raccolte scanner multipagina incomplete vengono salvate localmente in IndexedDB: foto sorgente, ordine delle pagine e testo OCR possono essere ripristinati dopo la chiusura dell'app. Le foto servono solo a completare l'OCR della raccolta e non vengono incorporate nel libro di studio finale. Le sessioni scanner locali scadono dopo 30 giorni.
+
+
+### Protezione spazio scanner v0.15
+
+Le fotografie delle raccolte scanner vengono ottimizzate prima del salvataggio locale: StudyBook AI riduce in modo conservativo la risoluzione e usa JPEG ad alta qualità quando questo produce un risparmio reale, mantenendo una dimensione adatta all’OCR. L’app controlla inoltre la quota di archiviazione concessa dal browser/app, segnala i livelli di attenzione e blocca una nuova pagina solo quando manca il margine minimo necessario per salvarla in sicurezza.
+
+Quando una raccolta scanner è stata trasformata con successo in un libro e il libro è stato salvato nella Libreria, le fotografie temporanee della raccolta vengono cancellate automaticamente; nel libro finale resta il testo, non l’archivio fotografico.
