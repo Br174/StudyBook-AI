@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { detectChapters, readSourceFile } from './lib/documentParser.js';
-import { buildStudyBook, summaryLevels } from './lib/studyEngine.js';
+import { buildStudyBook, refineParagraphWithAi, summaryLevels } from './lib/studyEngine.js';
 import { exportDocx, exportHtml, exportJson, exportPdf, exportTxt, printStudyBook } from './lib/exporters.js';
 
 function countParagraphs(chapters = []) {
@@ -31,6 +31,10 @@ function sessionFileName(name, count) {
   return `${base} - ${count} pagine.pdf`;
 }
 
+function paragraphKey(chapterIndex, paragraphIndex) {
+  return `${chapterIndex}:${paragraphIndex}`;
+}
+
 export default function App() {
   const [documentData, setDocumentData] = useState(null);
   const [studyBook, setStudyBook] = useState(null);
@@ -50,6 +54,9 @@ export default function App() {
   const [scanPages, setScanPages] = useState([]);
   const [scanProcessing, setScanProcessing] = useState(false);
   const [scanSessionName, setScanSessionName] = useState('Appunti fotografati');
+  const [sourceEditor, setSourceEditor] = useState(null);
+  const [summaryEditor, setSummaryEditor] = useState(null);
+  const [refiningKey, setRefiningKey] = useState('');
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -133,6 +140,7 @@ export default function App() {
     setError('');
     setGenerating(true);
     setDsaMode(true);
+    setSummaryEditor(null);
     setStatus(fromScanner
       ? 'Scansione completa · preparo riassunto, DSA e impaginazione…'
       : 'Creazione del libro di studio…');
@@ -176,6 +184,8 @@ export default function App() {
     setStudyBook(null);
     setDocumentData(null);
     setScannerResultReady(false);
+    setSourceEditor(null);
+    setSummaryEditor(null);
     setProgress({ done: 0, total: 0 });
     setImporting(true);
 
@@ -386,6 +396,132 @@ export default function App() {
     await createStudyBook(documentData, fileName, { fromScanner: false });
   }
 
+  function beginSourceEdit(chapterIndex, paragraphIndex, value) {
+    setSourceEditor({
+      key: paragraphKey(chapterIndex, paragraphIndex),
+      chapterIndex,
+      paragraphIndex,
+      value,
+    });
+  }
+
+  function saveSourceEdit() {
+    if (!sourceEditor || !sourceEditor.value.trim()) return;
+    const { chapterIndex, paragraphIndex, value } = sourceEditor;
+    const cleaned = value.trim();
+
+    setDocumentData((current) => {
+      if (!current) return current;
+      const chapters = current.chapters.map((chapter, currentChapterIndex) => {
+        if (currentChapterIndex !== chapterIndex) return chapter;
+        return {
+          ...chapter,
+          paragraphs: chapter.paragraphs.map((paragraph, currentParagraphIndex) => (
+            currentParagraphIndex === paragraphIndex ? cleaned : paragraph
+          )),
+        };
+      });
+      return {
+        ...current,
+        chapters,
+        fullText: chapters.flatMap((chapter) => chapter.paragraphs).join('\n\n'),
+      };
+    });
+
+    setStudyBook(null);
+    setScannerResultReady(false);
+    setSourceEditor(null);
+    setStatus('Testo originale aggiornato · ricrea il libro per applicare la modifica');
+  }
+
+  function beginSummaryEdit(chapterIndex, paragraphIndex, paragraph) {
+    const field = dsaMode ? 'dsaSummary' : 'summary';
+    setSummaryEditor({
+      key: paragraphKey(chapterIndex, paragraphIndex),
+      chapterIndex,
+      paragraphIndex,
+      field,
+      value: paragraph[field] || paragraph.summary || '',
+    });
+  }
+
+  function saveSummaryEdit() {
+    if (!summaryEditor || !summaryEditor.value.trim()) return;
+    const { chapterIndex, paragraphIndex, field, value } = summaryEditor;
+    const cleaned = value.trim();
+
+    setStudyBook((current) => {
+      if (!current) return current;
+      const next = {
+        ...current,
+        editedAt: new Date().toISOString(),
+        chapters: current.chapters.map((chapter, currentChapterIndex) => {
+          if (currentChapterIndex !== chapterIndex) return chapter;
+          return {
+            ...chapter,
+            paragraphs: chapter.paragraphs.map((paragraph, currentParagraphIndex) => (
+              currentParagraphIndex === paragraphIndex
+                ? { ...paragraph, [field]: cleaned, manuallyEdited: true }
+                : paragraph
+            )),
+          };
+        }),
+      };
+      localStorage.setItem('studybook:last', JSON.stringify({ fileName, book: next }));
+      return next;
+    });
+
+    setSummaryEditor(null);
+    setStatus('Paragrafo modificato manualmente');
+  }
+
+  async function refineParagraph(chapterIndex, paragraphIndex, paragraph) {
+    const key = paragraphKey(chapterIndex, paragraphIndex);
+    if (refiningKey || generating) return;
+    setError('');
+    setRefiningKey(key);
+    setStatus(`Correzione AI approfondita · paragrafo ${paragraphIndex + 1}…`);
+
+    try {
+      const refined = await refineParagraphWithAi({
+        original: paragraph.original,
+        summary: paragraph.summary,
+        dsaSummary: paragraph.dsaSummary,
+        level,
+      });
+
+      setStudyBook((current) => {
+        if (!current) return current;
+        const next = {
+          ...current,
+          engine: current.engine === 'locale' ? 'misto' : current.engine,
+          editedAt: new Date().toISOString(),
+          chapters: current.chapters.map((chapter, currentChapterIndex) => {
+            if (currentChapterIndex !== chapterIndex) return chapter;
+            return {
+              ...chapter,
+              paragraphs: chapter.paragraphs.map((item, currentParagraphIndex) => (
+                currentParagraphIndex === paragraphIndex
+                  ? { ...item, ...refined, original: item.original, refinedAt: new Date().toISOString() }
+                  : item
+              )),
+            };
+          }),
+        };
+        localStorage.setItem('studybook:last', JSON.stringify({ fileName, book: next }));
+        return next;
+      });
+
+      setSummaryEditor(null);
+      setStatus('Paragrafo ricontrollato e migliorato con AI');
+    } catch (err) {
+      setError(err.message || 'Correzione AI non disponibile.');
+      setStatus('Correzione AI non completata');
+    } finally {
+      setRefiningKey('');
+    }
+  }
+
   const originalChapter = documentData?.chapters?.[selectedChapter];
   const generatedChapter = studyBook?.chapters?.[selectedChapter];
   const visibleChapter = generatedChapter || originalChapter;
@@ -405,12 +541,12 @@ export default function App() {
   return (
     <main className="app-shell">
       <header className="hero">
-        <div>
-          <span className="eyebrow">STUDYBOOK AI · v0.5</span>
-          <h1>Trasforma un libro in un libro di studio.</h1>
+        <div className="hero-copy">
+          <span className="eyebrow">STUDYBOOK AI · v0.6</span>
+          <h1>Il tuo libro, reso più semplice da studiare.</h1>
           <p>
-            Importa un documento oppure fotografa più pagine una alla volta. Ogni foto viene letta con OCR,
-            entra nella tua raccolta, può essere controllata e riordinata, poi viene trasformata in un unico libro DSA esportabile.
+            Importa un libro o fotografa più pagine. StudyBook AI organizza capitoli e paragrafi, crea sintesi fedeli,
+            modalità DSA e un nuovo libro pronto da leggere, modificare, stampare ed esportare.
           </p>
         </div>
         <div className="status-pill">{status}</div>
@@ -418,8 +554,9 @@ export default function App() {
 
       <section className="panel import-panel">
         <div>
-          <h2>1. Importa o scansiona</h2>
-          <p>PDF, TXT e immagini. Lo Scanner multipagina crea una cartellina temporanea: pagina 1, pagina 2, pagina 3… poi “Fine scansione”.</p>
+          <span className="section-kicker">INIZIA</span>
+          <h2>Importa o scansiona</h2>
+          <p>PDF, TXT e immagini. Lo Scanner multipagina raccoglie pagina 1, pagina 2, pagina 3… poi le elabora tutte insieme.</p>
         </div>
         <div className="import-actions">
           <label className={importing ? 'upload-button disabled' : 'upload-button'}>
@@ -460,7 +597,7 @@ export default function App() {
             <div>
               <span className="eyebrow dark">CARTELLINA SCANSIONI</span>
               <h2>{scanPages.length} {scanPages.length === 1 ? 'pagina' : 'pagine'} · {scanReadyCount} pronte</h2>
-              <p>Controlla l'ordine e il testo riconosciuto. Il riassunto viene creato solo alla fine, così l'AI vede tutte le pagine insieme.</p>
+              <p>Controlla ordine e testo OCR. Il riassunto viene creato alla fine, così il motore vede il contesto completo.</p>
             </div>
             <label className="scan-name-field">
               Nome raccolta
@@ -532,7 +669,7 @@ export default function App() {
           <div>
             <span className="eyebrow dark">RACCOLTA COMPLETATA</span>
             <h2>Le pagine sono diventate un unico libro di studio.</h2>
-            <p>OCR, riassunto, modalità DSA e impaginazione sono stati applicati all'intera raccolta. Puoi scaricare, stampare o esportare.</p>
+            <p>OCR, riassunto, modalità DSA e impaginazione sono stati applicati all'intera raccolta. Puoi ancora modificare ogni paragrafo prima dell'export.</p>
           </div>
           <div className="ready-actions">
             <button type="button" className="primary-button ready-download" onClick={() => exportPdf(studyBook, fileName, true)}>Scarica PDF</button>
@@ -546,15 +683,15 @@ export default function App() {
           <section className="stats-grid">
             <article className="stat-card"><span>Capitoli</span><strong>{documentData.chapters.length}</strong></article>
             <article className="stat-card"><span>Paragrafi</span><strong>{paragraphCount}</strong></article>
-            <article className="stat-card"><span>Pagine recuperate con OCR</span><strong>{documentData.ocrApplied?.length || 0}</strong></article>
-            <article className="stat-card"><span>Pagine da verificare</span><strong>{documentData.needsOcr.length}</strong></article>
+            <article className="stat-card"><span>Pagine OCR</span><strong>{documentData.ocrApplied?.length || 0}</strong></article>
+            <article className="stat-card"><span>Da verificare</span><strong>{documentData.needsOcr?.length || 0}</strong></article>
           </section>
 
           <section className="panel study-controls">
             <div>
               <span className="eyebrow dark">MOTORE DI STUDIO</span>
-              <h2>3. Crea il nuovo libro</h2>
-              <p>Il motore prova prima l'endpoint AI. Se non è configurato, usa automaticamente una sintesi locale dichiarata, senza fingere che sia AI.</p>
+              <h2>Crea il nuovo libro</h2>
+              <p>Il lavoro resta a compartimenti: capitoli → paragrafi → sintesi → DSA → ricostruzione. Puoi intervenire manualmente in qualsiasi punto.</p>
             </div>
             <label>
               Livello di sintesi
@@ -581,7 +718,7 @@ export default function App() {
             <section className="panel export-bar">
               <div>
                 <span className="eyebrow dark">ESPORTA</span>
-                <strong>{studyBook.engine === 'ai' ? 'Motore AI' : 'Modalità locale di sicurezza'}</strong>
+                <strong>{studyBook.engine === 'ai' ? 'Motore AI' : studyBook.engine === 'misto' ? 'AI + modifiche mirate' : 'Modalità locale di sicurezza'}</strong>
               </div>
               <div className="export-actions">
                 <button type="button" onClick={() => exportPdf(studyBook, fileName, dsaMode)}>PDF</button>
@@ -596,13 +733,18 @@ export default function App() {
 
           <section className="workspace">
             <aside className="panel chapter-list">
-              <h2>2. Struttura</h2>
+              <span className="section-kicker">STRUTTURA</span>
+              <h2>Capitoli</h2>
               {documentData.chapters.map((chapter, index) => (
                 <button
                   type="button"
                   key={`${chapter.title}-${index}`}
                   className={index === selectedChapter ? 'chapter-button active' : 'chapter-button'}
-                  onClick={() => setSelectedChapter(index)}
+                  onClick={() => {
+                    setSelectedChapter(index);
+                    setSourceEditor(null);
+                    setSummaryEditor(null);
+                  }}
                 >
                   <span>{chapter.title}</span>
                   <small>{chapter.paragraphs.length} paragrafi</small>
@@ -615,27 +757,102 @@ export default function App() {
                 <div>
                   <span className="eyebrow dark">{studyBook ? 'LIBRO DI STUDIO' : 'TESTO ORIGINALE'}</span>
                   <h2>{visibleChapter?.title}</h2>
+                  <p className="reader-subtitle">
+                    {studyBook
+                      ? 'Modifica a mano oppure usa “Migliora con AI” solo sul paragrafo che vuoi ricontrollare.'
+                      : 'Puoi correggere manualmente il testo estratto prima di generare il libro.'}
+                  </p>
                 </div>
-                <button type="button" className="secondary-button" onClick={speakChapter}>Leggi capitolo</button>
+                <button type="button" className="secondary-button" onClick={speakChapter}>Ascolta capitolo</button>
               </div>
 
               <div className="paragraph-stack">
                 {visibleChapter?.paragraphs.map((paragraph, index) => {
+                  const key = paragraphKey(selectedChapter, index);
+
                   if (!studyBook) {
+                    const editing = sourceEditor?.key === key;
                     return (
-                      <article className="paragraph-card" key={index}>
-                        <div className="paragraph-number">{index + 1}</div>
-                        <p>{paragraph}</p>
-                        <div className="future-tag">Pronto per sintesi e modalità DSA</div>
+                      <article className="paragraph-card source-card" key={key}>
+                        <div className="paragraph-toolbar">
+                          <div className="paragraph-number">{index + 1}</div>
+                          {!editing && (
+                            <button
+                              type="button"
+                              className="text-action-button"
+                              onClick={() => beginSourceEdit(selectedChapter, index, paragraph)}
+                            >
+                              Modifica testo
+                            </button>
+                          )}
+                        </div>
+
+                        {editing ? (
+                          <div className="inline-editor">
+                            <textarea
+                              value={sourceEditor.value}
+                              onChange={(event) => setSourceEditor((current) => ({ ...current, value: event.target.value }))}
+                              aria-label={`Modifica testo originale paragrafo ${index + 1}`}
+                            />
+                            <div className="inline-editor-actions">
+                              <button type="button" className="secondary-button compact" onClick={() => setSourceEditor(null)}>Annulla</button>
+                              <button type="button" className="primary-button compact" onClick={saveSourceEdit} disabled={!sourceEditor.value.trim()}>Salva testo</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p>{paragraph}</p>
+                        )}
+
+                        <div className="future-tag">Fonte originale · la modifica manuale verrà usata nella prossima sintesi</div>
                       </article>
                     );
                   }
 
                   const text = dsaMode ? (paragraph.dsaSummary || paragraph.summary) : paragraph.summary;
+                  const editing = summaryEditor?.key === key;
+                  const refining = refiningKey === key;
+
                   return (
-                    <article className={dsaMode ? 'paragraph-card dsa-card' : 'paragraph-card'} key={index}>
-                      <div className="paragraph-number">{index + 1}</div>
-                      <p className="summary-text">{text}</p>
+                    <article className={dsaMode ? 'paragraph-card dsa-card' : 'paragraph-card'} key={key}>
+                      <div className="paragraph-toolbar">
+                        <div className="paragraph-number">{index + 1}</div>
+                        <div className="paragraph-actions">
+                          {!editing && (
+                            <button type="button" className="text-action-button" onClick={() => beginSummaryEdit(selectedChapter, index, paragraph)}>
+                              Modifica
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="ai-action-button"
+                            onClick={() => refineParagraph(selectedChapter, index, paragraph)}
+                            disabled={refining || Boolean(refiningKey) || generating}
+                          >
+                            {refining ? 'Controllo AI…' : '✦ Migliora con AI'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {editing ? (
+                        <div className="inline-editor summary-editor">
+                          <div className="editor-label">{summaryEditor.field === 'dsaSummary' ? 'Versione DSA' : 'Sintesi standard'}</div>
+                          <textarea
+                            value={summaryEditor.value}
+                            onChange={(event) => setSummaryEditor((current) => ({ ...current, value: event.target.value }))}
+                            aria-label={`Modifica sintesi paragrafo ${index + 1}`}
+                          />
+                          <div className="inline-editor-actions">
+                            <button type="button" className="secondary-button compact" onClick={() => setSummaryEditor(null)}>Annulla</button>
+                            <button type="button" className="primary-button compact" onClick={saveSummaryEdit} disabled={!summaryEditor.value.trim()}>Salva modifica</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="summary-text">{text}</p>
+                      )}
+
+                      {paragraph.refinedAt && <div className="refined-badge">Controllato con AI su questo paragrafo</div>}
+                      {paragraph.manuallyEdited && <div className="manual-badge">Modificato manualmente</div>}
+
                       {paragraph.keywords?.length > 0 && (
                         <div className="chips">{paragraph.keywords.map((keyword) => <span key={keyword}>{keyword}</span>)}</div>
                       )}
@@ -666,8 +883,9 @@ export default function App() {
 
       {!documentData && !importing && scanPages.length === 0 && (
         <section className="empty-state panel">
+          <span className="section-kicker">STUDYBOOK AI</span>
           <h2>Carica un libro oppure avvia lo scanner</h2>
-          <p>Con lo scanner multipagina raccogli prima tutte le fotografie, controlli il risultato e solo alla fine crei un unico PDF di studio.</p>
+          <p>Il documento viene diviso in compartimenti, elaborato un pezzo alla volta e poi ricostruito in un unico libro di studio.</p>
         </section>
       )}
 
