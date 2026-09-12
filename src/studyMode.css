@@ -114,6 +114,17 @@
   box-shadow: 0 10px 30px rgba(27, 40, 68, 0.08);
 }
 
+.study-sheet.has-glossary {
+  width: min(980px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 18px;
+}
+
+.study-sheet-main {
+  min-width: 0;
+}
+
 .study-sheet-meta {
   display: flex;
   align-items: center;
@@ -170,6 +181,69 @@
 .study-word.emphasized {
   font-weight: 800;
   color: #111827;
+}
+
+.study-word.glossary-term {
+  text-decoration: underline dotted #64748b;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.study-glossary-inline-wrap {
+  display: inline;
+}
+
+.study-inline-definition {
+  color: #526077;
+  font-size: 0.92em;
+  font-weight: 600;
+}
+
+.study-margin-glossary {
+  align-self: start;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-left: 3px solid #5367c7;
+  border-radius: 14px;
+  background: #f7f8fc;
+}
+
+.study-margin-glossary > small {
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  color: #6d7890;
+}
+
+.study-margin-glossary button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(27, 40, 68, 0.06);
+  text-align: left;
+  cursor: pointer;
+}
+
+.study-margin-glossary button:hover,
+.study-margin-glossary button:focus-visible {
+  outline: 2px solid rgba(83, 103, 199, 0.25);
+  outline-offset: 1px;
+}
+
+.study-margin-glossary strong {
+  font-size: 0.82rem;
+  color: #24365d;
+}
+
+.study-margin-glossary span {
+  font-size: 0.79rem;
+  line-height: 1.45;
+  color: #566176;
 }
 
 .study-assistant-sheet {
@@ -330,6 +404,11 @@
   font-weight: 700;
 }
 
+.study-answer-basis.source {
+  background: #eaf7ef;
+  color: #27613e;
+}
+
 .study-answer-actions {
   display: flex;
   align-items: center;
@@ -367,9 +446,20 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .study-sheet {
+  .study-sheet,
+  .study-sheet.has-glossary {
     border-radius: 15px;
     padding: 16px 14px;
+  }
+
+  .study-sheet.has-glossary {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .study-margin-glossary {
+    border-left: 0;
+    border-top: 3px solid #5367c7;
   }
 
   .study-mode-pages {
