@@ -62,12 +62,12 @@ export default function App() {
   );
 
   const scanReadyCount = useMemo(
-    () => scanPages.filter((page) => page.status === 'ready').length,
+    () => scanPages.filter((page) => page.status === 'ready' && page.text.trim()).length,
     [scanPages],
   );
 
   const scanHasErrors = useMemo(
-    () => scanPages.some((page) => page.status === 'error'),
+    () => scanPages.some((page) => page.status === 'error' || (page.status === 'ready' && !page.text.trim())),
     [scanPages],
   );
 
@@ -351,14 +351,14 @@ export default function App() {
 
   async function finishScanSession() {
     if (!scanPages.length || scanProcessing || generating) return;
-    if (scanPages.some((page) => page.status !== 'ready' || !page.parsed?.fullText)) {
+    if (scanPages.some((page) => page.status !== 'ready' || !page.text.trim())) {
       setError('Prima di terminare, correggi o elimina le pagine che non sono state riconosciute.');
       return;
     }
 
     const pages = scanPages.map((page, index) => ({
       pageNumber: index + 1,
-      text: page.parsed.fullText,
+      text: page.text.trim(),
       source: 'camera-ocr',
     }));
     const fullText = pages.map((page) => page.text).join('\n\n');
@@ -479,14 +479,18 @@ export default function App() {
                   <div className="scan-page-title">
                     <strong>Pagina {index + 1}</strong>
                     <span className={`scan-status ${page.status}`}>
-                      {page.status === 'ready' ? 'Pronta' : page.status === 'error' ? 'Da rifare' : 'OCR…'}
+                      {page.status === 'ready' ? (page.text.trim() ? 'Pronta' : 'Testo vuoto') : page.status === 'error' ? 'Da rifare' : 'OCR…'}
                     </span>
                   </div>
 
                   {page.status === 'ready' && (
                     <details className="scan-text-preview">
-                      <summary>Controlla testo OCR</summary>
-                      <p>{page.text}</p>
+                      <summary>Controlla e correggi testo OCR</summary>
+                      <textarea
+                        value={page.text}
+                        onChange={(event) => patchScanPage(page.id, { text: event.target.value })}
+                        aria-label={`Testo OCR pagina ${index + 1}`}
+                      />
                     </details>
                   )}
 
@@ -519,7 +523,7 @@ export default function App() {
               {generating ? `Elaborazione ${progressPercent}%` : 'Fine scansione · Crea libro PDF'}
             </button>
           </div>
-          {scanHasErrors && <p className="scan-warning">Correggi o elimina le pagine segnate “Da rifare” prima di terminare.</p>}
+          {scanHasErrors && <p className="scan-warning">Correggi o elimina le pagine segnate prima di terminare.</p>}
         </section>
       )}
 
