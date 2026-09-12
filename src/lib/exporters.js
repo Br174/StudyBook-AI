@@ -24,6 +24,84 @@ function paragraphText(item, dsaMode) {
   return dsaMode ? (item.dsaSummary || item.summary) : item.summary;
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function printableHtml(book, fileName, dsaMode = false) {
+  const chapters = book.chapters.map((chapter, chapterIndex) => `
+    <section class="chapter">
+      <div class="chapter-kicker">CAPITOLO ${chapterIndex + 1}</div>
+      <h2>${escapeHtml(chapter.title)}</h2>
+      ${chapter.paragraphs.map((item, index) => `
+        <article>
+          <div class="paragraph-label">PARAGRAFO ${index + 1}</div>
+          <p class="summary ${dsaMode ? 'dsa' : ''}">${escapeHtml(paragraphText(item, dsaMode)).replace(/\n/g, '<br>')}</p>
+          ${item.keywords?.length ? `<p class="keywords"><strong>Parole chiave:</strong> ${item.keywords.map(escapeHtml).join(' · ')}</p>` : ''}
+          ${item.keyPoints?.length ? `<div class="box"><strong>Punti chiave</strong><ul>${item.keyPoints.map((v) => `<li>${escapeHtml(v)}</li>`).join('')}</ul></div>` : ''}
+          ${item.remember?.length ? `<div class="remember"><strong>Da ricordare</strong><ul>${item.remember.map((v) => `<li>${escapeHtml(v)}</li>`).join('')}</ul></div>` : ''}
+        </article>`).join('')}
+    </section>`).join('');
+
+  const index = book.chapters.map((chapter, indexValue) => `<li>${indexValue + 1}. ${escapeHtml(chapter.title)}</li>`).join('');
+  const title = escapeHtml(displayName(fileName));
+  const mode = dsaMode ? 'Modalità DSA' : 'Studio';
+
+  return `<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} · StudyBook AI</title>
+<style>
+  @page { size: A4; margin: 18mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: #1f2937; font-family: Arial, Helvetica, sans-serif; line-height: 1.65; background: #fff; }
+  .cover { min-height: 245mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+  .brand { font-weight: 800; letter-spacing: .14em; color: #2563eb; font-size: 12px; }
+  .cover h1 { font-size: 34px; line-height: 1.08; margin: 16px 0 10px; color: #111827; }
+  .cover p { color: #64748b; font-size: 16px; }
+  .pill { display: inline-block; width: fit-content; margin-top: 22px; padding: 7px 12px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-weight: 700; }
+  .index { page-break-after: always; }
+  .index h2 { font-size: 26px; margin-bottom: 18px; }
+  .index ol { padding-left: 22px; }
+  .index li { margin: 8px 0; color: #475569; }
+  .chapter { page-break-before: always; }
+  .chapter-kicker, .paragraph-label { color: #2563eb; font-weight: 800; font-size: 11px; letter-spacing: .08em; }
+  h2 { font-size: 25px; color: #111827; margin: 7px 0 20px; }
+  article { break-inside: avoid; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb; }
+  .summary { margin: 9px 0 10px; }
+  .summary.dsa { font-size: 17px; line-height: 1.9; letter-spacing: .01em; }
+  .keywords { color: #1d4ed8; font-size: 13px; }
+  .box, .remember { border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .box { background: #f8fafc; border: 1px solid #e2e8f0; }
+  .remember { background: #fff7ed; border: 1px solid #fed7aa; }
+  .box ul, .remember ul { margin: 7px 0 0; padding-left: 20px; }
+  @media print {
+    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+  <section class="cover">
+    <div class="brand">STUDYBOOK AI</div>
+    <h1>${title}</h1>
+    <p>Libro di studio ricostruito da testo, PDF o fotografie.</p>
+    <span class="pill">${mode}</span>
+  </section>
+  <section class="index">
+    <h2>Indice</h2>
+    <ol>${index}</ol>
+  </section>
+  ${chapters}
+</body>
+</html>`;
+}
+
 export function exportTxt(book, fileName, dsaMode = false) {
   const lines = ['STUDYBOOK AI', ''];
   book.chapters.forEach((chapter) => {
@@ -41,26 +119,29 @@ export function exportJson(book, fileName) {
 }
 
 export function exportHtml(book, fileName, dsaMode = false) {
-  const escapeHtml = (value) => String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-
-  const chapters = book.chapters.map((chapter) => `
-    <section>
-      <h2>${escapeHtml(chapter.title)}</h2>
-      ${chapter.paragraphs.map((item, index) => `
-        <article>
-          <h3>Paragrafo ${index + 1}</h3>
-          <p>${escapeHtml(paragraphText(item, dsaMode)).replace(/\n/g, '<br>')}</p>
-          ${item.keywords?.length ? `<p><strong>Parole chiave:</strong> ${item.keywords.map(escapeHtml).join(', ')}</p>` : ''}
-          ${item.remember?.length ? `<ul>${item.remember.map((v) => `<li>${escapeHtml(v)}</li>`).join('')}</ul>` : ''}
-        </article>`).join('')}
-    </section>`).join('');
-
-  const html = `<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>StudyBook AI</title><style>body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 20px;line-height:1.7;color:#18202a}h1,h2{color:#111827}article{border-top:1px solid #ddd;padding:18px 0}ul{padding-left:22px}.dsa{font-size:1.08rem;line-height:1.9}</style></head><body><h1>StudyBook AI</h1>${chapters}</body></html>`;
+  const html = printableHtml(book, fileName, dsaMode);
   downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${safeName(fileName)}_studybook.html`);
+}
+
+export function printStudyBook(book, fileName, dsaMode = false) {
+  const printWindow = window.open('', '_blank', 'noopener,noreferrer');
+  if (!printWindow) {
+    exportPdf(book, fileName, dsaMode);
+    return false;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(printableHtml(book, fileName, dsaMode));
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => {
+    try {
+      printWindow.print();
+    } catch {
+      // Il documento resta aperto e può essere stampato/condiviso dal browser.
+    }
+  }, 450);
+  return true;
 }
 
 export function exportPdf(book, fileName, dsaMode = false) {
