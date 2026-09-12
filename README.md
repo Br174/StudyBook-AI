@@ -109,3 +109,8 @@ In questo modo una regressione su gerarchia, perdita di paragrafi, fedeltà mini
 ## Repository madre
 
 Questo repository è la base ufficiale del progetto. L'esperimento Replit resta separato e potrà essere confrontato in seguito senza sovrascrivere il progetto madre.
+
+
+### Scanner persistente v0.14
+
+Le raccolte scanner multipagina incomplete vengono salvate localmente in IndexedDB: foto sorgente, ordine delle pagine e testo OCR possono essere ripristinati dopo la chiusura dell'app. Le foto servono solo a completare l'OCR della raccolta e non vengono incorporate nel libro di studio finale. Le sessioni scanner locali scadono dopo 30 giorni.
