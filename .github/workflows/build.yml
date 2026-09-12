@@ -20,5 +20,7 @@ jobs:
         run: npm install
       - name: Check API syntax
         run: node --check api/summarize.js && node --check api/refine.js && node --check api/explain.js
+      - name: Stress test 600-page text pipeline
+        run: node scripts/stress-large-book.mjs
       - name: Build
         run: npm run build
