@@ -164,7 +164,12 @@ export async function loadScannerSession() {
   try {
     db = await openDb();
     const tx = db.transaction([META_STORE, PAGE_STORE], 'readonly');
-    const meta = await requestResult(tx.objectStore(META_STORE).get(ACTIVE_SESSION));
+    const metaRequest = tx.objectStore(META_STORE).get(ACTIVE_SESSION);
+    const pagesRequest = tx.objectStore(PAGE_STORE).getAll();
+    const [meta, records] = await Promise.all([
+      requestResult(metaRequest),
+      requestResult(pagesRequest),
+    ]);
     if (!meta) return null;
 
     const age = Date.now() - new Date(meta.updatedAt || 0).getTime();
@@ -175,13 +180,14 @@ export async function loadScannerSession() {
       return null;
     }
 
-    const records = await requestResult(tx.objectStore(PAGE_STORE).getAll());
     const byId = new Map(records.map((record) => [String(record.id), record]));
-    const ordered = (meta.order || [])
-      .map((id) => byId.get(String(id)))
-      .filter(Boolean);
-    const missingFromOrder = records.filter((record) => !(meta.order || []).includes(String(record.id)));
-    const pages = [...ordered, ...missingFromOrder].map(scannerPageFromRecord).filter((page) => page.id && page.file);
+    const order = (meta.order || []).map(String);
+    const orderSet = new Set(order);
+    const ordered = order.map((id) => byId.get(id)).filter(Boolean);
+    const missingFromOrder = records.filter((record) => !orderSet.has(String(record.id)));
+    const pages = [...ordered, ...missingFromOrder]
+      .map(scannerPageFromRecord)
+      .filter((page) => page.id && page.file);
 
     return {
       name: cleanName(meta.name),
