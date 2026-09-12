@@ -123,6 +123,32 @@ async function summarizeWithEndpoint(paragraphs, level) {
   return payload.summaries.map((item) => ({ ...item, engine: item.engine || 'ai' }));
 }
 
+export async function refineParagraphWithAi({ original, summary, dsaSummary, level = 'studio' }) {
+  const response = await fetch('/api/refine', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ original, summary, dsaSummary, level }),
+  });
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    const message = payload?.error || `Correzione AI non disponibile (${response.status})`;
+    throw new Error(message);
+  }
+
+  if (!payload?.result || typeof payload.result.summary !== 'string' || typeof payload.result.dsaSummary !== 'string') {
+    throw new Error('Risposta AI di correzione non valida.');
+  }
+
+  return { ...payload.result, engine: 'ai-refine' };
+}
+
 export async function buildStudyBook(documentData, { level = 'studio', preferAi = true, onProgress } = {}) {
   const flat = [];
   documentData.chapters.forEach((chapter, chapterIndex) => {
@@ -164,7 +190,7 @@ export async function buildStudyBook(documentData, { level = 'studio', preferAi 
 
   const engine = results.some((item) => item?.engine === 'ai') ? 'ai' : 'locale';
   return {
-    version: 1,
+    version: 2,
     generatedAt: new Date().toISOString(),
     level,
     engine,
