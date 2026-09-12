@@ -14,7 +14,7 @@ Il progetto madre include:
 - OCR automatico per fotografie e pagine PDF senza testo digitale sufficiente;
 - scanner fotografico multipagina con riordino e correzione OCR;
 - riconoscimento gerarchico di Parte, Libro, Unità, Modulo, Capitolo, Sezione, Paragrafo e numerazioni annidate;
-- rilevamento dell'indice/sommario per ridurre i falsi capitoli;
+- parser gerarchico v10 che esclude le pagine di indice/sommario dal corpo del libro per ridurre i falsi capitoli;
 - riferimenti alle pagine e alle sezioni quando disponibili;
 - tre livelli di sintesi: Approfondito, Studio e Ripasso;
 - modalità DSA senza perdita intenzionale dei concetti;
@@ -28,6 +28,7 @@ Il progetto madre include:
 - modifica manuale e pulsante **Migliora con AI** sul singolo paragrafo;
 - Libreria locale dei libri elaborati;
 - esportazione PDF, DOCX, HTML, TXT e JSON;
+- grassetto semantico e glossario contestuale anche negli export PDF, DOCX e HTML, con disposizione laterale quando il formato lo consente;
 - nuova **Modalità Studio** a schermo intero, pensata anche per il telefono;
 - tocco su una parola o selezione di una frase per aprire l'assistente di comprensione;
 - azioni rapide: **Spiegami semplice**, **Che significa?**, **Fammi un esempio**, **Perché è importante?**, **Cosa devo ricordare?**, **Domanda d'esame**;
@@ -59,7 +60,11 @@ Se il libro usa un termine specialistico senza spiegarlo abbastanza, StudyBook A
 
 Per libri da centinaia di pagine il documento viene prima strutturato e poi inserito in una coda di elaborazione. I paragrafi molto lunghi vengono divisi in blocchi controllati; i batch restano nello stesso capitolo e vengono elaborati con parallelismo limitato. Dopo ogni ondata viene salvato un checkpoint nel browser.
 
-Alla riapertura dello stesso documento, con lo stesso livello di sintesi, i paragrafi già completati possono essere riutilizzati. L'architettura è pensata anche per libri molto grandi, ma il comportamento su un libro reale di circa 500–600 pagine deve ancora essere sottoposto a stress test completo prima di considerarlo certificato.
+Alla riapertura dello stesso documento, con lo stesso livello di sintesi, i paragrafi già completati possono essere riutilizzati.
+
+Il repository esegue ora in CI uno **stress test sintetico da 600 pagine** sulla pipeline testuale. Il test corrente genera 80 capitoli, 240 sezioni e 600 paragrafi, verifica l'esclusione dell'indice, l'ordine e gli intervalli pagina, la conservazione dei marcatori di contenuto, la ricostruzione senza perdita di paragrafi, il glossario contestuale, la fedeltà dei dati numerici, il progresso monotono e limiti di tempo/memoria. Sul runner GitHub del test di riferimento la pipeline locale ha completato il parsing in circa 103 ms e la ricostruzione in circa 506 ms, con circa 9,9 MB di crescita heap.
+
+Questo risultato certifica la **robustezza del percorso testuale sintetico** nella fascia 600 pagine, non un libro reale completo con OCR e provider AI remoto. La prova reale su un volume grande, soprattutto se scansionato, resta un test distinto da eseguire prima di dichiarare certificazione completa sul campo.
 
 ## Assistente di comprensione
 
@@ -81,12 +86,23 @@ Per il provider AI servono variabili d'ambiente server-side:
 
 Le chiavi non devono essere inserite nel frontend.
 
+## Verifica continua
+
+Ogni push su `main` esegue automaticamente:
+
+1. installazione delle dipendenze;
+2. controllo sintattico delle API AI;
+3. stress test sintetico della pipeline testuale da 600 pagine;
+4. build di produzione Vite.
+
+In questo modo una regressione su gerarchia, perdita di paragrafi, fedeltà minima o prestazioni di base blocca la build prima di essere considerata valida.
+
 ## Prossimi passi
 
-1. Stress test controllato fino alla fascia 500–600 pagine.
-2. Portare glossario contestuale e grassetto semantico anche negli export PDF/DOCX/HTML, con riquadro laterale nelle versioni impaginate quando possibile.
-3. Rafforzare il controllo qualità strutturale e semantico sui libri reali.
-4. Rifinire la Modalità Studio e la gestione delle spiegazioni salvate.
+1. Test reale con un volume ampio, includendo un caso PDF digitale e un caso OCR/scansione.
+2. Rafforzare i retry controllati dei batch AI e la gestione dei singoli blocchi eccezionalmente lunghi.
+3. Rifinire la Modalità Studio e la gestione persistente delle spiegazioni salvate.
+4. Ridurre ulteriormente il peso iniziale della web app con caricamento differito dei moduli pesanti di OCR/export.
 5. Pubblicare la web app e trasformarla in PWA installabile.
 6. Aggiungere strumenti di studio: flashcard, quiz, mappe e modalità interrogazione.
 
