@@ -2,7 +2,7 @@ import {
   buildStudyBook as buildBaseStudyBook,
   refineParagraphWithAi,
   summaryLevels,
-} from './studyEngine.js';
+} from './studyEngineV09.js';
 
 function attachSourceParts(book, documentData) {
   const chapters = (book.chapters || []).map((chapter, chapterIndex) => ({
@@ -24,7 +24,7 @@ export async function buildStudyBook(documentData, options = {}) {
   const sourceAssets = Array.isArray(documentData?.assets) ? documentData.assets : [];
   return {
     ...book,
-    version: Math.max(Number(book.version || 0), 5),
+    version: Math.max(Number(book.version || 0), 6),
     sourceFormat: documentData?.sourceFormat || null,
     sourceTitle: documentData?.sourceTitle || null,
     sourceAssets,
