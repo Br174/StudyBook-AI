@@ -5,7 +5,7 @@ const AI_BATCH_CHAR_LIMIT = 18000;
 const AI_BATCH_ITEM_LIMIT = 5;
 const LONG_PARAGRAPH_LIMIT = 7000;
 const CHUNK_TARGET = 4200;
-const CHECKPOINT_VERSION = 2;
+const CHECKPOINT_VERSION = 3;
 
 function normalize(text) {
   return String(text || '').replace(/\s+/g, ' ').trim();
@@ -30,6 +30,65 @@ function unique(values, limit = Infinity) {
     if (out.length >= limit) break;
   }
   return out;
+}
+
+function glossaryPlacement(definition) {
+  const clean = normalize(definition);
+  const words = clean.split(/\s+/).filter(Boolean).length;
+  return words <= 6 && clean.length <= 72 ? 'inline' : 'side';
+}
+
+function normalizeGlossary(entries, source, limit = 6) {
+  const sourceLower = normalize(source).toLocaleLowerCase('it-IT');
+  const seen = new Set();
+  const out = [];
+
+  for (const entry of entries || []) {
+    const term = normalize(entry?.term).slice(0, 90);
+    const definition = normalize(entry?.definition).replace(/[.;:]$/, '').slice(0, 240);
+    if (!term || !definition) continue;
+    if (!sourceLower.includes(term.toLocaleLowerCase('it-IT'))) continue;
+
+    const key = term.toLocaleLowerCase('it-IT');
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    out.push({
+      term,
+      definition,
+      placement: entry?.placement === 'inline' && glossaryPlacement(definition) === 'inline' ? 'inline' : glossaryPlacement(definition),
+      basis: 'source',
+    });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function extractLocalGlossary(source) {
+  const found = [];
+  const word = "[A-Za-zÀ-ÖØ-öø-ÿ'’\\-]+";
+  const phrase = `${word}(?:\\s+${word}){0,3}`;
+  const patterns = [
+    new RegExp(`\\b(?:per|con)\\s+(${phrase})\\s+si\\s+intende\\s+(.{4,140})$`, 'i'),
+    new RegExp(`\\bsi\\s+definisce\\s+(${phrase})\\s+(.{4,140})$`, 'i'),
+    new RegExp(`^(?:Il|La|Lo|L'|L’|Un|Una)?\\s*(${phrase})\\s+(?:è|sono)\\s+(.{4,140})$`, 'i'),
+  ];
+
+  for (const sentence of splitSentences(source)) {
+    const cleanSentence = sentence.replace(/[.!?]+$/, '').trim();
+    for (const pattern of patterns) {
+      const match = cleanSentence.match(pattern);
+      if (!match) continue;
+      const term = normalize(match[1]).replace(/^(?:il|la|lo|l'|l’|un|una)\s+/i, '');
+      const definition = normalize(match[2]);
+      if (!term || !definition) continue;
+      found.push({ term, definition, placement: glossaryPlacement(definition), basis: 'source' });
+      break;
+    }
+    if (found.length >= 6) break;
+  }
+
+  return normalizeGlossary(found, source, 6);
 }
 
 function dsaVersion(summary) {
@@ -61,9 +120,13 @@ function extractStudyAnchors(text) {
 function ensureSourceFidelity(source, generated) {
   const summary = normalize(generated?.summary);
   const dsaSummary = String(generated?.dsaSummary || '').trim() || dsaVersion(summary);
+  const glossary = normalizeGlossary([
+    ...(generated?.glossary || []),
+    ...extractLocalGlossary(source),
+  ], source, 6);
   const searchable = `${summary} ${dsaSummary}`.toLocaleLowerCase('it-IT');
   const missing = extractStudyAnchors(source).filter((anchor) => !searchable.includes(anchor.toLocaleLowerCase('it-IT')));
-  if (!missing.length) return { ...generated, summary, dsaSummary };
+  if (!missing.length) return { ...generated, summary, dsaSummary, glossary };
 
   const sourceSentences = splitSentences(source);
   const recovery = [];
@@ -73,7 +136,7 @@ function ensureSourceFidelity(source, generated) {
     if (sentence && !recovery.includes(sentence)) recovery.push(sentence);
     if (recovery.length >= 5) break;
   }
-  if (!recovery.length) return { ...generated, summary, dsaSummary };
+  if (!recovery.length) return { ...generated, summary, dsaSummary, glossary };
 
   return {
     ...generated,
@@ -81,6 +144,7 @@ function ensureSourceFidelity(source, generated) {
     dsaSummary: [dsaSummary, ...recovery.map(dsaVersion)].filter(Boolean).join('\n\n'),
     keyPoints: unique([...(generated?.keyPoints || []), ...recovery], 8),
     remember: unique([...(generated?.remember || []), ...recovery], 5),
+    glossary,
     fidelityRecovered: Number(generated?.fidelityRecovered || 0) + recovery.length,
   };
 }
@@ -192,6 +256,7 @@ function combineUnitResults(source, pieces) {
     keyPoints: unique(ordered.flatMap((item) => item?.keyPoints || []), 8),
     remember: unique(ordered.flatMap((item) => item?.remember || []), 5),
     keywords: unique(ordered.flatMap((item) => item?.keywords || []), 12),
+    glossary: normalizeGlossary(ordered.flatMap((item) => item?.glossary || []), source, 6),
     engine,
   });
 }
@@ -259,7 +324,7 @@ function buildChapters(documentData, results) {
     pageEnd: chapter.pageEnd ?? chapter.pageStart ?? null,
     sections: Array.isArray(chapter.sections) ? chapter.sections.map((section) => ({ ...section })) : [],
     paragraphs: chapter.paragraphs.map((original, paragraphIndex) => {
-      const generated = results[cursor] || summarizeLocally(original, 'studio');
+      const generated = results[cursor] || ensureSourceFidelity(original, summarizeLocally(original, 'studio'));
       const sourceMeta = paragraphSourceMeta(chapter, paragraphIndex);
       cursor += 1;
       return { original, ...generated, ...sourceMeta };
@@ -289,7 +354,7 @@ export async function buildStudyBook(documentData, {
 
   if (!flat.length) {
     return {
-      version: 6,
+      version: 7,
       generatedAt: new Date().toISOString(),
       level,
       engine: 'locale',
@@ -412,7 +477,7 @@ export async function buildStudyBook(documentData, {
   }
 
   for (let index = 0; index < finalResults.length; index += 1) {
-    if (!finalResults[index]) finalResults[index] = summarizeLocally(flat[index].text, level);
+    if (!finalResults[index]) finalResults[index] = ensureSourceFidelity(flat[index].text, summarizeLocally(flat[index].text, level));
   }
 
   const aiParagraphs = finalResults.filter((item) => item?.engine === 'ai').length;
@@ -430,7 +495,7 @@ export async function buildStudyBook(documentData, {
   await saveResumeState(signature, completedCheckpoint);
 
   return {
-    version: 6,
+    version: 7,
     generatedAt: new Date().toISOString(),
     level,
     engine,
@@ -444,6 +509,7 @@ export async function buildStudyBook(documentData, {
       maxConcurrencyUsed,
       longParagraphsSplit: [...unitTotals.values()].filter((value) => value > 1).length,
       fidelityRecovered: finalResults.reduce((sum, item) => sum + Number(item?.fidelityRecovered || 0), 0),
+      glossaryEntries: finalResults.reduce((sum, item) => sum + (item?.glossary?.length || 0), 0),
     },
     sourceStructure: documentData.structure || null,
     chapters: buildChapters(documentData, finalResults),
