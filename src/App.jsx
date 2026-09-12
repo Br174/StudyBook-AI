@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { detectChapters, readSourceFile } from './lib/documentParser.js';
-import { buildStudyBook, refineParagraphWithAi, summaryLevels } from './lib/studyEngine.js';
+import { detectChapters, readSourceFile } from './lib/documentParserV09.js';
+import { buildStudyBook, refineParagraphWithAi, summaryLevels } from './lib/studyEngineV10.js';
 import { exportDocx, exportHtml, exportJson, exportPdf, exportTxt, printStudyBook } from './lib/exporters.js';
 
 function countParagraphs(chapters = []) {
@@ -150,20 +150,38 @@ export default function App() {
       const result = await buildStudyBook(sourceData, {
         level,
         preferAi: true,
-        onProgress(done, progressTotal) {
+        onProgress(done, progressTotal, phase, meta = {}) {
           setProgress({ done, total: progressTotal });
+          if (phase === 'resume') {
+            setStatus(`Ripresa lavoro · ${done}/${progressTotal} paragrafi già pronti`);
+          } else if (phase === 'preparazione') {
+            setStatus('Preparo la coda di elaborazione…');
+          } else if (phase === 'controllo') {
+            const chaptersDone = meta.chaptersDone || 0;
+            const chaptersTotal = meta.chaptersTotal || sourceData.chapters.length;
+            const recovered = meta.recoveredSentences || 0;
+            setStatus(`Controllo completezza capitoli · ${chaptersDone}/${chaptersTotal}${recovered ? ` · ${recovered} concetti recuperati` : ''}`);
+          } else {
+            const parallel = meta.concurrency ? ` · ${meta.concurrency} gruppi in parallelo` : '';
+            setStatus(`Sintesi · ${done}/${progressTotal} paragrafi${parallel}`);
+          }
         },
       });
       setStudyBook(result);
       localStorage.setItem('studybook:last', JSON.stringify({ fileName: sourceName, book: result }));
 
+      const engineLabel = result.engine === 'ai'
+        ? 'AI'
+        : result.engine === 'misto'
+          ? 'AI + sicurezza locale'
+          : 'modalità locale di sicurezza';
+      const recovered = result.quality?.chapterAudit?.recoveredSentences || 0;
+
       if (fromScanner) {
         setScannerResultReady(true);
-        setStatus(result.engine === 'ai'
-          ? 'Raccolta pronta · riassunto DSA creato · PDF pronto'
-          : 'Raccolta pronta · sintesi locale DSA · PDF pronto');
+        setStatus(`Raccolta pronta · ${engineLabel} · DSA · PDF pronto${recovered ? ` · ${recovered} concetti recuperati` : ''}`);
       } else {
-        setStatus(result.engine === 'ai' ? 'Libro di studio creato con AI' : 'Libro di studio creato · modalità locale');
+        setStatus(`Libro di studio creato · ${engineLabel} · controllo capitoli completato${recovered ? ` · ${recovered} concetti recuperati` : ''}`);
       }
       return result;
     } catch (err) {
@@ -379,6 +397,8 @@ export default function App() {
       needsOcr: [],
       ocrApplied: pages.map((page) => page.pageNumber),
       scanCount: pages.length,
+      sourceFormat: 'scanner',
+      sourceTitle: scanSessionName,
     };
     const sourceName = sessionFileName(scanSessionName, pages.length);
 
@@ -542,7 +562,7 @@ export default function App() {
     <main className="app-shell">
       <header className="hero">
         <div className="hero-copy">
-          <span className="eyebrow">STUDYBOOK AI · v0.6</span>
+          <span className="eyebrow">STUDYBOOK AI · v0.10</span>
           <h1>Il tuo libro, reso più semplice da studiare.</h1>
           <p>
             Importa un libro o fotografa più pagine. StudyBook AI organizza capitoli e paragrafi, crea sintesi fedeli,
@@ -556,14 +576,14 @@ export default function App() {
         <div>
           <span className="section-kicker">INIZIA</span>
           <h2>Importa o scansiona</h2>
-          <p>PDF, TXT e immagini. Lo Scanner multipagina raccoglie pagina 1, pagina 2, pagina 3… poi le elabora tutte insieme.</p>
+          <p>PDF, DOCX, EPUB, TXT e immagini. Lo Scanner multipagina raccoglie pagina 1, pagina 2, pagina 3… poi le elabora tutte insieme.</p>
         </div>
         <div className="import-actions">
           <label className={importing ? 'upload-button disabled' : 'upload-button'}>
             {importing ? 'Analisi in corso…' : 'Scegli file'}
             <input
               type="file"
-              accept=".pdf,.txt,.png,.jpg,.jpeg,.webp,application/pdf,text/plain,image/png,image/jpeg,image/webp"
+              accept=".pdf,.docx,.epub,.txt,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,text/plain,image/png,image/jpeg,image/webp"
               onChange={handleFile}
               disabled={importing}
             />
@@ -691,7 +711,7 @@ export default function App() {
             <div>
               <span className="eyebrow dark">MOTORE DI STUDIO</span>
               <h2>Crea il nuovo libro</h2>
-              <p>Il lavoro resta a compartimenti: capitoli → paragrafi → sintesi → DSA → ricostruzione. Puoi intervenire manualmente in qualsiasi punto.</p>
+              <p>Il lavoro resta a compartimenti: capitoli → paragrafi → sintesi → DSA → controllo completezza → ricostruzione. Puoi intervenire manualmente in qualsiasi punto.</p>
             </div>
             <label>
               Livello di sintesi
@@ -718,7 +738,12 @@ export default function App() {
             <section className="panel export-bar">
               <div>
                 <span className="eyebrow dark">ESPORTA</span>
-                <strong>{studyBook.engine === 'ai' ? 'Motore AI' : studyBook.engine === 'misto' ? 'AI + modifiche mirate' : 'Modalità locale di sicurezza'}</strong>
+                <strong>{studyBook.engine === 'ai' ? 'Motore AI' : studyBook.engine === 'misto' ? 'AI + sicurezza locale' : 'Modalità locale di sicurezza'}</strong>
+                {studyBook.quality?.chapterAudit && (
+                  <small>
+                    Controllo capitoli: {studyBook.quality.chapterAudit.chaptersAudited} · concetti recuperati: {studyBook.quality.chapterAudit.recoveredSentences}
+                  </small>
+                )}
               </div>
               <div className="export-actions">
                 <button type="button" onClick={() => exportPdf(studyBook, fileName, dsaMode)}>PDF</button>
@@ -852,6 +877,7 @@ export default function App() {
 
                       {paragraph.refinedAt && <div className="refined-badge">Controllato con AI su questo paragrafo</div>}
                       {paragraph.manuallyEdited && <div className="manual-badge">Modificato manualmente</div>}
+                      {paragraph.chapterQaRecovered > 0 && <div className="refined-badge">Controllo capitolo: concetto importante recuperato</div>}
 
                       {paragraph.keywords?.length > 0 && (
                         <div className="chips">{paragraph.keywords.map((keyword) => <span key={keyword}>{keyword}</span>)}</div>
@@ -885,7 +911,7 @@ export default function App() {
         <section className="empty-state panel">
           <span className="section-kicker">STUDYBOOK AI</span>
           <h2>Carica un libro oppure avvia lo scanner</h2>
-          <p>Il documento viene diviso in compartimenti, elaborato un pezzo alla volta e poi ricostruito in un unico libro di studio.</p>
+          <p>Il documento viene diviso in compartimenti, elaborato in gruppi controllati e poi ricostruito in un unico libro di studio.</p>
         </section>
       )}
 
