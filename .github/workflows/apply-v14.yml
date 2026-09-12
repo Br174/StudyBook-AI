@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - scripts/apply-v14-upgrade.mjs
+      - .github/workflows/apply-v14.yml
 
 permissions:
   contents: write
