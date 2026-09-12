@@ -48,12 +48,17 @@ function cleanName(value) {
 
 export function scannerPageToRecord(page = {}) {
   const source = page.file instanceof Blob ? page.file : page.blob instanceof Blob ? page.blob : null;
+  const storedBytes = Number(page.storedBytes || source?.size || 0);
+  const originalBytes = Number(page.originalBytes || storedBytes || 0);
   return {
     id: String(page.id || ''),
     blob: source,
     fileName: page.file?.name || page.fileName || 'pagina.jpg',
     fileType: page.file?.type || page.fileType || source?.type || 'image/jpeg',
     lastModified: Number(page.file?.lastModified || page.lastModified || Date.now()),
+    originalBytes,
+    storedBytes,
+    optimized: Boolean(page.optimized || (originalBytes > 0 && storedBytes > 0 && storedBytes < originalBytes * 0.98)),
     text: String(page.text || ''),
     status: page.status === 'ready' || page.status === 'error' || page.status === 'processing'
       ? page.status
@@ -74,10 +79,15 @@ export function scannerPageFromRecord(record = {}) {
   }
 
   const interrupted = record.status === 'processing';
+  const storedBytes = Number(record.storedBytes || blob?.size || 0);
+  const originalBytes = Number(record.originalBytes || storedBytes || 0);
   return {
     id: String(record.id || ''),
     file,
     parsed: null,
+    originalBytes,
+    storedBytes,
+    optimized: Boolean(record.optimized || (originalBytes > 0 && storedBytes > 0 && storedBytes < originalBytes * 0.98)),
     text: String(record.text || ''),
     status: interrupted ? 'error' : (record.status || 'error'),
     error: interrupted
