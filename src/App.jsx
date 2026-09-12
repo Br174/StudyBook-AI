@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { readSourceFile } from './lib/documentParser.js';
+import { detectChapters, readSourceFile } from './lib/documentParser.js';
 import { buildStudyBook, summaryLevels } from './lib/studyEngine.js';
-import { exportDocx, exportHtml, exportJson, exportPdf, exportTxt } from './lib/exporters.js';
+import { exportDocx, exportHtml, exportJson, exportPdf, exportTxt, printStudyBook } from './lib/exporters.js';
 
 function countParagraphs(chapters = []) {
   return chapters.reduce((total, chapter) => total + chapter.paragraphs.length, 0);
@@ -19,7 +19,16 @@ function importStatus(update) {
 
 function scanFileName() {
   const stamp = new Date().toISOString().replace(/[.:]/g, '-');
-  return `scansione-libro-${stamp}.jpg`;
+  return `pagina-${stamp}.jpg`;
+}
+
+function scanId() {
+  return globalThis.crypto?.randomUUID?.() || `scan-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function sessionFileName(name, count) {
+  const base = String(name || 'Scansione libro').trim() || 'Scansione libro';
+  return `${base} - ${count} pagine.pdf`;
 }
 
 export default function App() {
@@ -38,15 +47,33 @@ export default function App() {
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraCapturing, setCameraCapturing] = useState(false);
   const [scannerResultReady, setScannerResultReady] = useState(false);
+  const [scanPages, setScanPages] = useState([]);
+  const [scanProcessing, setScanProcessing] = useState(false);
+  const [scanSessionName, setScanSessionName] = useState('Appunti fotografati');
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const cameraFileInputRef = useRef(null);
+  const scanPagesRef = useRef([]);
 
   const paragraphCount = useMemo(
     () => (documentData ? countParagraphs(documentData.chapters) : 0),
     [documentData],
   );
+
+  const scanReadyCount = useMemo(
+    () => scanPages.filter((page) => page.status === 'ready').length,
+    [scanPages],
+  );
+
+  const scanHasErrors = useMemo(
+    () => scanPages.some((page) => page.status === 'error'),
+    [scanPages],
+  );
+
+  useEffect(() => {
+    scanPagesRef.current = scanPages;
+  }, [scanPages]);
 
   useEffect(() => {
     if (cameraOpen && videoRef.current && streamRef.current) {
@@ -57,6 +84,9 @@ export default function App() {
 
   useEffect(() => () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
+    scanPagesRef.current.forEach((page) => {
+      if (page.previewUrl) URL.revokeObjectURL(page.previewUrl);
+    });
   }, []);
 
   function stopCamera() {
@@ -69,7 +99,7 @@ export default function App() {
   }
 
   async function openScanner() {
-    if (importing || generating) return;
+    if (importing || generating || scanProcessing) return;
     setError('');
     setScannerResultReady(false);
 
@@ -90,7 +120,7 @@ export default function App() {
       });
       streamRef.current = stream;
       setCameraOpen(true);
-      setStatus('Scanner pronto · inquadra la pagina');
+      setStatus(`Scanner pronto · prossima pagina ${scanPages.length + 1}`);
     } catch {
       setStatus('Apro la fotocamera del dispositivo…');
       cameraFileInputRef.current?.click();
@@ -103,7 +133,9 @@ export default function App() {
     setError('');
     setGenerating(true);
     setDsaMode(true);
-    setStatus(fromScanner ? 'Foto letta · preparo automaticamente il riassunto DSA…' : 'Creazione del libro di studio…');
+    setStatus(fromScanner
+      ? 'Scansione completa · preparo riassunto, DSA e impaginazione…'
+      : 'Creazione del libro di studio…');
     setProgress({ done: 0, total });
 
     try {
@@ -120,8 +152,8 @@ export default function App() {
       if (fromScanner) {
         setScannerResultReady(true);
         setStatus(result.engine === 'ai'
-          ? 'Scansione pronta · riassunto DSA creato · PDF pronto da scaricare'
-          : 'Scansione pronta · sintesi locale DSA · PDF pronto da scaricare');
+          ? 'Raccolta pronta · riassunto DSA creato · PDF pronto'
+          : 'Raccolta pronta · sintesi locale DSA · PDF pronto');
       } else {
         setStatus(result.engine === 'ai' ? 'Libro di studio creato con AI' : 'Libro di studio creato · modalità locale');
       }
@@ -135,11 +167,11 @@ export default function App() {
     }
   }
 
-  async function processFile(file, { autoGenerate = false, fromScanner = false } = {}) {
+  async function processFile(file) {
     if (!file) return;
 
     setError('');
-    setStatus(fromScanner ? 'Analisi della fotografia…' : 'Analisi del documento…');
+    setStatus('Analisi del documento…');
     setFileName(file.name);
     setStudyBook(null);
     setDocumentData(null);
@@ -162,13 +194,9 @@ export default function App() {
       if (unresolved) {
         setStatus(`Documento analizzato · OCR recuperato su ${recovered} pagine · ${unresolved} da verificare`);
       } else if (recovered) {
-        setStatus(fromScanner ? 'Foto riconosciuta con OCR' : `Documento analizzato · OCR completato su ${recovered} pagine`);
+        setStatus(`Documento analizzato · OCR completato su ${recovered} pagine`);
       } else {
         setStatus('Documento analizzato');
-      }
-
-      if (autoGenerate) {
-        await createStudyBook(parsed, file.name, { fromScanner });
       }
     } catch (err) {
       setError(err.message || 'Errore durante la lettura del documento.');
@@ -180,13 +208,74 @@ export default function App() {
 
   async function handleFile(event) {
     const file = event.target.files?.[0];
-    await processFile(file, { autoGenerate: false, fromScanner: false });
+    await processFile(file);
     event.target.value = '';
+  }
+
+  function patchScanPage(id, patch) {
+    setScanPages((pages) => pages.map((page) => (page.id === id ? { ...page, ...patch } : page)));
+  }
+
+  async function recognizeScanPage(id, file, pageNumber) {
+    setScanProcessing(true);
+    patchScanPage(id, { status: 'processing', error: '' });
+    setStatus(`Pagina ${pageNumber} · OCR in corso…`);
+
+    try {
+      const parsed = await readSourceFile(file, {
+        autoOcr: true,
+        onProgress(update) {
+          if (update?.phase === 'ocr-recognize') {
+            setStatus(`Pagina ${pageNumber} · OCR ${Math.round((update.fraction || 0) * 100)}%`);
+          }
+        },
+      });
+      patchScanPage(id, {
+        status: 'ready',
+        parsed,
+        text: parsed.fullText,
+        error: '',
+      });
+      setStatus(`Pagina ${pageNumber} pronta · controlla oppure aggiungi la successiva`);
+      return parsed;
+    } catch (err) {
+      patchScanPage(id, {
+        status: 'error',
+        error: err.message || 'Testo non riconosciuto. Riprova la foto.',
+      });
+      setStatus(`Pagina ${pageNumber} da rifare`);
+      return null;
+    } finally {
+      setScanProcessing(false);
+    }
+  }
+
+  async function addScanPage(file) {
+    if (!file || scanProcessing) return;
+    const id = scanId();
+    const previewUrl = URL.createObjectURL(file);
+    const pageNumber = scanPages.length + 1;
+
+    setScannerResultReady(false);
+    setScanPages((pages) => [
+      ...pages,
+      {
+        id,
+        file,
+        previewUrl,
+        status: 'processing',
+        parsed: null,
+        text: '',
+        error: '',
+      },
+    ]);
+
+    await recognizeScanPage(id, file, pageNumber);
   }
 
   async function handleCameraFallback(event) {
     const file = event.target.files?.[0];
-    if (file) await processFile(file, { autoGenerate: true, fromScanner: true });
+    if (file) await addScanPage(file);
     event.target.value = '';
   }
 
@@ -203,18 +292,93 @@ export default function App() {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const blob = await new Promise((resolve, reject) => {
-        canvas.toBlob((value) => value ? resolve(value) : reject(new Error('Impossibile acquisire la foto.')), 'image/jpeg', 0.94);
+        canvas.toBlob(
+          (value) => value ? resolve(value) : reject(new Error('Impossibile acquisire la foto.')),
+          'image/jpeg',
+          0.94,
+        );
       });
       const file = new File([blob], scanFileName(), { type: 'image/jpeg' });
       canvas.width = 1;
       canvas.height = 1;
       stopCamera();
-      await processFile(file, { autoGenerate: true, fromScanner: true });
+      await addScanPage(file);
     } catch (err) {
       setCameraCapturing(false);
       setError(err.message || 'Errore durante lo scatto.');
       setStatus('Errore scanner');
     }
+  }
+
+  function moveScanPage(index, direction) {
+    setScanPages((pages) => {
+      const target = index + direction;
+      if (target < 0 || target >= pages.length) return pages;
+      const next = [...pages];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
+  function removeScanPage(id) {
+    if (scanProcessing || generating) return;
+    setScanPages((pages) => {
+      const page = pages.find((item) => item.id === id);
+      if (page?.previewUrl) URL.revokeObjectURL(page.previewUrl);
+      return pages.filter((item) => item.id !== id);
+    });
+    setScannerResultReady(false);
+    setStatus('Pagina rimossa dalla raccolta');
+  }
+
+  async function retryScanPage(id) {
+    if (scanProcessing || generating) return;
+    const page = scanPages.find((item) => item.id === id);
+    const index = scanPages.findIndex((item) => item.id === id);
+    if (!page) return;
+    await recognizeScanPage(id, page.file, index + 1);
+  }
+
+  function clearScanSession() {
+    if (scanProcessing || generating) return;
+    scanPages.forEach((page) => {
+      if (page.previewUrl) URL.revokeObjectURL(page.previewUrl);
+    });
+    setScanPages([]);
+    setScannerResultReady(false);
+    setStatus('Raccolta scansioni svuotata');
+  }
+
+  async function finishScanSession() {
+    if (!scanPages.length || scanProcessing || generating) return;
+    if (scanPages.some((page) => page.status !== 'ready' || !page.parsed?.fullText)) {
+      setError('Prima di terminare, correggi o elimina le pagine che non sono state riconosciute.');
+      return;
+    }
+
+    const pages = scanPages.map((page, index) => ({
+      pageNumber: index + 1,
+      text: page.parsed.fullText,
+      source: 'camera-ocr',
+    }));
+    const fullText = pages.map((page) => page.text).join('\n\n');
+    const sourceData = {
+      fullText,
+      pages,
+      chapters: detectChapters(fullText),
+      needsOcr: [],
+      ocrApplied: pages.map((page) => page.pageNumber),
+      scanCount: pages.length,
+    };
+    const sourceName = sessionFileName(scanSessionName, pages.length);
+
+    setError('');
+    setFileName(sourceName);
+    setDocumentData(sourceData);
+    setStudyBook(null);
+    setSelectedChapter(0);
+    setProgress({ done: 0, total: 0 });
+    await createStudyBook(sourceData, sourceName, { fromScanner: true });
   }
 
   async function generateBook() {
@@ -242,11 +406,11 @@ export default function App() {
     <main className="app-shell">
       <header className="hero">
         <div>
-          <span className="eyebrow">STUDYBOOK AI · v0.4</span>
+          <span className="eyebrow">STUDYBOOK AI · v0.5</span>
           <h1>Trasforma un libro in un libro di studio.</h1>
           <p>
-            Importa un documento oppure fotografa direttamente una pagina: StudyBook AI estrae il testo,
-            lo riassume, crea la versione DSA e prepara un nuovo PDF pronto da scaricare.
+            Importa un documento oppure fotografa più pagine una alla volta. Ogni foto viene letta con OCR,
+            entra nella tua raccolta, può essere controllata e riordinata, poi viene trasformata in un unico libro DSA esportabile.
           </p>
         </div>
         <div className="status-pill">{status}</div>
@@ -255,7 +419,7 @@ export default function App() {
       <section className="panel import-panel">
         <div>
           <h2>1. Importa o scansiona</h2>
-          <p>PDF, TXT e immagini. Con Scanner fotografi la pagina e parte automaticamente OCR → riassunto → DSA → PDF.</p>
+          <p>PDF, TXT e immagini. Lo Scanner multipagina crea una cartellina temporanea: pagina 1, pagina 2, pagina 3… poi “Fine scansione”.</p>
         </div>
         <div className="import-actions">
           <label className={importing ? 'upload-button disabled' : 'upload-button'}>
@@ -271,11 +435,11 @@ export default function App() {
             type="button"
             className="scanner-button"
             onClick={openScanner}
-            disabled={importing || generating}
-            aria-label="Apri scanner con fotocamera"
+            disabled={importing || generating || scanProcessing}
+            aria-label="Apri scanner multipagina"
           >
             <span aria-hidden="true">📷</span>
-            Scanner
+            {scanPages.length ? 'Aggiungi pagina' : 'Scanner'}
           </button>
           <input
             ref={cameraFileInputRef}
@@ -290,16 +454,86 @@ export default function App() {
         {error && <div className="error-box">{error}</div>}
       </section>
 
+      {scanPages.length > 0 && (
+        <section className="panel scan-basket">
+          <div className="scan-basket-head">
+            <div>
+              <span className="eyebrow dark">CARTELLINA SCANSIONI</span>
+              <h2>{scanPages.length} {scanPages.length === 1 ? 'pagina' : 'pagine'} · {scanReadyCount} pronte</h2>
+              <p>Controlla l'ordine e il testo riconosciuto. Il riassunto viene creato solo alla fine, così l'AI vede tutte le pagine insieme.</p>
+            </div>
+            <label className="scan-name-field">
+              Nome raccolta
+              <input value={scanSessionName} onChange={(event) => setScanSessionName(event.target.value)} maxLength={80} />
+            </label>
+          </div>
+
+          <div className="scan-page-grid">
+            {scanPages.map((page, index) => (
+              <article className={`scan-page-card ${page.status}`} key={page.id}>
+                <div className="scan-thumb-wrap">
+                  <img className="scan-thumb" src={page.previewUrl} alt={`Pagina ${index + 1}`} />
+                  <span className="scan-page-number">{index + 1}</span>
+                </div>
+                <div className="scan-page-body">
+                  <div className="scan-page-title">
+                    <strong>Pagina {index + 1}</strong>
+                    <span className={`scan-status ${page.status}`}>
+                      {page.status === 'ready' ? 'Pronta' : page.status === 'error' ? 'Da rifare' : 'OCR…'}
+                    </span>
+                  </div>
+
+                  {page.status === 'ready' && (
+                    <details className="scan-text-preview">
+                      <summary>Controlla testo OCR</summary>
+                      <p>{page.text}</p>
+                    </details>
+                  )}
+
+                  {page.status === 'error' && (
+                    <div className="scan-page-error">{page.error}</div>
+                  )}
+
+                  <div className="scan-page-actions">
+                    <button type="button" onClick={() => moveScanPage(index, -1)} disabled={index === 0 || scanProcessing}>↑</button>
+                    <button type="button" onClick={() => moveScanPage(index, 1)} disabled={index === scanPages.length - 1 || scanProcessing}>↓</button>
+                    {page.status === 'error' && (
+                      <button type="button" onClick={() => retryScanPage(page.id)} disabled={scanProcessing}>Riprova OCR</button>
+                    )}
+                    <button type="button" className="danger-link" onClick={() => removeScanPage(page.id)} disabled={scanProcessing}>Elimina</button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="scan-basket-actions">
+            <button type="button" className="secondary-button" onClick={clearScanSession} disabled={scanProcessing || generating}>Svuota</button>
+            <button type="button" className="scanner-button" onClick={openScanner} disabled={scanProcessing || generating}>📷 Aggiungi pagina</button>
+            <button
+              type="button"
+              className="primary-button finish-scan-button"
+              onClick={finishScanSession}
+              disabled={scanProcessing || generating || scanHasErrors || scanReadyCount !== scanPages.length}
+            >
+              {generating ? `Elaborazione ${progressPercent}%` : 'Fine scansione · Crea libro PDF'}
+            </button>
+          </div>
+          {scanHasErrors && <p className="scan-warning">Correggi o elimina le pagine segnate “Da rifare” prima di terminare.</p>}
+        </section>
+      )}
+
       {scannerResultReady && studyBook && (
         <section className="panel scan-ready-panel">
           <div>
-            <span className="eyebrow dark">SCANSIONE COMPLETATA</span>
-            <h2>La pagina è già diventata un PDF di studio.</h2>
-            <p>OCR, riassunto e modalità DSA sono stati applicati automaticamente. Puoi controllare il risultato sotto oppure scaricarlo subito.</p>
+            <span className="eyebrow dark">RACCOLTA COMPLETATA</span>
+            <h2>Le pagine sono diventate un unico libro di studio.</h2>
+            <p>OCR, riassunto, modalità DSA e impaginazione sono stati applicati all'intera raccolta. Puoi scaricare, stampare o esportare.</p>
           </div>
-          <button type="button" className="primary-button ready-download" onClick={() => exportPdf(studyBook, fileName, true)}>
-            Scarica PDF pronto
-          </button>
+          <div className="ready-actions">
+            <button type="button" className="primary-button ready-download" onClick={() => exportPdf(studyBook, fileName, true)}>Scarica PDF</button>
+            <button type="button" className="secondary-button" onClick={() => printStudyBook(studyBook, fileName, true)}>Stampa</button>
+          </div>
         </section>
       )}
 
@@ -347,6 +581,7 @@ export default function App() {
               </div>
               <div className="export-actions">
                 <button type="button" onClick={() => exportPdf(studyBook, fileName, dsaMode)}>PDF</button>
+                <button type="button" onClick={() => printStudyBook(studyBook, fileName, dsaMode)}>Stampa</button>
                 <button type="button" onClick={() => exportDocx(studyBook, fileName, dsaMode)}>DOCX</button>
                 <button type="button" onClick={() => exportHtml(studyBook, fileName, dsaMode)}>HTML</button>
                 <button type="button" onClick={() => exportTxt(studyBook, fileName, dsaMode)}>TXT</button>
@@ -425,10 +660,10 @@ export default function App() {
         </>
       )}
 
-      {!documentData && !importing && (
+      {!documentData && !importing && scanPages.length === 0 && (
         <section className="empty-state panel">
-          <h2>Carica un libro oppure fotografa una pagina</h2>
-          <p>Lo scanner può trasformare una fotografia in un riassunto DSA e in un nuovo PDF senza passaggi manuali intermedi.</p>
+          <h2>Carica un libro oppure avvia lo scanner</h2>
+          <p>Con lo scanner multipagina raccogli prima tutte le fotografie, controlli il risultato e solo alla fine crei un unico PDF di studio.</p>
         </section>
       )}
 
@@ -444,7 +679,7 @@ export default function App() {
           <div className="camera-sheet">
             <div className="camera-header">
               <div>
-                <span className="eyebrow">SCANNER</span>
+                <span className="eyebrow">SCANNER · PAGINA {scanPages.length + 1}</span>
                 <h2>Fotografa la pagina</h2>
               </div>
               <button type="button" className="camera-close" onClick={stopCamera} aria-label="Chiudi scanner">×</button>
@@ -458,11 +693,11 @@ export default function App() {
               />
               <div className="scan-frame" aria-hidden="true" />
             </div>
-            <p className="camera-help">Tieni il foglio diritto, ben illuminato e dentro il riquadro. Dopo lo scatto partiranno automaticamente OCR, riassunto, DSA e preparazione del PDF.</p>
+            <p className="camera-help">Tieni il foglio diritto, ben illuminato e dentro il riquadro. Dopo lo scatto la pagina viene letta con OCR e messa nella cartellina; potrai controllarla prima di creare il PDF finale.</p>
             <div className="camera-actions">
               <button type="button" className="secondary-button" onClick={stopCamera}>Annulla</button>
               <button type="button" className="capture-button" onClick={capturePhoto} disabled={!cameraReady || cameraCapturing}>
-                {cameraCapturing ? 'Acquisizione…' : 'Scatta e crea PDF'}
+                {cameraCapturing ? 'Acquisizione…' : 'Scatta pagina'}
               </button>
             </div>
           </div>
