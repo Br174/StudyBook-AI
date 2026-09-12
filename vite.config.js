@@ -10,6 +10,10 @@ export default defineConfig({
         find: './lib/documentParserV08.js',
         replacement: fileURLToPath(new URL('./src/lib/documentParserV09.js', import.meta.url)),
       },
+      {
+        find: './lib/documentParserV09.js',
+        replacement: fileURLToPath(new URL('./src/lib/documentParserV10.js', import.meta.url)),
+      },
     ],
   },
 });
