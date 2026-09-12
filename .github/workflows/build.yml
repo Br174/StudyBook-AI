@@ -26,6 +26,8 @@ jobs:
         run: node scripts/test-long-paragraph-engine.mjs
       - name: Test resumable OCR checkpoints
         run: node scripts/test-ocr-checkpoint.mjs
+      - name: Test scanner session persistence
+        run: node scripts/test-scanner-session-store.mjs
       - name: Stress test 600-page text pipeline
         run: node scripts/stress-large-book.mjs
       - name: Build
