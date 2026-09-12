@@ -23,6 +23,8 @@ Il progetto madre include:
 - controllo di fedeltà su date, numeri, sigle, percentuali e formule;
 - controllo finale di completezza capitolo per capitolo;
 - parole chiave e parti salienti evidenziate per facilitare il colpo d'occhio;
+- glossario contestuale ricavato dalla fonte: definizioni molto brevi inline tra parentesi e definizioni più ampie in un riquadro laterale;
+- termini del glossario cliccabili in Modalità Studio, con apertura immediata della definizione già ricavata dal libro senza una nuova chiamata AI;
 - modifica manuale e pulsante **Migliora con AI** sul singolo paragrafo;
 - Libreria locale dei libri elaborati;
 - esportazione PDF, DOCX, HTML, TXT e JSON;
@@ -31,7 +33,7 @@ Il progetto madre include:
 - azioni rapide: **Spiegami semplice**, **Che significa?**, **Fammi un esempio**, **Perché è importante?**, **Cosa devo ricordare?**, **Domanda d'esame**;
 - campo libero per chiedere altro sul passaggio selezionato;
 - spiegazioni sempre scritte, con pulsante **Ascolta** e opzione di lettura automatica;
-- separazione esplicita tra spiegazioni ricavate dalla fonte e spiegazioni aggiuntive basate su conoscenza generale.
+- separazione esplicita tra definizioni ricavate dalla fonte e spiegazioni aggiuntive basate su conoscenza generale.
 
 ## Scelta text-first
 
@@ -44,6 +46,14 @@ Questa scelta riduce peso, memoria e complessità e concentra l'app sul suo obie
 StudyBook AI non deve creare un riassunto aggressivo. L'obiettivo è eliminare soprattutto ripetizioni, giri di parole, collegamenti retorici ed esempi realmente secondari, mantenendo ciò che serve a capire, ricordare o rispondere a una domanda d'esame.
 
 Il testo generato resta vincolato alla fonte. Il controllo di completezza recupera dalla fonte le informazioni importanti che risultano mancanti invece di inventare nuovo contenuto.
+
+## Glossario contestuale
+
+Il glossario automatico segue una regola conservativa: un termine tecnico viene definito automaticamente solo quando il significato può essere ricavato dal testo del libro stesso.
+
+Se la definizione è molto breve viene mostrata direttamente tra parentesi alla prima occorrenza utile. Se richiede una frase più ampia viene mostrata in un riquadro laterale associato al passaggio. In Modalità Studio il termine resta cliccabile e apre subito la definizione già disponibile.
+
+Se il libro usa un termine specialistico senza spiegarlo abbastanza, StudyBook AI non inventa una definizione nel glossario. L'utente può comunque toccare il termine e chiedere una spiegazione all'assistente; quando la risposta usa conoscenza generale esterna alla fonte viene indicata come spiegazione aggiuntiva.
 
 ## Libri molto lunghi
 
@@ -59,7 +69,7 @@ Le risposte vengono mostrate per iscritto e possono essere lette dal Text-to-Spe
 
 Il frontend usa:
 
-- `/api/summarize` per la generazione dei riassunti;
+- `/api/summarize` per la generazione dei riassunti e del glossario contestuale ricavato dalla fonte;
 - `/api/refine` per il ricontrollo del singolo paragrafo;
 - `/api/explain` per le spiegazioni interattive della Modalità Studio.
 
@@ -74,9 +84,9 @@ Le chiavi non devono essere inserite nel frontend.
 ## Prossimi passi
 
 1. Stress test controllato fino alla fascia 500–600 pagine.
-2. Glossario intelligente: definizioni brevissime inline e spiegazioni più lunghe in un riquadro dedicato.
-3. Portare il grassetto semantico anche negli export PDF/DOCX/HTML.
-4. Rafforzare il controllo qualità strutturale e semantico sui libri reali.
+2. Portare glossario contestuale e grassetto semantico anche negli export PDF/DOCX/HTML, con riquadro laterale nelle versioni impaginate quando possibile.
+3. Rafforzare il controllo qualità strutturale e semantico sui libri reali.
+4. Rifinire la Modalità Studio e la gestione delle spiegazioni salvate.
 5. Pubblicare la web app e trasformarla in PWA installabile.
 6. Aggiungere strumenti di studio: flashcard, quiz, mappe e modalità interrogazione.
 
