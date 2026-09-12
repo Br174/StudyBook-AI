@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks';
-import { detectChaptersFromPages } from '../src/lib/documentParserV09.js';
+import { detectChaptersFromPages } from '../src/lib/documentParserV10.js';
 import { buildStudyBook } from '../src/lib/studyEngineV09.js';
 
 const TOTAL_PAGES = 600;
