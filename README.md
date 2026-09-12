@@ -1,76 +1,69 @@
 # StudyBook AI
 
-StudyBook AI è un'app di studio assistita dall'intelligenza artificiale progettata per trasformare libri, documenti e fotografie di pagine in materiali di studio strutturati, chiari e accessibili.
+StudyBook AI trasforma libri, documenti e fotografie di pagine in un nuovo libro di studio strutturato, fedele alla fonte e più semplice da studiare.
 
-## Obiettivo
+## Pipeline
 
-Pipeline principale:
+**Libro / PDF / DOCX / EPUB / TXT / fotografia → analisi → OCR se serve → struttura gerarchica → capitoli → sezioni → paragrafi → sintesi conservativa → DSA → controllo completezza → ricostruzione → PDF/DOCX/HTML/TXT/JSON**
 
-**Libro originale / fotografia → analisi completa → OCR se necessario → capitoli → paragrafi → riassunti didattici → modalità DSA → libro di studio → PDF pronto da scaricare**
+## Stato attuale · v0.10
 
-## Stato attuale · v0.4
+Il progetto madre include:
 
-Già implementato:
+- importazione PDF, DOCX, EPUB, TXT, PNG, JPG/JPEG e WEBP;
+- OCR automatico per fotografie e pagine PDF senza testo digitale sufficiente;
+- scanner fotografico multipagina con cartellina, riordino, eliminazione e correzione manuale del testo OCR;
+- riconoscimento gerarchico di Parte, Libro, Unità, Modulo, Capitolo, Sezione, Paragrafo e numerazioni come `1`, `1.2`, `1.2.3`, numeri romani e lettere;
+- rilevamento dell'indice/sommario per ridurre i falsi capitoli;
+- conservazione dei riferimenti alle pagine e alle sezioni quando disponibili;
+- tre livelli di sintesi: Approfondito, Studio e Ripasso;
+- modalità DSA che conserva i concetti ma cambia la forma espositiva;
+- modifica manuale del testo originale e dei riassunti;
+- pulsante **Migliora con AI** sul singolo paragrafo;
+- elaborazione in batch che non attraversano i confini dei capitoli;
+- parallelismo adattivo: normalmente 3 gruppi, fino a 4 quando il servizio è stabile, riduzione automatica in caso di errori;
+- checkpoint persistenti e ripresa dei lavori lunghi senza ricominciare dal primo paragrafo;
+- fallback locale se l'AI non è disponibile;
+- controllo di fedeltà su date, numeri, sigle, percentuali e formule;
+- controllo finale di completezza capitolo per capitolo: le frasi della fonte che sembrano didatticamente essenziali e non risultano coperte vengono recuperate direttamente dalla fonte, senza inventare contenuto;
+- punti chiave, parole chiave e sezione “Da ricordare”;
+- esportazione PDF, DOCX, HTML, TXT e JSON e funzione Stampa;
+- PDF di studio con copertina, indice, capitoli, numerazione e modalità DSA;
+- build automatica con GitHub Actions.
 
-- Importazione PDF e TXT
-- Importazione immagini PNG, JPG/JPEG e WEBP
-- Scanner con fotocamera integrata nell'app web
-- Fotocamera posteriore preferita sui dispositivi mobili
-- Fallback automatico alla fotocamera nativa del dispositivo quando la camera integrata non è disponibile
-- Flusso automatico Scanner → OCR → riassunto → modalità DSA → PDF
-- Estrazione del testo digitale dai PDF
-- OCR automatico nel browser per le pagine PDF con testo insufficiente
-- OCR automatico delle immagini e delle fotografie
-- Riconoscimento iniziale di capitoli, sezioni e paragrafi
-- Tre livelli di sintesi: Approfondito, Studio, Ripasso
-- Modalità DSA con testo più arioso e leggibile
-- Punti chiave, parole chiave e sezione “Da ricordare”
-- Ricostruzione del libro di studio per capitoli e paragrafi
-- Visualizzazione espandibile del testo originale
-- Lettura vocale tramite Web Speech API
-- Salvataggio locale dell'ultimo libro generato
-- Esportazione PDF, DOCX, HTML, TXT e JSON
-- PDF rilegato con copertina, indice, capitoli, riquadri “Da ricordare” e numerazione delle pagine
-- Endpoint AI server-side con output strutturato e vincolo di fedeltà alla fonte
-- Motore locale di sicurezza quando l'endpoint AI non è configurato o non risponde
-- Controllo automatico della build con GitHub Actions
+## Filosofia della sintesi
 
-## Scanner fotografico
+StudyBook AI non deve creare un riassunto aggressivo. L'obiettivo è eliminare soprattutto ripetizioni, giri di parole, collegamenti retorici ed esempi realmente secondari, mantenendo ciò che serve a capire, ricordare o rispondere a una domanda d'esame.
 
-Il pulsante **Scanner** apre la fotocamera direttamente nell'interfaccia quando il browser lo consente. L'utente inquadra la pagina del libro e preme **Scatta e crea PDF**. Da quel momento il flusso è automatico: la fotografia viene letta con OCR, trasformata in testo, organizzata, riassunta, adattata alla modalità DSA e ricostruita come libro di studio. Al termine compare il pulsante **Scarica PDF pronto**.
+Il testo generato resta vincolato alla fonte. Il controllo di completezza lavora localmente e, quando recupera un'informazione, reinserisce la frase della fonte invece di produrre una nuova affermazione.
 
-Su dispositivi o browser che non consentono l'anteprima diretta della fotocamera, StudyBook AI usa come fallback la fotocamera nativa tramite acquisizione immagine.
+## Libri molto lunghi
 
-## OCR
+Per libri da centinaia di pagine il documento viene prima strutturato e poi inserito in una coda di elaborazione. I paragrafi molto lunghi vengono divisi in blocchi controllati; i batch restano nello stesso capitolo e vengono elaborati con parallelismo limitato. Dopo ogni ondata viene salvato un checkpoint nel browser.
 
-L'OCR usa Tesseract.js nel browser e viene caricato solo quando serve. Nei PDF l'app prova prima a leggere il testo incorporato; le pagine con testo troppo scarso vengono renderizzate e riconosciute in italiano e inglese. Le pagine che non vengono recuperate restano indicate come “da verificare”, invece di essere considerate valide in silenzio.
+Alla riapertura dello stesso documento, con lo stesso livello di sintesi, i paragrafi già completati possono essere riutilizzati. Al termine, un controllo di completezza viene eseguito capitolo per capitolo prima della ricostruzione finale.
+
+L'architettura è progettata per documenti molto grandi, ma il comportamento su un libro reale di circa 600 pagine va ancora sottoposto a uno stress test completo prima di considerarlo certificato.
 
 ## Motore AI
 
-Il frontend prova l'endpoint `/api/summarize`. L'endpoint è già presente nel repository e richiede tre variabili d'ambiente sul servizio di pubblicazione:
+Il frontend usa `/api/summarize` e `/api/refine`. Per il provider AI servono variabili d'ambiente server-side:
 
-- `AI_API_URL` — endpoint compatibile con il formato Chat Completions
-- `AI_API_KEY` — chiave del provider
-- `AI_MODEL` — identificativo del modello
+- `AI_API_URL`
+- `AI_API_KEY`
+- `AI_MODEL`
 
-Se una di queste variabili manca, l'app passa automaticamente alla modalità locale e lo dichiara nell'interfaccia.
+Le chiavi non devono essere inserite nel frontend. Se il provider non è configurato o fallisce, StudyBook AI continua con il motore locale di sicurezza e lo dichiara nell'interfaccia.
 
-## Affidabilità
+## Prossimi passi
 
-Il motore deve usare soltanto il contenuto del documento caricato o della pagina fotografata. Nessuna informazione esterna deve essere inserita nel riassunto senza essere chiaramente separata dal contenuto originale.
-
-L'endpoint AI tratta il testo del libro come contenuto e non come istruzione, limita i batch e valida la struttura della risposta. Se il provider non restituisce un risultato valido, la generazione non viene presentata come AI.
-
-## Prossimi passaggi
-
-1. Collegare un provider AI live in fase di pubblicazione e verificare i riassunti su libri reali.
-2. Aggiungere scansione multipagina per fotografare più pagine consecutive e rilegarle in un unico PDF.
-3. Rendere più robusto il riconoscimento di capitoli, sottocapitoli e riferimenti alle pagine.
-4. Importare DOCX ed EPUB.
-5. Aggiungere recupero/ripresa dei lavori lunghi e persistenza più completa.
-6. Pubblicare la web app e trasformarla in PWA installabile.
-7. Aggiungere strumenti di studio: domande, flashcard, quiz, mappe e modalità interrogazione.
+1. Stress test controllato con libri sintetici e reali di grandi dimensioni, fino alla fascia 500–600 pagine.
+2. Rafforzare ulteriormente i controlli di qualità strutturale e semantica senza rendere i riassunti troppo lunghi.
+3. Rendere più visibile nell'interfaccia lo stato dei checkpoint, dei capitoli completati e dei controlli di qualità.
+4. Completare e rifinire la Libreria persistente dei libri elaborati.
+5. Pubblicare la web app e trasformarla in PWA installabile.
+6. Aggiungere strumenti di studio: domande, flashcard, quiz, mappe, glossario e modalità interrogazione.
 
 ## Repository madre
 
-Questo repository è la versione madre ufficiale del progetto. L'esperimento Replit resta separato e potrà essere confrontato in seguito per recuperare eventuali parti utili senza sovrascrivere questa base.
+Questo repository è la base ufficiale del progetto. L'esperimento Replit resta separato e potrà essere confrontato in seguito senza sovrascrivere il progetto madre.
