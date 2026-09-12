@@ -1,0 +1,144 @@
+.asset-panel {
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.asset-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.asset-panel-head h2 {
+  margin: 5px 0 7px;
+}
+
+.asset-panel-head p {
+  margin: 0;
+  max-width: 760px;
+  color: var(--muted, #667085);
+}
+
+.asset-count-pill {
+  flex: 0 0 auto;
+  min-width: 46px;
+  height: 34px;
+  padding: 0 11px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  background: rgba(0, 122, 255, .1);
+  color: #007aff;
+}
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.asset-card {
+  min-width: 0;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .74);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, .05);
+  overflow: hidden;
+}
+
+.asset-image-wrap {
+  aspect-ratio: 4 / 3;
+  background: #f3f4f6;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.asset-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.asset-card-body {
+  padding: 12px 13px 14px;
+}
+
+.asset-card-body strong,
+.asset-card-body small {
+  display: block;
+}
+
+.asset-card-body strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.asset-card-body small {
+  color: #667085;
+  line-height: 1.35;
+}
+
+.asset-table-preview {
+  padding: 12px;
+  overflow-x: auto;
+  background: #f8fafc;
+}
+
+.asset-table-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 180px;
+}
+
+.asset-table-preview td {
+  border: 1px solid #dfe3ea;
+  padding: 5px 6px;
+  vertical-align: top;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asset-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #667085;
+}
+
+.format-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #f2f4f7;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+@media (max-width: 640px) {
+  .asset-panel-head {
+    flex-direction: column;
+  }
+
+  .asset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .asset-grid {
+    grid-template-columns: 1fr;
+  }
+}
