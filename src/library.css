@@ -1,0 +1,30 @@
+.library-panel { margin-top: 20px; }
+.library-head { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:16px; }
+.library-head h2 { margin:4px 0 6px; }
+.library-head p { margin:0; color:#667085; line-height:1.5; }
+.library-count { min-width:42px; height:42px; display:grid; place-items:center; border-radius:14px; background:#f2f4f7; color:#344054; font-weight:800; }
+.library-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+.library-card { border:1px solid rgba(15,23,42,.09); background:rgba(255,255,255,.78); border-radius:18px; padding:15px; display:flex; flex-direction:column; gap:14px; min-width:0; transition:.18s ease; }
+.library-card:hover { transform:translateY(-1px); box-shadow:0 12px 28px rgba(15,23,42,.07); }
+.library-card.active { border-color:#8bb8ff; box-shadow:0 0 0 3px rgba(0,113,227,.08); }
+.library-card-main { display:grid; gap:5px; min-width:0; }
+.library-card-main strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#111827; }
+.library-card-main small { color:#667085; line-height:1.35; }
+.library-card-actions { display:flex; gap:8px; margin-top:auto; }
+.library-card-actions button { border:0; border-radius:12px; padding:9px 12px; cursor:pointer; font-weight:750; background:#f2f4f7; color:#1f2937; }
+.library-card-actions button:first-child { background:#0071e3; color:white; }
+.library-card-actions .danger-link { color:#b42318; background:#fff1f2; }
+.library-empty { border:1px dashed #d0d5dd; border-radius:16px; padding:22px; color:#667085; text-align:center; background:rgba(248,250,252,.72); }
+.source-meta { display:flex; flex-wrap:wrap; gap:7px; margin:0 0 12px; }
+.source-meta span { display:inline-flex; align-items:center; min-height:27px; border-radius:999px; padding:5px 9px; background:#f2f4f7; color:#475467; font-size:.78rem; font-weight:750; }
+.chapter-entry { margin-top:10px; }
+.chapter-entry .chapter-button { margin-top:0; }
+.section-list { display:grid; gap:5px; margin:7px 4px 2px 14px; padding-left:10px; border-left:2px solid #e5e7eb; }
+.section-list > div { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; font-size:.78rem; color:#667085; line-height:1.35; padding:4px 0; }
+.section-list span { min-width:0; }
+.section-list small { white-space:nowrap; color:#98a2b3; }
+@media (max-width:720px) {
+  .library-head { align-items:flex-start; }
+  .library-grid { grid-template-columns:1fr; }
+  .library-card { border-radius:16px; }
+}
