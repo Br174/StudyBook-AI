@@ -1,6 +1,6 @@
 import {
-  readSourceFile as readV08SourceFile,
-} from './documentParserV08.js';
+  readSourceFile as readTextSourceFile,
+} from './documentParserText.js';
 
 const MAX_HEADING_LENGTH = 140;
 const MAX_DEPTH = 6;
@@ -302,7 +302,7 @@ export function detectChaptersFromPages(inputPages = []) {
       const line = lines[i];
       const prevBlank = !clean(lines[i - 1] || '');
       const nextBlank = !clean(lines[i + 1] || '');
-      let heading = isIndex ? null : classifyHeading(line, { surrounded: prevBlank || nextBlank });
+      const heading = isIndex ? null : classifyHeading(line, { surrounded: prevBlank || nextBlank });
       if (!heading) {
         buffer.push(line);
         continue;
@@ -337,7 +337,7 @@ export function detectChaptersFromPages(inputPages = []) {
         continue;
       }
 
-      const chapter = ensureChapter(page.pageNumber);
+      const current = ensureChapter(page.pageNumber);
       const level = Math.min(MAX_DEPTH, sectionLevel(heading, strategy));
       while (sectionStack.length && sectionStack[sectionStack.length - 1].level >= level) sectionStack.pop();
       const section = {
@@ -350,7 +350,7 @@ export function detectChaptersFromPages(inputPages = []) {
         path: [...sectionStack.map((item) => item.title), heading.title],
       };
       sectionStack.push(section);
-      chapter.sections.push(section);
+      current.sections.push(section);
     }
 
     flush();
@@ -377,12 +377,12 @@ function structureStats(chapters, pages, previous = {}) {
     sectionCount: chapters.reduce((total, chapter) => total + (chapter.sections?.length || 0), 0),
     paragraphCount: chapters.reduce((total, chapter) => total + (chapter.paragraphs?.length || 0), 0),
     maxSectionDepth: chapters.reduce((max, chapter) => Math.max(max, ...(chapter.sections || []).map((section) => section.level || 0), 0), 0),
-    hierarchyEngine: 'v09',
+    hierarchyEngine: 'v11-text',
   };
 }
 
 export async function readSourceFile(file, options = {}) {
-  const parsed = await readV08SourceFile(file, options);
+  const parsed = await readTextSourceFile(file, options);
   const pages = Array.isArray(parsed.pages) ? parsed.pages.filter((page) => clean(page?.text)) : [];
 
   let chapters = parsed.chapters || [];
