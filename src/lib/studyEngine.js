@@ -149,11 +149,26 @@ export async function refineParagraphWithAi({ original, summary, dsaSummary, lev
   return { ...payload.result, engine: 'ai-refine' };
 }
 
+function paragraphSourceMeta(chapter, paragraphIndex) {
+  const meta = chapter.paragraphMeta?.[paragraphIndex] || null;
+  return {
+    sourcePageStart: meta?.pageStart ?? chapter.pageStart ?? null,
+    sourcePageEnd: meta?.pageEnd ?? meta?.pageStart ?? chapter.pageEnd ?? chapter.pageStart ?? null,
+    sourceSection: meta?.sectionTitle || null,
+    sourceSectionLevel: meta?.sectionLevel || null,
+  };
+}
+
 export async function buildStudyBook(documentData, { level = 'studio', preferAi = true, onProgress } = {}) {
   const flat = [];
   documentData.chapters.forEach((chapter, chapterIndex) => {
     chapter.paragraphs.forEach((paragraph, paragraphIndex) => {
-      flat.push({ chapterIndex, paragraphIndex, text: paragraph });
+      flat.push({
+        chapterIndex,
+        paragraphIndex,
+        text: paragraph,
+        sourceMeta: paragraphSourceMeta(chapter, paragraphIndex),
+      });
     });
   });
 
@@ -181,19 +196,28 @@ export async function buildStudyBook(documentData, { level = 'studio', preferAi 
   let cursor = 0;
   const chapters = documentData.chapters.map((chapter) => ({
     title: chapter.title,
-    paragraphs: chapter.paragraphs.map((original) => {
+    pageStart: chapter.pageStart ?? null,
+    pageEnd: chapter.pageEnd ?? chapter.pageStart ?? null,
+    sections: Array.isArray(chapter.sections) ? chapter.sections.map((section) => ({ ...section })) : [],
+    paragraphs: chapter.paragraphs.map((original, paragraphIndex) => {
       const generated = results[cursor];
+      const sourceMeta = paragraphSourceMeta(chapter, paragraphIndex);
       cursor += 1;
-      return { original, ...generated };
+      return {
+        original,
+        ...generated,
+        ...sourceMeta,
+      };
     }),
   }));
 
   const engine = results.some((item) => item?.engine === 'ai') ? 'ai' : 'locale';
   return {
-    version: 2,
+    version: 3,
     generatedAt: new Date().toISOString(),
     level,
     engine,
+    sourceStructure: documentData.structure || null,
     chapters,
   };
 }
