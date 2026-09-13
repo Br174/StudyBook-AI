@@ -1,3 +1,5 @@
+import { purgeExpiredStudyHelpCache, readStudyHelpCache, writeStudyHelpCache } from './studyHelpCache.js';
+
 export const STUDY_ACTIONS = [
   { id: 'simple', label: 'Spiegami semplice' },
   { id: 'meaning', label: 'Che significa?' },
@@ -18,7 +20,7 @@ function hashText(value) {
 }
 
 function cacheKey(payload) {
-  return `studybook:study-help:${hashText([
+  return `studybook:study-help:v2:${hashText([
     payload.action,
     payload.selection,
     payload.chapterTitle,
@@ -28,7 +30,7 @@ function cacheKey(payload) {
   ].join('::'))}`;
 }
 
-function readCache(key) {
+function readSessionCache(key) {
   try {
     const raw = sessionStorage.getItem(key);
     if (!raw) return null;
@@ -40,18 +42,24 @@ function readCache(key) {
   }
 }
 
-function writeCache(key, value) {
+function writeSessionCache(key, value) {
   try {
     sessionStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // La cache è solo un'ottimizzazione: un limite del browser non deve bloccare lo studio.
+    // La cache è un'ottimizzazione: un limite del browser non deve bloccare lo studio.
   }
 }
 
 export async function askStudyAssistant(payload) {
   const key = cacheKey(payload);
-  const cached = readCache(key);
-  if (cached) return cached;
+  const sessionCached = readSessionCache(key);
+  if (sessionCached) return sessionCached;
+
+  const persisted = await readStudyHelpCache(key);
+  if (persisted) {
+    writeSessionCache(key, persisted);
+    return persisted;
+  }
 
   const response = await fetch('/api/explain', {
     method: 'POST',
@@ -79,6 +87,9 @@ export async function askStudyAssistant(payload) {
     label: String(data.label || '').trim(),
     cached: false,
   };
-  writeCache(key, result);
+
+  writeSessionCache(key, result);
+  await writeStudyHelpCache(key, result);
+  purgeExpiredStudyHelpCache();
   return result;
 }
