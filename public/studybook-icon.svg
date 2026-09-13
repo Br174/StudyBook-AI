@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="StudyBook AI">
+  <rect width="512" height="512" rx="112" fill="#111827"/>
+  <path d="M112 120h120c42 0 72 18 88 46 16-28 46-46 88-46h-8v250h-96c-30 0-54 12-72 34-18-22-42-34-72-34h-96V120h58z" fill="#f8fafc"/>
+  <path d="M256 166v232" stroke="#c7d2fe" stroke-width="20" stroke-linecap="round"/>
+  <path d="M148 188h62M148 234h62M148 280h62M302 188h62M302 234h62M302 280h62" stroke="#5367c7" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="386" cy="354" r="54" fill="#5367c7"/>
+  <path d="M365 354l14 14 29-34" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
