@@ -20,6 +20,8 @@ jobs:
         run: npm install
       - name: Check API syntax
         run: node --check api/summarize.js && node --check api/refine.js && node --check api/explain.js
+      - name: Check Netlify functions syntax
+        run: node --check netlify/functions/_legacy-adapter.mjs && node --check netlify/functions/summarize.mjs && node --check netlify/functions/refine.mjs && node --check netlify/functions/explain.mjs
       - name: Test AI resilience
         run: node scripts/test-ai-resilience.mjs
       - name: Test long-paragraph engine
@@ -40,3 +42,15 @@ jobs:
         run: node scripts/stress-large-book.mjs
       - name: Build
         run: npm run build
+      - name: Upload deploy source
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: studybook-ai-deploy-source
+          retention-days: 3
+          include-hidden-files: true
+          path: |
+            .
+            !.git/**
+            !node_modules/**
+            !dist/**
