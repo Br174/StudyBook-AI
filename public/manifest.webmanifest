@@ -1,0 +1,19 @@
+{
+  "name": "StudyBook AI",
+  "short_name": "StudyBook AI",
+  "description": "Comprensione ed efficientamento del testo per lo studio.",
+  "lang": "it",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f7fb",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "/studybook-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
