@@ -28,6 +28,14 @@ jobs:
         run: node scripts/test-ocr-checkpoint.mjs
       - name: Test scanner session persistence
         run: node scripts/test-scanner-session-store.mjs
+      - name: Test scanner storage protection
+        run: node scripts/test-scanner-storage.mjs
+      - name: Test study tools
+        run: node scripts/test-study-tools.mjs
+      - name: Test persistent study-help cache
+        run: node scripts/test-study-help-cache-model.mjs
+      - name: Test PWA shell
+        run: node scripts/test-pwa.mjs
       - name: Stress test 600-page text pipeline
         run: node scripts/stress-large-book.mjs
       - name: Build
