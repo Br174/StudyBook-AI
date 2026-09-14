@@ -3,6 +3,7 @@ import { askStudyAssistant, STUDY_ACTIONS } from '../lib/studyAssistant.js';
 import { buildConceptMap, buildFlashcards, buildOralQuestions, buildQuiz } from '../lib/studyTools.js';
 import '../studyMode.css';
 import '../studyTools.css';
+import '../studyContinuous.css';
 
 function pageRange(start, end) {
   if (!Number.isFinite(start)) return '';
@@ -23,17 +24,6 @@ function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function keywordWords(keywords = []) {
-  const set = new Set();
-  keywords.forEach((keyword) => {
-    String(keyword || '').split(/[^\p{L}\p{N}]+/u).forEach((part) => {
-      const word = part.trim().toLocaleLowerCase('it-IT');
-      if (word.length >= 4) set.add(word);
-    });
-  });
-  return set;
-}
-
 function cleanGlossary(entries = []) {
   const seen = new Set();
   const output = [];
@@ -47,16 +37,36 @@ function cleanGlossary(entries = []) {
     output.push({
       term,
       definition,
-      placement: entry?.placement === 'inline' ? 'inline' : 'side',
+      placement: 'side',
       basis: entry?.basis || 'source',
+      paragraphIndex: Number.isInteger(entry?.paragraphIndex) ? entry.paragraphIndex : null,
     });
   }
   return output;
 }
 
-function InteractiveText({ text, keywords, glossary, onPick }) {
+function chapterGlossary(chapter = {}) {
+  const entries = [];
+  const seen = new Set();
+  (chapter.paragraphs || []).forEach((paragraph, paragraphIndex) => {
+    cleanGlossary(paragraph.glossary || []).forEach((entry) => {
+      const key = entry.term.toLocaleLowerCase('it-IT');
+      if (seen.has(key)) return;
+      seen.add(key);
+      entries.push({ ...entry, paragraphIndex });
+    });
+  });
+  return entries.slice(0, 24);
+}
+
+function modeLabel(level) {
+  if (level === 'ripasso') return 'Riassunto';
+  if (level === 'approfondito') return 'Approfondimento';
+  return 'Metodo di studio';
+}
+
+function InteractiveText({ text, glossary, onPick }) {
   const ref = useRef(null);
-  const strongWords = useMemo(() => keywordWords(keywords), [keywords]);
   const glossaryEntries = useMemo(() => cleanGlossary(glossary), [glossary]);
   const glossaryMap = useMemo(
     () => new Map(glossaryEntries.map((entry) => [entry.term.toLocaleLowerCase('it-IT'), entry])),
@@ -79,31 +89,7 @@ function InteractiveText({ text, keywords, glossary, onPick }) {
     if (!value || value.length > 1400 || !ref.current) return;
     const anchor = selection.anchorNode;
     const focus = selection.focusNode;
-    if ((anchor && ref.current.contains(anchor)) || (focus && ref.current.contains(focus))) {
-      onPick(value, null);
-    }
-  }
-
-  const shownInline = new Set();
-
-  function renderPlainSegment(value, segmentIndex) {
-    const chunks = String(value || '').split(/(\p{L}[\p{L}\p{M}\p{N}'’\-]*|\p{N}+(?:[.,]\p{N}+)*)/gu);
-    return chunks.map((chunk, index) => {
-      if (!chunk) return null;
-      const isWord = /^[\p{L}\p{N}]/u.test(chunk);
-      if (!isWord) return <span key={`${segmentIndex}-plain-${index}`}>{chunk}</span>;
-      const emphasized = strongWords.has(chunk.toLocaleLowerCase('it-IT'));
-      return (
-        <button
-          type="button"
-          className={emphasized ? 'study-word emphasized' : 'study-word'}
-          key={`${segmentIndex}-${chunk}-${index}`}
-          onClick={() => onPick(chunk, null)}
-        >
-          {chunk}
-        </button>
-      );
-    });
+    if ((anchor && ref.current.contains(anchor)) || (focus && ref.current.contains(focus))) onPick(value, null);
   }
 
   return (
@@ -113,26 +99,18 @@ function InteractiveText({ text, keywords, glossary, onPick }) {
       onMouseUp={useSelection}
       onTouchEnd={() => window.setTimeout(useSelection, 0)}
     >
-      {segments.map((segment, segmentIndex) => {
+      {segments.map((segment, index) => {
         const entry = glossaryMap.get(String(segment || '').toLocaleLowerCase('it-IT'));
-        if (!entry) return renderPlainSegment(segment, segmentIndex);
-
-        const key = entry.term.toLocaleLowerCase('it-IT');
-        const showInline = entry.placement === 'inline' && !shownInline.has(key);
-        if (showInline) shownInline.add(key);
-        const emphasized = strongWords.has(key) || entry.term.split(/\s+/).some((word) => strongWords.has(word.toLocaleLowerCase('it-IT')));
-
+        if (!entry) return <span key={`plain-${index}`}>{segment}</span>;
         return (
-          <span className="study-glossary-inline-wrap" key={`${entry.term}-${segmentIndex}`}>
-            <button
-              type="button"
-              className={`study-word glossary-term${emphasized ? ' emphasized' : ''}`}
-              onClick={() => onPick(segment, entry)}
-            >
-              {segment}
-            </button>
-            {showInline && <span className="study-inline-definition"> ({entry.definition})</span>}
-          </span>
+          <button
+            type="button"
+            className="study-legal-term"
+            key={`${entry.term}-${index}`}
+            onClick={() => onPick(segment, entry)}
+          >
+            <strong>{segment}</strong>
+          </button>
         );
       })}
     </p>
@@ -165,6 +143,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
   const quiz = useMemo(() => buildQuiz(chapter || {}), [chapter]);
   const oralQuestions = useMemo(() => buildOralQuestions(chapter || {}), [chapter]);
   const conceptMap = useMemo(() => buildConceptMap(chapter || {}), [chapter]);
+  const glossary = useMemo(() => chapterGlossary(chapter || {}), [chapter]);
 
   useEffect(() => {
     setToolIndex(0);
@@ -177,7 +156,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
 
   function openTarget(selection, paragraph, glossaryEntry = null) {
     const value = String(selection || '').trim();
-    if (!value) return;
+    if (!value || !paragraph) return;
     setTarget({
       selection: value.slice(0, 1400),
       sourceText: paragraph.original || '',
@@ -188,7 +167,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
     });
     setAnswer(glossaryEntry ? {
       answer: glossaryEntry.definition,
-      label: glossaryEntry.placement === 'inline' ? 'Significato breve' : 'Definizione contestuale',
+      label: 'Terminologia',
       basis: glossaryEntry.basis || 'source',
       glossary: true,
     } : null);
@@ -227,9 +206,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
   }
 
   function speakChapter() {
-    const text = chapter?.paragraphs?.map((paragraph) => (
-      dsaMode ? (paragraph.dsaSummary || paragraph.summary) : paragraph.summary
-    )).join(' ');
+    const text = chapter?.paragraphs?.map((paragraph) => paragraph.summary || paragraph.dsaSummary || '').join(' ');
     speak(text);
   }
 
@@ -261,7 +238,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
     <div className="study-mode" role="dialog" aria-modal="true" aria-label="Modalità Studio">
       <header className="study-mode-header">
         <div>
-          <span>MODALITÀ STUDIO</span>
+          <span>{modeLabel(book?.level)}</span>
           <strong>{chapter.title}</strong>
         </div>
         <div className="study-mode-header-actions">
@@ -290,44 +267,48 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
         ))}
       </nav>
 
-      {tool === 'reader' && <div className="study-mode-tip">Tocca una parola oppure seleziona una frase. Le parole chiave sono in grassetto; le definizioni brevi compaiono tra parentesi.</div>}
+      {tool === 'reader' && (
+        <div className="study-mode-tip">
+          Lettura continua del capitolo. Solo i termini tecnici o giuridici davvero non comuni sono in grassetto; la spiegazione resta nella fascia laterale.
+        </div>
+      )}
 
       {tool === 'reader' && (
         <main className="study-mode-pages">
-          {chapter.paragraphs.map((paragraph, index) => {
-            const text = dsaMode ? (paragraph.dsaSummary || paragraph.summary) : paragraph.summary;
-            const glossary = cleanGlossary(paragraph.glossary || []);
-            const sideGlossary = glossary.filter((entry) => entry.placement === 'side');
-            return (
-              <article className={sideGlossary.length ? 'study-sheet has-glossary' : 'study-sheet'} key={`${chapterIndex}-${index}`}>
-                <div className="study-sheet-main">
-                  <div className="study-sheet-meta">
-                    <span>{index + 1}</span>
-                    {paragraph.sourceSection && <small>§ {paragraph.sourceSection}</small>}
-                    {pageRange(paragraph.sourcePageStart, paragraph.sourcePageEnd) && <small>{pageRange(paragraph.sourcePageStart, paragraph.sourcePageEnd)}</small>}
-                  </div>
-                  <InteractiveText
-                    text={text}
-                    keywords={paragraph.keywords}
-                    glossary={glossary}
-                    onPick={(selection, glossaryEntry) => openTarget(selection, paragraph, glossaryEntry)}
-                  />
-                </div>
+          <article className="study-continuous-sheet">
+            <div className="study-continuous-main">
+              {chapter.paragraphs.map((paragraph, index) => {
+                const text = paragraph.summary || paragraph.dsaSummary || paragraph.original || '';
+                const localGlossary = cleanGlossary(paragraph.glossary || []);
+                const paragraphTitle = paragraph.sourceSection || `Paragrafo ${index + 1}`;
+                return (
+                  <section className="study-flow-paragraph" key={`${chapterIndex}-${index}`}>
+                    <small className="study-flow-paragraph-title">
+                      {paragraphTitle}{pageRange(paragraph.sourcePageStart, paragraph.sourcePageEnd) ? ` · ${pageRange(paragraph.sourcePageStart, paragraph.sourcePageEnd)}` : ''}
+                    </small>
+                    <InteractiveText
+                      text={text}
+                      glossary={localGlossary}
+                      onPick={(selection, glossaryEntry) => openTarget(selection, paragraph, glossaryEntry)}
+                    />
+                  </section>
+                );
+              })}
+            </div>
 
-                {sideGlossary.length > 0 && (
-                  <aside className="study-margin-glossary" aria-label="Glossario del passaggio">
-                    <small>TERMINI DEL PASSAGGIO</small>
-                    {sideGlossary.map((entry) => (
-                      <button type="button" key={entry.term} onClick={() => openTarget(entry.term, paragraph, entry)}>
-                        <strong>{entry.term}</strong>
-                        <span>{entry.definition}</span>
-                      </button>
-                    ))}
-                  </aside>
-                )}
-              </article>
-            );
-          })}
+            <aside className="study-chapter-glossary" aria-label="Terminologia del capitolo">
+              <small>TERMINOLOGIA</small>
+              {glossary.length ? glossary.map((entry) => {
+                const paragraph = chapter.paragraphs[entry.paragraphIndex] || chapter.paragraphs[0];
+                return (
+                  <button type="button" key={entry.term} onClick={() => openTarget(entry.term, paragraph, entry)}>
+                    <strong>{entry.term}</strong>
+                    <span>{entry.definition}</span>
+                  </button>
+                );
+              }) : <span className="study-tool-empty">Nessun termine specialistico da spiegare in questo capitolo.</span>}
+            </aside>
+          </article>
         </main>
       )}
 
@@ -346,7 +327,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
                 <button type="button" onClick={() => { setToolIndex(Math.min(flashcards.length - 1, toolIndex + 1)); setFlashRevealed(false); }} disabled={toolIndex >= flashcards.length - 1}>Successiva →</button>
               </div>
             </section>
-          ) : <EmptyTool>Non ci sono ancora abbastanza punti chiave o definizioni per creare flashcard in questo capitolo.</EmptyTool>}
+          ) : <EmptyTool>Non ci sono ancora elementi sufficienti per creare flashcard in questo capitolo.</EmptyTool>}
         </main>
       )}
 
@@ -372,7 +353,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
                 </div>
               )}
             </section>
-          ) : <EmptyTool>Per il quiz servono almeno alcuni concetti o definizioni distinti nel capitolo.</EmptyTool>}
+          ) : <EmptyTool>Non riesco a costruire un quiz affidabile da questo capitolo.</EmptyTool>}
         </main>
       )}
 
@@ -389,7 +370,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
                 </article>
               ))}
             </section>
-          ) : <EmptyTool>La mappa comparirà quando il capitolo contiene parole chiave o punti da ricordare.</EmptyTool>}
+          ) : <EmptyTool>La mappa comparirà quando il capitolo contiene concetti utili da collegare.</EmptyTool>}
         </main>
       )}
 
@@ -410,7 +391,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
                 <button type="button" onClick={() => { setToolIndex(Math.min(oralQuestions.length - 1, toolIndex + 1)); setOralRevealed(false); }} disabled={toolIndex >= oralQuestions.length - 1}>Successiva →</button>
               </div>
             </section>
-          ) : <EmptyTool>Non ci sono ancora abbastanza elementi per simulare l’interrogazione in questo capitolo.</EmptyTool>}
+          ) : <EmptyTool>Non ci sono ancora abbastanza elementi per simulare l’interrogazione.</EmptyTool>}
         </main>
       )}
 
