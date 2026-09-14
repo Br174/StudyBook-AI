@@ -115,13 +115,14 @@
   margin-right: auto;
 }
 
+/* Lettore principale: i paragrafi restano unità tecniche, ma visivamente diventano un testo continuo. */
 .reader-panel .paragraph-stack {
   display: block;
 }
 
 .reader-panel .paragraph-card:not(.source-card) {
   margin: 0;
-  padding: 0 0 1.1rem;
+  padding: 0;
   border: 0;
   border-radius: 0;
   box-shadow: none;
@@ -129,28 +130,44 @@
 }
 
 .reader-panel .paragraph-card:not(.source-card) + .paragraph-card:not(.source-card) {
-  padding-top: 0.2rem;
+  padding-top: 0;
 }
 
-.reader-panel .paragraph-card:not(.source-card) .paragraph-number {
-  min-width: auto;
-  width: auto;
-  height: auto;
-  border: 0;
-  background: transparent;
-  font-size: 0.7rem;
-  opacity: 0.45;
-}
-
+.reader-panel .paragraph-card:not(.source-card) .paragraph-toolbar,
 .reader-panel .paragraph-card:not(.source-card) .chips,
 .reader-panel .paragraph-card:not(.source-card) .study-box,
-.reader-panel .paragraph-card:not(.source-card) .remember-box {
+.reader-panel .paragraph-card:not(.source-card) .remember-box,
+.reader-panel .paragraph-card:not(.source-card) .original-details {
   display: none;
 }
 
+.reader-panel .paragraph-card:not(.source-card) .source-meta {
+  margin: 0.9rem 0 0.3rem;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  opacity: 0.52;
+}
+
+.reader-panel .paragraph-card:not(.source-card):first-child .source-meta {
+  margin-top: 0;
+}
+
 .reader-panel .paragraph-card:not(.source-card) .summary-text {
+  margin: 0 0 1.08rem;
   font-size: 1.05rem;
-  line-height: 1.75;
+  line-height: 1.78;
+}
+
+/* Nel lettore principale non evidenziare automaticamente tutte le keyword: il grassetto tecnico resta nella Modalità Studio e negli export. */
+.reader-panel .paragraph-card:not(.source-card) .semantic-bold {
+  font-weight: inherit;
+  color: inherit;
+}
+
+.reader-panel .reader-heading {
+  margin-bottom: 1rem;
 }
 
 @media (max-width: 720px) {
