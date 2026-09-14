@@ -2,6 +2,18 @@ function cleanText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
+function splitSentences(value) {
+  const text = cleanText(value);
+  if (!text) return [];
+  return (text.match(/[^.!?]+(?:[.!?]+|$)/g) || [text])
+    .map(cleanText)
+    .filter((sentence) => sentence.length >= 18);
+}
+
+function paragraphText(paragraph = {}) {
+  return cleanText(paragraph.summary || paragraph.dsaSummary || paragraph.original || '');
+}
+
 function pushUnique(target, seen, item, key = '') {
   const signature = cleanText(key || JSON.stringify(item)).toLocaleLowerCase('it-IT');
   if (!signature || seen.has(signature)) return;
@@ -23,12 +35,28 @@ function glossaryEntries(chapter = {}) {
   return entries;
 }
 
-function paragraphPoints(paragraph = {}) {
+function paragraphPoints(paragraph = {}, limit = 5) {
   const values = [
     ...(paragraph.remember || []),
     ...(paragraph.keyPoints || []),
-  ].map(cleanText).filter(Boolean);
-  return [...new Set(values)];
+    ...splitSentences(paragraphText(paragraph)),
+  ].map(cleanText).filter((value) => value.length >= 18);
+
+  const seen = new Set();
+  const output = [];
+  for (const value of values) {
+    const key = value.toLocaleLowerCase('it-IT');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    output.push(value);
+    if (output.length >= limit) break;
+  }
+  return output;
+}
+
+function paragraphLabel(paragraph = {}, paragraphIndex = 0) {
+  const section = cleanText(paragraph.sourceSection);
+  return section ? `la sezione “${section}”` : `il passaggio ${paragraphIndex + 1}`;
 }
 
 export function buildFlashcards(chapter = {}, limit = 36) {
@@ -41,32 +69,50 @@ export function buildFlashcards(chapter = {}, limit = 36) {
       back: entry.definition,
       paragraphIndex: entry.paragraphIndex,
       kind: 'term',
-    }, `${entry.term}::${entry.definition}`);
+    }, `term::${entry.term}::${entry.definition}`);
     if (cards.length >= limit) return cards;
   }
 
   for (const [paragraphIndex, paragraph] of (chapter.paragraphs || []).entries()) {
-    for (const point of paragraphPoints(paragraph)) {
-      const section = cleanText(paragraph.sourceSection);
+    const points = paragraphPoints(paragraph, 3);
+    points.forEach((point, pointIndex) => {
       pushUnique(cards, seen, {
-        front: section
-          ? `Qual è un punto da ricordare della sezione “${section}”?`
-          : `Qual è un punto da ricordare del paragrafo ${paragraphIndex + 1}?`,
+        front: pointIndex === 0
+          ? `Qual è il concetto principale di ${paragraphLabel(paragraph, paragraphIndex)}?`
+          : `Quale altro elemento importante va ricordato di ${paragraphLabel(paragraph, paragraphIndex)}?`,
         back: point,
         paragraphIndex,
         kind: 'point',
-      }, `${paragraphIndex}::${point}`);
-      if (cards.length >= limit) return cards;
-    }
+      }, `point::${paragraphIndex}::${point}`);
+    });
+    if (cards.length >= limit) return cards.slice(0, limit);
   }
 
-  return cards;
+  return cards.slice(0, limit);
 }
 
 function rotateOptions(values, offset) {
   if (!values.length) return [];
   const shift = ((offset % values.length) + values.length) % values.length;
   return [...values.slice(shift), ...values.slice(0, shift)];
+}
+
+function distinctOtherFacts(pools, currentIndex, correct, limit = 3) {
+  const out = [];
+  const seen = new Set([cleanText(correct).toLocaleLowerCase('it-IT')]);
+  for (let step = 1; step < pools.length && out.length < limit; step += 1) {
+    const pool = pools[(currentIndex + step) % pools.length];
+    if (!pool || pool.paragraphIndex === pools[currentIndex]?.paragraphIndex) continue;
+    for (const fact of pool.points || []) {
+      const clean = cleanText(fact);
+      const key = clean.toLocaleLowerCase('it-IT');
+      if (!clean || seen.has(key)) continue;
+      seen.add(key);
+      out.push(clean);
+      break;
+    }
+  }
+  return out;
 }
 
 export function buildQuiz(chapter = {}, limit = 18) {
@@ -77,12 +123,17 @@ export function buildQuiz(chapter = {}, limit = 18) {
     for (let index = 0; index < glossary.length && questions.length < limit; index += 1) {
       const current = glossary[index];
       const distractors = [];
+      const seen = new Set([current.definition.toLocaleLowerCase('it-IT')]);
       for (let step = 1; step < glossary.length && distractors.length < 3; step += 1) {
-        const candidate = glossary[(index + step) % glossary.length]?.definition;
-        if (candidate && candidate !== current.definition && !distractors.includes(candidate)) distractors.push(candidate);
+        const candidate = cleanText(glossary[(index + step) % glossary.length]?.definition);
+        const key = candidate.toLocaleLowerCase('it-IT');
+        if (candidate && !seen.has(key)) {
+          seen.add(key);
+          distractors.push(candidate);
+        }
       }
       if (distractors.length < 2) continue;
-      const options = rotateOptions([current.definition, ...distractors], index + current.term.length);
+      const options = rotateOptions([current.definition, ...distractors].slice(0, 4), index + current.term.length);
       questions.push({
         question: `Quale definizione corrisponde a “${current.term}”?`,
         options,
@@ -93,33 +144,25 @@ export function buildQuiz(chapter = {}, limit = 18) {
     }
   }
 
-  if (questions.length < Math.min(8, limit)) {
-    const pools = (chapter.paragraphs || []).map((paragraph, paragraphIndex) => ({
-      paragraphIndex,
-      points: paragraphPoints(paragraph),
-      section: cleanText(paragraph.sourceSection),
-    })).filter((item) => item.points.length);
+  const pools = (chapter.paragraphs || []).map((paragraph, paragraphIndex) => ({
+    paragraphIndex,
+    paragraph,
+    points: paragraphPoints(paragraph, 3),
+  })).filter((item) => item.points.length);
 
-    for (let index = 0; index < pools.length && questions.length < limit; index += 1) {
-      const current = pools[index];
-      const correct = current.points[0];
-      const distractors = pools
-        .filter((item) => item.paragraphIndex !== current.paragraphIndex)
-        .flatMap((item) => item.points.slice(0, 1))
-        .filter((item) => item && item !== correct)
-        .slice(0, 3);
-      if (distractors.length < 2) continue;
-      const options = rotateOptions([correct, ...distractors], index + 1);
-      questions.push({
-        question: current.section
-          ? `Quale idea appartiene alla sezione “${current.section}”?`
-          : `Quale idea appartiene al paragrafo ${current.paragraphIndex + 1}?`,
-        options,
-        correctIndex: options.indexOf(correct),
-        explanation: correct,
-        paragraphIndex: current.paragraphIndex,
-      });
-    }
+  for (let index = 0; index < pools.length && questions.length < limit; index += 1) {
+    const current = pools[index];
+    const correct = current.points[0];
+    const distractors = distinctOtherFacts(pools, index, correct, 3);
+    if (distractors.length < 2) continue;
+    const options = rotateOptions([correct, ...distractors].slice(0, 4), index + 1);
+    questions.push({
+      question: `Quale affermazione appartiene a ${paragraphLabel(current.paragraph, current.paragraphIndex)}?`,
+      options,
+      correctIndex: options.indexOf(correct),
+      explanation: correct,
+      paragraphIndex: current.paragraphIndex,
+    });
   }
 
   return questions.slice(0, limit);
@@ -139,28 +182,41 @@ export function buildOralQuestions(chapter = {}, limit = 24) {
   }
 
   for (const [paragraphIndex, paragraph] of (chapter.paragraphs || []).entries()) {
-    const points = paragraphPoints(paragraph).slice(0, 3);
+    const points = paragraphPoints(paragraph, 3);
     if (!points.length) continue;
-    const section = cleanText(paragraph.sourceSection);
     pushUnique(questions, seen, {
-      question: section
-        ? `Quali sono i concetti fondamentali della sezione “${section}”?`
-        : `Quali sono i concetti fondamentali del paragrafo ${paragraphIndex + 1}?`,
-      answer: points.join(' · '),
+      question: `Spiega i concetti fondamentali di ${paragraphLabel(paragraph, paragraphIndex)}.`,
+      answer: points.join(' '),
       paragraphIndex,
-    }, `paragraph::${paragraphIndex}::${section}`);
+    }, `paragraph::${paragraphIndex}::${points[0]}`);
     if (questions.length >= limit) return questions;
   }
 
   return questions;
 }
 
+function fallbackKeywords(paragraph = {}, limit = 6) {
+  const explicit = (paragraph.keywords || []).map(cleanText).filter(Boolean);
+  const glossary = (paragraph.glossary || []).map((entry) => cleanText(entry?.term)).filter(Boolean);
+  const values = [...explicit, ...glossary];
+  const seen = new Set();
+  const output = [];
+  for (const value of values) {
+    const key = value.toLocaleLowerCase('it-IT');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    output.push(value);
+    if (output.length >= limit) break;
+  }
+  return output;
+}
+
 export function buildConceptMap(chapter = {}, limit = 24) {
   return (chapter.paragraphs || []).slice(0, limit).map((paragraph, paragraphIndex) => {
-    const keywords = (paragraph.keywords || []).map(cleanText).filter(Boolean).slice(0, 6);
-    const points = paragraphPoints(paragraph).slice(0, 3);
+    const keywords = fallbackKeywords(paragraph, 6);
+    const points = paragraphPoints(paragraph, 3);
     return {
-      title: cleanText(paragraph.sourceSection) || `Paragrafo ${paragraphIndex + 1}`,
+      title: cleanText(paragraph.sourceSection) || `Passaggio ${paragraphIndex + 1}`,
       paragraphIndex,
       keywords,
       points,
