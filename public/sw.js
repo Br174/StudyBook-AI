@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'studybook-shell-v1';
-const RUNTIME_CACHE = 'studybook-runtime-v1';
+const SHELL_CACHE = 'studybook-shell-v2';
+const RUNTIME_CACHE = 'studybook-runtime-v2';
 const SHELL = ['/', '/manifest.webmanifest', '/studybook-icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -39,11 +39,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (['script', 'style'].includes(request.destination)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request)),
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
-        if (response.ok && ['script', 'style', 'font', 'image'].includes(request.destination)) {
+        if (response.ok && ['font', 'image'].includes(request.destination)) {
           const copy = response.clone();
           caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
         }
