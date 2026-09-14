@@ -20,6 +20,28 @@
   padding: 28px 30px 34px;
 }
 
+.study-continuous-chapter-head {
+  margin: 0 0 1.6rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.study-continuous-chapter-head small {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #2563eb;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.study-continuous-chapter-head h1 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(1.55rem, 4vw, 2.2rem);
+  line-height: 1.18;
+}
+
 .study-flow-paragraph {
   margin: 0 0 1.15rem;
 }
@@ -28,15 +50,12 @@
   margin-bottom: 0;
 }
 
-.study-flow-paragraph-title {
-  display: block;
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
-  line-height: 1.2;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.study-flow-section-title {
+  margin: 1.25rem 0 0.45rem;
+  color: #475569;
+  font-size: 0.86rem;
   font-weight: 700;
-  opacity: 0.56;
+  line-height: 1.3;
 }
 
 .study-flow-paragraph .study-interactive-text {
@@ -137,21 +156,9 @@
 .reader-panel .paragraph-card:not(.source-card) .chips,
 .reader-panel .paragraph-card:not(.source-card) .study-box,
 .reader-panel .paragraph-card:not(.source-card) .remember-box,
-.reader-panel .paragraph-card:not(.source-card) .original-details {
-  display: none;
-}
-
+.reader-panel .paragraph-card:not(.source-card) .original-details,
 .reader-panel .paragraph-card:not(.source-card) .source-meta {
-  margin: 0.9rem 0 0.3rem;
-  font-size: 0.68rem;
-  line-height: 1.2;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  opacity: 0.52;
-}
-
-.reader-panel .paragraph-card:not(.source-card):first-child .source-meta {
-  margin-top: 0;
+  display: none;
 }
 
 .reader-panel .paragraph-card:not(.source-card) .summary-text {
@@ -182,6 +189,19 @@
 
   .study-continuous-main {
     padding: 20px 16px 24px;
+  }
+
+  .study-continuous-chapter-head {
+    margin-bottom: 1.25rem;
+  }
+
+  .study-continuous-chapter-head h1 {
+    font-size: 1.55rem;
+  }
+
+  .study-flow-section-title {
+    margin-top: 1.05rem;
+    font-size: 0.8rem;
   }
 
   .study-chapter-glossary {
