@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/apply-cancel-feature.mjs && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:cloudflare": "npm run build && wrangler dev",
+    "test:cloudflare": "node --test scripts/test-cloudflare-worker.mjs",
+    "check:cloudflare": "npm run build && wrangler deploy --dry-run && npm run test:cloudflare",
+    "deploy:cloudflare": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "docx": "^9.7.1",
@@ -19,6 +23,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.4",
-    "vite": "^7.1.5"
+    "vite": "^7.1.5",
+    "wrangler": "4.131.2"
   }
 }

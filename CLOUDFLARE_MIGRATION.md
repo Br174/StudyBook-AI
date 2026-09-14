@@ -85,3 +85,69 @@ npx wrangler deploy
 - confronto funzionale con la versione Netlify.
 
 Solo dopo questi controlli si può valutare il passaggio definitivo a Cloudflare.
+
+## Verifica automatica della migrazione
+
+Requisito degli strumenti Cloudflare: Node.js 22 o successivo. Wrangler è fissato
+alla versione 4.131.2 nelle dipendenze di sviluppo; la pipeline usa Node.js 22.
+
+Dopo avere installato le dipendenze con `npm install`, eseguire:
+
+```text
+npm run check:cloudflare
+```
+
+Il comando compila l'app con il comando di build esistente, verifica il bundle del
+Worker con `wrangler deploy --dry-run` ed esegue il collaudo nel runtime locale
+Cloudflare (`workerd`) usando `createTestHarness` di Wrangler.
+
+Il collaudo carica la stessa `wrangler.jsonc` prevista per il deploy e verifica:
+
+- home, collegamenti diretti SPA e JavaScript compilato;
+- service worker, manifest e icona PWA;
+- routing API, errori 400/404/405/413 e intestazione Allow;
+- contratti JSON di summarize, explain e refine;
+- passaggio del modello configurato e del secret tramite process.env;
+- ordine dei paragrafi e richieste simultanee;
+- retry transitorio, rifiuto credenziali e JSON AI non valido;
+- risposta AI_NOT_CONFIGURED quando il secret è vuoto.
+
+Le richieste AI di questo collaudo vanno a un server di prova locale, con una
+credenziale fittizia. Non vengono inviate a Gemini e non verificano la validità
+della chiave reale, la disponibilità del modello o la qualità delle risposte.
+Il modello in configurazione e la logica degli handler non vengono modificati.
+
+La data di compatibilità 2026-09-14 abilita già il supporto Node.js e il popolamento
+di process.env con variabili e secret. Non occorre copiare il secret in variabili
+globali o modificare gli handler condivisi con Netlify.
+
+La pipeline GitHub esegue questi controlli oltre ai test esistenti. Un esito positivo
+non sostituisce il collaudo HTTPS con Gemini reale e la prova della PWA su Android.
+
+## Comandi per Cloudflare
+
+- `npm run dev:cloudflare`: build dell'app e avvio locale del Worker.
+- `npm run check:cloudflare`: build, verifica deploy senza pubblicazione e test.
+- `npm run deploy:cloudflare`: build e pubblicazione sul proprio account Cloudflare.
+
+Per l'avvio locale con Gemini reale, configurare AI_API_KEY in un file .dev.vars
+ignorato da Git; non inserire la chiave nel codice o in chat.
+Per la pubblicazione, configurare il secret AI_API_KEY sul Worker studybook-ai
+tramite il pannello Cloudflare oppure il comando interattivo:
+
+```text
+npx wrangler secret put AI_API_KEY
+```
+
+Il comando che configura il secret scrive sul proprio account Cloudflare.
+La verifica in CI e il dry-run non pubblicano l'app e non modificano Netlify.
+Per Workers Builds, usare esclusivamente cloudflare-migration come branch di
+produzione del progetto di migrazione, build command npm run build e deploy
+command npx wrangler deploy. Il repository resta privato e deve essere autorizzato
+nell'integrazione GitHub di Cloudflare.
+
+## Riferimenti tecnici
+
+- [Cloudflare: process.env e compatibilità Node.js](https://developers.cloudflare.com/workers/runtime-apis/nodejs/process/)
+- [Cloudflare: API di test Wrangler](https://developers.cloudflare.com/workers/wrangler/api/)
+- [Cloudflare: configurazione, routing asset e secret richiesti](https://developers.cloudflare.com/workers/wrangler/configuration/)

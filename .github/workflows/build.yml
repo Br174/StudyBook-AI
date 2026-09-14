@@ -44,6 +44,15 @@ jobs:
         run: node scripts/stress-large-book.mjs
       - name: Build
         run: npm run build
+      - name: Validate Cloudflare deployment bundle
+        run: npx wrangler deploy --dry-run
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+      - name: Test Cloudflare runtime and assets
+        run: npm run test:cloudflare
+        timeout-minutes: 5
+        env:
+          WRANGLER_SEND_METRICS: 'false'
       - name: Upload deploy source
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
