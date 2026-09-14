@@ -151,3 +151,38 @@ nell'integrazione GitHub di Cloudflare.
 - [Cloudflare: process.env e compatibilità Node.js](https://developers.cloudflare.com/workers/runtime-apis/nodejs/process/)
 - [Cloudflare: API di test Wrangler](https://developers.cloudflare.com/workers/wrangler/api/)
 - [Cloudflare: configurazione, routing asset e secret richiesti](https://developers.cloudflare.com/workers/wrangler/configuration/)
+
+## Collegamento dal telefono e prima pubblicazione
+
+Worker creato nel pannello Cloudflare: `studybook-ai`.
+
+Indirizzo del Worker: https://studybook-ai.brunoverlezza.workers.dev
+
+Per scegliere una branch diversa da quella predefinita del repository prima di
+pubblicare l'app, creare inizialmente il Worker con il modello Hello World, poi
+aprire Impostazioni > Crea > Repository git > Connetti.
+
+Impostazioni da usare nel collegamento:
+
+- Account Git: `Br174`.
+- Repository: `StudyBook-AI`.
+- Branch di produzione: `cloudflare-migration`.
+- Abilita build di anteprima: disattivato.
+- Comando di generazione: `npm run build`.
+- Comando Distribuisci: `npx wrangler deploy`.
+- Percorso del progetto: `/`.
+
+Configurare `AI_API_KEY` nelle variabili e nei segreti di runtime del Worker,
+selezionando Segreto. Le variabili della compilazione non sostituiscono i segreti
+di runtime. Salvare il segreto prima di inviare il commit che avvia la prima
+pubblicazione: Wrangler verifica i segreti obbligatori e rifiuta il deploy se
+mancano. Non riportare il valore della chiave nel repository o nei log.
+
+Dopo il collegamento, un nuovo commit sulla branch di produzione configurata
+avvia Workers Builds. Il collegamento Git e la presenza del segreto non attestano
+da soli che l'app sia pubblicata: controllare l'esito del deploy e poi verificare
+l'indirizzo pubblico e gli endpoint Gemini prima del cutover.
+
+- [Cloudflare: collegare un Worker esistente](https://developers.cloudflare.com/workers/ci-cd/builds/#connect-an-existing-worker)
+- [Cloudflare: scelta della branch di produzione](https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/)
+- [Cloudflare: segreti obbligatori prima del deploy](https://developers.cloudflare.com/workers/configuration/secrets/#validate-secrets-before-deploy)
