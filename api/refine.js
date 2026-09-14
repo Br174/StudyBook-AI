@@ -83,7 +83,7 @@ export default async function handler(req, res) {
     if (!upstream.ok) {
       const detail = await upstream.text();
       console.error('AI refine upstream error', upstream.status, detail.slice(0, 800));
-      return res.status(502).json({ error: 'Il provider AI non ha completato la correzione.' });
+      return res.status(502).json({ error: 'Il provider AI non ha completato la correzione.', code: `UPSTREAM_${upstream.status}` });
     }
 
     const data = await upstream.json();
