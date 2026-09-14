@@ -1,4 +1,5 @@
-export { exportDocx, exportHtml, exportPdf, printStudyBook } from './exportersV11.js';
+export { exportDocx } from './exportersV11.js';
+export { exportHtml, exportPdf, printStudyBook } from './exportersV12.js';
 
 function safeName(name = 'studybook') {
   return name.replace(/\.[^.]+$/, '').replace(/[^a-z0-9-_]+/gi, '_') || 'studybook';
@@ -16,20 +17,30 @@ function downloadBlob(blob, fileName) {
 }
 
 function paragraphText(item, dsaMode) {
-  return dsaMode ? (item.dsaSummary || item.summary) : item.summary;
+  const value = dsaMode ? (item.dsaSummary || item.summary) : (item.summary || item.dsaSummary);
+  return String(value || item.original || '').replace(/\s+/g, ' ').trim();
 }
 
 export function exportTxt(book, fileName, dsaMode = false) {
   const lines = ['STUDYBOOK AI', ''];
   book.chapters.forEach((chapter) => {
     lines.push(chapter.title.toUpperCase(), '');
-    chapter.paragraphs.forEach((item, index) => {
-      lines.push(`${index + 1}. ${paragraphText(item, dsaMode)}`, '');
-      if (item.glossary?.length) {
-        lines.push('Glossario:', ...item.glossary.map((entry) => `- ${entry.term}: ${entry.definition}`), '');
-      }
-      if (item.remember?.length) lines.push('Da ricordare:', ...item.remember.map((value) => `- ${value}`), '');
+    chapter.paragraphs.forEach((item) => {
+      lines.push(paragraphText(item, dsaMode), '');
     });
+    const glossary = [];
+    const seen = new Set();
+    chapter.paragraphs.forEach((item) => {
+      (item.glossary || []).forEach((entry) => {
+        const term = String(entry?.term || '').trim();
+        const definition = String(entry?.definition || '').trim();
+        const key = term.toLocaleLowerCase('it-IT');
+        if (!term || !definition || seen.has(key)) return;
+        seen.add(key);
+        glossary.push(`- ${term}: ${definition}`);
+      });
+    });
+    if (glossary.length) lines.push('TERMINOLOGIA', ...glossary, '');
   });
   downloadBlob(new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }), `${safeName(fileName)}_studybook.txt`);
 }
