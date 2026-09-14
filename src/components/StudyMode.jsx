@@ -5,12 +5,6 @@ import '../studyMode.css';
 import '../studyTools.css';
 import '../studyContinuous.css';
 
-function pageRange(start, end) {
-  if (!Number.isFinite(start)) return '';
-  if (!Number.isFinite(end) || end === start) return `p. ${start}`;
-  return `pp. ${start}–${end}`;
-}
-
 function speak(text) {
   const value = String(text || '').trim();
   if (!value || !window.speechSynthesis) return;
@@ -63,6 +57,10 @@ function modeLabel(level) {
   if (level === 'ripasso') return 'Riassunto';
   if (level === 'approfondito') return 'Approfondimento';
   return 'Metodo di studio';
+}
+
+function normalizedSection(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
 function InteractiveText({ text, glossary, onPick }) {
@@ -277,15 +275,28 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
         <main className="study-mode-pages">
           <article className="study-continuous-sheet">
             <div className="study-continuous-main">
+              <header className="study-continuous-chapter-head">
+                <small>CAPITOLO {chapterIndex + 1}</small>
+                <h1>{chapter.title}</h1>
+              </header>
+
               {chapter.paragraphs.map((paragraph, index) => {
-                const text = paragraph.summary || paragraph.dsaSummary || paragraph.original || '';
+                const text = dsaMode
+                  ? (paragraph.dsaSummary || paragraph.summary || paragraph.original || '')
+                  : (paragraph.summary || paragraph.dsaSummary || paragraph.original || '');
                 const localGlossary = cleanGlossary(paragraph.glossary || []);
-                const paragraphTitle = paragraph.sourceSection || `Paragrafo ${index + 1}`;
+                const sectionTitle = normalizedSection(paragraph.sourceSection);
+                const previousSection = index > 0 ? normalizedSection(chapter.paragraphs[index - 1]?.sourceSection) : '';
+                const chapterTitle = normalizedSection(chapter.title).toLocaleLowerCase('it-IT');
+                const showSectionTitle = Boolean(
+                  sectionTitle
+                  && sectionTitle !== previousSection
+                  && sectionTitle.toLocaleLowerCase('it-IT') !== chapterTitle,
+                );
+
                 return (
                   <section className="study-flow-paragraph" key={`${chapterIndex}-${index}`}>
-                    <small className="study-flow-paragraph-title">
-                      {paragraphTitle}{pageRange(paragraph.sourcePageStart, paragraph.sourcePageEnd) ? ` · ${pageRange(paragraph.sourcePageStart, paragraph.sourcePageEnd)}` : ''}
-                    </small>
+                    {showSectionTitle && <h3 className="study-flow-section-title">{sectionTitle}</h3>}
                     <InteractiveText
                       text={text}
                       glossary={localGlossary}
