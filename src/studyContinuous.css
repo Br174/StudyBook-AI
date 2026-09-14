@@ -1,0 +1,196 @@
+.study-mode-pages {
+  display: block;
+  padding: 18px;
+}
+
+.study-continuous-sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: 0;
+  width: min(1120px, 100%);
+  margin: 0 auto 28px;
+  background: #fff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 10px 32px rgba(17, 24, 39, 0.08);
+}
+
+.study-continuous-main {
+  min-width: 0;
+  padding: 28px 30px 34px;
+}
+
+.study-flow-paragraph {
+  margin: 0 0 1.15rem;
+}
+
+.study-flow-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.study-flow-paragraph-title {
+  display: block;
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.56;
+}
+
+.study-flow-paragraph .study-interactive-text {
+  margin: 0;
+  font-size: clamp(1rem, 1.8vw, 1.12rem);
+  line-height: 1.78;
+  white-space: pre-wrap;
+}
+
+.study-legal-term {
+  display: inline;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  text-align: inherit;
+}
+
+.study-legal-term strong {
+  font-weight: 800;
+}
+
+.study-chapter-glossary {
+  border-left: 2px solid rgba(37, 99, 235, 0.16);
+  padding: 24px 14px 28px;
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.study-chapter-glossary > small {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  opacity: 0.55;
+}
+
+.study-chapter-glossary button {
+  width: 100%;
+  display: block;
+  border: 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 9px 0 10px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.study-chapter-glossary button:last-child {
+  border-bottom: 0;
+}
+
+.study-chapter-glossary strong,
+.study-chapter-glossary span {
+  display: block;
+}
+
+.study-chapter-glossary strong {
+  margin-bottom: 3px;
+  font-size: 0.78rem;
+}
+
+.study-chapter-glossary span {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  opacity: 0.78;
+}
+
+.study-mode-tip {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.reader-panel .paragraph-stack {
+  display: block;
+}
+
+.reader-panel .paragraph-card:not(.source-card) {
+  margin: 0;
+  padding: 0 0 1.1rem;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.reader-panel .paragraph-card:not(.source-card) + .paragraph-card:not(.source-card) {
+  padding-top: 0.2rem;
+}
+
+.reader-panel .paragraph-card:not(.source-card) .paragraph-number {
+  min-width: auto;
+  width: auto;
+  height: auto;
+  border: 0;
+  background: transparent;
+  font-size: 0.7rem;
+  opacity: 0.45;
+}
+
+.reader-panel .paragraph-card:not(.source-card) .chips,
+.reader-panel .paragraph-card:not(.source-card) .study-box,
+.reader-panel .paragraph-card:not(.source-card) .remember-box {
+  display: none;
+}
+
+.reader-panel .paragraph-card:not(.source-card) .summary-text {
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+@media (max-width: 720px) {
+  .study-mode-pages {
+    padding: 8px;
+  }
+
+  .study-continuous-sheet {
+    grid-template-columns: minmax(0, 1fr) 112px;
+    border-radius: 16px;
+  }
+
+  .study-continuous-main {
+    padding: 20px 16px 24px;
+  }
+
+  .study-chapter-glossary {
+    padding: 18px 8px 22px;
+  }
+
+  .study-chapter-glossary > small {
+    font-size: 0.56rem;
+  }
+
+  .study-chapter-glossary strong {
+    font-size: 0.7rem;
+  }
+
+  .study-chapter-glossary span {
+    font-size: 0.64rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .study-continuous-sheet {
+    grid-template-columns: minmax(0, 1fr) 100px;
+  }
+
+  .study-continuous-main {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+}
