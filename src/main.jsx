@@ -5,6 +5,7 @@ import PwaInstallPrompt from './components/PwaInstallPrompt.jsx';
 import './styles.css';
 import './library.css';
 import './pwaInstall.css';
+import './studyContinuous.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
