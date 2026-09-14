@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "studybook-ai",
+  "main": "./worker/index.js",
+  "compatibility_date": "2026-09-14",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "AI_API_URL": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    "AI_MODEL": "gemini-3.6-flash",
+    "AI_TIMEOUT_MS": "30000"
+  },
+  "secrets": {
+    "required": ["AI_API_KEY"]
+  }
+}
