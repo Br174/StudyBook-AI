@@ -11,10 +11,12 @@ assert.equal(manifest.start_url, '/');
 assert.ok(Array.isArray(manifest.icons) && manifest.icons.length >= 1);
 assert.ok(manifest.icons.some((icon) => icon.src === '/studybook-icon.svg'));
 assert.match(sw, /pathname\.startsWith\('\/api\/'\)/);
-assert.match(sw, /studybook-shell-v2/);
-assert.match(sw, /studybook-runtime-v2/);
+assert.match(sw, /studybook-shell-v4/);
+assert.match(sw, /studybook-runtime-v4/);
 assert.match(sw, /\['script', 'style'\]\.includes\(request\.destination\)/);
-assert.match(main, /serviceWorker\.register\('\/sw\.js'\)/);
+assert.match(sw, /cache: 'no-store'/);
+assert.match(main, /serviceWorker\.register\('\/sw\.js', \{ updateViaCache: 'none' \}\)/);
+assert.match(main, /registration\.update\(\)/);
 assert.match(main, /PwaInstallPrompt/);
 assert.match(index, /manifest\.webmanifest/);
 
