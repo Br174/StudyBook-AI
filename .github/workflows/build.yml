@@ -25,6 +25,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Detect lifecycle stage
+        id: stage
         shell: bash
         run: |
           set -euo pipefail
@@ -36,6 +37,7 @@ jobs:
             *) UAB_STAGE="CHECK" ;;
           esac
           echo "UAB_STAGE=$UAB_STAGE" >> "$GITHUB_ENV"
+          echo "stage=$UAB_STAGE" >> "$GITHUB_OUTPUT"
           echo "[UAB_PROGRESS=15] Stage=$UAB_STAGE; ciclo MADRE-LAB-CANDIDATA applicato"
 
       - name: Setup Node
@@ -99,19 +101,19 @@ jobs:
           echo "[UAB_PROGRESS=85] Output dist verificato"
 
       - name: Upload temporary LAB/CANDIDATA build output
-        if: env.UAB_STAGE == 'LAB' || env.UAB_STAGE == 'CANDIDATA'
+        if: steps.stage.outputs.stage == 'LAB' || steps.stage.outputs.stage == 'CANDIDATA'
         uses: actions/upload-artifact@v4
         with:
-          name: StudyBook-${{ env.UAB_STAGE }}-${{ github.run_number }}
+          name: StudyBook-${{ steps.stage.outputs.stage }}-${{ github.run_number }}
           retention-days: 14
           path: dist/
           if-no-files-found: error
 
       - name: Upload deploy source for BASE/MADRE
-        if: github.event_name == 'push' && (env.UAB_STAGE == 'BASE' || env.UAB_STAGE == 'MADRE')
+        if: github.event_name == 'push' && (steps.stage.outputs.stage == 'BASE' || steps.stage.outputs.stage == 'MADRE')
         uses: actions/upload-artifact@v4
         with:
-          name: studybook-ai-${{ env.UAB_STAGE }}-deploy-source
+          name: studybook-ai-${{ steps.stage.outputs.stage }}-deploy-source
           retention-days: 3
           include-hidden-files: true
           path: |
