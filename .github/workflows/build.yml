@@ -10,18 +10,41 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Progress 5% - accepted
+        run: echo "[UAB_PROGRESS=5] Richiesta presa in carico"
+
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Progress 15% - source ready
+        run: echo "[UAB_PROGRESS=15] Sorgenti StudyBook recuperati"
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Restore npm download cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node22-npm-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node22-npm-
+
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install --prefer-offline --no-audit --no-fund
+          echo "[UAB_PROGRESS=30] Dipendenze pronte con cache persistente"
+
       - name: Check API syntax
         run: node --check api/summarize.js && node --check api/refine.js && node --check api/explain.js
+
       - name: Check Netlify functions syntax
-        run: node --check netlify/functions/_legacy-adapter.mjs && node --check netlify/functions/summarize.mjs && node --check netlify/functions/refine.mjs && node --check netlify/functions/explain.mjs
+        run: |
+          node --check netlify/functions/_legacy-adapter.mjs && node --check netlify/functions/summarize.mjs && node --check netlify/functions/refine.mjs && node --check netlify/functions/explain.mjs
+          echo "[UAB_PROGRESS=45] Controlli statici completati"
+
       - name: Test AI resilience
         run: node scripts/test-ai-resilience.mjs
       - name: Test long-paragraph engine
@@ -38,10 +61,24 @@ jobs:
         run: node scripts/test-study-help-cache-model.mjs
       - name: Test PWA shell
         run: node scripts/test-pwa.mjs
+
+      - name: Progress 60% - tests running
+        run: echo "[UAB_PROGRESS=60] Cache pronta; test principali completati"
+
       - name: Stress test 600-page text pipeline
         run: node scripts/stress-large-book.mjs
+
       - name: Build
-        run: npm run build
+        run: |
+          npm run build
+          echo "[UAB_PROGRESS=75] Build web completata"
+
+      - name: Verify dist
+        run: |
+          test -d dist
+          test -n "$(find dist -type f -print -quit)"
+          echo "[UAB_PROGRESS=85] Output dist verificato"
+
       - name: Upload deploy source
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
@@ -54,3 +91,6 @@ jobs:
             !.git/**
             !node_modules/**
             !dist/**
+
+      - name: Progress 100% - complete
+        run: echo "[UAB_PROGRESS=100] StudyBook build/test completati"
