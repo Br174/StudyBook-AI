@@ -1,23 +1,42 @@
-name: Build StudyBook AI
+name: UAB-CORE StudyBook AI adapter
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - 'lab/**'
+      - 'candidate/**'
+      - 'mother/**'
+    paths-ignore:
+      - '.uab/**'
+      - '.github/workflows/build.yml'
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Progress 5% - accepted
-        run: echo "[UAB_PROGRESS=5] Richiesta presa in carico"
+        run: echo "[UAB_PROGRESS=5] StudyBook preso in carico da UAB-CORE-V1"
 
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Progress 15% - source ready
-        run: echo "[UAB_PROGRESS=15] Sorgenti StudyBook recuperati"
+      - name: Detect lifecycle stage
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_REF_NAME" in
+            mother/*) UAB_STAGE="MADRE" ;;
+            candidate/*) UAB_STAGE="CANDIDATA" ;;
+            lab/*) UAB_STAGE="LAB" ;;
+            main) UAB_STAGE="BASE" ;;
+            *) UAB_STAGE="CHECK" ;;
+          esac
+          echo "UAB_STAGE=$UAB_STAGE" >> "$GITHUB_ENV"
+          echo "[UAB_PROGRESS=15] Stage=$UAB_STAGE; ciclo MADRE-LAB-CANDIDATA applicato"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -62,7 +81,7 @@ jobs:
       - name: Test PWA shell
         run: node scripts/test-pwa.mjs
 
-      - name: Progress 60% - tests running
+      - name: Progress 60% - tests complete
         run: echo "[UAB_PROGRESS=60] Cache pronta; test principali completati"
 
       - name: Stress test 600-page text pipeline
@@ -79,11 +98,20 @@ jobs:
           test -n "$(find dist -type f -print -quit)"
           echo "[UAB_PROGRESS=85] Output dist verificato"
 
-      - name: Upload deploy source
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Upload temporary LAB/CANDIDATA build output
+        if: env.UAB_STAGE == 'LAB' || env.UAB_STAGE == 'CANDIDATA'
         uses: actions/upload-artifact@v4
         with:
-          name: studybook-ai-deploy-source
+          name: StudyBook-${{ env.UAB_STAGE }}-${{ github.run_number }}
+          retention-days: 14
+          path: dist/
+          if-no-files-found: error
+
+      - name: Upload deploy source for BASE/MADRE
+        if: github.event_name == 'push' && (env.UAB_STAGE == 'BASE' || env.UAB_STAGE == 'MADRE')
+        uses: actions/upload-artifact@v4
+        with:
+          name: studybook-ai-${{ env.UAB_STAGE }}-deploy-source
           retention-days: 3
           include-hidden-files: true
           path: |
@@ -92,5 +120,8 @@ jobs:
             !node_modules/**
             !dist/**
 
+      - name: Progress 95% - handoff ready
+        run: echo "[UAB_PROGRESS=95] Output $UAB_STAGE pronto; nessuna promozione implicita eseguita"
+
       - name: Progress 100% - complete
-        run: echo "[UAB_PROGRESS=100] StudyBook build/test completati"
+        run: echo "[UAB_PROGRESS=100] StudyBook UAB-CORE-V1 completato per stage $UAB_STAGE"
