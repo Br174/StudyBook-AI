@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/test-posthog-config.mjs && node scripts/test-posthog-pilot-probe.mjs && node scripts/test-posthog-root-integration.mjs && node scripts/test-cloudflare-contract.mjs && node scripts/apply-cancel-feature.mjs && vite build",
+    "build": "node scripts/test-posthog-config.mjs && node scripts/test-posthog-pilot-probe.mjs && node scripts/test-posthog-root-integration.mjs && node scripts/test-cloudflare-contract.mjs && node scripts/test-cloudflare-preview-workflow.mjs && node scripts/apply-cancel-feature.mjs && vite build",
     "preview": "vite preview",
     "dev:cloudflare": "npm run build && wrangler dev",
     "test:cloudflare": "node --test scripts/test-cloudflare-worker.mjs",
     "check:cloudflare": "npm run build && wrangler deploy --dry-run && npm run test:cloudflare",
-    "preview:cloudflare": "npm run build && wrangler preview"
+    "preview:cloudflare": "npm run build && wrangler preview ./worker/index.js"
   },
   "dependencies": {
     "@posthog/react": "^1.11.3",
