@@ -1,0 +1,127 @@
+name: MotorLab Cloudflare LAB Preview
+
+on:
+  push:
+    branches:
+      - 'lab/posthog-cloudflare-preview-03'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studybook-cloudflare-preview-lab03
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout LAB only
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Credentials preflight
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VITE_POSTHOG_PROJECT_TOKEN: ${{ secrets.VITE_POSTHOG_PROJECT_TOKEN }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]] || missing+=("CLOUDFLARE_API_TOKEN")
+          [[ -n "${CLOUDFLARE_ACCOUNT_ID:-}" ]] || missing+=("CLOUDFLARE_ACCOUNT_ID")
+          [[ -n "${AI_API_KEY:-}" || -n "${GEMINI_API_KEY:-}" ]] || missing+=("AI_API_KEY_OR_GEMINI_API_KEY")
+          [[ -n "${VITE_POSTHOG_PROJECT_TOKEN:-}" ]] || missing+=("VITE_POSTHOG_PROJECT_TOKEN")
+
+          if (( ${#missing[@]} > 0 )); then
+            printf '::error title=MotorLab preview preflight::Missing required repository secret: %s\n' "${missing[@]}"
+            exit 1
+          fi
+
+          echo "MotorLab preview credentials: READY"
+
+      - name: Install dependencies
+        run: npm install --prefer-offline --no-audit --no-fund
+
+      - name: Build LAB with diagnostics-only PostHog
+        env:
+          VITE_POSTHOG_PROJECT_TOKEN: ${{ secrets.VITE_POSTHOG_PROJECT_TOKEN }}
+          VITE_POSTHOG_HOST: https://eu.i.posthog.com
+          VITE_MOTORLAB_POSTHOG_TEST: '1'
+        run: npm run build
+
+      - name: Re-verify Cloudflare package
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          npx wrangler deploy --dry-run
+          npm run test:cloudflare
+
+      - name: Create isolated Cloudflare preview
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          set -euo pipefail
+          EFFECTIVE_AI_KEY="${AI_API_KEY:-${GEMINI_API_KEY:-}}"
+          printf 'AI_API_KEY=%s\n' "$EFFECTIVE_AI_KEY" > .cloudflare-preview.secrets
+          chmod 600 .cloudflare-preview.secrets
+
+          npx wrangler preview ./worker/index.js \
+            --worker-name studybook-ai \
+            --name studybook-ai-motorlab-lab03 \
+            --secrets-file .cloudflare-preview.secrets \
+            --json > cloudflare-preview-result.json
+
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
+          const result = JSON.parse(readFileSync('cloudflare-preview-result.json', 'utf8'));
+          const candidates = [
+            ...(Array.isArray(result.preview_urls) ? result.preview_urls : []),
+            ...(Array.isArray(result.previewUrls) ? result.previewUrls : []),
+            ...(Array.isArray(result.urls) ? result.urls : []),
+          ];
+          const url = candidates.find((value) => typeof value === 'string' && value.startsWith('https://'));
+          if (!url) throw new Error('Cloudflare preview URL non trovata nella risposta Wrangler.');
+          writeFileSync('cloudflare-preview-url.txt', `${url}\n`);
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### MotorLab Cloudflare Preview\n\n${url}\n`);
+          NODE
+
+      - name: Smoke test preview URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          PREVIEW_URL="$(cat cloudflare-preview-url.txt)"
+          curl --fail --silent --show-error --retry 4 --retry-delay 2 "$PREVIEW_URL/" > /tmp/studybook-home.html
+          test -s /tmp/studybook-home.html
+
+          HTTP_CODE="$(curl --silent --output /tmp/studybook-api.json --write-out '%{http_code}' "$PREVIEW_URL/api/motorlab-not-found")"
+          test "$HTTP_CODE" = "404"
+          grep -q 'Endpoint non trovato' /tmp/studybook-api.json
+
+      - name: Publish preview URL artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-Cloudflare-LAB03-Preview
+          retention-days: 3
+          path: cloudflare-preview-url.txt
+          if-no-files-found: error
+
+      - name: Remove temporary secret file
+        if: always()
+        shell: bash
+        run: rm -f .cloudflare-preview.secrets
