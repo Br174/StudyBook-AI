@@ -42,6 +42,8 @@ Non inserire valori reali di queste variabili nei file sorgente o nella document
 
 Il pilota non abilita session recording, autocapture di click/form, pageview o pageleave automatiche. Il probe sintetico richiede sia `VITE_MOTORLAB_POSTHOG_TEST=1` sia il parametro URL `motorlab_posthog_probe=1`.
 
+Dopo una modifica delle variabili `branch-deploy`, avviare un nuovo build del branch LAB prima della verifica, così i valori Vite vengono incorporati esclusivamente nell'artefatto di prova.
+
 ## Verifica prima della pubblicazione
 
 Ogni commit su `main` deve superare la pipeline GitHub Actions, che verifica sintassi API e funzioni Netlify, resilienza AI, gestione paragrafi lunghi, checkpoint OCR, persistenza scanner, protezione storage, strumenti di studio, cache persistente, PWA, stress test sintetico da 600 pagine e build Vite.
