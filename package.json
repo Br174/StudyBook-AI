@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/test-posthog-config.mjs && node scripts/test-posthog-pilot-probe.mjs && node scripts/test-posthog-root-integration.mjs && node scripts/apply-cancel-feature.mjs && vite build",
+    "build": "node scripts/test-posthog-config.mjs && node scripts/test-posthog-pilot-probe.mjs && node scripts/test-posthog-root-integration.mjs && node scripts/test-cloudflare-contract.mjs && node scripts/apply-cancel-feature.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
