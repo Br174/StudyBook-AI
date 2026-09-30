@@ -30,6 +30,18 @@ Variabili richieste:
 
 `AI_API_KEY` deve essere trattata come segreto e non va mai committata nel repository.
 
+## PostHog · solo LAB MotorLab
+
+Il pilota di diagnostica PostHog resta confinato al branch LAB e usa esclusivamente variabili d'ambiente del deploy di prova:
+
+- `VITE_POSTHOG_PROJECT_TOKEN` — project token client-side del progetto PostHog;
+- `VITE_POSTHOG_HOST` — host di ingestion indicato nelle impostazioni del progetto PostHog;
+- `VITE_MOTORLAB_POSTHOG_TEST` — flag temporaneo del solo collaudo MotorLab; deve essere assente o disabilitato nei build normali.
+
+Non inserire valori reali di queste variabili nei file sorgente o nella documentazione. I file `.env` e `.env.*` restano esclusi dal repository tramite `.gitignore`.
+
+Il pilota non abilita session recording, autocapture di click/form, pageview o pageleave automatiche. Il probe sintetico richiede sia `VITE_MOTORLAB_POSTHOG_TEST=1` sia il parametro URL `motorlab_posthog_probe=1`.
+
 ## Verifica prima della pubblicazione
 
 Ogni commit su `main` deve superare la pipeline GitHub Actions, che verifica sintassi API e funzioni Netlify, resilienza AI, gestione paragrafi lunghi, checkpoint OCR, persistenza scanner, protezione storage, strumenti di studio, cache persistente, PWA, stress test sintetico da 600 pagine e build Vite.
