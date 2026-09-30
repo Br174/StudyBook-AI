@@ -3,7 +3,8 @@ import { readFile } from 'node:fs/promises';
 
 const workflow = await readFile(new URL('../.github/workflows/cloudflare-preview.yml', import.meta.url), 'utf8');
 
-assert.match(workflow, /lab\/posthog-cloudflare-preview-03/);
+assert.match(workflow, /workflow_dispatch:/);
+assert.doesNotMatch(workflow, /\n\s*push:/);
 assert.match(workflow, /CLOUDFLARE_API_TOKEN/);
 assert.match(workflow, /CLOUDFLARE_ACCOUNT_ID/);
 assert.match(workflow, /VITE_POSTHOG_PROJECT_TOKEN/);
