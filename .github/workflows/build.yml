@@ -64,8 +64,11 @@ jobs:
         run: node --check api/summarize.js && node --check api/refine.js && node --check api/explain.js
 
       - name: Check Netlify functions syntax
+        run: node --check netlify/functions/_legacy-adapter.mjs && node --check netlify/functions/summarize.mjs && node --check netlify/functions/refine.mjs && node --check netlify/functions/explain.mjs
+
+      - name: Check Cloudflare Worker syntax
         run: |
-          node --check netlify/functions/_legacy-adapter.mjs && node --check netlify/functions/summarize.mjs && node --check netlify/functions/refine.mjs && node --check netlify/functions/explain.mjs
+          node --check worker/index.js
           echo "[UAB_PROGRESS=45] Controlli statici completati"
 
       - name: Test AI resilience
@@ -100,7 +103,21 @@ jobs:
         run: |
           test -d dist
           test -n "$(find dist -type f -print -quit)"
-          echo "[UAB_PROGRESS=85] Output dist verificato"
+          echo "[UAB_PROGRESS=82] Output dist verificato"
+
+      - name: Validate Cloudflare deployment bundle
+        run: npx wrangler deploy --dry-run
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+
+      - name: Test Cloudflare runtime and assets
+        run: npm run test:cloudflare
+        timeout-minutes: 5
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+
+      - name: Progress 90% - Cloudflare verified
+        run: echo "[UAB_PROGRESS=90] Bundle e runtime Cloudflare verificati"
 
       - name: Upload temporary LAB/CANDIDATA build output
         if: steps.stage.outputs.stage == 'LAB' || steps.stage.outputs.stage == 'CANDIDATA'
