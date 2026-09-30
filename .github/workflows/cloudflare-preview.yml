@@ -1,9 +1,6 @@
 name: MotorLab Cloudflare LAB Preview
 
 on:
-  push:
-    branches:
-      - 'lab/posthog-cloudflare-preview-03'
   workflow_dispatch:
 
 permissions:
