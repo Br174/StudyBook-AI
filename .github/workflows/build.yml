@@ -63,9 +63,6 @@ jobs:
       - name: Check API syntax
         run: node --check api/summarize.js && node --check api/refine.js && node --check api/explain.js
 
-      - name: Check Netlify functions syntax
-        run: node --check netlify/functions/_legacy-adapter.mjs && node --check netlify/functions/summarize.mjs && node --check netlify/functions/refine.mjs && node --check netlify/functions/explain.mjs
-
       - name: Check Cloudflare Worker syntax
         run: |
           node --check worker/index.js

@@ -17,7 +17,7 @@ Diagnostica degli errori nel progetto EU configurato dal project token; session 
 
 ## Netlify
 
-Dopo la verifica della prima pubblicazione Cloudflare, scollegare il repository GitHub da `studybook-ai` e arrestare le build Netlify prima di promuovere `main`. Il vecchio progetto resta recuperabile: non eliminare account, altri progetti o dati.
+Il repository GitHub è già scollegato dal progetto Netlify `studybook-ai`, che resta conservato. Netlify non esegue build di questo repository; le pubblicazioni attive passano da Cloudflare tramite `.github/workflows/cloudflare-production.yml`.
 
 ## Collaudo reale Android
 

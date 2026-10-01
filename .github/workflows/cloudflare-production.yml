@@ -6,6 +6,13 @@ on:
     branches:
       - main
       - candidate/cloudflare-production-01
+    paths-ignore:
+      - 'netlify.toml'
+      - 'netlify/**'
+      - 'DEPLOYMENT.md'
+      - '.github/workflows/build.yml'
+      - '.github/workflows/cloudflare-production.yml'
+      - 'scripts/test-cloudflare-preview-workflow.mjs'
 
 permissions:
   contents: read

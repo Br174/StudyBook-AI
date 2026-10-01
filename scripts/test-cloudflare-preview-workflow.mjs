@@ -22,4 +22,10 @@ assert.doesNotMatch(workflow, /--json\s*>/);
 assert.doesNotMatch(workflow, /wrangler deploy(?!\s+--dry-run)/);
 assert.doesNotMatch(workflow, /branches:\s*\[?\s*main/);
 
-console.log('Cloudflare preview workflow contract: PASS');
+const production = await readFile(new URL('../.github/workflows/cloudflare-production.yml', import.meta.url), 'utf8');
+assert.match(production, /paths-ignore:/);
+for (const path of ['netlify.toml', 'netlify/**', 'DEPLOYMENT.md', '.github/workflows/build.yml', '.github/workflows/cloudflare-production.yml', 'scripts/test-cloudflare-preview-workflow.mjs']) {
+  assert.ok(production.includes(`'${path}'`), `Production workflow must ignore cleanup-only path ${path}`);
+}
+
+console.log('Cloudflare workflow contracts: PASS');
