@@ -2,6 +2,9 @@ name: MotorLab Cloudflare LAB Preview
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - lab/posthog-cloudflare-preview-03
 
 permissions:
   contents: read
@@ -12,6 +15,7 @@ concurrency:
 
 jobs:
   preview:
+    if: github.ref == 'refs/heads/lab/posthog-cloudflare-preview-03' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[motorlab-preview]'))
     runs-on: ubuntu-latest
     timeout-minutes: 12
 
