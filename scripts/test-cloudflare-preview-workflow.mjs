@@ -16,6 +16,9 @@ assert.match(workflow, /CLOUDFLARE_ACCOUNT_ID/);
 assert.match(workflow, /VITE_POSTHOG_PROJECT_TOKEN/);
 assert.match(workflow, /VITE_MOTORLAB_POSTHOG_TEST/);
 assert.match(workflow, /wrangler preview/);
+assert.ok(workflow.includes('WRANGLER_OUTPUT_FILE_PATH=cloudflare-preview-result.jsonl'));
+assert.ok(workflow.includes("record.type === 'preview'"));
+assert.doesNotMatch(workflow, /--json\s*>/);
 assert.doesNotMatch(workflow, /wrangler deploy(?!\s+--dry-run)/);
 assert.doesNotMatch(workflow, /branches:\s*\[?\s*main/);
 

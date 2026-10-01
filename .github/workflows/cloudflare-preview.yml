@@ -82,15 +82,17 @@ jobs:
           printf 'AI_API_KEY=%s\n' "$EFFECTIVE_AI_KEY" > .cloudflare-preview.secrets
           chmod 600 .cloudflare-preview.secrets
 
-          npx wrangler preview ./worker/index.js \
+          WRANGLER_OUTPUT_FILE_PATH=cloudflare-preview-result.jsonl npx wrangler preview ./worker/index.js \
             --worker-name studybook-ai \
             --name studybook-ai-motorlab-lab03 \
             --secrets-file .cloudflare-preview.secrets \
-            --json > cloudflare-preview-result.json
+            --json
 
           node --input-type=module <<'NODE'
           import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
-          const result = JSON.parse(readFileSync('cloudflare-preview-result.json', 'utf8'));
+          const records = readFileSync('cloudflare-preview-result.jsonl', 'utf8').trim().split('\n').map((line) => JSON.parse(line));
+          const result = records.filter((record) => record.type === 'preview').at(-1);
+          if (!result) throw new Error('Risultato preview mancante nel file strutturato Wrangler.');
           const candidates = [
             ...(Array.isArray(result.preview_urls) ? result.preview_urls : []),
             ...(Array.isArray(result.previewUrls) ? result.previewUrls : []),
