@@ -5,7 +5,7 @@ const source = readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8')
 
 assert.match(source, /import\s+\{\s*PostHogProvider\s*\}\s+from\s+['"]@posthog\/react['"]/);
 assert.match(source, /import\s+\{\s*getPostHogConfig\s*\}\s+from\s+['"]\.\/lib\/posthogConfig\.js['"]/);
-assert.match(source, /import\s+\{\s*schedulePostHogPilotProbe\s*\}\s+from\s+['"]\.\/lib\/posthogPilotProbe\.js['"]/);
+assert.match(source, /import\s+\{\s*schedulePostHogPilotProbe,\s*shouldRunPostHogPilotProbe\s*\}\s+from\s+['"]\.\/lib\/posthogPilotProbe\.js['"]/);
 assert.match(source, /getPostHogConfig\(import\.meta\.env\)/);
 assert.match(source, /postHogConfig\s*\?/);
 assert.match(source, /<PostHogProvider\s+apiKey=\{postHogConfig\.apiKey\}\s+options=\{postHogConfig\.options\}>/);
@@ -14,4 +14,8 @@ assert.match(source, /<PwaInstallPrompt\s*\/>/);
 assert.match(source, /schedulePostHogPilotProbe\(import\.meta\.env,\s*window\.location\.search\)/);
 assert.match(source, /navigator\.serviceWorker\.register\('\/sw\.js',\s*\{\s*updateViaCache:\s*'none'\s*\}\)/);
 
+assert.match(source, /postHogConfig && shouldRunPostHogPilotProbe/);
+assert.match(source, /onClick=\{\(event\) =>/);
+assert.match(source, /event\.currentTarget\.disabled = true/);
+assert.doesNotMatch(source, /\n\s*schedulePostHogPilotProbe\(import\.meta\.env, window\.location\.search\);\n\nif/);
 console.log('PostHog root integration contract: PASS');

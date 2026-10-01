@@ -4,7 +4,7 @@ import { PostHogProvider } from '@posthog/react';
 import AppV15 from './AppV15.jsx';
 import PwaInstallPrompt from './components/PwaInstallPrompt.jsx';
 import { getPostHogConfig } from './lib/posthogConfig.js';
-import { schedulePostHogPilotProbe } from './lib/posthogPilotProbe.js';
+import { schedulePostHogPilotProbe, shouldRunPostHogPilotProbe } from './lib/posthogPilotProbe.js';
 import './styles.css';
 import './library.css';
 import './pwaInstall.css';
@@ -15,6 +15,17 @@ const appContent = (
   <React.StrictMode>
     <AppV15 />
     <PwaInstallPrompt />
+    {postHogConfig && shouldRunPostHogPilotProbe(import.meta.env, window.location.search) && (
+      <button
+        type="button"
+        onClick={(event) => {
+          event.currentTarget.disabled = true;
+          schedulePostHogPilotProbe(import.meta.env, window.location.search);
+        }}
+      >
+        Verifica PostHog
+      </button>
+    )}
   </React.StrictMode>
 );
 
@@ -25,8 +36,6 @@ const rootContent = postHogConfig ? (
 ) : appContent;
 
 ReactDOM.createRoot(document.getElementById('root')).render(rootContent);
-
-schedulePostHogPilotProbe(import.meta.env, window.location.search);
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', async () => {
