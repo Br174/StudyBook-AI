@@ -6,7 +6,9 @@ on:
       - lab/studybook-core-android-01
       - lab/studybook-core-android-01-update-01
       - lab/studybook-core-android-01-update-02
+      - lab/studybook-core-android-01-update-03
       - lab/recovery-studybook-core-android-02
+      - lab/recovery-studybook-core-android-03
     paths:
       - 'src/**'
       - 'api/**'
@@ -67,21 +69,36 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Resolve LAB 02 family identity
+      - name: Resolve LAB family identity
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$GITHUB_REF_NAME" == "lab/recovery-studybook-core-android-02" ]]; then
-            echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-02-RIPRISTINO" >> "$GITHUB_ENV"
-            echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab.recovery02" >> "$GITHUB_ENV"
-            echo "STUDYBOOK_APP_NAME=StudyBook AI LAB 02 Ripristino" >> "$GITHUB_ENV"
-            echo "STUDYBOOK_SIGNING_MODE=recovery" >> "$GITHUB_ENV"
-          else
-            echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-02-AGGIORNAMENTO" >> "$GITHUB_ENV"
-            echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab" >> "$GITHUB_ENV"
-            echo "STUDYBOOK_APP_NAME=StudyBook AI LAB" >> "$GITHUB_ENV"
-            echo "STUDYBOOK_SIGNING_MODE=update" >> "$GITHUB_ENV"
-          fi
+          case "$GITHUB_REF_NAME" in
+            lab/recovery-studybook-core-android-03)
+              echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-03-RIPRISTINO" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab.recovery03" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APP_NAME=StudyBook AI LAB 03 Ripristino" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_SIGNING_MODE=recovery" >> "$GITHUB_ENV"
+              ;;
+            lab/studybook-core-android-01-update-03)
+              echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-03-AGGIORNAMENTO" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APP_NAME=StudyBook AI LAB" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_SIGNING_MODE=update" >> "$GITHUB_ENV"
+              ;;
+            lab/recovery-studybook-core-android-02)
+              echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-02-RIPRISTINO" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab.recovery02" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APP_NAME=StudyBook AI LAB 02 Ripristino" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_SIGNING_MODE=recovery" >> "$GITHUB_ENV"
+              ;;
+            *)
+              echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-02-AGGIORNAMENTO" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APP_NAME=StudyBook AI LAB" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_SIGNING_MODE=update" >> "$GITHUB_ENV"
+              ;;
+          esac
 
       - name: Apply Android family identity
         shell: bash
@@ -141,7 +158,7 @@ jobs:
             -storepass android \
             -alias androiddebugkey \
             -keypass android \
-            -dname "CN=StudyBook LAB 02 Ripristino,O=StudyBook AI,C=IT" \
+            -dname "CN=${STUDYBOOK_APP_NAME},O=StudyBook AI,C=IT" \
             -keyalg RSA -keysize 2048 -validity 10000
 
       - name: Build installable debug APK

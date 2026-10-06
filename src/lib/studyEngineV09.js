@@ -1,13 +1,26 @@
 import { apiEndpoint } from './apiEndpoint.js';
 import { filterGlossaryEntries } from './glossaryQuality.js';
 import { refineParagraphWithAi, summarizeLocally, summaryLevels } from './studyEngine.js';
-import { loadResumeState, purgeOldResumeStates, saveResumeState } from './resumeStore.js';
+import {
+  loadResumeState,
+  loadRuntimeUnitResults,
+  purgeOldResumeStates,
+  purgeOldRuntimeUnitResults,
+  saveResumeState,
+  saveRuntimeUnitResults,
+} from './resumeStore.js';
+import {
+  MOTORLAB_RUNTIME_VERSION,
+  chooseRuntimeConcurrency,
+  makeRuntimeUnitKey,
+  runAdaptiveBatchQueue,
+} from './motorLabRuntime.js';
 
 const AI_BATCH_CHAR_LIMIT = 18000;
 const AI_BATCH_ITEM_LIMIT = 5;
 const LONG_PARAGRAPH_LIMIT = 7000;
 const CHUNK_TARGET = 4200;
-const CHECKPOINT_VERSION = 3;
+const CHECKPOINT_VERSION = 4;
 
 function normalize(text) {
   return String(text || '').replace(/\s+/g, ' ').trim();
@@ -286,11 +299,6 @@ function buildResumeSignature(documentData, level) {
   return `studybook-v09-${hashText(fingerprint)}`;
 }
 
-function defaultConcurrency() {
-  if (typeof navigator !== 'undefined' && navigator.connection?.saveData) return 2;
-  return 3;
-}
-
 async function processBatch(batch, level, aiAllowed) {
   if (aiAllowed) {
     try {
@@ -357,6 +365,7 @@ export async function buildStudyBook(documentData, {
   onCheckpoint,
   maxConcurrency,
 } = {}) {
+  const runtimeStartedAt = Date.now();
   const flat = [];
   const memories = buildContextMemories(documentData);
   documentData.chapters.forEach((chapter, chapterIndex) => {
@@ -379,26 +388,39 @@ export async function buildStudyBook(documentData, {
 
   if (!flat.length) {
     return {
-      version: 7,
+      version: 8,
       generatedAt: new Date().toISOString(),
       level,
       engine: 'locale',
       sourceStructure: documentData.structure || null,
       chapters: [],
+      quality: {
+        motorLabRuntime: {
+          runtimeId: MOTORLAB_RUNTIME_VERSION,
+          totalProcessingMs: Date.now() - runtimeStartedAt,
+          timeToFirstReadyParagraphMs: 0,
+          cachedChunks: 0,
+          cacheMisses: 0,
+          cacheHitPercent: 0,
+          waves: 0,
+          correctionRelays: 0,
+        },
+      },
     };
   }
 
   purgeOldResumeStates().catch(() => {});
+  purgeOldRuntimeUnitResults().catch(() => {});
   const signature = buildResumeSignature(documentData, level);
   const saved = await loadResumeState(signature);
   const finalResults = Array(flat.length).fill(null);
-  let resumedParagraphs = 0;
+  let checkpointResumedParagraphs = 0;
 
   if (saved?.version === CHECKPOINT_VERSION && saved?.signature === signature && saved?.level === level) {
     (saved.results || []).forEach((item, index) => {
       if (index < finalResults.length && item?.summary && item?.dsaSummary) {
         finalResults[index] = item;
-        resumedParagraphs += 1;
+        checkpointResumedParagraphs += 1;
       }
     });
   }
@@ -414,92 +436,116 @@ export async function buildStudyBook(documentData, {
     if (finalResults[parentIndex]) return;
     unitResults.set(parentIndex, []);
     unitDone.set(parentIndex, 0);
-    chunks.forEach((chunk, chunkIndex) => units.push({ ...item, text: chunk, parentIndex, chunkIndex }));
+    chunks.forEach((chunk, chunkIndex) => {
+      const unit = { ...item, text: chunk, parentIndex, chunkIndex };
+      units.push({ ...unit, cacheKey: makeRuntimeUnitKey(unit, level) });
+    });
   });
 
   const completedParents = new Set(finalResults.map((item, index) => item ? index : null).filter((value) => value !== null));
-  onProgress?.(completedParents.size, flat.length, resumedParagraphs ? 'resume' : 'preparazione');
+  const cached = await loadRuntimeUnitResults(units.map((unit) => unit.cacheKey));
+  let cachedChunks = 0;
 
-  const batches = makeChapterBatches(units);
-  let aiEnabled = Boolean(preferAi);
-  let concurrency = Math.max(1, Math.min(4, Number(maxConcurrency || defaultConcurrency())));
-  let maxConcurrencyUsed = concurrency;
-  let cleanWaves = 0;
-  let batchCursor = 0;
-  let aiFailures = 0;
-
-  while (batchCursor < batches.length) {
-    const waveSize = Math.min(concurrency, batches.length - batchCursor);
-    const waveBatches = batches.slice(batchCursor, batchCursor + waveSize);
-    const aiAllowedForWave = aiEnabled;
-    const wave = await Promise.all(waveBatches.map((batch) => processBatch(batch, level, aiAllowedForWave)));
-    batchCursor += waveSize;
-
-    let waveFailures = 0;
-    let waveAiSuccesses = 0;
-    let aiNotConfigured = false;
-
-    for (const item of wave) {
-      if (item.aiSuccess) waveAiSuccesses += 1;
-      if (item.aiFailure) {
-        aiFailures += 1;
-        waveFailures += 1;
-        if (item.aiFailure === 'AI_NOT_CONFIGURED') aiNotConfigured = true;
-      }
-
-      item.batch.forEach((unit, offset) => {
-        const piece = ensureSourceFidelity(unit.text, item.summaries[offset]);
-        const pieces = unitResults.get(unit.parentIndex) || [];
-        pieces.push({ chunkIndex: unit.chunkIndex, ...piece });
-        unitResults.set(unit.parentIndex, pieces);
-        const nextDone = (unitDone.get(unit.parentIndex) || 0) + 1;
-        unitDone.set(unit.parentIndex, nextDone);
-        if (nextDone >= (unitTotals.get(unit.parentIndex) || 1) && !finalResults[unit.parentIndex]) {
-          finalResults[unit.parentIndex] = combineUnitResults(flat[unit.parentIndex].text, pieces);
-          completedParents.add(unit.parentIndex);
-        }
-      });
+  for (const unit of units) {
+    const cachedPiece = cached.get(unit.cacheKey);
+    if (!cachedPiece?.summary || !cachedPiece?.dsaSummary || cachedPiece?.engine !== 'ai') continue;
+    const pieces = unitResults.get(unit.parentIndex) || [];
+    pieces.push({ chunkIndex: unit.chunkIndex, ...cachedPiece });
+    unitResults.set(unit.parentIndex, pieces);
+    const nextDone = (unitDone.get(unit.parentIndex) || 0) + 1;
+    unitDone.set(unit.parentIndex, nextDone);
+    cachedChunks += 1;
+    if (nextDone >= (unitTotals.get(unit.parentIndex) || 1) && !finalResults[unit.parentIndex]) {
+      finalResults[unit.parentIndex] = combineUnitResults(flat[unit.parentIndex].text, pieces);
+      completedParents.add(unit.parentIndex);
     }
-
-    if (aiNotConfigured) {
-      aiEnabled = false;
-      concurrency = 1;
-      cleanWaves = 0;
-    } else if (waveFailures > 0) {
-      concurrency = Math.max(1, concurrency - 1);
-      cleanWaves = 0;
-    } else if (aiAllowedForWave && waveAiSuccesses === wave.length) {
-      cleanWaves += 1;
-      if (cleanWaves >= 3 && concurrency < 4) {
-        concurrency += 1;
-        maxConcurrencyUsed = Math.max(maxConcurrencyUsed, concurrency);
-        cleanWaves = 0;
-      }
-    }
-
-    const checkpoint = {
-      version: CHECKPOINT_VERSION,
-      signature,
-      level,
-      results: finalResults,
-      completed: completedParents.size,
-      total: flat.length,
-      aiEnabled,
-      concurrency,
-      savedAt: new Date().toISOString(),
-    };
-    await saveResumeState(signature, checkpoint);
-    if (onCheckpoint) await onCheckpoint(checkpoint);
-
-    const waveEngine = wave.some((item) => item.aiSuccess)
-      ? (wave.some((item) => item.aiFailure) ? 'misto' : 'ai')
-      : (aiAllowedForWave ? 'misto' : 'locale');
-    onProgress?.(completedParents.size, flat.length, waveEngine, {
-      concurrency,
-      resumedParagraphs,
-      aiFailures,
-    });
   }
+
+  const resumedParagraphs = completedParents.size;
+  let firstReadyAtMs = resumedParagraphs ? 0 : null;
+  onProgress?.(
+    completedParents.size,
+    flat.length,
+    resumedParagraphs ? 'resume' : 'preparazione',
+    {
+      runtimeId: MOTORLAB_RUNTIME_VERSION,
+      resumedParagraphs,
+      cachedChunks,
+      checkpointResumedParagraphs,
+      concurrency: 0,
+    },
+  );
+
+  const pendingUnits = units.filter((unit) => !cached.has(unit.cacheKey));
+  const batches = makeChapterBatches(pendingUnits);
+  const initialConcurrency = chooseRuntimeConcurrency(maxConcurrency);
+  const ceiling = Number.isFinite(Number(maxConcurrency)) && Number(maxConcurrency) > 0
+    ? Math.max(1, Math.min(4, Math.floor(Number(maxConcurrency))))
+    : 4;
+
+  const runtimeQueue = await runAdaptiveBatchQueue({
+    batches,
+    preferAi,
+    initialConcurrency,
+    maxConcurrency: ceiling,
+    worker(batch, { aiAllowed }) {
+      return processBatch(batch, level, aiAllowed);
+    },
+    async onWave(meta) {
+      const cacheWrites = [];
+
+      for (const item of meta.results) {
+        item.batch.forEach((unit, offset) => {
+          const piece = ensureSourceFidelity(unit.text, item.summaries[offset]);
+          const pieces = unitResults.get(unit.parentIndex) || [];
+          pieces.push({ chunkIndex: unit.chunkIndex, ...piece });
+          unitResults.set(unit.parentIndex, pieces);
+          const nextDone = (unitDone.get(unit.parentIndex) || 0) + 1;
+          unitDone.set(unit.parentIndex, nextDone);
+          if (piece?.engine === 'ai') cacheWrites.push({ key: unit.cacheKey, result: piece });
+          if (nextDone >= (unitTotals.get(unit.parentIndex) || 1) && !finalResults[unit.parentIndex]) {
+            finalResults[unit.parentIndex] = combineUnitResults(flat[unit.parentIndex].text, pieces);
+            completedParents.add(unit.parentIndex);
+            if (firstReadyAtMs == null) firstReadyAtMs = Date.now() - runtimeStartedAt;
+          }
+        });
+      }
+
+      if (cacheWrites.length) await saveRuntimeUnitResults(cacheWrites);
+
+      const checkpoint = {
+        version: CHECKPOINT_VERSION,
+        signature,
+        level,
+        results: finalResults,
+        completed: completedParents.size,
+        total: flat.length,
+        aiEnabled: meta.aiEnabled,
+        concurrency: meta.concurrency,
+        runtimeId: MOTORLAB_RUNTIME_VERSION,
+        cachedChunks,
+        savedAt: new Date().toISOString(),
+      };
+      await saveResumeState(signature, checkpoint);
+      if (onCheckpoint) await onCheckpoint(checkpoint);
+
+      const waveEngine = meta.results.some((item) => item.aiSuccess)
+        ? (meta.results.some((item) => item.aiFailure) ? 'misto' : 'ai')
+        : (preferAi ? 'misto' : 'locale');
+
+      onProgress?.(completedParents.size, flat.length, waveEngine, {
+        runtimeId: MOTORLAB_RUNTIME_VERSION,
+        concurrency: meta.concurrency,
+        maxConcurrencyUsed: meta.maxConcurrencyUsed,
+        resumedParagraphs,
+        cachedChunks,
+        aiFailures: meta.aiFailures,
+        correctionRelays: meta.correctionRelays,
+        waveNumber: meta.waveNumber,
+        totalWavesEstimate: Math.max(meta.waveNumber, Math.ceil((meta.totalBatches || 0) / Math.max(1, meta.maxConcurrencyUsed || 1))),
+      });
+    },
+  });
 
   for (let index = 0; index < finalResults.length; index += 1) {
     if (!finalResults[index]) finalResults[index] = ensureSourceFidelity(flat[index].text, summarizeLocally(flat[index].text, level));
@@ -515,12 +561,20 @@ export async function buildStudyBook(documentData, {
     completed: finalResults.length,
     total: flat.length,
     complete: true,
+    runtimeId: MOTORLAB_RUNTIME_VERSION,
+    cachedChunks,
     savedAt: new Date().toISOString(),
   };
   await saveResumeState(signature, completedCheckpoint);
 
+  const totalUnitCount = units.length;
+  const cacheMisses = Math.max(0, totalUnitCount - cachedChunks);
+  const cacheHitPercent = totalUnitCount
+    ? Math.round((cachedChunks / totalUnitCount) * 1000) / 10
+    : (checkpointResumedParagraphs ? 100 : 0);
+
   return {
-    version: 7,
+    version: 8,
     generatedAt: new Date().toISOString(),
     level,
     engine,
@@ -530,11 +584,26 @@ export async function buildStudyBook(documentData, {
       aiParagraphs,
       localParagraphs: finalResults.length - aiParagraphs,
       resumedParagraphs,
-      aiFailures,
-      maxConcurrencyUsed,
+      checkpointResumedParagraphs,
+      aiFailures: runtimeQueue.aiFailures,
+      maxConcurrencyUsed: runtimeQueue.maxConcurrencyUsed,
       longParagraphsSplit: [...unitTotals.values()].filter((value) => value > 1).length,
       fidelityRecovered: finalResults.reduce((sum, item) => sum + Number(item?.fidelityRecovered || 0), 0),
       glossaryEntries: finalResults.reduce((sum, item) => sum + (item?.glossary?.length || 0), 0),
+      motorLabRuntime: {
+        runtimeId: MOTORLAB_RUNTIME_VERSION,
+        initialConcurrency: runtimeQueue.initialConcurrency,
+        finalConcurrency: runtimeQueue.finalConcurrency,
+        maxConcurrencyUsed: runtimeQueue.maxConcurrencyUsed,
+        waves: runtimeQueue.waves,
+        correctionRelays: runtimeQueue.correctionRelays,
+        aiFailures: runtimeQueue.aiFailures,
+        cachedChunks,
+        cacheMisses,
+        cacheHitPercent,
+        timeToFirstReadyParagraphMs: firstReadyAtMs ?? (Date.now() - runtimeStartedAt),
+        totalProcessingMs: Date.now() - runtimeStartedAt,
+      },
     },
     sourceStructure: documentData.structure || null,
     chapters: buildChapters(documentData, finalResults),

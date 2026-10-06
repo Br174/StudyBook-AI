@@ -1,6 +1,8 @@
 const DB_NAME = 'studybook-ai-processing';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = 'checkpoints';
+const RUNTIME_STORE = 'runtime-unit-results';
+const RUNTIME_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 
 function openDb() {
@@ -16,6 +18,10 @@ function openDb() {
       if (!db.objectStoreNames.contains(STORE)) {
         const store = db.createObjectStore(STORE, { keyPath: 'signature' });
         store.createIndex('updatedAt', 'updatedAt');
+      }
+      if (!db.objectStoreNames.contains(RUNTIME_STORE)) {
+        const runtimeStore = db.createObjectStore(RUNTIME_STORE, { keyPath: 'key' });
+        runtimeStore.createIndex('updatedAt', 'updatedAt');
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -104,6 +110,73 @@ export async function purgeOldResumeStates() {
     });
   } catch {
     // Pulizia best-effort.
+  } finally {
+    db?.close();
+  }
+}
+
+
+export async function loadRuntimeUnitResults(keys = []) {
+  const wanted = [...new Set((keys || []).filter(Boolean))];
+  if (!wanted.length) return new Map();
+  let db;
+  try {
+    db = await openDb();
+    const store = db.transaction(RUNTIME_STORE, 'readonly').objectStore(RUNTIME_STORE);
+    const rows = await Promise.all(wanted.map((key) => requestResult(store.get(key))));
+    const now = Date.now();
+    const output = new Map();
+    rows.forEach((row) => {
+      if (!row?.key || !row?.result) return;
+      const age = now - new Date(row.updatedAt || 0).getTime();
+      if (!Number.isFinite(age) || age > RUNTIME_MAX_AGE_MS) return;
+      output.set(row.key, row.result);
+    });
+    return output;
+  } catch {
+    return new Map();
+  } finally {
+    db?.close();
+  }
+}
+
+export async function saveRuntimeUnitResults(entries = []) {
+  const valid = (entries || []).filter((entry) => entry?.key && entry?.result);
+  if (!valid.length) return false;
+  let db;
+  try {
+    db = await openDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(RUNTIME_STORE, 'readwrite');
+      const store = tx.objectStore(RUNTIME_STORE);
+      const updatedAt = new Date().toISOString();
+      valid.forEach((entry) => store.put({ key: entry.key, result: entry.result, updatedAt }));
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error('Salvataggio cache MotorLab Runtime non riuscito.'));
+      tx.onabort = () => reject(tx.error || new Error('Salvataggio cache MotorLab Runtime annullato.'));
+    });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    db?.close();
+  }
+}
+
+export async function purgeOldRuntimeUnitResults() {
+  let db;
+  try {
+    db = await openDb();
+    const tx = db.transaction(RUNTIME_STORE, 'readwrite');
+    const store = tx.objectStore(RUNTIME_STORE);
+    const records = await requestResult(store.getAll());
+    const cutoff = Date.now() - RUNTIME_MAX_AGE_MS;
+    records.forEach((record) => {
+      const timestamp = new Date(record.updatedAt || 0).getTime();
+      if (!timestamp || timestamp < cutoff) store.delete(record.key);
+    });
+  } catch {
+    // Cache runtime best-effort: non deve mai bloccare la creazione del libro.
   } finally {
     db?.close();
   }

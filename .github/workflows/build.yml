@@ -70,6 +70,8 @@ jobs:
 
       - name: Test AI resilience
         run: node scripts/test-ai-resilience.mjs
+      - name: Test MotorLab Runtime r21
+        run: node scripts/test-motorlab-runtime.mjs
       - name: Test fidelity gate
         run: node scripts/test-fidelity-engine.mjs
       - name: Test editorial model

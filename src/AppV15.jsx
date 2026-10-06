@@ -412,7 +412,7 @@ export default function AppV14() {
     setDsaMode(true);
     setError('');
     setProgress({ done: 0, total: countParagraphs(sourceData.chapters) });
-    setStatus(fromScanner ? 'Scansione completa · preparo il libro di studio…' : 'Creazione del libro di studio…');
+    setStatus(fromScanner ? 'MotorLab Runtime · scansione completa · preparo il libro…' : 'MotorLab Runtime · preparo il libro di studio…');
 
     try {
       const result = await buildStudyBook(sourceData, {
@@ -420,9 +420,9 @@ export default function AppV14() {
         preferAi: true,
         onProgress(done, total, phase, meta) {
           setProgress({ done, total });
-          if (phase === 'resume') setStatus(`Ripresa lavoro · ${done}/${total} paragrafi già pronti`);
-          else if (phase === 'ai' || phase === 'misto') setStatus(`Elaborazione · ${done}/${total} paragrafi · ${meta?.concurrency || 1} gruppi in parallelo`);
-          else if (phase === 'locale') setStatus(`Elaborazione locale · ${done}/${total} paragrafi`);
+          if (phase === 'resume') setStatus(`MotorLab Runtime · ripresa · ${done}/${total} paragrafi già pronti${meta?.cachedChunks ? ` · ${meta.cachedChunks} blocchi riusati` : ''}`);
+          else if (phase === 'ai' || phase === 'misto') setStatus(`MotorLab Runtime · ${done}/${total} paragrafi · ${meta?.concurrency || 1} corridori`);
+          else if (phase === 'locale') setStatus(`MotorLab Runtime · elaborazione locale · ${done}/${total} paragrafi`);
         },
       });
       setStudyBook(result);
@@ -437,7 +437,9 @@ export default function AppV14() {
         await refreshScannerStorage();
       }
       const engineLabel = result.engine === 'ai' ? 'AI' : result.engine === 'misto' ? 'AI + sicurezza locale' : 'modalità locale';
-      setStatus(`Libro pronto · ${engineLabel}${saved ? ' · salvato in Libreria' : ''}`);
+      const runtime = result.quality?.motorLabRuntime;
+      const speedLabel = runtime ? ` · MotorLab Runtime · ${runtime.maxConcurrencyUsed || 1} corridori${runtime.cachedChunks ? ` · ${runtime.cachedChunks} blocchi riusati` : ''}` : '';
+      setStatus(`Libro pronto · ${engineLabel}${speedLabel}${saved ? ' · salvato in Libreria' : ''}`);
       navigateTo('studio');
       return result;
     } catch (err) {
