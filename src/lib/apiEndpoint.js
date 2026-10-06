@@ -1,5 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 
+export const NATIVE_BRIDGE_VERSION = 1;
+
 export const NATIVE_API_BASE = String(
   import.meta.env?.VITE_NATIVE_API_BASE || 'https://studybook-ai.brunoverlezza.workers.dev',
 ).replace(/\/$/, '');
