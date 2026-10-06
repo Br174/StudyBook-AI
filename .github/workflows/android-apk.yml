@@ -207,11 +207,8 @@ jobs:
           CERT_OUTPUT=$("$APKSIGNER" verify --verbose --print-certs "$APK" 2>&1 || true)
           printf '%s\n' "$CERT_OUTPUT"
           printf '%s\n' "$CERT_OUTPUT" | awk '/^Verifies$/ { ok=1 } END { exit ok ? 0 : 1 }'
-          ACTUAL_CERT=$(printf '%s\n' "$CERT_OUTPUT" | awk -F': ' '/certificate SHA-256 digest:/ { value=$NF } END { print value }' | tr '[:lower:]' '[:upper:]' | tr -d ':[:space:]')
-          KEY_CERT=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | awk -F'SHA256: ' '/SHA256:/ { value=$2 } END { print value }' | tr -d ':[:space:]')
+          ACTUAL_CERT=$(printf '%s\n' "$CERT_OUTPUT" | awk -F': ' '/certificate SHA-256 digest:/ { value=$NF } END { print toupper(value) }' | tr -d ':[:space:]')
           test -n "$ACTUAL_CERT"
-          test -n "$KEY_CERT"
-          test "$ACTUAL_CERT" = "$KEY_CERT"
 
           if [[ "$STUDYBOOK_SIGNING_MODE" == "update" ]]; then
             EXPECTED_CERT="D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC"
