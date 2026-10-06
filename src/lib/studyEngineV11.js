@@ -3,6 +3,7 @@ import {
   refineParagraphWithAi,
   summaryLevels,
 } from './studyEngineV09.js';
+import { filterGlossaryEntries } from './glossaryQuality.js';
 
 const LONG_PARAGRAPH_LIMIT = 7000;
 const CHUNK_TARGET = 4200;
@@ -134,7 +135,10 @@ function mergeChunkResults(original, pieces) {
     keyPoints: unique(valid.flatMap((item) => item?.keyPoints || []), 10),
     remember: unique(valid.flatMap((item) => item?.remember || []), 6),
     keywords: unique(valid.flatMap((item) => item?.keywords || []), 14),
-    glossary: normalizeGlossary(valid.flatMap((item) => item?.glossary || []), 8),
+    glossary: filterGlossaryEntries(
+      normalizeGlossary(valid.flatMap((item) => item?.glossary || []), 8),
+      { source: original, summary: normalize(valid.map((item) => item?.summary).filter(Boolean).join(' ')), limit: 8, minConfidence: 0.82 },
+    ),
     fidelityRecovered: valid.reduce((sum, item) => sum + Number(item?.fidelityRecovered || 0), 0),
     engine,
     chunkStats: {
