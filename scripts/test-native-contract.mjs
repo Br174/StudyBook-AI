@@ -24,6 +24,8 @@ assert.ok(worker.includes("'https://localhost'"));
 assert.ok(prep.includes('android.permission.CAMERA'));
 assert.ok(workflow.includes('assembleDebug'));
 assert.ok(workflow.includes('StudyBook-AI-LAB-01-UPDATE-01.apk'));
+assert.ok(workflow.includes('StudyBook-LAB01-signing-recovery'));
+assert.ok(workflow.includes('D7:BB:93:15:C9:C4:35:18:72:49:54:78:61:0C:48:47:25:08:6E:2B:AB:BC:04:BE:C6:5E:C8:23:45:5F:BD:CC'));
 
 console.log(JSON.stringify({
   ok: true,
