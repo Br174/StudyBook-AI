@@ -1,3 +1,4 @@
+import { apiEndpoint } from './apiEndpoint.js';
 const LEVELS = {
   approfondito: { label: 'Approfondito', ratio: 0.76, minSentences: 3, maxSentences: 10 },
   studio: { label: 'Studio', ratio: 0.55, minSentences: 2, maxSentences: 7 },
@@ -204,7 +205,7 @@ function pageContext(meta) {
 }
 
 async function summarizeWithEndpoint(units, level) {
-  const response = await fetch('/api/summarize', {
+  const response = await fetch(apiEndpoint('/api/summarize'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -239,7 +240,7 @@ async function summarizeWithEndpoint(units, level) {
 }
 
 export async function refineParagraphWithAi({ original, summary, dsaSummary, level = 'studio' }) {
-  const response = await fetch('/api/refine', {
+  const response = await fetch(apiEndpoint('/api/refine'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ original, summary, dsaSummary, level }),
