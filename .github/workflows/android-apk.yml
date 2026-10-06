@@ -26,6 +26,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+      actions: read
     env:
       STUDYBOOK_VERSION_CODE: ${{ github.run_number }}
       STUDYBOOK_VERSION_NAME: 0.1.${{ github.run_number }}
@@ -76,18 +77,25 @@ jobs:
           npx cap sync android
           node scripts/prepare-android.mjs
 
-      - name: Restore LAB signing continuity
-        id: signing-cache
-        uses: actions/cache@v4
+      - name: Download original LAB01 signing identity
+        uses: actions/download-artifact@v4
         with:
-          path: ~/.android/debug.keystore
-          key: studybook-ai-lab01-debug-signing-v1
+          name: StudyBook-LAB01-signing-recovery
+          path: signing-recovery
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: 37467723184
 
-      - name: Create LAB signing key on first build
-        if: steps.signing-cache.outputs.cache-hit != 'true'
+      - name: Install and verify original LAB01 signing key
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p ~/.android
-          keytool -genkeypair -v             -keystore ~/.android/debug.keystore             -storepass android             -alias androiddebugkey             -keypass android             -dname "CN=StudyBook AI LAB 01,O=StudyBook AI,C=IT"             -keyalg RSA -keysize 2048 -validity 10000
+          cp signing-recovery/lab01-debug.keystore ~/.android/debug.keystore
+          KEY_SHA=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | sed -n 's/.*SHA256: //p' | head -n1)
+          EXPECTED_SHA="D7:BB:93:15:C9:C4:35:18:72:49:54:78:61:0C:48:47:25:08:6E:2B:AB:BC:04:BE:C6:5E:C8:23:45:5F:BD:CC"
+          test "$KEY_SHA" = "$EXPECTED_SHA"
+          echo "LAB01 signing fingerprint verified: $KEY_SHA"
 
       - name: Build installable debug APK
         working-directory: android
