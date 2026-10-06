@@ -1,3 +1,4 @@
+import { deliverBlob } from './fileDelivery.js';
 export { exportDocx } from './exportersV11.js';
 export { exportHtml, exportPdf, printStudyBook } from './exportersV12.js';
 
