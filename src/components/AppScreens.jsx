@@ -47,6 +47,7 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest }) {
         onPointerUp={clearHold}
         onPointerCancel={clearHold}
         onPointerLeave={clearHold}
+        onContextMenu={(event) => event.preventDefault()}
         onClick={openBook}
         disabled={!available}
         aria-label={`${title}. Pressione prolungata per eliminare`}
@@ -110,7 +111,7 @@ export function HomeScreen({
         </div>
         <div className="sb-source-grid">
           <button type="button" onClick={onScanner} disabled={importing || generating}><span>⌗</span>Scanner</button>
-          <button type="button" onClick={onImport} disabled={importing || generating}><span>PDF</span>PDF</button>
+          <button type="button" onClick={onImport} disabled={importing || generating}><span>BOOK</span>PDF / eBook</button>
           <button type="button" onClick={onImport} disabled={importing || generating}><span>▧</span>Foto</button>
           <button type="button" onClick={onImport} disabled={importing || generating}><span>▤</span>Documento</button>
         </div>
