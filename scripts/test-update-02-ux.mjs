@@ -24,6 +24,6 @@ const local = summarizeLocally('La disciplina si applica mediante tre condizioni
 assert.ok(local.simpleSummary);
 assert.notEqual(local.simpleSummary, local.summary);
 assert.equal(editorialParagraphText(local, { variant: 'simple' }), local.simpleSummary);
-assert.equal(editorialParagraphText(local, { variant: 'study' }), local.dsaSummary || local.summary);
+assert.equal(editorialParagraphText(local, { variant: 'study' }), local.summary);
 
 console.log(JSON.stringify({ ok:true, openBookCover:true, compactActions:true, processedPdfExplicit:true, originalFormatReader:true, distinctStudyAndSimpleText:true, groundedQuizFlashcardsOnly:true }, null, 2));
