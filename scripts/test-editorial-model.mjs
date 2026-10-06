@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { buildEditorialDocument, editorialParagraphText } from '../src/lib/editorialModel.js';
+import { EDITORIAL_MODEL_VERSION, buildEditorialDocument, editorialParagraphText } from '../src/lib/editorialModel.js';
+
+assert.equal(EDITORIAL_MODEL_VERSION, 1);
 
 const book = {
   chapters: [{
