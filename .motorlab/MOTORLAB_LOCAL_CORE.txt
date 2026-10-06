@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.05-r20
+RELEASE=2026.10.06-r21
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -33,6 +33,20 @@ POLLICINO_EXECUTOR_ADAPTER=required
 POLLICINO_TERMINAL_HOOKS=required
 FAST_ITERATION_NO_SPIN=required
 RISK_SCALED_LAB_ITERATION=required
+FOUR_DESIGN_PILLARS=required
+SPEED_PRIMARY_OPTIMIZATION=required
+TIME_TO_TESTABLE_ARTIFACT_KPI=required
+COMPLEXITY_BUDGET=required
+ADAPTIVE_DAG_EXECUTION=required
+CRITICAL_PATH_FIRST=required
+ADAPTIVE_RUNNER_FANOUT=required
+RUNNER_ISOLATION=required
+SINGLE_INTEGRATION_LANE=required
+CONTINUOUS_CONVERGENCE=required
+CORRECTION_RELAY=required
+BOUNDED_SPECULATIVE_EXECUTION=required
+EVIDENCE_LEARNING_LOOP=required
+INCREMENTAL_EVERYTHING=required
 CHANGE_HISTORY_REGISTRY=required
 SEMANTIC_CHANGE_LOOKUP=required
 SELECTIVE_EXACT_RESTORE=required
@@ -67,6 +81,22 @@ LOCAL FALLBACK CONTRACT
 - Before every NEW write-capable application/project modification, initial mutation wording is intent only; perform read-only preparation, show pre-change report, then wait for Bruno approval.
 - Apply Change Compatibility Guard and single-writer before writes.
 - Eligible LAB work uses risk-scaled Fast Iteration/No-Spin; HIGH-risk and CANDIDATA/MADRE retain full gates.
+
+
+FOUR PILLARS + ADAPTIVE VELOCITY - R21+
+- Four permanent objectives: engine efficiency, automation/programming facilitation, final artifact quality, execution speed.
+- Execution speed is the primary optimization priority; TTTA is the primary comparable performance KPI.
+- Hard safety/correctness/security/data-integrity/signing/package/approval/lifecycle/project-native constraints still win.
+- Complexity must pay rent: prefer on-demand/reused/merged mechanisms over always-on overhead.
+- Eligible non-trivial work is decomposed into a dependency DAG; critical-path tasks receive priority.
+- Independent tasks start when their own prerequisites are ready; do not impose global barriers without a dependency reason.
+- Runner fan-out is adaptive; one runner is preferred when coordination overhead exceeds expected savings.
+- Parallel writes require disjoint isolated scopes; one integration lane owns final artifact state.
+- Converge compatible outputs continuously and return corrections only to affected scopes.
+- Bounded speculative alternatives are allowed only when isolated, safe and likely to beat serial trial without hidden paid/quota abuse.
+- Prefer incremental inspection/test/build/cache reuse; invalidate only affected surfaces when evidence permits.
+- Learn from verified errors, Root Cause, searches/research, timings, build/cache/provider behavior, compatibility conflicts, recovery and successful/failed strategies.
+- Lessons are bounded, evidence-backed, context/invalidation aware, advisory only and never replace current Git/source/provider truth or approval.
 
 ARTIFACT-FIRST ROOT CAUSE - R15+
 - When Bruno expects an APK/ZIP/testable artifact for an approved defect/regression, artifact delivery is the default critical path.
@@ -133,7 +163,7 @@ CENTRAL SYNC
 Compare local release with central manifest only at safe boundaries. Preserve current VERIFIED local bundle as LAST_GOOD before adoption. Never switch release mid active write/build/test/promotion.
 
 FUTURE PROJECTS
-Future projects inherit hard pre-change approval, Root Cause Closure, Artifact-First ordering, dual progress, Fast Iteration/No-Spin, technical history, visible restore register and r16 multi-service authority/persistent-state/observability/knowledge-routing contracts.
+Future projects inherit hard pre-change approval, Root Cause Closure, Artifact-First ordering, dual progress, Fast Iteration/No-Spin, technical history, visible restore register, r16 multi-service authority/persistent-state/observability/knowledge-routing contracts and r21 Four-Pillar adaptive Velocity/learning/TTTA rules.
 
 PLATFORM LIMIT
 Repository text cannot wake a host with no execution cycle and cannot continue invisibly without a real durable executor.
@@ -156,7 +186,7 @@ POLLICINO CONTINUITY - R20+
 - Alive-but-stalled evidence may precompute `READY_STALL_SUSPECTED`; resumed progress supersedes it.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V2.15
+MOTORLAB-SATELLITE-BUNDLE-V2.16
 Revision 2.6: r16 adds authority/data ownership, persistent operational state, MOTORLAB_OPERATION_ID, observability boundaries, service connection-status tracking and non-redundant auxiliary-tool routing.
 Revision 2.7: r17 adds Android update-family lifecycle fallback markers.
 
@@ -175,3 +205,5 @@ Revision 2.13: r20 adds explicit stable POLLICINO_PROOF_HEAD inheritance so secr
 Revision 2.14: r20 persists and consumes the stable local sidecar-adoption proof so later metadata-only commits do not break source-proof enrollment.
 
 Revision 2.15: r20 Codex sidecar emits an immediate synchronous liveness pulse on active hooks before starting the detached daemon, eliminating first-heartbeat startup ambiguity.
+
+Revision 2.16: r21 adds Four-Pillar TTTA-first adaptive Velocity markers, critical-path DAG scheduling, isolated runner fan-out, continuous convergence, incremental execution, complexity budget and bounded evidence learning.

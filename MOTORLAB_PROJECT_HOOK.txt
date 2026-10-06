@@ -37,6 +37,20 @@ MOTORLAB_EXECUTION_CONTINUITY=required
 MOTORLAB_POLLICINO_MODE=external-control-plane-only
 MOTORLAB_ANDROID_UPDATE_FAMILY_MODE=enabled
 MOTORLAB_PAIRED_SAFETY_LAB=required
+MOTORLAB_FOUR_DESIGN_PILLARS=required
+MOTORLAB_SPEED_PRIMARY_OPTIMIZATION=required
+MOTORLAB_TIME_TO_TESTABLE_ARTIFACT_KPI=required
+MOTORLAB_COMPLEXITY_BUDGET=required
+MOTORLAB_ADAPTIVE_DAG_EXECUTION=required
+MOTORLAB_CRITICAL_PATH_FIRST=required
+MOTORLAB_ADAPTIVE_RUNNER_FANOUT=required
+MOTORLAB_RUNNER_ISOLATION=required
+MOTORLAB_SINGLE_INTEGRATION_LANE=required
+MOTORLAB_CONTINUOUS_CONVERGENCE=required
+MOTORLAB_CORRECTION_RELAY=required
+MOTORLAB_BOUNDED_SPECULATIVE_EXECUTION=required
+MOTORLAB_EVIDENCE_LEARNING_LOOP=required
+MOTORLAB_INCREMENTAL_EVERYTHING=required
 MOTORLAB_LAB_UPDATE_IDENTITY=stable-applicationId-stable-signing-increasing-versionCode
 MOTORLAB_CANDIDATE_POLICY=new-immutable-family
 MOTORLAB_MOTHER_PROMOTION_POLICY=approved-candidate-same-family-source
@@ -48,7 +62,7 @@ Persistent StudyBook-AI-side hook. Every recognizable StudyBook-AI chat activate
 
 MANDATORY RULES
 1. MotorLab activates before substantive StudyBook-AI work and first visible line is "⚙️ MotorLab attivo".
-2. Load local r20 satellite first and reconcile central manifest at safe boundaries.
+2. Load local r21 satellite first and reconcile central manifest at safe boundaries.
 3. Live newer GitHub/job/artifact evidence wins over stale ledgers.
 4. Preserve logical operation/progress/next-safe-step across chat ids through Project Continuity + Resume Recovery.
 5. Apply Change Compatibility Guard before every write: ONE RESPONSIBILITY = ONE ACTIVE COORDINATOR.
@@ -62,8 +76,10 @@ MANDATORY RULES
 13. Keep visible Registro Modifiche e Ripristini limited to Bruno-confirmed working changes.
 14. Update technical change history and Project Continuity at material verified boundaries.
 15. MotorLab metadata must not alter StudyBook runtime/UI/domain behavior unless that application change is separately in the approved scope.
+16. Apply r21 Four-Pillar Adaptive Velocity: TTTA-first critical-path DAG planning, adaptive one-or-many runners, isolated parallel writes, one integration lane, continuous convergence, targeted correction relay, incremental evidence reuse and bounded learning without weakening approval/safety/lifecycle gates.
+17. Complexity must pay rent: keep optional orchestration off the critical path unless it produces a net benefit to speed, automation, engine efficiency or final artifact quality.
 
 VERSION
-MOTORLAB-PROJECT-HOOK-STUDYBOOK-V2.0
-ADOPTED_RELEASE=2026.10.05-r20
+MOTORLAB-PROJECT-HOOK-STUDYBOOK-V2.1
+ADOPTED_RELEASE=2026.10.06-r21
 UPDATED_DATE=2026-10-06
