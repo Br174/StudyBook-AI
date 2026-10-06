@@ -3,6 +3,7 @@ import { askStudyAssistant, STUDY_ACTIONS } from '../lib/studyAssistant.js';
 import { buildConceptMap, buildFlashcards, buildOralQuestions, buildQuiz } from '../lib/studyTools.js';
 import { readerCssVariables } from '../lib/accessibility.js';
 import { editorialParagraphText } from '../lib/editorialModel.js';
+import { filterGlossaryEntries } from '../lib/glossaryQuality.js';
 import '../studyMode.css';
 import '../studyTools.css';
 import '../studyContinuous.css';
@@ -21,24 +22,12 @@ function escapeRegExp(value) {
 }
 
 function cleanGlossary(entries = []) {
-  const seen = new Set();
-  const output = [];
-  for (const entry of entries || []) {
-    const term = String(entry?.term || '').trim();
-    const definition = String(entry?.definition || '').trim();
-    if (!term || !definition) continue;
-    const key = term.toLocaleLowerCase('it-IT');
-    if (seen.has(key)) continue;
-    seen.add(key);
-    output.push({
-      term,
-      definition,
-      placement: 'side',
-      basis: entry?.basis || 'source',
-      paragraphIndex: Number.isInteger(entry?.paragraphIndex) ? entry.paragraphIndex : null,
-    });
-  }
-  return output;
+  return filterGlossaryEntries(entries, { limit: 24 }).map((entry) => ({
+    ...entry,
+    placement: 'side',
+    basis: entry?.basis || 'source',
+    paragraphIndex: Number.isInteger(entry?.paragraphIndex) ? entry.paragraphIndex : null,
+  }));
 }
 
 function chapterGlossary(chapter = {}) {
