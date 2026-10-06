@@ -1,4 +1,6 @@
-export const EDITORIAL_MODEL_VERSION = 1;
+import { filterGlossaryEntries } from './glossaryQuality.js';
+
+export const EDITORIAL_MODEL_VERSION = 2;
 
 function clean(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
@@ -22,19 +24,13 @@ export function editorialParagraphText(paragraph, { variant = 'study', dsaMode =
 }
 
 export function editorialGlossary(paragraphs = []) {
-  const seen = new Set();
-  const entries = [];
-  for (const paragraph of paragraphs) {
-    for (const entry of Array.isArray(paragraph?.glossary) ? paragraph.glossary : []) {
-      const term = clean(entry?.term);
-      const definition = clean(entry?.definition);
-      const key = term.toLocaleLowerCase('it-IT');
-      if (!term || !definition || seen.has(key)) continue;
-      seen.add(key);
-      entries.push({ term, definition, basis: entry?.basis || 'source' });
-    }
-  }
-  return entries;
+  const entries = paragraphs.flatMap((paragraph) => Array.isArray(paragraph?.glossary) ? paragraph.glossary : []);
+  return filterGlossaryEntries(entries, { limit: 24 }).map((entry) => ({
+    term: entry.term,
+    definition: entry.definition,
+    basis: entry?.basis || 'source',
+    confidence: entry?.confidence ?? null,
+  }));
 }
 
 export function buildEditorialDocument(book, options = {}) {
