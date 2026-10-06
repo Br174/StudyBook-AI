@@ -144,6 +144,13 @@ export function auditFidelity(source, studyText) {
 }
 
 function sourceSentenceForUnit(source, unitText) {
+  const target = normalizeFidelityText(unitText).toLocaleLowerCase('it-IT');
+  const fullSentences = (normalizeFidelityText(source).match(/[^.!?]+(?:[.!?]+|$)/g) || [source])
+    .map(normalizeFidelityText)
+    .filter(Boolean);
+  const exactCarrier = fullSentences.find((sentence) => sentence.toLocaleLowerCase('it-IT').includes(target));
+  if (exactCarrier) return exactCarrier;
+
   const sentences = splitSemanticUnits(source);
   const targetWords = new Set(contentWords(unitText));
   let best = '';
