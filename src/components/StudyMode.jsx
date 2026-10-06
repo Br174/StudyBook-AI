@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { askStudyAssistant, STUDY_ACTIONS } from '../lib/studyAssistant.js';
 import { buildConceptMap, buildFlashcards, buildOralQuestions, buildQuiz } from '../lib/studyTools.js';
+import { readerCssVariables } from '../lib/accessibility.js';
 import '../studyMode.css';
 import '../studyTools.css';
 import '../studyContinuous.css';
@@ -119,13 +120,14 @@ function EmptyTool({ children }) {
   return <div className="study-tool-empty">{children}</div>;
 }
 
-export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode, onClose }) {
+export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode, accessibility, onClose }) {
   const [target, setTarget] = useState(null);
   const [answer, setAnswer] = useState(null);
   const [assistantBusy, setAssistantBusy] = useState(false);
   const [assistantError, setAssistantError] = useState('');
   const [question, setQuestion] = useState('');
   const [tool, setTool] = useState('reader');
+  const [readingVariant, setReadingVariant] = useState('study');
   const [toolIndex, setToolIndex] = useState(0);
   const [flashRevealed, setFlashRevealed] = useState(false);
   const [quizChoice, setQuizChoice] = useState(null);
@@ -203,8 +205,14 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
     try { localStorage.setItem('studybook:auto-speak-help', enabled ? '1' : '0'); } catch { /* noop */ }
   }
 
+  function paragraphReadingText(paragraph) {
+    if (readingVariant === 'simple') return paragraph.simpleSummary || paragraph.summary || paragraph.original || '';
+    if (dsaMode) return paragraph.dsaSummary || paragraph.summary || paragraph.original || '';
+    return paragraph.summary || paragraph.dsaSummary || paragraph.original || '';
+  }
+
   function speakChapter() {
-    const text = chapter?.paragraphs?.map((paragraph) => paragraph.summary || paragraph.dsaSummary || '').join(' ');
+    const text = chapter?.paragraphs?.map(paragraphReadingText).join(' ');
     speak(text);
   }
 
@@ -233,7 +241,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
   const oralQuestion = oralQuestions[toolIndex];
 
   return (
-    <div className="study-mode" role="dialog" aria-modal="true" aria-label="Modalità Studio">
+    <div className={`study-mode ${accessibility?.enabled ? 'accessibility-on' : ''} ${accessibility?.phone?.readingGuide ? 'reading-guide-on' : ''}`} style={readerCssVariables(accessibility)} role="dialog" aria-modal="true" aria-label="Modalità Studio">
       <header className="study-mode-header">
         <div>
           <span>{modeLabel(book?.level)}</span>
@@ -266,9 +274,17 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
       </nav>
 
       {tool === 'reader' && (
-        <div className="study-mode-tip">
-          Lettura continua del capitolo. Solo i termini tecnici o giuridici davvero non comuni sono in grassetto; la spiegazione resta nella fascia laterale.
-        </div>
+        <>
+          <div className="study-reading-variant" aria-label="Versione del testo">
+            <button type="button" className={readingVariant === 'study' ? 'active' : ''} onClick={() => setReadingVariant('study')}>Testo di studio</button>
+            <button type="button" className={readingVariant === 'simple' ? 'active' : ''} onClick={() => setReadingVariant('simple')}>In parole semplici</button>
+          </div>
+          <div className="study-mode-tip">
+            {readingVariant === 'study'
+              ? 'Versione rigorosa e concentrata: conserva le informazioni utili allo studio.'
+              : 'Versione breve e accessibile per capire rapidamente il significato prima di approfondire.'}
+          </div>
+        </>
       )}
 
       {tool === 'reader' && (
@@ -281,9 +297,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
               </header>
 
               {chapter.paragraphs.map((paragraph, index) => {
-                const text = dsaMode
-                  ? (paragraph.dsaSummary || paragraph.summary || paragraph.original || '')
-                  : (paragraph.summary || paragraph.dsaSummary || paragraph.original || '');
+                const text = paragraphReadingText(paragraph);
                 const localGlossary = cleanGlossary(paragraph.glossary || []);
                 const sectionTitle = normalizedSection(paragraph.sourceSection);
                 const previousSection = index > 0 ? normalizedSection(chapter.paragraphs[index - 1]?.sourceSection) : '';
