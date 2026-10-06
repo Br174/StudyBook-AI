@@ -1,0 +1,12 @@
+{
+  "appId": "it.studybook.ai.lab",
+  "appName": "StudyBook AI LAB",
+  "webDir": "dist",
+  "server": {
+    "hostname": "localhost",
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
