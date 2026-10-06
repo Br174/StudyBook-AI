@@ -1,3 +1,5 @@
+export const EDITORIAL_MODEL_VERSION = 1;
+
 function clean(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
