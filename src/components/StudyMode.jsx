@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { askStudyAssistant, STUDY_ACTIONS } from '../lib/studyAssistant.js';
 import { buildConceptMap, buildFlashcards, buildOralQuestions, buildQuiz } from '../lib/studyTools.js';
 import { readerCssVariables } from '../lib/accessibility.js';
+import { editorialParagraphText } from '../lib/editorialModel.js';
 import '../studyMode.css';
 import '../studyTools.css';
 import '../studyContinuous.css';
@@ -206,9 +207,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
   }
 
   function paragraphReadingText(paragraph) {
-    if (readingVariant === 'simple') return paragraph.simpleSummary || paragraph.summary || paragraph.original || '';
-    if (dsaMode) return paragraph.dsaSummary || paragraph.summary || paragraph.original || '';
-    return paragraph.summary || paragraph.dsaSummary || paragraph.original || '';
+    return editorialParagraphText(paragraph, { variant: readingVariant, dsaMode });
   }
 
   function speakChapter() {
