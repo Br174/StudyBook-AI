@@ -129,6 +129,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
   const [question, setQuestion] = useState('');
   const [tool, setTool] = useState('reader');
   const [readingVariant, setReadingVariant] = useState('study');
+  const [studyScope, setStudyScope] = useState('book');
   const [toolIndex, setToolIndex] = useState(0);
   const [flashRevealed, setFlashRevealed] = useState(false);
   const [quizChoice, setQuizChoice] = useState(null);
@@ -140,10 +141,19 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
 
   const chapter = book?.chapters?.[chapterIndex];
   const chapterCount = book?.chapters?.length || 0;
-  const flashcards = useMemo(() => buildFlashcards(chapter || {}), [chapter]);
-  const quiz = useMemo(() => buildQuiz(chapter || {}), [chapter]);
-  const oralQuestions = useMemo(() => buildOralQuestions(chapter || {}), [chapter]);
-  const conceptMap = useMemo(() => buildConceptMap(chapter || {}), [chapter]);
+  const wholeBookChapter = useMemo(() => ({
+    title: 'Intero libro',
+    paragraphs: (book?.chapters || []).flatMap((item, cIndex) => (item.paragraphs || []).map((paragraph) => ({
+      ...paragraph,
+      sourceSection: [item.title, paragraph.sourceSection].filter(Boolean).join(' · '),
+      sourceChapterIndex: cIndex,
+    }))),
+  }), [book]);
+  const studySource = studyScope === 'book' ? wholeBookChapter : (chapter || {});
+  const flashcards = useMemo(() => buildFlashcards(studySource, studyScope === 'book' ? 60 : 36), [studySource, studyScope]);
+  const quiz = useMemo(() => buildQuiz(studySource, studyScope === 'book' ? 30 : 18), [studySource, studyScope]);
+  const oralQuestions = useMemo(() => buildOralQuestions(studySource, studyScope === 'book' ? 36 : 24), [studySource, studyScope]);
+  const conceptMap = useMemo(() => buildConceptMap(studySource, studyScope === 'book' ? 60 : 24), [studySource, studyScope]);
   const glossary = useMemo(() => chapterGlossary(chapter || {}), [chapter]);
 
   useEffect(() => {
@@ -153,7 +163,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
     setQuizScore(0);
     setOralRevealed(false);
     setTarget(null);
-  }, [chapterIndex, tool]);
+  }, [chapterIndex, tool, studyScope]);
 
   function openTarget(selection, paragraph, glossaryEntry = null) {
     const value = String(selection || '').trim();
@@ -271,6 +281,13 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
           <button type="button" key={id} className={tool === id ? 'active' : ''} onClick={() => setTool(id)}>{label}</button>
         ))}
       </nav>
+
+      {tool !== 'reader' && (
+        <div className="study-scope-switch" aria-label="Ambito strumenti di studio">
+          <button type="button" className={studyScope === 'book' ? 'active' : ''} onClick={() => setStudyScope('book')}>Intero libro</button>
+          <button type="button" className={studyScope === 'chapter' ? 'active' : ''} onClick={() => setStudyScope('chapter')}>Solo capitolo</button>
+        </div>
+      )}
 
       {tool === 'reader' && (
         <>
