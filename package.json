@@ -28,7 +28,8 @@
     "@capacitor/android": "8.5.2",
     "@capacitor/core": "8.5.2",
     "@capacitor/filesystem": "8.1.4",
-    "@capacitor/share": "8.0.2"
+    "@capacitor/share": "8.0.2",
+    "@capacitor/file-viewer": "2.0.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.4",
