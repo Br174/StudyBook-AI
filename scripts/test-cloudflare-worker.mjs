@@ -15,6 +15,7 @@ let workerOptions;
 function resultFor(source) {
   return {
     summary: source,
+    simpleSummary: `In parole semplici: ${source}`,
     dsaSummary: source,
     keyPoints: [source],
     remember: [source],
