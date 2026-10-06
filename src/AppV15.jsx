@@ -709,230 +709,100 @@ export default function AppV14() {
     speakText(text);
   }
 
-  return (
-    <main className="app-shell">
-      <header className="hero">
-        <div className="hero-copy">
-          <span className="eyebrow">STUDYBOOK AI · v0.15</span>
-          <h1>Comprendi meglio. Studia solo ciò che conta.</h1>
-          <p>Importa libri e pagine, riconosci struttura e gerarchie, elimina il superfluo e ricostruisci un testo di studio fedele, chiaro e interattivo.</p>
+  const activeProfile = profiles.find((profile) => profile.id === activeProfileId) || { id: 'default', name: 'Bruno' };
+
+  function openFromLibrary(item, view = 'processed') {
+    return openLibraryItem(item.id, { original: view === 'original', openReader: view !== 'original' });
+  }
+
+  const scannerPanel = scanPages.length > 0 ? (
+    <section className="panel scan-basket sb-inline-scanner">
+      <div className="scan-basket-head">
+        <div><span className="eyebrow dark">SCANSIONI</span><h2>{scanPages.length} {scanPages.length === 1 ? 'pagina' : 'pagine'} · {scanReadyCount} pronte</h2><p>Le foto servono soltanto per l’OCR e non entreranno nel libro elaborato.</p></div>
+        <label className="scan-name-field">Nome raccolta<input value={scanSessionName} onChange={(event) => setScanSessionName(event.target.value)} maxLength={80} /></label>
+      </div>
+      {scannerStorageInfo && (
+        <div className={`scanner-storage-meter ${scannerStorageInfo.risk || 'unknown'}`}>
+          <div className="scanner-storage-head"><strong>Protezione spazio scanner</strong><span>{scannerStorageInfo.supported && scannerStorageInfo.quota ? `${formatStorageBytes(scannerStorageInfo.usage)} / ${formatStorageBytes(scannerStorageInfo.quota)}` : 'Stima spazio non disponibile'}</span></div>
+          {scannerStorageInfo.ratio != null && <div className="scanner-storage-track"><span style={{ width: `${Math.min(100, Math.max(1, Math.round(scannerStorageInfo.ratio * 100)))}%` }} /></div>}
         </div>
-        <div className="status-pill">{status}</div>
+      )}
+      <div className="scan-page-grid">
+        {scanPages.map((page, index) => (
+          <article className={`scan-page-card ${page.status}`} key={page.id}>
+            <div className="scan-thumb-wrap"><img className="scan-thumb" src={page.previewUrl} alt={`Pagina ${index + 1}`} /><span className="scan-page-number">{index + 1}</span></div>
+            <div className="scan-page-body">
+              <div className="scan-page-title"><strong>Pagina {index + 1}</strong><span className={`scan-status ${page.status}`}>{page.status === 'ready' ? 'Pronta' : page.status === 'error' ? 'Da rifare' : 'OCR…'}</span></div>
+              {page.status === 'ready' && <details className="scan-text-preview"><summary>Controlla testo OCR</summary><textarea value={page.text} onChange={(event) => patchScanPage(page.id, { text: event.target.value }, { persistDelay: 600 })} /></details>}
+              {page.status === 'error' && <div className="scan-page-error">{page.error}</div>}
+              <div className="scan-page-actions">
+                <button type="button" onClick={() => moveScanPage(index, -1)} disabled={index === 0 || scanProcessing}>↑</button>
+                <button type="button" onClick={() => moveScanPage(index, 1)} disabled={index === scanPages.length - 1 || scanProcessing}>↓</button>
+                {page.status === 'error' && <button type="button" onClick={() => recognizeScanPage(page.id, page.file, index + 1)} disabled={scanProcessing}>Riprova OCR</button>}
+                <button type="button" className="danger-link" onClick={() => removeScanPage(page.id)} disabled={scanProcessing}>Elimina</button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="scan-basket-actions">
+        <button type="button" className="secondary-button" onClick={clearScanSession} disabled={scanProcessing || generating}>Svuota</button>
+        <button type="button" className="scanner-button" onClick={openScanner} disabled={scanProcessing || generating || scannerOptimizing}>📷 Aggiungi pagina</button>
+        <button type="button" className="primary-button finish-scan-button" onClick={finishScanSession} disabled={scanProcessing || generating || scanHasErrors || scanReadyCount !== scanPages.length}>{generating ? `Elaborazione ${progressPercent}%` : 'Fine scansione · Crea libro'}</button>
+      </div>
+    </section>
+  ) : null;
+
+  return (
+    <main className="sb-app-frame">
+      <header className="sb-topbar">
+        <button type="button" className="sb-brand" onClick={() => setActiveScreen('home')}>StudyBook <b>AI</b></button>
+        <div className="sb-top-actions">
+          <button type="button" onClick={() => setActiveScreen('settings')}>{activeProfile.name}</button>
+          <button type="button" aria-label="Impostazioni" onClick={() => setActiveScreen('settings')}>⚙</button>
+        </div>
       </header>
 
-      <section className="panel import-panel">
-        <div>
-          <span className="section-kicker">INIZIA</span>
-          <h2>Importa o scansiona</h2>
-          <p>PDF, DOCX, EPUB, TXT e fotografie. Le foto scanner vengono ottimizzate per ridurre lo spazio, restano locali solo mentre la raccolta è incompleta e non entrano nel libro di studio.</p>
-        </div>
-        <div className="import-actions">
-          <label className={importing ? 'upload-button disabled' : 'upload-button'}>
-            {importing ? 'Analisi in corso…' : 'Scegli file'}
-            <input
-              type="file"
-              accept=".pdf,.docx,.epub,.txt,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,text/plain,image/png,image/jpeg,image/webp"
-              onChange={handleFile}
-              disabled={importing}
-            />
-          </label>
-          <button type="button" className="scanner-button" onClick={openScanner} disabled={importing || generating || scanProcessing || scannerOptimizing}>📷 {scannerOptimizing ? 'Ottimizzo foto…' : (scanPages.length ? 'Aggiungi pagina' : 'Scanner')}</button>
-          <input ref={cameraFileInputRef} className="camera-fallback-input" type="file" accept="image/*" capture="environment" onChange={handleCameraFallback} />
-        </div>
-        {fileName && <div className="file-name">{fileName}{documentData?.sourceFormat && <span className="format-chip">{documentData.sourceFormat}</span>}</div>}
-        {error && <div className="error-box">{error}</div>}
-      </section>
+      <input ref={documentFileInputRef} type="file" hidden accept=".pdf,.docx,.epub,.txt,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,text/plain,image/png,image/jpeg,image/webp" onChange={handleFile} />
+      {error && <div className="error-box sb-global-error">{error}</div>}
 
-      <section className="panel library-panel">
-        <div className="library-head">
-          <div><span className="section-kicker">LIBRERIA</span><h2>I tuoi libri di studio</h2><p>Salvati sul dispositivo, senza archivio immagini.</p></div>
-          <span className="library-count">{libraryItems.length}</span>
-        </div>
-        {libraryItems.length ? (
-          <div className="library-grid">
-            {libraryItems.map((item) => (
-              <article className={item.id === libraryId ? 'library-card active' : 'library-card'} key={item.id}>
-                <div className="library-card-main">
-                  <strong>{item.fileName}</strong>
-                  <small>{item.metadata?.chapters || 0} capitoli · {item.metadata?.paragraphs || 0} paragrafi{item.metadata?.pages ? ` · ${item.metadata.pages} pagine` : ''}</small>
-                  <small>Aggiornato {formatLibraryDate(item.updatedAt)}</small>
-                </div>
-                <div className="library-card-actions">
-                  <button type="button" onClick={() => openLibraryItem(item.id)} disabled={libraryBusy}>Apri</button>
-                  <button type="button" className="danger-link" onClick={() => removeLibraryItem(item.id)} disabled={libraryBusy}>Elimina</button>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : <div className="library-empty">Il primo libro elaborato verrà salvato qui automaticamente.</div>}
-      </section>
-
-      {scanPages.length > 0 && (
-        <section className="panel scan-basket">
-          <div className="scan-basket-head">
-            <div><span className="eyebrow dark">SCANSIONI</span><h2>{scanPages.length} {scanPages.length === 1 ? 'pagina' : 'pagine'} · {scanReadyCount} pronte</h2><p>Salvataggio automatico locale: le foto vengono compresse in modo conservativo per l’OCR e vengono eliminate dall’archivio scanner appena il libro è creato e salvato in Libreria.</p></div>
-            <label className="scan-name-field">Nome raccolta<input value={scanSessionName} onChange={(event) => setScanSessionName(event.target.value)} maxLength={80} /></label>
-          </div>
-          {scannerStorageInfo && (
-            <div className={`scanner-storage-meter ${scannerStorageInfo.risk || 'unknown'}`}>
-              <div className="scanner-storage-head">
-                <strong>Protezione spazio scanner</strong>
-                <span>{scannerStorageInfo.supported && scannerStorageInfo.quota
-                  ? `Quota locale: ${formatStorageBytes(scannerStorageInfo.usage)} / ${formatStorageBytes(scannerStorageInfo.quota)}`
-                  : 'Stima quota locale non disponibile'}</span>
-              </div>
-              {scannerStorageInfo.ratio != null && <div className="scanner-storage-track" aria-label="Uso spazio locale"><span style={{ width: `${Math.min(100, Math.max(1, Math.round(scannerStorageInfo.ratio * 100)))}%` }} /></div>}
-              <small>{scannerStorageInfo.risk === 'blocked'
-                ? 'Spazio quasi esaurito: nuove pagine vengono bloccate per evitare una raccolta incompleta o corrotta.'
-                : scannerStorageInfo.risk === 'critical'
-                  ? 'Spazio molto ridotto: conviene completare presto questa raccolta.'
-                  : scannerStorageInfo.risk === 'warning'
-                    ? 'Lo spazio locale sta diminuendo; StudyBook AI continua a comprimere le nuove foto.'
-                    : 'Le nuove foto vengono ridimensionate e compresse senza abbassare intenzionalmente la leggibilità OCR.'}</small>
-            </div>
-          )}
-          <div className="scan-page-grid">
-            {scanPages.map((page, index) => (
-              <article className={`scan-page-card ${page.status}`} key={page.id}>
-                <div className="scan-thumb-wrap"><img className="scan-thumb" src={page.previewUrl} alt={`Pagina ${index + 1}`} /><span className="scan-page-number">{index + 1}</span></div>
-                <div className="scan-page-body">
-                  <div className="scan-page-title"><strong>Pagina {index + 1}</strong><span className={`scan-status ${page.status}`}>{page.status === 'ready' ? 'Pronta' : page.status === 'error' ? 'Da rifare' : 'OCR…'}</span></div>{page.storedBytes > 0 && <small className="scan-file-size">{formatStorageBytes(page.storedBytes)}{page.optimized && page.originalBytes > page.storedBytes ? ` · ottimizzata da ${formatStorageBytes(page.originalBytes)}` : ''}</small>}
-                  {page.status === 'ready' && <details className="scan-text-preview"><summary>Controlla e correggi testo OCR</summary><textarea value={page.text} onChange={(event) => patchScanPage(page.id, { text: event.target.value }, { persistDelay: 600 })} /></details>}
-                  {page.status === 'error' && <div className="scan-page-error">{page.error}</div>}
-                  <div className="scan-page-actions">
-                    <button type="button" onClick={() => moveScanPage(index, -1)} disabled={index === 0 || scanProcessing}>↑</button>
-                    <button type="button" onClick={() => moveScanPage(index, 1)} disabled={index === scanPages.length - 1 || scanProcessing}>↓</button>
-                    {page.status === 'error' && <button type="button" onClick={() => recognizeScanPage(page.id, page.file, index + 1)} disabled={scanProcessing}>Riprova OCR</button>}
-                    <button type="button" className="danger-link" onClick={() => removeScanPage(page.id)} disabled={scanProcessing}>Elimina</button>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-          <div className="scan-basket-actions">
-            <button type="button" className="secondary-button" onClick={clearScanSession} disabled={scanProcessing || generating}>Svuota</button>
-            <button type="button" className="scanner-button" onClick={openScanner} disabled={scanProcessing || generating || scannerOptimizing}>📷 {scannerOptimizing ? 'Ottimizzo foto…' : 'Aggiungi pagina'}</button>
-            <button type="button" className="primary-button finish-scan-button" onClick={finishScanSession} disabled={scanProcessing || generating || scanHasErrors || scanReadyCount !== scanPages.length}>{generating ? `Elaborazione ${progressPercent}%` : 'Fine scansione · Crea libro'}</button>
-          </div>
-        </section>
+      {activeScreen === 'home' && (
+        <HomeScreen
+          status={status} importing={importing} generating={generating} libraryItems={libraryItems}
+          onImport={() => documentFileInputRef.current?.click()} onScanner={openScanner} onOpenBook={openFromLibrary}
+          documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
+          scanContent={scannerPanel}
+        />
       )}
 
-      {scannerResultReady && studyBook && (
-        <section className="panel scan-ready-panel">
-          <div><span className="eyebrow dark">RACCOLTA COMPLETATA</span><h2>Le pagine sono diventate un libro di studio.</h2><p>Il testo OCR è stato organizzato, sintetizzato e salvato nella Libreria.</p></div>
-          <div className="ready-actions"><button type="button" className="primary-button" onClick={() => setStudyModeOpen(true)}>Studia ora</button><button type="button" className="secondary-button" onClick={() => exportPdf(studyBook, fileName, true)}>Scarica PDF</button></div>
-        </section>
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} onOpenBook={openFromLibrary} />}
+
+      {activeScreen === 'studio' && (
+        <StudioScreen
+          studyBook={studyBook} fileName={fileName}
+          onRead={() => setStudyModeOpen(true)}
+          onPdf={() => studyBook && exportPdf(studyBook, fileName, dsaMode)}
+          onStudy={() => setStudyModeOpen(true)}
+        />
       )}
 
-      {documentData && (
-        <>
-          <section className="stats-grid v11-stats">
-            <article className="stat-card"><span>Capitoli</span><strong>{documentData.chapters?.length || 0}</strong></article>
-            <article className="stat-card"><span>Sezioni</span><strong>{documentData.structure?.sectionCount || documentData.chapters?.reduce((n, c) => n + (c.sections?.length || 0), 0) || 0}</strong></article>
-            <article className="stat-card"><span>Paragrafi</span><strong>{paragraphCount}</strong></article>
-            <article className="stat-card"><span>Pagine</span><strong>{documentData.structure?.pageCount || documentData.pages?.length || '—'}</strong></article>
-          </section>
-
-          <section className="panel study-controls">
-            <div><span className="eyebrow dark">MOTORE DI COMPRENSIONE</span><h2>Crea il libro efficiente</h2><p>Struttura → paragrafi → sintesi fedele → controllo → DSA → studio interattivo.</p></div>
-            <label>Livello di sintesi<select value={level} onChange={(event) => setLevel(event.target.value)}>{Object.entries(summaryLevels).map(([value, item]) => <option key={value} value={value}>{item.label}</option>)}</select></label>
-            <label className="toggle-row"><input type="checkbox" checked={dsaMode} onChange={(event) => setDsaMode(event.target.checked)} />Modalità DSA</label>
-            <button type="button" className="primary-button" onClick={generateBook} disabled={generating || importing}>{generating ? `Elaborazione ${progressPercent}%` : (studyBook ? 'Rigenera libro' : 'Crea libro di studio')}</button>
-            {studyBook && <button type="button" className="study-now-button" onClick={() => setStudyModeOpen(true)}>📱 Studia sul telefono</button>}
-            {generating && <div className="progress-wrap"><div className="progress-bar"><span style={{ width: `${progressPercent}%` }} /></div><small>{progress.done} / {progress.total} paragrafi</small></div>}
-          </section>
-
-          {studyBook && (
-            <section className="panel export-bar">
-              <div><span className="eyebrow dark">LIBRO PRONTO</span><strong>{studyBook.engine === 'ai' ? 'Motore AI' : studyBook.engine === 'misto' ? 'AI + sicurezza locale' : 'Modalità locale di sicurezza'}</strong></div>
-              <div className="export-actions">
-                <button type="button" className="study-export-button" onClick={() => setStudyModeOpen(true)}>Studia</button>
-                <button type="button" onClick={() => persistBook(studyBook)}>Salva Libreria</button>
-                <button type="button" onClick={() => exportPdf(studyBook, fileName, dsaMode)}>PDF</button>
-                <button type="button" onClick={() => printStudyBook(studyBook, fileName, dsaMode)}>Stampa</button>
-                <button type="button" onClick={() => exportDocx(studyBook, fileName, dsaMode)}>DOCX</button>
-                <button type="button" onClick={() => exportHtml(studyBook, fileName, dsaMode)}>HTML</button>
-                <button type="button" onClick={() => exportTxt(studyBook, fileName, dsaMode)}>TXT</button>
-                <button type="button" onClick={() => exportJson(studyBook, fileName)}>JSON</button>
-              </div>
-            </section>
-          )}
-
-          <section className="workspace">
-            <aside className="panel chapter-list">
-              <span className="section-kicker">STRUTTURA</span><h2>Capitoli</h2>
-              {documentData.chapters.map((chapter, index) => (
-                <div className="chapter-entry" key={`${chapter.title}-${index}`}>
-                  <button type="button" className={index === selectedChapter ? 'chapter-button active' : 'chapter-button'} onClick={() => { setSelectedChapter(index); setSourceEditor(null); setSummaryEditor(null); }}>
-                    <span>{chapter.title}</span><small>{chapter.paragraphs.length} paragrafi{pageRange(chapter.pageStart, chapter.pageEnd) ? ` · ${pageRange(chapter.pageStart, chapter.pageEnd)}` : ''}</small>
-                  </button>
-                  {index === selectedChapter && chapter.sections?.length > 0 && <div className="section-list">{chapter.sections.map((section, sIndex) => <div key={`${section.title}-${sIndex}`}><span>{section.title}</span>{pageRange(section.pageStart, section.pageEnd) && <small>{pageRange(section.pageStart, section.pageEnd)}</small>}</div>)}</div>}
-                </div>
-              ))}
-            </aside>
-
-            <section className="panel reader-panel">
-              <div className="reader-heading">
-                <div><span className="eyebrow dark">{studyBook ? 'LIBRO DI STUDIO' : 'TESTO ORIGINALE'}</span><h2>{visibleChapter?.title}</h2><p className="reader-subtitle">{studyBook ? 'Le parole chiave vengono evidenziate per rendere più rapido il colpo d’occhio.' : 'Puoi correggere il testo prima di generare il libro.'}</p></div>
-                <div className="reader-heading-actions">{studyBook && <button type="button" className="primary-button compact" onClick={() => setStudyModeOpen(true)}>Studia</button>}<button type="button" className="secondary-button" onClick={speakChapter}>Ascolta capitolo</button></div>
-              </div>
-              <div className="paragraph-stack">
-                {visibleChapter?.paragraphs.map((paragraph, index) => {
-                  const key = paragraphKey(selectedChapter, index);
-                  const meta = metaForParagraph(paragraph, index);
-
-                  if (!studyBook) {
-                    const editing = sourceEditor?.key === key;
-                    return (
-                      <article className="paragraph-card source-card" key={key}>
-                        <div className="paragraph-toolbar"><div className="paragraph-number">{index + 1}</div>{!editing && <button type="button" className="text-action-button" onClick={() => beginSourceEdit(selectedChapter, index, paragraph)}>Modifica testo</button>}</div>
-                        <div className="source-meta">{meta.section && <span>§ {meta.section}</span>}{pageRange(meta.pageStart, meta.pageEnd) && <span>{pageRange(meta.pageStart, meta.pageEnd)}</span>}</div>
-                        {editing ? <div className="inline-editor"><textarea value={sourceEditor.value} onChange={(event) => setSourceEditor((current) => ({ ...current, value: event.target.value }))} /><div className="inline-editor-actions"><button type="button" className="secondary-button compact" onClick={() => setSourceEditor(null)}>Annulla</button><button type="button" className="primary-button compact" onClick={saveSourceEdit}>Salva testo</button></div></div> : <p>{paragraph}</p>}
-                      </article>
-                    );
-                  }
-
-                  const text = dsaMode ? (paragraph.dsaSummary || paragraph.summary) : paragraph.summary;
-                  const editing = summaryEditor?.key === key;
-                  const refining = refiningKey === key;
-                  return (
-                    <article className={dsaMode ? 'paragraph-card dsa-card' : 'paragraph-card'} key={key}>
-                      <div className="paragraph-toolbar">
-                        <div className="paragraph-number">{index + 1}</div>
-                        <div className="paragraph-actions">
-                          {!editing && <button type="button" className="text-action-button" onClick={() => beginSummaryEdit(selectedChapter, index, paragraph)}>Modifica</button>}
-                          <button type="button" className="ai-action-button" onClick={() => refineParagraph(selectedChapter, index, paragraph)} disabled={refining || Boolean(refiningKey) || generating}>{refining ? 'Controllo AI…' : '✦ Migliora con AI'}</button>
-                        </div>
-                      </div>
-                      <div className="source-meta">{meta.section && <span>§ {meta.section}</span>}{pageRange(meta.pageStart, meta.pageEnd) && <span>{pageRange(meta.pageStart, meta.pageEnd)}</span>}</div>
-                      {editing ? (
-                        <div className="inline-editor summary-editor"><textarea value={summaryEditor.value} onChange={(event) => setSummaryEditor((current) => ({ ...current, value: event.target.value }))} /><div className="inline-editor-actions"><button type="button" className="secondary-button compact" onClick={() => setSummaryEditor(null)}>Annulla</button><button type="button" className="primary-button compact" onClick={saveSummaryEdit}>Salva modifica</button></div></div>
-                      ) : <p className="summary-text"><HighlightedText text={text} keywords={paragraph.keywords} /></p>}
-                      {paragraph.keywords?.length > 0 && <div className="chips">{paragraph.keywords.map((keyword) => <span key={keyword}>{keyword}</span>)}</div>}
-                      {paragraph.keyPoints?.length > 0 && <div className="study-box"><strong>Punti chiave</strong><ul>{paragraph.keyPoints.map((point, i) => <li key={i}>{point}</li>)}</ul></div>}
-                      {paragraph.remember?.length > 0 && <div className="remember-box"><strong>Da ricordare</strong><ul>{paragraph.remember.map((point, i) => <li key={i}>{point}</li>)}</ul></div>}
-                      <details className="original-details"><summary>Mostra testo originale</summary><p>{paragraph.original}</p></details>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-          </section>
-        </>
+      {activeScreen === 'settings' && (
+        <SettingsScreen
+          settings={accessibility} onSettingsChange={updateAccessibility}
+          profiles={profiles.length ? profiles : [activeProfile]} activeProfileId={activeProfileId}
+          onProfileChange={setActiveProfileId} onAddProfile={addProfile}
+        />
       )}
 
-      {!documentData && !importing && scanPages.length === 0 && (
-        <section className="empty-state panel"><span className="section-kicker">STUDYBOOK AI</span><h2>Carica un libro e trasformalo in testo da studiare</h2><p>Niente archivio immagini: il progetto resta concentrato su struttura, comprensione, sintesi e studio.</p></section>
-      )}
-
-      {importing && <section className="empty-state panel"><h2>{status}</h2><p>Il testo viene riconosciuto e organizzato per capitoli, sezioni e paragrafi.</p></section>}
+      <BottomNav active={activeScreen === 'settings' ? 'home' : activeScreen} onChange={setActiveScreen} />
+      <input ref={cameraFileInputRef} className="camera-fallback-input" type="file" accept="image/*" capture="environment" onChange={handleCameraFallback} />
 
       {cameraOpen && (
         <div className="camera-overlay" role="dialog" aria-modal="true" aria-label="Scanner pagina">
           <div className="camera-sheet">
             <div className="camera-header"><div><span className="eyebrow">SCANNER · PAGINA {scanPages.length + 1}</span><h2>Fotografa la pagina</h2></div><button type="button" className="camera-close" onClick={stopCamera}>×</button></div>
             <div className="camera-stage"><video ref={videoRef} playsInline muted onLoadedMetadata={() => setCameraReady(true)} /><div className="scan-frame" aria-hidden="true" /></div>
-            <p className="camera-help">La foto viene salvata localmente nella raccolta scanner finché il lavoro è incompleto. Nel libro di studio finale salviamo il testo, non la foto.</p>
+            <p className="camera-help">La foto serve all’OCR durante l’acquisizione. Nel libro finale salviamo il testo, non l’immagine.</p>
             <div className="camera-actions"><button type="button" className="secondary-button" onClick={stopCamera}>Annulla</button><button type="button" className="capture-button" onClick={capturePhoto} disabled={!cameraReady || cameraCapturing}>{cameraCapturing ? 'Acquisizione…' : 'Scatta pagina'}</button></div>
           </div>
         </div>
@@ -940,11 +810,8 @@ export default function AppV14() {
 
       {studyModeOpen && studyBook && (
         <StudyMode
-          book={studyBook}
-          chapterIndex={selectedChapter}
-          onChapterChange={setSelectedChapter}
-          dsaMode={dsaMode}
-          onClose={() => setStudyModeOpen(false)}
+          book={studyBook} chapterIndex={selectedChapter} onChapterChange={setSelectedChapter}
+          dsaMode={dsaMode} accessibility={accessibility} onClose={() => setStudyModeOpen(false)}
         />
       )}
     </main>
