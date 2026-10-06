@@ -119,6 +119,7 @@ function extractStudyAnchors(text) {
 
 function ensureSourceFidelity(source, generated) {
   const summary = normalize(generated?.summary);
+  const simpleSummary = normalize(generated?.simpleSummary || generated?.summary);
   const dsaSummary = String(generated?.dsaSummary || '').trim() || dsaVersion(summary);
   const glossary = normalizeGlossary([
     ...(generated?.glossary || []),
@@ -126,7 +127,7 @@ function ensureSourceFidelity(source, generated) {
   ], source, 6);
   const searchable = `${summary} ${dsaSummary}`.toLocaleLowerCase('it-IT');
   const missing = extractStudyAnchors(source).filter((anchor) => !searchable.includes(anchor.toLocaleLowerCase('it-IT')));
-  if (!missing.length) return { ...generated, summary, dsaSummary, glossary };
+  if (!missing.length) return { ...generated, summary, simpleSummary, dsaSummary, glossary };
 
   const sourceSentences = splitSentences(source);
   const recovery = [];
@@ -141,6 +142,7 @@ function ensureSourceFidelity(source, generated) {
   return {
     ...generated,
     summary: normalize([summary, ...recovery].filter(Boolean).join(' ')),
+    simpleSummary,
     dsaSummary: [dsaSummary, ...recovery.map(dsaVersion)].filter(Boolean).join('\n\n'),
     keyPoints: unique([...(generated?.keyPoints || []), ...recovery], 8),
     remember: unique([...(generated?.remember || []), ...recovery], 5),
@@ -196,6 +198,10 @@ async function summarizeWithEndpoint(units, level) {
         chapterTitle: item.chapterTitle,
         sectionTitle: item.sourceMeta?.sourceSection,
         page: pageContext(item.sourceMeta),
+        previousText: item.previousText,
+        nextText: item.nextText,
+        chapterMemory: item.chapterMemory,
+        bookMemory: item.bookMemory,
       })),
       level,
     }),
@@ -248,10 +254,12 @@ function makeChapterBatches(units) {
 function combineUnitResults(source, pieces) {
   const ordered = [...pieces].sort((a, b) => a.chunkIndex - b.chunkIndex);
   const summaries = ordered.map((item) => item?.summary).filter(Boolean);
+  const simple = ordered.map((item) => item?.simpleSummary).filter(Boolean);
   const dsa = ordered.map((item) => item?.dsaSummary).filter(Boolean);
   const engine = ordered.some((item) => item?.engine === 'ai') ? 'ai' : 'locale';
   return ensureSourceFidelity(source, {
     summary: normalize(summaries.join(' ')),
+    simpleSummary: normalize(simple.join(' ')) || normalize(summaries.join(' ')),
     dsaSummary: dsa.join('\n\n'),
     keyPoints: unique(ordered.flatMap((item) => item?.keyPoints || []), 8),
     remember: unique(ordered.flatMap((item) => item?.remember || []), 5),
@@ -332,6 +340,27 @@ function buildChapters(documentData, results) {
   }));
 }
 
+function compactMemory(value, limit) {
+  const text = normalize(value);
+  return text.length <= limit ? text : `${text.slice(0, limit - 1).trim()}…`;
+}
+
+function buildContextMemories(documentData) {
+  const chapters = documentData?.chapters || [];
+  const bookMemory = compactMemory([
+    documentData?.sourceTitle || '',
+    ...chapters.map((chapter, index) => `${index + 1}. ${chapter.title || `Capitolo ${index + 1}`}`),
+  ].filter(Boolean).join(' | '), 1400);
+
+  const chapterMemory = chapters.map((chapter) => compactMemory([
+    chapter.title,
+    ...(chapter.sections || []).map((section) => section.title),
+    ...(chapter.paragraphs || []).slice(0, 8).map((paragraph) => splitSentences(paragraph)[0] || ''),
+  ].filter(Boolean).join(' | '), 1800));
+
+  return { bookMemory, chapterMemory };
+}
+
 export async function buildStudyBook(documentData, {
   level = 'studio',
   preferAi = true,
@@ -340,13 +369,20 @@ export async function buildStudyBook(documentData, {
   maxConcurrency,
 } = {}) {
   const flat = [];
+  const memories = buildContextMemories(documentData);
   documentData.chapters.forEach((chapter, chapterIndex) => {
     chapter.paragraphs.forEach((paragraph, paragraphIndex) => {
+      const previous = chapter.paragraphs[paragraphIndex - 1] || '';
+      const next = chapter.paragraphs[paragraphIndex + 1] || '';
       flat.push({
         chapterIndex,
         paragraphIndex,
         chapterTitle: chapter.title,
         text: normalize(paragraph),
+        previousText: compactMemory(previous, 900),
+        nextText: compactMemory(next, 900),
+        chapterMemory: memories.chapterMemory[chapterIndex] || '',
+        bookMemory: memories.bookMemory,
         sourceMeta: paragraphSourceMeta(chapter, paragraphIndex),
       });
     });
