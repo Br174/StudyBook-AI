@@ -508,7 +508,7 @@ export async function exportPdf(book, fileName, dsaMode = false) {
   pdf.save(`${safeName(fileName)}_studybook.pdf`);
 }
 
-function docxSemanticRuns(text, item) {
+function docxSemanticRuns(text, item, size = null) {
   const lines = String(text || '').split('\n');
   const runs = [];
   lines.forEach((line, lineIndex) => {
@@ -517,11 +517,12 @@ function docxSemanticRuns(text, item) {
       runs.push(new TextRun({
         text: segment.text,
         bold: segment.bold,
+        size: size || undefined,
         break: lineIndex > 0 && segmentIndex === 0 ? 1 : 0,
       }));
     });
   });
-  return runs.length ? runs : [new TextRun('')];
+  return runs.length ? runs : [new TextRun({ text: '', size: size || undefined })];
 }
 
 function docxGlossaryCell(item) {
@@ -590,10 +591,7 @@ export async function exportDocx(book, fileName, rawOptions = false) {
 
         const sourceItem = book?.chapters?.[chapter.chapterIndex]?.paragraphs?.[block.paragraphIndex] || {};
         children.push(new Paragraph({
-          children: docxSemanticRuns(block.text, sourceItem).map((run) => {
-            if (!run?.options) return run;
-            return run;
-          }),
+          children: docxSemanticRuns(block.text, sourceItem, fontSize),
           spacing: { after: 150, line: paragraphLine },
           widowControl: true,
         }));
@@ -617,14 +615,6 @@ export async function exportDocx(book, fileName, rawOptions = false) {
       }
     });
   });
-
-  // Applica la dimensione richiesta ai run del testo continuo senza cambiare la struttura.
-  for (const paragraph of children) {
-    const runs = paragraph?.root?.filter?.((node) => node?.options?.text) || [];
-    for (const run of runs) {
-      if (run?.options && !run.options.size) run.options.size = fontSize;
-    }
-  }
 
   const doc = new Document({ sections: [{ children }] });
   const blob = await Packer.toBlob(doc);
