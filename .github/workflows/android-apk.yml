@@ -186,8 +186,11 @@ jobs:
 
           APKSIGNER="${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/36.0.0/apksigner"
           "$APKSIGNER" verify --verbose "$APK"
-          ACTUAL_CERT=$("$APKSIGNER" verify --print-certs "$APK" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n1 | tr '[:lower:]' '[:upper:]')
-          KEY_CERT=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | sed -n 's/.*SHA256: //p' | head -n1 | tr -d ':')
+          CERT_OUTPUT=$("$APKSIGNER" verify --print-certs "$APK")
+          ACTUAL_CERT=$(printf '%s\n' "$CERT_OUTPUT" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ { value=$2 } END { print value }' | tr '[:lower:]' '[:upper:]')
+          KEY_CERT=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | awk -F'SHA256: ' '/SHA256:/ { value=$2 } END { print value }' | tr -d ':')
+          test -n "$ACTUAL_CERT"
+          test -n "$KEY_CERT"
           test "$ACTUAL_CERT" = "$KEY_CERT"
 
           if [[ "$STUDYBOOK_SIGNING_MODE" == "update" ]]; then
