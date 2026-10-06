@@ -123,6 +123,16 @@ export async function buildStudyBook(documentData, options = {}) {
         compressionPercent,
         passed: failedParagraphs === 0,
       },
+      chapterAudit: {
+        chaptersAudited: chapters.length,
+        chaptersWithRecovery: chapters.filter((chapter) => (chapter.paragraphs || []).some((paragraph) => Number(paragraph?.fidelityGate?.recovered || 0) > 0)).length,
+        importantSentences: totalConcepts,
+        recoveredSentences: recoveredUnits,
+        cappedRecoveries: 0,
+        averageCoverageBefore: null,
+        averageCoverageAfter: paragraphCount ? (coverageSum / paragraphCount) / 100 : 1,
+        supersededBy: 'fidelityGate-v1',
+      },
     },
   };
 }
