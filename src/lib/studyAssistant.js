@@ -1,3 +1,4 @@
+import { apiEndpoint } from './apiEndpoint.js';
 import { purgeExpiredStudyHelpCache, readStudyHelpCache, writeStudyHelpCache } from './studyHelpCache.js';
 
 export const STUDY_ACTIONS = [
@@ -154,7 +155,7 @@ function localFallback(payload) {
 }
 
 async function requestRemote(payload) {
-  const response = await fetch('/api/explain', {
+  const response = await fetch(apiEndpoint('/api/explain'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
