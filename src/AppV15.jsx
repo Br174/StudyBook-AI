@@ -5,10 +5,15 @@ import { exportDocx, exportHtml, exportJson, exportPdf, exportTxt, printStudyBoo
 import {
   createLibraryId,
   deleteLibraryBook,
+  ensureDefaultProfile,
   getLibraryBook,
   listLibraryBooks,
+  listProfiles,
   saveLibraryBook,
+  saveProfile,
 } from './lib/library.js';
+import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
+import { BottomNav, HomeScreen, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import {
   clearScannerSessionStore,
@@ -105,6 +110,11 @@ export default function AppV14() {
   const [summaryEditor, setSummaryEditor] = useState(null);
   const [refiningKey, setRefiningKey] = useState('');
   const [studyModeOpen, setStudyModeOpen] = useState(false);
+  const [activeScreen, setActiveScreen] = useState('home');
+  const [sourceFile, setSourceFile] = useState(null);
+  const [profiles, setProfiles] = useState([]);
+  const [activeProfileId, setActiveProfileId] = useState('default');
+  const [accessibility, setAccessibility] = useState(() => loadAccessibility('default'));
 
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
@@ -124,6 +134,7 @@ export default function AppV14() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const cameraFileInputRef = useRef(null);
+  const documentFileInputRef = useRef(null);
   const scanPagesRef = useRef([]);
   const scanPersistTimersRef = useRef(new Map());
   const scannerRestoreStartedRef = useRef(false);
@@ -170,7 +181,20 @@ export default function AppV14() {
   }
 
   useEffect(() => { scanPagesRef.current = scanPages; }, [scanPages]);
-  useEffect(() => { refreshLibrary(); refreshScannerStorage(); }, []);
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureDefaultProfile();
+        setProfiles(await listProfiles());
+      } catch { setProfiles([{ id: 'default', name: 'Bruno' }]); }
+      await refreshLibrary('default');
+      refreshScannerStorage();
+    })();
+  }, []);
+  useEffect(() => {
+    setAccessibility(loadAccessibility(activeProfileId));
+    refreshLibrary(activeProfileId);
+  }, [activeProfileId]);
   useEffect(() => {
     if (scannerRestoreStartedRef.current) return undefined;
     scannerRestoreStartedRef.current = true;
@@ -215,8 +239,23 @@ export default function AppV14() {
     scanPagesRef.current.forEach((page) => page.previewUrl && URL.revokeObjectURL(page.previewUrl));
   }, []);
 
-  async function refreshLibrary() {
-    try { setLibraryItems(await listLibraryBooks()); } catch { setLibraryItems([]); }
+  async function refreshLibrary(profileId = activeProfileId) {
+    try { setLibraryItems(await listLibraryBooks({ profileId })); } catch { setLibraryItems([]); }
+  }
+
+  function updateAccessibility(next) {
+    setAccessibility(saveAccessibility(activeProfileId, next));
+  }
+
+  async function addProfile(name) {
+    try {
+      const profile = await saveProfile({ name });
+      setProfiles(await listProfiles());
+      setActiveProfileId(profile.id);
+      setStatus(`Profilo ${profile.name} creato`);
+    } catch (err) {
+      setError(err.message || 'Non riesco a creare il profilo.');
+    }
   }
 
   async function persistBook(nextBook, nextSource = documentData, nextName = fileName, forcedId = libraryId) {
@@ -228,6 +267,8 @@ export default function AppV14() {
         sourceData: nextSource,
         studyBook: nextBook,
         dsaMode,
+        profileId: activeProfileId,
+        originalFile: sourceFile,
       });
       setLibraryId(record.id);
       await refreshLibrary();
@@ -238,7 +279,7 @@ export default function AppV14() {
     }
   }
 
-  async function openLibraryItem(id) {
+  async function openLibraryItem(id, { original = false, openReader = false } = {}) {
     if (libraryBusy || generating || importing) return;
     setLibraryBusy(true);
     setError('');
@@ -248,14 +289,20 @@ export default function AppV14() {
       setLibraryId(record.id);
       setFileName(record.fileName);
       setDocumentData(record.sourceData);
-      setStudyBook(record.studyBook);
-      setLevel(record.studyBook.level || 'studio');
+      setSourceFile(record.originalFile || null);
+      setStudyBook(original ? null : record.studyBook);
+      setLevel(record.studyBook?.level || 'studio');
       setDsaMode(record.dsaMode !== false);
       setSelectedChapter(0);
       setSourceEditor(null);
       setSummaryEditor(null);
       setScannerResultReady(Boolean(record.sourceData.scanCount));
-      setStatus('Libro riaperto dalla Libreria');
+      setStatus(original ? 'Originale aperto dalla Libreria' : 'Libro riaperto dalla Libreria');
+      if (original) setActiveScreen('home');
+      else {
+        setActiveScreen('studio');
+        if (openReader) setStudyModeOpen(true);
+      }
     } catch (err) {
       setError(err.message || 'Impossibile aprire il libro.');
     } finally {
@@ -283,6 +330,7 @@ export default function AppV14() {
     setError('');
     setStatus('Analisi del documento…');
     setFileName(file.name);
+    setSourceFile(file);
     setLibraryId('');
     setStudyBook(null);
     setDocumentData(null);
@@ -350,6 +398,7 @@ export default function AppV14() {
       }
       const engineLabel = result.engine === 'ai' ? 'AI' : result.engine === 'misto' ? 'AI + sicurezza locale' : 'modalità locale';
       setStatus(`Libro pronto · ${engineLabel}${saved ? ' · salvato in Libreria' : ''}`);
+      setActiveScreen('studio');
       return result;
     } catch (err) {
       setError(err.message || 'Errore durante la creazione del libro di studio.');
