@@ -129,6 +129,7 @@ function mergeChunkResults(original, pieces) {
     ...first,
     original,
     summary: normalize(valid.map((item) => item?.summary).filter(Boolean).join(' ')),
+    simpleSummary: normalize(valid.map((item) => item?.simpleSummary || item?.summary).filter(Boolean).join(' ')),
     dsaSummary: valid.map((item) => item?.dsaSummary).filter(Boolean).join('\n\n'),
     keyPoints: unique(valid.flatMap((item) => item?.keyPoints || []), 10),
     remember: unique(valid.flatMap((item) => item?.remember || []), 6),
