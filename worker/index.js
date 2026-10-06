@@ -8,6 +8,24 @@ const API_ROUTES = new Map([
   ['/api/refine', refineHandler],
 ]);
 
+const NATIVE_ORIGINS = new Set([
+  'http://localhost',
+  'https://localhost',
+  'capacitor://localhost',
+]);
+
+function withNativeCors(response, request) {
+  const origin = request.headers.get('Origin') || '';
+  if (!NATIVE_ORIGINS.has(origin)) return response;
+  const headers = new Headers(response.headers);
+  headers.set('Access-Control-Allow-Origin', origin);
+  headers.set('Access-Control-Allow-Methods', 'POST, GET, HEAD, OPTIONS');
+  headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  headers.set('Access-Control-Max-Age', '86400');
+  headers.append('Vary', 'Origin');
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
 function requestHeaders(request) {
   return Object.fromEntries(request.headers.entries());
 }
@@ -90,9 +108,13 @@ export default {
     const handler = API_ROUTES.get(url.pathname);
 
     if (!handler) {
-      return Response.json({ error: 'Endpoint non trovato.' }, { status: 404 });
+      return withNativeCors(Response.json({ error: 'Endpoint non trovato.' }, { status: 404 }), request);
     }
 
-    return runLegacyApi(handler, request);
+    if (request.method === 'OPTIONS') {
+      return withNativeCors(new Response(null, { status: 204 }), request);
+    }
+
+    return withNativeCors(await runLegacyApi(handler, request), request);
   },
 };
