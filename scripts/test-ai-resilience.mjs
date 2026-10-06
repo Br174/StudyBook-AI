@@ -32,6 +32,7 @@ function successPayload(count) {
         content: JSON.stringify({
           summaries: Array.from({ length: count }, (_, index) => ({
             summary: `Sintesi ${index + 1}`,
+            simpleSummary: `In parole semplici ${index + 1}`,
             dsaSummary: `Sintesi DSA ${index + 1}`,
             keyPoints: [`Punto ${index + 1}`],
             remember: [`Ricorda ${index + 1}`],
