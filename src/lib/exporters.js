@@ -8,14 +8,7 @@ function safeName(name = 'studybook') {
 }
 
 function downloadBlob(blob, fileName) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = fileName;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  void deliverBlob(blob, fileName);
 }
 
 function paragraphText(item, dsaMode) {
