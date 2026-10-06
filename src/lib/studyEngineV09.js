@@ -1,4 +1,5 @@
 import { apiEndpoint } from './apiEndpoint.js';
+import { filterGlossaryEntries } from './glossaryQuality.js';
 import { refineParagraphWithAi, summarizeLocally, summaryLevels } from './studyEngine.js';
 import { loadResumeState, purgeOldResumeStates, saveResumeState } from './resumeStore.js';
 
@@ -39,30 +40,18 @@ function glossaryPlacement(definition) {
   return words <= 6 && clean.length <= 72 ? 'inline' : 'side';
 }
 
-function normalizeGlossary(entries, source, limit = 6) {
-  const sourceLower = normalize(source).toLocaleLowerCase('it-IT');
-  const seen = new Set();
-  const out = [];
-
-  for (const entry of entries || []) {
-    const term = normalize(entry?.term).slice(0, 90);
-    const definition = normalize(entry?.definition).replace(/[.;:]$/, '').slice(0, 240);
-    if (!term || !definition) continue;
-    if (!sourceLower.includes(term.toLocaleLowerCase('it-IT'))) continue;
-
-    const key = term.toLocaleLowerCase('it-IT');
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    out.push({
-      term,
-      definition,
-      placement: entry?.placement === 'inline' && glossaryPlacement(definition) === 'inline' ? 'inline' : glossaryPlacement(definition),
-      basis: 'source',
-    });
-    if (out.length >= limit) break;
-  }
-  return out;
+function normalizeGlossary(entries, source, limit = 6, summary = '') {
+  return filterGlossaryEntries(entries, {
+    source,
+    summary,
+    limit,
+    minConfidence: 0.82,
+    requireConfidence: false,
+  }).map((entry) => ({
+    ...entry,
+    placement: 'side',
+    basis: entry?.basis || 'source',
+  }));
 }
 
 function extractLocalGlossary(source) {
@@ -72,7 +61,6 @@ function extractLocalGlossary(source) {
   const patterns = [
     new RegExp(`\\b(?:per|con)\\s+(${phrase})\\s+si\\s+intende\\s+(.{4,140})$`, 'i'),
     new RegExp(`\\bsi\\s+definisce\\s+(${phrase})\\s+(.{4,140})$`, 'i'),
-    new RegExp(`^(?:Il|La|Lo|L'|L’|Un|Una)?\\s*(${phrase})\\s+(?:è|sono)\\s+(.{4,140})$`, 'i'),
   ];
 
   for (const sentence of splitSentences(source)) {
@@ -125,7 +113,7 @@ function ensureSourceFidelity(source, generated) {
   const glossary = normalizeGlossary([
     ...(generated?.glossary || []),
     ...extractLocalGlossary(source),
-  ], source, 6);
+  ], source, 6, summary);
   const searchable = `${summary} ${dsaSummary}`.toLocaleLowerCase('it-IT');
   const missing = extractStudyAnchors(source).filter((anchor) => !searchable.includes(anchor.toLocaleLowerCase('it-IT')));
   if (!missing.length) return { ...generated, summary, simpleSummary, dsaSummary, glossary };
