@@ -281,10 +281,158 @@ async function parseEpub(file, { onProgress } = {}) {
   };
 }
 
+
+function htmlBlocksFromDocument(doc, sourcePart = 'document') {
+  const blocks = [];
+  [...doc.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,blockquote,table')].forEach((node) => {
+    const tag = node.tagName?.toLowerCase();
+    if (/^h[1-6]$/.test(tag)) {
+      const text = clean(node.textContent);
+      if (text) blocks.push({ type: 'heading', level: Number(tag.slice(1)), text, sourcePart });
+      return;
+    }
+    if (tag === 'table') {
+      const text = tableAsText([...node.querySelectorAll('tr')]
+        .map((row) => [...row.querySelectorAll('th,td')].map((cell) => clean(cell.textContent)).filter(Boolean))
+        .filter((row) => row.length));
+      if (text) blocks.push({ type: 'paragraph', text, sourcePart });
+      return;
+    }
+    if (node.closest('table')) return;
+    const text = clean(node.textContent);
+    if (text) blocks.push({ type: 'paragraph', text, sourcePart });
+  });
+  return blocks;
+}
+
+async function parseHtmlFile(file, { onProgress } = {}) {
+  onProgress?.({ phase: 'rich-open', format: 'HTML' });
+  const raw = await file.text();
+  const doc = new DOMParser().parseFromString(raw, 'text/html');
+  const title = clean(doc.querySelector('title')?.textContent || file.name.replace(/\.html?$/i, ''));
+  const blocks = htmlBlocksFromDocument(doc, file.name);
+  const chapters = buildChaptersFromBlocks(blocks, title || 'Documento');
+  const fullText = chapters.flatMap((item) => item.paragraphs).join('\n\n');
+  if (!fullText) throw new Error('HTML letto, ma non contiene testo utilizzabile.');
+  onProgress?.({ phase: 'complete', done: 1, total: 1 });
+  return {
+    fullText, pages: [], chapters, needsOcr: [], ocrApplied: [], removedRunningLines: [],
+    sourceFormat: 'html', sourceTitle: title, structure: makeStructure(chapters, 0),
+  };
+}
+
+function decodeRtf(value) {
+  return String(value || '')
+    .replace(/\\'([0-9a-fA-F]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/\\u(-?\d+)\??/g, (_, code) => String.fromCharCode(Number(code) < 0 ? Number(code) + 65536 : Number(code)))
+    .replace(/\\par[d]?\b/g, '\n\n')
+    .replace(/\\line\b/g, '\n')
+    .replace(/\\tab\b/g, '\t')
+    .replace(/\\[a-zA-Z]+-?\d* ?/g, '')
+    .replace(/[{}]/g, '')
+    .replace(/\\([{}\\])/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+async function parseRtf(file, { onProgress } = {}) {
+  onProgress?.({ phase: 'rich-open', format: 'RTF' });
+  const text = clean(decodeRtf(await file.text()));
+  if (!text) throw new Error('RTF letto, ma non contiene testo utilizzabile.');
+  const blocks = [];
+  text.split(/\n{2,}/).map(clean).filter(Boolean).forEach((paragraph) => {
+    const heading = paragraph.match(/^(?:capitolo|chapter|parte|sezione)\b/i)
+      || (paragraph.length <= 90 && paragraph === paragraph.toUpperCase() && /[A-ZÀ-ÖØ-Ý]/.test(paragraph));
+    blocks.push(heading
+      ? { type: 'heading', level: /^(?:parte)\b/i.test(paragraph) ? 1 : 2, text: paragraph, sourcePart: file.name }
+      : { type: 'paragraph', text: paragraph, sourcePart: file.name });
+  });
+  const title = file.name.replace(/\.rtf$/i, '');
+  const chapters = buildChaptersFromBlocks(blocks, title || 'Documento');
+  onProgress?.({ phase: 'complete', done: 1, total: 1 });
+  return {
+    fullText: chapters.flatMap((item) => item.paragraphs).join('\n\n'),
+    pages: [], chapters, needsOcr: [], ocrApplied: [], removedRunningLines: [],
+    sourceFormat: 'rtf', sourceTitle: title, structure: makeStructure(chapters, 0),
+  };
+}
+
+async function parseOdt(file, { onProgress } = {}) {
+  onProgress?.({ phase: 'rich-open', format: 'ODT' });
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const entry = zip.file('content.xml');
+  if (!entry) throw new Error('ODT non valido: manca content.xml.');
+  const xml = parseXml(await entry.async('string'));
+  const blocks = [];
+  const body = firstByLocalName(xml, 'text') || firstByLocalName(xml, 'body');
+  const walk = (node) => {
+    [...(node?.childNodes || [])].forEach((child) => {
+      if (child.nodeType !== 1) return;
+      if (child.localName === 'h') {
+        const text = clean(child.textContent);
+        if (text) blocks.push({ type:'heading', level:Math.max(1,Math.min(6,Number(attr(child,'text:outline-level','outline-level')||1))), text, sourcePart:'content.xml' });
+        return;
+      }
+      if (child.localName === 'p') {
+        const text = clean(child.textContent);
+        if (text) blocks.push({ type:'paragraph', text, sourcePart:'content.xml' });
+        return;
+      }
+      walk(child);
+    });
+  };
+  walk(body || xml);
+  const title = file.name.replace(/\.odt$/i, '');
+  const chapters = buildChaptersFromBlocks(blocks, title || 'Documento');
+  const fullText = chapters.flatMap((item) => item.paragraphs).join('\n\n');
+  if (!fullText) throw new Error('ODT letto, ma non contiene testo utilizzabile.');
+  onProgress?.({ phase: 'complete', done: 1, total: 1 });
+  return {
+    fullText, pages: [], chapters, needsOcr: [], ocrApplied: [], removedRunningLines: [],
+    sourceFormat: 'odt', sourceTitle: title, structure: makeStructure(chapters, 0),
+  };
+}
+
+async function parseMarkdown(file, { onProgress } = {}) {
+  onProgress?.({ phase: 'rich-open', format: 'Markdown' });
+  const raw = await file.text();
+  const blocks = [];
+  const chunks = raw.replace(/\r\n?/g, '\n').split(/\n{2,}/);
+  chunks.forEach((chunk) => {
+    const lines = chunk.split('\n').map((line) => line.trim()).filter(Boolean);
+    if (!lines.length) return;
+    const heading = lines[0].match(/^(#{1,6})\s+(.+)$/);
+    if (heading && lines.length === 1) {
+      blocks.push({ type:'heading', level:heading[1].length, text:clean(heading[2]), sourcePart:file.name });
+      return;
+    }
+    const text = clean(lines.map((line) => line
+      .replace(/^[-*+]\s+/, '')
+      .replace(/^>\s?/, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      .replace(/\x60([^\x60]+)\x60/g, '$1')).join(' '));
+    if (text) blocks.push({ type:'paragraph', text, sourcePart:file.name });
+  });
+  const title = file.name.replace(/\.(?:md|markdown)$/i, '');
+  const chapters = buildChaptersFromBlocks(blocks, title || 'Documento');
+  const fullText = chapters.flatMap((item) => item.paragraphs).join('\n\n');
+  if (!fullText) throw new Error('Markdown letto, ma non contiene testo utilizzabile.');
+  onProgress?.({ phase:'complete', done:1, total:1 });
+  return {
+    fullText, pages:[], chapters, needsOcr:[], ocrApplied:[], removedRunningLines:[],
+    sourceFormat:'markdown', sourceTitle:title, structure:makeStructure(chapters,0),
+  };
+}
+
 export async function readSourceFile(file, options = {}) {
   const name = String(file?.name || '').toLowerCase();
   if (name.endsWith('.docx')) return parseDocx(file, options);
   if (name.endsWith('.epub')) return parseEpub(file, options);
+  if (/\.html?$/i.test(name)) return parseHtmlFile(file, options);
+  if (name.endsWith('.rtf')) return parseRtf(file, options);
+  if (name.endsWith('.odt')) return parseOdt(file, options);
+  if (/\.(?:md|markdown)$/i.test(name)) return parseMarkdown(file, options);
 
   const parsed = await readLegacySourceFile(file, options);
   const sourceFormat = name.endsWith('.pdf')
