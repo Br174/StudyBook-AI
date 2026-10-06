@@ -72,6 +72,8 @@ jobs:
         run: node scripts/test-ai-resilience.mjs
       - name: Test fidelity gate
         run: node scripts/test-fidelity-engine.mjs
+      - name: Test editorial model
+        run: node scripts/test-editorial-model.mjs
       - name: Test long-paragraph engine
         run: node scripts/test-long-paragraph-engine.mjs
       - name: Test resumable OCR checkpoints
