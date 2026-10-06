@@ -709,6 +709,34 @@ export default function AppV14() {
     speakText(text);
   }
 
+  function exportCurrentBook(format, variant = 'study') {
+    if (!studyBook) return;
+    const options = { dsaMode, variant, accessibility };
+    if (format === 'pdf') return exportPdf(studyBook, fileName, options);
+    if (format === 'docx') return exportDocx(studyBook, fileName, options);
+    if (format === 'html') return exportHtml(studyBook, fileName, options);
+    if (format === 'print') return printStudyBook(studyBook, fileName, options);
+    if (format === 'json') return exportJson(studyBook, fileName);
+    if (format === 'txt') {
+      if (variant === 'simple') {
+        const simpleBook = {
+          ...studyBook,
+          chapters: (studyBook.chapters || []).map((chapter) => ({
+            ...chapter,
+            paragraphs: (chapter.paragraphs || []).map((paragraph) => ({
+              ...paragraph,
+              summary: paragraph.simpleSummary || paragraph.summary,
+              dsaSummary: paragraph.simpleSummary || paragraph.summary,
+            })),
+          })),
+        };
+        return exportTxt(simpleBook, fileName, false);
+      }
+      return exportTxt(studyBook, fileName, dsaMode);
+    }
+    return undefined;
+  }
+
   const activeProfile = profiles.find((profile) => profile.id === activeProfileId) || { id: 'default', name: 'Bruno' };
 
   function openFromLibrary(item, view = 'processed') {
@@ -781,8 +809,8 @@ export default function AppV14() {
         <StudioScreen
           studyBook={studyBook} fileName={fileName}
           onRead={() => setStudyModeOpen(true)}
-          onPdf={() => studyBook && exportPdf(studyBook, fileName, dsaMode)}
           onStudy={() => setStudyModeOpen(true)}
+          onExport={exportCurrentBook}
         />
       )}
 
