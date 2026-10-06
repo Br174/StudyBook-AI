@@ -15,6 +15,7 @@ import {
 import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
 import { BottomNav, HomeScreen, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
 import StudyMode from './components/StudyMode.jsx';
+import { deliverBlob } from './lib/fileDelivery.js';
 import {
   clearScannerSessionStore,
   deleteScannerPage as deleteScannerPageRecord,
@@ -306,24 +307,33 @@ export default function AppV14() {
     setError('');
     try {
       const record = await getLibraryBook(id);
-      if (!record?.studyBook || !record?.sourceData) throw new Error('Libro non disponibile.');
+      if (!record) throw new Error('Libro non disponibile.');
+      if (original) {
+        if (!record.originalFile) throw new Error('Il file originale non è disponibile su questo dispositivo.');
+        await deliverBlob(
+          record.originalFile,
+          record.original?.name || record.originalFile?.name || record.fileName,
+          'Apri originale con il lettore del formato',
+          { preferOpen: true },
+        );
+        setStatus('Originale aperto con il lettore del formato');
+        return;
+      }
+      if (!record.studyBook || !record.sourceData) throw new Error('Libro elaborato non disponibile.');
       setLibraryId(record.id);
       setFileName(record.fileName);
       setDocumentData(record.sourceData);
       setSourceFile(record.originalFile || null);
-      setStudyBook(original ? null : record.studyBook);
+      setStudyBook(record.studyBook);
       setLevel(record.studyBook?.level || 'studio');
       setDsaMode(record.dsaMode !== false);
       setSelectedChapter(0);
       setSourceEditor(null);
       setSummaryEditor(null);
       setScannerResultReady(Boolean(record.sourceData.scanCount));
-      setStatus(original ? 'Originale aperto dalla Libreria' : 'Libro riaperto dalla Libreria');
-      if (original) navigateTo('home');
-      else {
-        navigateTo('studio');
-        if (openReader) setStudyModeOpen(true);
-      }
+      setStatus('Libro riaperto dalla Libreria');
+      navigateTo('studio');
+      if (openReader) setStudyModeOpen(true);
     } catch (err) {
       setError(err.message || 'Impossibile aprire il libro.');
     } finally {

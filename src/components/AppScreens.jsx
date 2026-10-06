@@ -232,6 +232,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook }) {
 
 export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport }) {
   const [exportVariant, setExportVariant] = useState('study');
+  const [exportOpen, setExportOpen] = useState(false);
   if (!studyBook) {
     return <section className="sb-screen"><div className="sb-empty-library"><h2>Nessun libro aperto</h2><p>Apri una copertina dalla Libreria oppure crea un nuovo libro.</p></div></section>;
   }
@@ -239,38 +240,60 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
   return (
     <section className="sb-screen sb-studio-screen">
       <header className="sb-screen-head compact">
-        <div><small>LIBRO APERTO</small><h1>{stripExtension(fileName)}</h1></div>
+        <div>
+          <small>LIBRO APERTO</small>
+          <h1>Il tuo libro di studio</h1>
+          <p className="sb-open-book-context">Tutto quello che fai qui appartiene a <strong>{stripExtension(fileName)}</strong>.</p>
+        </div>
         {fidelity && <div className={fidelity.passed ? 'sb-fidelity ok' : 'sb-fidelity warn'}>{fidelity.passed ? '✓ Fedeltà verificata' : 'Verifica richiesta'}</div>}
       </header>
-      <div className="sb-book-actions">
-        <button type="button" onClick={onRead}><span>Aa</span><strong>Leggi</strong><small>Testo di studio o In parole semplici</small></button>
-        <button type="button" onClick={() => onExport('pdf', exportVariant)}><span>▤</span><strong>PDF</strong><small>Impaginazione editoriale con le preferenze di stampa</small></button>
-        <button type="button" onClick={onStudy}><span>◇</span><strong>Studia</strong><small>Quiz, flashcard e domande orali</small></button>
-      </div>
 
-      <article className="sb-export-card">
-        <div className="sb-export-head">
-          <div><small>ESPORTA</small><h2>Scegli cosa portare con te</h2></div>
-          <div className="sb-export-variant">
-            <button type="button" className={exportVariant === 'study' ? 'active' : ''} onClick={() => setExportVariant('study')}>Testo di studio</button>
-            <button type="button" className={exportVariant === 'simple' ? 'active' : ''} onClick={() => setExportVariant('simple')}>In parole semplici</button>
-            <button type="button" className={exportVariant === 'both' ? 'active' : ''} onClick={() => setExportVariant('both')}>Entrambi</button>
+      <section className="sb-open-book-workspace" aria-label="Libro aperto">
+        <div className="sb-open-book-cover">
+          <span>STUDYBOOK</span>
+          <strong>{stripExtension(fileName)}</strong>
+          <small>{studyBook.chapters?.length || 0} capitoli · libro elaborato</small>
+        </div>
+        <div className="sb-open-book-panel">
+          <div className="sb-open-book-copy">
+            <small>STAI LAVORANDO SU</small>
+            <h2>{stripExtension(fileName)}</h2>
+            <p>Leggi, studia o porta con te il contenuto elaborato di questo libro.</p>
+          </div>
+          <div className="sb-book-quick-actions">
+            <button type="button" onClick={onRead}><span>Aa</span><strong>Leggi</strong></button>
+            <button type="button" onClick={() => onExport('pdf', 'study')}><span>▤</span><strong>PDF elaborato</strong></button>
+            <button type="button" onClick={onStudy}><span>◇</span><strong>Studia</strong></button>
+            <button type="button" className={exportOpen ? 'active' : ''} onClick={() => setExportOpen((value) => !value)}><span>↗</span><strong>Scegli cosa portare con te</strong></button>
           </div>
         </div>
-        <div className="sb-export-formats">
-          <button type="button" onClick={() => onExport('pdf', exportVariant)}>PDF</button>
-          <button type="button" onClick={() => onExport('docx', exportVariant)}>DOCX</button>
-          <button type="button" onClick={() => onExport('html', exportVariant)}>HTML</button>
-          <button type="button" onClick={() => onExport('epub', exportVariant)}>EPUB</button>
-          <button type="button" onClick={() => onExport('odt', exportVariant)}>ODT</button>
-          <button type="button" onClick={() => onExport('rtf', exportVariant)}>RTF</button>
-          <button type="button" onClick={() => onExport('md', exportVariant)}>Markdown</button>
-          <button type="button" onClick={() => onExport('print', exportVariant)}>Stampa</button>
-          <button type="button" onClick={() => onExport('txt', exportVariant)} disabled={exportVariant === 'both'}>TXT</button>
-          <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>
-        </div>
-        <p>Le impostazioni “Stampa ed esportazione” del profilo vengono applicate a PDF, DOCX, HTML e Stampa.</p>
-      </article>
+      </section>
+
+      {exportOpen && (
+        <article className="sb-export-card">
+          <div className="sb-export-head">
+            <div><small>ESPORTA</small><h2>Scegli cosa portare con te</h2></div>
+            <div className="sb-export-variant">
+              <button type="button" className={exportVariant === 'study' ? 'active' : ''} onClick={() => setExportVariant('study')}>Testo di studio</button>
+              <button type="button" className={exportVariant === 'simple' ? 'active' : ''} onClick={() => setExportVariant('simple')}>In parole semplici</button>
+              <button type="button" className={exportVariant === 'both' ? 'active' : ''} onClick={() => setExportVariant('both')}>Entrambi</button>
+            </div>
+          </div>
+          <div className="sb-export-formats">
+            <button type="button" onClick={() => onExport('pdf', exportVariant)}>PDF</button>
+            <button type="button" onClick={() => onExport('docx', exportVariant)}>DOCX</button>
+            <button type="button" onClick={() => onExport('html', exportVariant)}>HTML</button>
+            <button type="button" onClick={() => onExport('epub', exportVariant)}>EPUB</button>
+            <button type="button" onClick={() => onExport('odt', exportVariant)}>ODT</button>
+            <button type="button" onClick={() => onExport('rtf', exportVariant)}>RTF</button>
+            <button type="button" onClick={() => onExport('md', exportVariant)}>Markdown</button>
+            <button type="button" onClick={() => onExport('print', exportVariant)}>Stampa</button>
+            <button type="button" onClick={() => onExport('txt', exportVariant)} disabled={exportVariant === 'both'}>TXT</button>
+            <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>
+          </div>
+          <p>Questa sezione esporta il libro elaborato. L’originale resta separato nella Libreria.</p>
+        </article>
+      )}
 
       <article className="sb-quality-card">
         <h2>Controllo del libro</h2>

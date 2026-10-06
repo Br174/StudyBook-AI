@@ -61,3 +61,13 @@ assert.match(flashcards[0].front, /significa/i);
 assert.ok(map.some((node) => node.keywords.includes('principio')));
 
 console.log(`Study tools: OK · flashcards=${flashcards.length} · quiz=${quiz.length} · oral=${oral.length} · map=${map.length}`);
+
+
+const ungrounded = {
+  title: 'Sezione senza elementi didattici affidabili',
+  paragraphs: [
+    { sourceSection: 'Solo prosa', summary: 'Una frase generica. Una seconda frase generica senza punti chiave verificati.', glossary: [], keyPoints: [], remember: [] },
+  ],
+};
+assert.equal(buildFlashcards(ungrounded).length, 0, 'Nessuna flashcard deve essere inventata da prosa generica.');
+assert.equal(buildQuiz(ungrounded).length, 0, 'Nessun quiz deve essere inventato se la sezione non offre materiale affidabile.');

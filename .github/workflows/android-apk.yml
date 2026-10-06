@@ -5,6 +5,8 @@ on:
     branches:
       - lab/studybook-core-android-01
       - lab/studybook-core-android-01-update-01
+      - lab/studybook-core-android-01-update-02
+      - lab/recovery-studybook-core-android-02
     paths:
       - 'src/**'
       - 'api/**'
@@ -29,7 +31,7 @@ jobs:
       actions: read
     env:
       STUDYBOOK_VERSION_CODE: ${{ github.run_number }}
-      STUDYBOOK_VERSION_NAME: 0.1.${{ github.run_number }}
+      STUDYBOOK_VERSION_NAME: 0.2.${{ github.run_number }}
 
     steps:
       - name: Checkout
@@ -65,6 +67,34 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Resolve LAB 02 family identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_NAME" == "lab/recovery-studybook-core-android-02" ]]; then
+            echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-02-RIPRISTINO" >> "$GITHUB_ENV"
+            echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab.recovery02" >> "$GITHUB_ENV"
+            echo "STUDYBOOK_APP_NAME=StudyBook AI LAB 02 Ripristino" >> "$GITHUB_ENV"
+            echo "STUDYBOOK_SIGNING_MODE=recovery" >> "$GITHUB_ENV"
+          else
+            echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-02-AGGIORNAMENTO" >> "$GITHUB_ENV"
+            echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab" >> "$GITHUB_ENV"
+            echo "STUDYBOOK_APP_NAME=StudyBook AI LAB" >> "$GITHUB_ENV"
+            echo "STUDYBOOK_SIGNING_MODE=update" >> "$GITHUB_ENV"
+          fi
+
+      - name: Apply Android family identity
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const path = 'capacitor.config.json';
+          const config = JSON.parse(fs.readFileSync(path, 'utf8'));
+          config.appId = process.env.STUDYBOOK_APPLICATION_ID;
+          config.appName = process.env.STUDYBOOK_APP_NAME;
+          fs.writeFileSync(path, JSON.stringify(config, null, 2) + '\n');
+          NODE
+
       - name: Build web core
         env:
           VITE_NATIVE_API_BASE: https://studybook-ai.brunoverlezza.workers.dev
@@ -78,6 +108,7 @@ jobs:
           node scripts/prepare-android.mjs
 
       - name: Download original LAB01 signing identity
+        if: env.STUDYBOOK_SIGNING_MODE == 'update'
         uses: actions/download-artifact@v4
         with:
           name: StudyBook-LAB01-signing-recovery
@@ -86,7 +117,8 @@ jobs:
           repository: ${{ github.repository }}
           run-id: 37467723184
 
-      - name: Install and verify original LAB01 signing key
+      - name: Install and verify original LAB signing key
+        if: env.STUDYBOOK_SIGNING_MODE == 'update'
         shell: bash
         run: |
           set -euo pipefail
@@ -95,7 +127,22 @@ jobs:
           KEY_SHA=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | sed -n 's/.*SHA256: //p' | head -n1)
           EXPECTED_SHA="D7:BB:93:15:C9:C4:35:18:72:49:54:78:61:0C:48:47:25:08:6E:2B:AB:BC:04:BE:C6:5E:C8:23:45:5F:BD:CC"
           test "$KEY_SHA" = "$EXPECTED_SHA"
-          echo "LAB01 signing fingerprint verified: $KEY_SHA"
+          echo "LAB update signing fingerprint verified: $KEY_SHA"
+
+      - name: Create unique recovery signing key
+        if: env.STUDYBOOK_SIGNING_MODE == 'recovery'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.android
+          rm -f ~/.android/debug.keystore
+          keytool -genkeypair -v \
+            -keystore ~/.android/debug.keystore \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -dname "CN=StudyBook LAB 02 Ripristino,O=StudyBook AI,C=IT" \
+            -keyalg RSA -keysize 2048 -validity 10000
 
       - name: Build installable debug APK
         working-directory: android
@@ -103,17 +150,33 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon assembleDebug
 
-      - name: Prepare APK artifact
+      - name: Verify APK family identity
+        shell: bash
         run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          ACTUAL_ID=$(apkanalyzer manifest application-id "$APK")
+          test "$ACTUAL_ID" = "$STUDYBOOK_APPLICATION_ID"
+          echo "APK applicationId verified: $ACTUAL_ID"
+
+      - name: Prepare APK artifact
+        shell: bash
+        run: |
+          set -euo pipefail
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk "artifacts/StudyBook-AI-LAB-01-UPDATE-01.apk"
-          sha256sum "artifacts/StudyBook-AI-LAB-01-UPDATE-01.apk" > "artifacts/StudyBook-AI-LAB-01-UPDATE-01.sha256"
-          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey |             grep -E 'SHA256:|Valid from:' > "artifacts/StudyBook-AI-LAB-01-UPDATE-01-signing.txt"
+          APK_NAME="${STUDYBOOK_ARTIFACT_BASENAME}.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "artifacts/$APK_NAME"
+          sha256sum "artifacts/$APK_NAME" > "artifacts/${STUDYBOOK_ARTIFACT_BASENAME}.sha256"
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | \
+            grep -E 'SHA256:|Valid from:' > "artifacts/${STUDYBOOK_ARTIFACT_BASENAME}-signing.txt"
+          printf 'branch=%s\napplicationId=%s\nversionCode=%s\nversionName=%s\nmode=%s\n' \
+            "$GITHUB_REF_NAME" "$STUDYBOOK_APPLICATION_ID" "$STUDYBOOK_VERSION_CODE" "$STUDYBOOK_VERSION_NAME" "$STUDYBOOK_SIGNING_MODE" \
+            > "artifacts/${STUDYBOOK_ARTIFACT_BASENAME}-identity.txt"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: StudyBook-AI-LAB-01-UPDATE-01-APK
+          name: ${{ env.STUDYBOOK_ARTIFACT_BASENAME }}-APK
           path: artifacts/
           retention-days: 90
           if-no-files-found: error

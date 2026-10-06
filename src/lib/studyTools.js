@@ -39,7 +39,6 @@ function paragraphPoints(paragraph = {}, limit = 5) {
   const values = [
     ...(paragraph.remember || []),
     ...(paragraph.keyPoints || []),
-    ...splitSentences(paragraphText(paragraph)),
   ].map(cleanText).filter((value) => value.length >= 18);
 
   const seen = new Set();

@@ -95,6 +95,28 @@ function dsaVersion(summary) {
     .join('\n\n');
 }
 
+function simpleVersion(source, studySummary = '') {
+  const replacements = [
+    [/\bal fine di\b/gi, 'per'],
+    [/\bin relazione a\b/gi, 'su'],
+    [/\bmediante\b/gi, 'con'],
+    [/\bqualora\b/gi, 'se'],
+    [/\bpertanto\b/gi, 'quindi'],
+    [/\btuttavia\b/gi, 'però'],
+  ];
+  let simple = extractSummary(source, 'ripasso');
+  for (const [pattern, value] of replacements) simple = simple.replace(pattern, value);
+  simple = normalize(simple.replace(/\s*;\s*/g, '. '));
+  const study = normalize(studySummary);
+  if (simple.toLocaleLowerCase('it-IT') === study.toLocaleLowerCase('it-IT')) {
+    const sourceSentences = splitSentences(source);
+    if (sourceSentences.length > 1) {
+      simple = normalize(sourceSentences.slice(0, Math.max(1, Math.min(3, Math.ceil(sourceSentences.length * 0.34)))).join(' '));
+    }
+  }
+  return simple || study;
+}
+
 function rememberItems(source, keywords) {
   const sentences = splitSentences(source);
   const important = sentences.filter((sentence) => /\b\d{2,4}\b|\b(definisce|significa|causa|conseguenza|legge|formula|teorema|principale|fondamentale|eccezione)\b/i.test(sentence));
@@ -169,6 +191,7 @@ export function summarizeLocally(paragraph, level = 'studio') {
   const keywords = topKeywords(source);
   return ensureSourceFidelity(source, {
     summary,
+    simpleSummary: simpleVersion(source, summary),
     dsaSummary: dsaVersion(summary),
     keyPoints: keyPointsFromSummary(summary),
     remember: rememberItems(source, keywords),

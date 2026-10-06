@@ -80,6 +80,8 @@ jobs:
         run: node scripts/test-format-matrix.mjs
       - name: Test LAB update 01 UX
         run: node scripts/test-update-01-ux.mjs
+      - name: Test LAB update 02 UX
+        run: node scripts/test-update-02-ux.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine

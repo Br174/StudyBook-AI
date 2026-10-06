@@ -147,7 +147,7 @@ export async function saveLibraryBook({
       type: originalFile?.type || previous?.original?.type || sourceData?.sourceFormat || '',
       size: Number(originalFile?.size || previous?.original?.size || 0),
       lastModified: Number(originalFile?.lastModified || previous?.original?.lastModified || 0),
-      available: Boolean(originalFile || previous?.originalFile || sourceData),
+      available: Boolean(originalFile || previous?.originalFile),
     },
     subject: resolvedSubject,
     collections: Array.isArray(collections) ? collections : (previous?.collections || []),
@@ -161,7 +161,7 @@ export async function saveLibraryBook({
       pages: sourceData?.structure?.pageCount || sourceData?.pages?.length || 0,
       level: studyBook?.level || 'studio',
       engine: studyBook?.engine || 'locale',
-      hasOriginal: Boolean(originalFile || previous?.originalFile || sourceData),
+      hasOriginal: Boolean(originalFile || previous?.originalFile),
       hasProcessed: Boolean(studyBook || previous?.studyBook),
       fidelityPassed: Boolean(studyBook?.quality?.fidelityGate?.passed),
       compressionPercent: Number(studyBook?.quality?.fidelityGate?.compressionPercent || 0),
@@ -197,7 +197,8 @@ export async function listLibraryBooks({ profileId = null } = {}) {
         subject: summary.subject || inferSubject(summary.fileName),
         collections: summary.collections || [],
         favorite: Boolean(summary.favorite),
-        original: summary.original || { name: summary.fileName, available: true },
+        original: { ...(summary.original || { name: summary.fileName }), available: Boolean(originalFile) },
+        metadata: { ...(summary.metadata || {}), hasOriginal: Boolean(originalFile), hasProcessed: Boolean(studyBook || summary.metadata?.hasProcessed) },
       }));
   } finally {
     db.close();

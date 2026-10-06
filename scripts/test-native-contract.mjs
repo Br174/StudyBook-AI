@@ -23,7 +23,11 @@ assert.ok(main.includes("!nativeApp && 'serviceWorker' in navigator"));
 assert.ok(worker.includes("'https://localhost'"));
 assert.ok(prep.includes('android.permission.CAMERA'));
 assert.ok(workflow.includes('assembleDebug'));
-assert.ok(workflow.includes('StudyBook-AI-LAB-01-UPDATE-01.apk'));
+assert.ok(workflow.includes('StudyBook-AI-LAB-02-AGGIORNAMENTO'));
+assert.ok(workflow.includes('StudyBook-AI-LAB-02-RIPRISTINO'));
+assert.ok(workflow.includes('lab/studybook-core-android-01-update-02'));
+assert.ok(workflow.includes('lab/recovery-studybook-core-android-02'));
+assert.ok(workflow.includes('it.studybook.ai.lab.recovery02'));
 assert.ok(workflow.includes('StudyBook-LAB01-signing-recovery'));
 assert.ok(workflow.includes('D7:BB:93:15:C9:C4:35:18:72:49:54:78:61:0C:48:47:25:08:6E:2B:AB:BC:04:BE:C6:5E:C8:23:45:5F:BD:CC'));
 
