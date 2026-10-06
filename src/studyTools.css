@@ -236,3 +236,29 @@
   .study-oral-card { padding: 17px 14px; border-radius: 17px; }
   .study-tool-nav button { flex: 1; padding-inline: 8px; }
 }
+
+
+.study-scope-switch {
+  width: min(420px, calc(100% - 24px));
+  margin: 8px auto 12px;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  border-radius: 15px;
+  background: #e9edf3;
+}
+.study-scope-switch button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #687386;
+  font: inherit;
+  font-weight: 800;
+}
+.study-scope-switch button.active {
+  background: #fff;
+  color: #1677ea;
+  box-shadow: 0 3px 12px rgba(0,0,0,.07);
+}
