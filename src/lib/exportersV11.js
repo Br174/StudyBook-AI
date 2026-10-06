@@ -1,3 +1,4 @@
+import { deliverBlob } from './fileDelivery.js';
 import {
   Document,
   HeadingLevel,
@@ -619,5 +620,5 @@ export async function exportDocx(book, fileName, rawOptions = false) {
   const doc = new Document({ sections: [{ children }] });
   const blob = await Packer.toBlob(doc);
   const suffix = options.variant === 'simple' ? '_semplice' : options.variant === 'both' ? '_completo' : '_studio';
-  downloadBlob(blob, `${safeName(fileName)}${suffix}.docx`);
+  await deliverBlob(blob, `${safeName(fileName)}${suffix}.docx`);
 }
