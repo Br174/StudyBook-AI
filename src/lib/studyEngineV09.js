@@ -1,3 +1,4 @@
+import { apiEndpoint } from './apiEndpoint.js';
 import { refineParagraphWithAi, summarizeLocally, summaryLevels } from './studyEngine.js';
 import { loadResumeState, purgeOldResumeStates, saveResumeState } from './resumeStore.js';
 
@@ -189,7 +190,7 @@ function pageContext(meta) {
 }
 
 async function summarizeWithEndpoint(units, level) {
-  const response = await fetch('/api/summarize', {
+  const response = await fetch(apiEndpoint('/api/summarize'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
