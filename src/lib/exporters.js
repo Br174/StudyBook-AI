@@ -1,6 +1,7 @@
 import { deliverBlob } from './fileDelivery.js';
 export { exportDocx } from './exportersV11.js';
 export { exportHtml, exportPdf, printStudyBook } from './exportersV12.js';
+export { exportEpub, exportMarkdown, exportOdt, exportRtf } from './exportersRich.js';
 
 function safeName(name = 'studybook') {
   return name.replace(/\.[^.]+$/, '').replace(/[^a-z0-9-_]+/gi, '_') || 'studybook';
