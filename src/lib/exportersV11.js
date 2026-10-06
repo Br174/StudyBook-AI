@@ -11,6 +11,7 @@ import {
 } from 'docx';
 import { jsPDF } from 'jspdf';
 import { exportJson, exportTxt } from './exporters.js';
+import { buildEditorialDocument } from './editorialModel.js';
 
 export { exportJson, exportTxt };
 
@@ -543,61 +544,90 @@ function docxGlossaryCell(item) {
   });
 }
 
-export async function exportDocx(book, fileName, dsaMode = false) {
-  const children = [new Paragraph({ text: 'StudyBook AI', heading: HeadingLevel.TITLE })];
+export async function exportDocx(book, fileName, rawOptions = false) {
+  const options = typeof rawOptions === 'boolean'
+    ? { dsaMode: rawOptions, variant: 'study', accessibility: null }
+    : {
+      dsaMode: Boolean(rawOptions?.dsaMode),
+      variant: ['study', 'simple', 'both'].includes(rawOptions?.variant) ? rawOptions.variant : 'study',
+      accessibility: rawOptions?.accessibility || null,
+    };
+  const editorial = buildEditorialDocument(book, options);
+  const print = options.accessibility?.enabled ? (options.accessibility.print || {}) : {};
+  const fontSize = Math.round(22 * Math.min(1.5, Math.max(.85, Number(print.fontScale || 1))));
+  const lineScale = Math.min(2.2, Math.max(1.3, Number(print.lineHeight || 1.58)));
+  const paragraphLine = Math.round(240 * (lineScale / 1.2));
+  const children = [
+    new Paragraph({ text: 'StudyBook AI', heading: HeadingLevel.TITLE }),
+    new Paragraph({ children: [new TextRun({ text: displayName(fileName), bold: true, size: 34 })] }),
+  ];
 
-  book.chapters.forEach((chapter) => {
-    children.push(new Paragraph({ text: chapter.title, heading: HeadingLevel.HEADING_1 }));
-    chapter.paragraphs.forEach((item, index) => {
+  editorial.variants.forEach((variant, variantIndex) => {
+    if (editorial.variants.length > 1) {
       children.push(new Paragraph({
-        children: [new TextRun({ text: `Paragrafo ${index + 1}`, bold: true })],
+        pageBreakBefore: variantIndex > 0,
+        children: [new TextRun({ text: variant.label, bold: true, size: 32 })],
+        spacing: { before: 220, after: 260 },
+      }));
+    }
+
+    variant.chapters.forEach((chapter) => {
+      children.push(new Paragraph({
+        text: chapter.title,
+        heading: HeadingLevel.HEADING_1,
+        pageBreakBefore: true,
+        keepNext: true,
       }));
 
-      const summaryParagraph = new Paragraph({
-        children: docxSemanticRuns(withInlineGlossary(paragraphText(item, dsaMode), item), item),
-        spacing: { after: 100 },
-      });
-      const glossaryCell = docxGlossaryCell(item);
-      if (glossaryCell) {
-        children.push(new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          rows: [new TableRow({
-            children: [
-              new TableCell({ width: { size: 70, type: WidthType.PERCENTAGE }, children: [summaryParagraph] }),
-              glossaryCell,
-            ],
-          })],
-        }));
-      } else {
-        children.push(summaryParagraph);
-      }
+      chapter.blocks.forEach((block) => {
+        if (block.sectionTitle) {
+          children.push(new Paragraph({
+            children: [new TextRun({ text: block.sectionTitle, bold: true, size: 20 })],
+            keepNext: true,
+            spacing: { before: 180, after: 80 },
+          }));
+        }
 
-      if (item.keywords?.length) {
+        const sourceItem = book?.chapters?.[chapter.chapterIndex]?.paragraphs?.[block.paragraphIndex] || {};
         children.push(new Paragraph({
-          children: [
-            new TextRun({ text: 'Parole chiave: ', bold: true }),
-            ...docxSemanticRuns(item.keywords.join(' · '), item),
-          ],
+          children: docxSemanticRuns(block.text, sourceItem).map((run) => {
+            if (!run?.options) return run;
+            return run;
+          }),
+          spacing: { after: 150, line: paragraphLine },
+          widowControl: true,
         }));
-      }
-      if (item.keyPoints?.length) {
-        children.push(new Paragraph({ children: [new TextRun({ text: 'Punti chiave', bold: true })] }));
-        item.keyPoints.forEach((value) => children.push(new Paragraph({
-          children: docxSemanticRuns(value, item),
-          bullet: { level: 0 },
-        })));
-      }
-      if (item.remember?.length) {
-        children.push(new Paragraph({ children: [new TextRun({ text: 'Da ricordare', bold: true })] }));
-        item.remember.forEach((value) => children.push(new Paragraph({
-          children: docxSemanticRuns(value, item),
-          bullet: { level: 0 },
-        })));
+      });
+
+      if (chapter.glossary.length) {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: 'Terminologia', bold: true, size: 20 })],
+          keepNext: true,
+          spacing: { before: 220, after: 80 },
+        }));
+        chapter.glossary.forEach((entry) => {
+          children.push(new Paragraph({
+            children: [
+              new TextRun({ text: `${entry.term}: `, bold: true, size: Math.max(18, fontSize - 2) }),
+              new TextRun({ text: entry.definition, size: Math.max(18, fontSize - 2) }),
+            ],
+            spacing: { after: 70 },
+          }));
+        });
       }
     });
   });
 
+  // Applica la dimensione richiesta ai run del testo continuo senza cambiare la struttura.
+  for (const paragraph of children) {
+    const runs = paragraph?.root?.filter?.((node) => node?.options?.text) || [];
+    for (const run of runs) {
+      if (run?.options && !run.options.size) run.options.size = fontSize;
+    }
+  }
+
   const doc = new Document({ sections: [{ children }] });
   const blob = await Packer.toBlob(doc);
-  downloadBlob(blob, `${safeName(fileName)}_studybook.docx`);
+  const suffix = options.variant === 'simple' ? '_semplice' : options.variant === 'both' ? '_completo' : '_studio';
+  downloadBlob(blob, `${safeName(fileName)}${suffix}.docx`);
 }
