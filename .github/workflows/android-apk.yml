@@ -197,3 +197,5 @@ jobs:
           path: artifacts/
           retention-days: 90
           if-no-files-found: error
+
+# LAB03 recovery trigger
