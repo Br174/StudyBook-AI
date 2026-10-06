@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - lab/studybook-core-android-01
+      - lab/studybook-core-android-01-update-01
     paths:
       - 'src/**'
       - 'api/**'
@@ -97,14 +98,14 @@ jobs:
       - name: Prepare APK artifact
         run: |
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk "artifacts/StudyBook-AI-LAB-01.apk"
-          sha256sum "artifacts/StudyBook-AI-LAB-01.apk" > "artifacts/StudyBook-AI-LAB-01.sha256"
-          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey |             grep -E 'SHA256:|Valid from:' > "artifacts/StudyBook-AI-LAB-01-signing.txt"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "artifacts/StudyBook-AI-LAB-01-UPDATE-01.apk"
+          sha256sum "artifacts/StudyBook-AI-LAB-01-UPDATE-01.apk" > "artifacts/StudyBook-AI-LAB-01-UPDATE-01.sha256"
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey |             grep -E 'SHA256:|Valid from:' > "artifacts/StudyBook-AI-LAB-01-UPDATE-01-signing.txt"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: StudyBook-AI-LAB-01-APK
+          name: StudyBook-AI-LAB-01-UPDATE-01-APK
           path: artifacts/
           retention-days: 90
           if-no-files-found: error
