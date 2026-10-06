@@ -22,7 +22,7 @@ await writeFile(gradlePath, gradle);
 
 console.log(JSON.stringify({
   ok: true,
-  appId: 'it.studybook.ai.lab',
+  appId: process.env.STUDYBOOK_APPLICATION_ID || 'it.studybook.ai.lab',
   versionCode,
   versionName,
   cameraPermission: true,

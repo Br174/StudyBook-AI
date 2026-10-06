@@ -31,10 +31,6 @@ jobs:
     permissions:
       contents: read
       actions: read
-    env:
-      STUDYBOOK_VERSION_CODE: ${{ github.run_number }}
-      STUDYBOOK_VERSION_NAME: 0.2.${{ github.run_number }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,6 +64,17 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
+      - name: Resolve monotonic Android version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION_BASE=2026100000
+          VERSION_CODE=$((VERSION_BASE + GITHUB_RUN_NUMBER))
+          test "$VERSION_CODE" -lt 2147483647
+          echo "STUDYBOOK_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "STUDYBOOK_VERSION_NAME=0.3.$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+          echo "Monotonic Android version: $VERSION_CODE / 0.3.$GITHUB_RUN_NUMBER"
 
       - name: Resolve LAB family identity
         shell: bash
@@ -167,14 +174,30 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon assembleDebug
 
-      - name: Verify APK family identity
+      - name: Verify APK update identity
         shell: bash
         run: |
           set -euo pipefail
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           ACTUAL_ID=$(apkanalyzer manifest application-id "$APK")
+          ACTUAL_VERSION_CODE=$(apkanalyzer manifest version-code "$APK")
           test "$ACTUAL_ID" = "$STUDYBOOK_APPLICATION_ID"
+          test "$ACTUAL_VERSION_CODE" = "$STUDYBOOK_VERSION_CODE"
+
+          APKSIGNER="${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/36.0.0/apksigner"
+          "$APKSIGNER" verify --verbose "$APK"
+          ACTUAL_CERT=$("$APKSIGNER" verify --print-certs "$APK" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n1 | tr '[:lower:]' '[:upper:]')
+          KEY_CERT=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | sed -n 's/.*SHA256: //p' | head -n1 | tr -d ':')
+          test "$ACTUAL_CERT" = "$KEY_CERT"
+
+          if [[ "$STUDYBOOK_SIGNING_MODE" == "update" ]]; then
+            EXPECTED_CERT="D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC"
+            test "$ACTUAL_CERT" = "$EXPECTED_CERT"
+          fi
+
           echo "APK applicationId verified: $ACTUAL_ID"
+          echo "APK versionCode verified: $ACTUAL_VERSION_CODE"
+          echo "APK signing certificate verified: $ACTUAL_CERT"
 
       - name: Prepare APK artifact
         shell: bash
