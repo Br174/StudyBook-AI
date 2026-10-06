@@ -20,14 +20,7 @@ function escapeHtml(value) {
 }
 
 function downloadBlob(blob, fileName) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = fileName;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  void deliverBlob(blob, fileName);
 }
 
 function normalizeOptions(value = false) {
@@ -360,7 +353,7 @@ export async function exportPdf(book, fileName, rawOptions = false) {
   const suffix = options.variant === 'simple' ? '_semplice' : options.variant === 'both' ? '_completo' : '_studio';
   if (Capacitor.isNativePlatform?.()) {
     const blob = pdf.output('blob');
-    await deliverBlob(blob, `${safeName(fileName)}${suffix}.pdf`);
+    await deliverBlob(blob, `${safeName(fileName)}${suffix}.pdf`, 'Apri PDF StudyBook', { preferOpen: true });
   } else {
     pdf.save(`${safeName(fileName)}${suffix}.pdf`);
   }
