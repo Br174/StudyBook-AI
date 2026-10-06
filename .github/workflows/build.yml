@@ -74,6 +74,10 @@ jobs:
         run: node scripts/test-fidelity-engine.mjs
       - name: Test editorial model
         run: node scripts/test-editorial-model.mjs
+      - name: Test glossary quality
+        run: node scripts/test-glossary-quality.mjs
+      - name: Test import/export format matrix
+        run: node scripts/test-format-matrix.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
