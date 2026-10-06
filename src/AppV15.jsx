@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { detectChaptersFromPages, readSourceFile } from './lib/documentParserV11.js';
 import { buildStudyBook, refineParagraphWithAi, summaryLevels } from './lib/studyEngineV10.js';
-import { exportDocx, exportHtml, exportJson, exportPdf, exportTxt, printStudyBook } from './lib/exporters.js';
+import { exportDocx, exportEpub, exportHtml, exportJson, exportMarkdown, exportOdt, exportPdf, exportRtf, exportTxt, printStudyBook } from './lib/exporters.js';
 import {
   createLibraryId,
   deleteLibraryBook,
@@ -138,6 +138,7 @@ export default function AppV14() {
   const scanPagesRef = useRef([]);
   const scanPersistTimersRef = useRef(new Map());
   const scannerRestoreStartedRef = useRef(false);
+  const screenHistoryRef = useRef([]);
 
   const paragraphCount = useMemo(() => countParagraphs(documentData?.chapters), [documentData]);
   const scanReadyCount = useMemo(
@@ -149,6 +150,26 @@ export default function AppV14() {
     [scanPages],
   );
   const progressPercent = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+
+  function navigateTo(nextScreen, { replace = false } = {}) {
+    if (!nextScreen || nextScreen === activeScreen) return;
+    if (!replace) screenHistoryRef.current.push(activeScreen);
+    setActiveScreen(nextScreen);
+  }
+
+  function goBack() {
+    if (studyModeOpen) {
+      setStudyModeOpen(false);
+      return;
+    }
+    const previous = screenHistoryRef.current.pop() || 'home';
+    setActiveScreen(previous);
+  }
+
+  function goHome() {
+    screenHistoryRef.current = [];
+    setActiveScreen('home');
+  }
 
   function setScanPagesNow(updater) {
     const current = scanPagesRef.current;
@@ -298,9 +319,9 @@ export default function AppV14() {
       setSummaryEditor(null);
       setScannerResultReady(Boolean(record.sourceData.scanCount));
       setStatus(original ? 'Originale aperto dalla Libreria' : 'Libro riaperto dalla Libreria');
-      if (original) setActiveScreen('home');
+      if (original) navigateTo('home');
       else {
-        setActiveScreen('studio');
+        navigateTo('studio');
         if (openReader) setStudyModeOpen(true);
       }
     } catch (err) {
@@ -311,15 +332,24 @@ export default function AppV14() {
   }
 
   async function removeLibraryItem(id) {
-    if (libraryBusy) return;
+    if (libraryBusy) return false;
     setLibraryBusy(true);
     try {
       await deleteLibraryBook(id);
-      if (libraryId === id) setLibraryId('');
-      await refreshLibrary();
-      setStatus('Libro rimosso dalla Libreria');
+      if (libraryId === id) {
+        setLibraryId('');
+        setStudyBook(null);
+        setDocumentData(null);
+        setSourceFile(null);
+        setFileName('');
+        setStudyModeOpen(false);
+      }
+      await refreshLibrary(activeProfileId);
+      setStatus('Libro eliminato definitivamente dalla Libreria');
+      return true;
     } catch (err) {
       setError(err.message || 'Impossibile eliminare il libro.');
+      return false;
     } finally {
       setLibraryBusy(false);
     }
@@ -398,7 +428,7 @@ export default function AppV14() {
       }
       const engineLabel = result.engine === 'ai' ? 'AI' : result.engine === 'misto' ? 'AI + sicurezza locale' : 'modalità locale';
       setStatus(`Libro pronto · ${engineLabel}${saved ? ' · salvato in Libreria' : ''}`);
-      setActiveScreen('studio');
+      navigateTo('studio');
       return result;
     } catch (err) {
       setError(err.message || 'Errore durante la creazione del libro di studio.');
@@ -715,6 +745,10 @@ export default function AppV14() {
     if (format === 'pdf') return exportPdf(studyBook, fileName, options);
     if (format === 'docx') return exportDocx(studyBook, fileName, options);
     if (format === 'html') return exportHtml(studyBook, fileName, options);
+    if (format === 'epub') return exportEpub(studyBook, fileName, options);
+    if (format === 'odt') return exportOdt(studyBook, fileName, options);
+    if (format === 'rtf') return exportRtf(studyBook, fileName, options);
+    if (format === 'md') return exportMarkdown(studyBook, fileName, options);
     if (format === 'print') return printStudyBook(studyBook, fileName, options);
     if (format === 'json') return exportJson(studyBook, fileName);
     if (format === 'txt') {
@@ -784,14 +818,17 @@ export default function AppV14() {
   return (
     <main className="sb-app-frame">
       <header className="sb-topbar">
-        <button type="button" className="sb-brand" onClick={() => setActiveScreen('home')}>StudyBook <b>AI</b></button>
+        <div className="sb-topbar-left">
+          {activeScreen !== 'home' && <button type="button" className="sb-back-button" onClick={goBack} aria-label="Torna indietro">←</button>}
+          <button type="button" className="sb-brand" onClick={goHome}>StudyBook <b>AI</b></button>
+        </div>
         <div className="sb-top-actions">
-          <button type="button" onClick={() => setActiveScreen('settings')}>{activeProfile.name}</button>
-          <button type="button" aria-label="Impostazioni" onClick={() => setActiveScreen('settings')}>⚙</button>
+          <button type="button" onClick={() => navigateTo('settings')}>{activeProfile.name}</button>
+          <button type="button" aria-label="Impostazioni" onClick={() => navigateTo('settings')}>⚙</button>
         </div>
       </header>
 
-      <input ref={documentFileInputRef} type="file" hidden accept=".pdf,.docx,.epub,.txt,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,text/plain,image/png,image/jpeg,image/webp" onChange={handleFile} />
+      <input ref={documentFileInputRef} type="file" hidden accept=".pdf,.docx,.epub,.txt,.html,.htm,.rtf,.odt,.md,.markdown,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,application/rtf,application/vnd.oasis.opendocument.text,text/plain,text/html,text/markdown,image/png,image/jpeg,image/webp" onChange={handleFile} />
       {error && <div className="error-box sb-global-error">{error}</div>}
 
       {activeScreen === 'home' && (
@@ -803,7 +840,7 @@ export default function AppV14() {
         />
       )}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} onOpenBook={openFromLibrary} />}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} onOpenBook={openFromLibrary} onDeleteBook={removeLibraryItem} />}
 
       {activeScreen === 'studio' && (
         <StudioScreen
@@ -822,7 +859,7 @@ export default function AppV14() {
         />
       )}
 
-      <BottomNav active={activeScreen === 'settings' ? 'home' : activeScreen} onChange={setActiveScreen} />
+      <BottomNav active={activeScreen === 'settings' ? 'home' : activeScreen} onChange={navigateTo} />
       <input ref={cameraFileInputRef} className="camera-fallback-input" type="file" accept="image/*" capture="environment" onChange={handleCameraFallback} />
 
       {cameraOpen && (
