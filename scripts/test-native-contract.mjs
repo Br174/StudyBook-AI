@@ -11,6 +11,7 @@ const workflow = await readFile('.github/workflows/android-apk.yml', 'utf8');
 
 assert.equal(pkg.dependencies['@capacitor/core'], '8.5.2');
 assert.equal(pkg.dependencies['@capacitor/android'], '8.5.2');
+assert.equal(pkg.dependencies['@capacitor/file-viewer'], '2.0.4');
 assert.equal(pkg.devDependencies['@capacitor/cli'], '8.5.2');
 assert.equal(config.appId, 'it.studybook.ai.lab');
 assert.equal(config.webDir, 'dist');
@@ -22,7 +23,7 @@ assert.ok(main.includes("!nativeApp && 'serviceWorker' in navigator"));
 assert.ok(worker.includes("'https://localhost'"));
 assert.ok(prep.includes('android.permission.CAMERA'));
 assert.ok(workflow.includes('assembleDebug'));
-assert.ok(workflow.includes('StudyBook-AI-LAB-01.apk'));
+assert.ok(workflow.includes('StudyBook-AI-LAB-01-UPDATE-01.apk'));
 
 console.log(JSON.stringify({
   ok: true,
