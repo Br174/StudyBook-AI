@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+import { deliverBlob } from './fileDelivery.js';
 import { jsPDF } from 'jspdf';
 import { buildEditorialDocument, editorialVariantLabel } from './editorialModel.js';
 
@@ -356,5 +358,10 @@ export async function exportPdf(book, fileName, rawOptions = false) {
   }
 
   const suffix = options.variant === 'simple' ? '_semplice' : options.variant === 'both' ? '_completo' : '_studio';
-  pdf.save(`${safeName(fileName)}${suffix}.pdf`);
+  if (Capacitor.isNativePlatform?.()) {
+    const blob = pdf.output('blob');
+    await deliverBlob(blob, `${safeName(fileName)}${suffix}.pdf`);
+  } else {
+    pdf.save(`${safeName(fileName)}${suffix}.pdf`);
+  }
 }
