@@ -180,3 +180,5 @@ jobs:
           path: artifacts/
           retention-days: 90
           if-no-files-found: error
+
+# MotorLab LAB 02 ripristino trigger
