@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ACCESSIBILITY_PRESETS } from '../lib/accessibility.js';
 import '../appShellV16.css';
 
@@ -6,23 +6,70 @@ function stripExtension(value = '') {
   return String(value || 'StudyBook').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'StudyBook';
 }
 
-function BookCover({ item, view = 'processed', onOpen }) {
+function BookCover({ item, view = 'processed', onOpen, onDeleteRequest }) {
+  const [deleteArmed, setDeleteArmed] = useState(false);
+  const holdTimer = useRef(null);
+  const suppressClick = useRef(false);
   const title = stripExtension(item.fileName);
   const subject = item.subject || 'Altro';
   const pages = item.metadata?.pages || 0;
   const available = view === 'original' ? item.metadata?.hasOriginal !== false : item.metadata?.hasProcessed !== false;
+
+  function clearHold() {
+    if (holdTimer.current) clearTimeout(holdTimer.current);
+    holdTimer.current = null;
+  }
+
+  function startHold() {
+    clearHold();
+    suppressClick.current = false;
+    holdTimer.current = window.setTimeout(() => {
+      suppressClick.current = true;
+      setDeleteArmed(true);
+      try { navigator.vibrate?.(35); } catch { /* best effort */ }
+    }, 520);
+  }
+
+  function openBook() {
+    if (suppressClick.current) {
+      suppressClick.current = false;
+      return;
+    }
+    if (available) onOpen(item, view);
+  }
+
   return (
-    <button type="button" className="sb-book-card" onClick={() => available && onOpen(item, view)} disabled={!available}>
-      <div className="sb-cover" data-subject={subject}>
-        <span>{view === 'original' ? 'ORIGINALE' : 'STUDYBOOK'}</span>
-        <strong>{title}</strong>
-        <small>{subject}</small>
-      </div>
-      <div className="sb-book-meta">
-        <strong>{title}</strong>
-        <span>{pages ? `${pages} pagine` : (item.metadata?.chapters ? `${item.metadata.chapters} capitoli` : subject)}</span>
-      </div>
-    </button>
+    <div className={`sb-book-card-wrap ${deleteArmed ? 'delete-armed' : ''}`}>
+      <button
+        type="button"
+        className="sb-book-card"
+        onPointerDown={startHold}
+        onPointerUp={clearHold}
+        onPointerCancel={clearHold}
+        onPointerLeave={clearHold}
+        onClick={openBook}
+        disabled={!available}
+        aria-label={`${title}. Pressione prolungata per eliminare`}
+      >
+        <div className="sb-cover" data-subject={subject}>
+          <span>{view === 'original' ? 'ORIGINALE' : 'STUDYBOOK'}</span>
+          <strong>{title}</strong>
+          <small>{subject}</small>
+        </div>
+        <div className="sb-book-meta">
+          <strong>{title}</strong>
+          <span>{pages ? `${pages} pagine` : (item.metadata?.chapters ? `${item.metadata.chapters} capitoli` : subject)}</span>
+        </div>
+      </button>
+      {deleteArmed && onDeleteRequest && (
+        <button
+          type="button"
+          className="sb-book-delete"
+          aria-label={`Elimina ${title}`}
+          onClick={() => onDeleteRequest(item)}
+        >×</button>
+      )}
+    </div>
   );
 }
 
@@ -103,11 +150,12 @@ export function HomeScreen({
   );
 }
 
-export function LibraryScreen({ items, onOpenBook }) {
+export function LibraryScreen({ items, onOpenBook, onDeleteBook }) {
   const [area, setArea] = useState('subjects');
   const [view, setView] = useState('processed');
   const [subject, setSubject] = useState('Tutte');
   const [sort, setSort] = useState('recent');
+  const [deleteCandidate, setDeleteCandidate] = useState(null);
   const subjects = useMemo(() => ['Tutte', ...new Set(items.map((item) => item.subject || 'Altro'))].slice(0, 8), [items]);
   const collections = useMemo(() => [...new Set(items.flatMap((item) => item.collections || []))], [items]);
 
@@ -160,9 +208,23 @@ export function LibraryScreen({ items, onOpenBook }) {
 
       {filtered.length ? (
         <div className="sb-library-grid">
-          {filtered.map((item) => <BookCover key={item.id} item={item} view={view} onOpen={onOpenBook} />)}
+          {filtered.map((item) => <BookCover key={item.id} item={item} view={view} onOpen={onOpenBook} onDeleteRequest={setDeleteCandidate} />)}
         </div>
       ) : <div className="sb-empty-library">Nessun libro in questa sezione.</div>}
+
+      {deleteCandidate && (
+        <div className="sb-confirm-overlay" role="dialog" aria-modal="true" aria-label="Conferma eliminazione">
+          <div className="sb-confirm-dialog">
+            <div className="sb-confirm-icon">!</div>
+            <h2>Eliminare definitivamente?</h2>
+            <p><strong>{stripExtension(deleteCandidate.fileName)}</strong> verrà rimosso da questa Libreria. L’operazione non può essere annullata.</p>
+            <div className="sb-confirm-actions">
+              <button type="button" onClick={() => setDeleteCandidate(null)}>Annulla</button>
+              <button type="button" className="danger" onClick={async () => { await onDeleteBook(deleteCandidate.id); setDeleteCandidate(null); }}>Sì, elimina</button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -198,6 +260,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
           <button type="button" onClick={() => onExport('pdf', exportVariant)}>PDF</button>
           <button type="button" onClick={() => onExport('docx', exportVariant)}>DOCX</button>
           <button type="button" onClick={() => onExport('html', exportVariant)}>HTML</button>
+          <button type="button" onClick={() => onExport('epub', exportVariant)}>EPUB</button>
+          <button type="button" onClick={() => onExport('odt', exportVariant)}>ODT</button>
+          <button type="button" onClick={() => onExport('rtf', exportVariant)}>RTF</button>
+          <button type="button" onClick={() => onExport('md', exportVariant)}>Markdown</button>
           <button type="button" onClick={() => onExport('print', exportVariant)}>Stampa</button>
           <button type="button" onClick={() => onExport('txt', exportVariant)} disabled={exportVariant === 'both'}>TXT</button>
           <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>
