@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { FileViewer } from '@capacitor/file-viewer';
 
 function safeFileName(value = 'StudyBook') {
   return String(value || 'StudyBook').replace(/[\\/:*?"<>|]+/g, '_');
@@ -27,7 +28,7 @@ function webDownload(blob, fileName) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export async function deliverBlob(blob, fileName, title = 'Esporta da StudyBook AI') {
+export async function deliverBlob(blob, fileName, title = 'Esporta da StudyBook AI', { preferOpen = false } = {}) {
   const name = safeFileName(fileName);
   if (!Capacitor.isNativePlatform()) {
     webDownload(blob, name);
@@ -41,11 +42,23 @@ export async function deliverBlob(blob, fileName, title = 'Esporta da StudyBook 
     directory: Directory.Cache,
     recursive: true,
   });
+  if (preferOpen) {
+    const candidates = [written.uri, String(written.uri || '').replace(/^file:\/\//, '')].filter(Boolean);
+    for (const path of [...new Set(candidates)]) {
+      try {
+        await FileViewer.openDocumentFromLocalPath({ path });
+        return { native: true, fileName: name, uri: written.uri, opened: true };
+      } catch {
+        // Prova la forma alternativa del percorso; poi fallback al pannello Android.
+      }
+    }
+  }
+
   await Share.share({
     title,
     text: 'File creato con StudyBook AI',
     url: written.uri,
     dialogTitle: 'Salva o condividi',
   });
-  return { native: true, fileName: name, uri: written.uri };
+  return { native: true, fileName: name, uri: written.uri, opened: false };
 }
