@@ -1,0 +1,259 @@
+import { useMemo, useState } from 'react';
+import { ACCESSIBILITY_PRESETS } from '../lib/accessibility.js';
+import '../appShellV16.css';
+
+function stripExtension(value = '') {
+  return String(value || 'StudyBook').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'StudyBook';
+}
+
+function BookCover({ item, view = 'processed', onOpen }) {
+  const title = stripExtension(item.fileName);
+  const subject = item.subject || 'Altro';
+  const pages = item.metadata?.pages || 0;
+  const available = view === 'original' ? item.metadata?.hasOriginal !== false : item.metadata?.hasProcessed !== false;
+  return (
+    <button type="button" className="sb-book-card" onClick={() => available && onOpen(item, view)} disabled={!available}>
+      <div className="sb-cover" data-subject={subject}>
+        <span>{view === 'original' ? 'ORIGINALE' : 'STUDYBOOK'}</span>
+        <strong>{title}</strong>
+        <small>{subject}</small>
+      </div>
+      <div className="sb-book-meta">
+        <strong>{title}</strong>
+        <span>{pages ? `${pages} pagine` : (item.metadata?.chapters ? `${item.metadata.chapters} capitoli` : subject)}</span>
+      </div>
+    </button>
+  );
+}
+
+export function BottomNav({ active, onChange }) {
+  const items = [
+    ['home', '⌂', 'Home'],
+    ['library', '▥', 'Libreria'],
+    ['studio', '◇', 'Studio'],
+  ];
+  return (
+    <nav className="sb-bottom-nav" aria-label="Navigazione principale">
+      {items.map(([id, icon, label]) => (
+        <button type="button" key={id} className={active === id ? 'active' : ''} onClick={() => onChange(id)}>
+          <span>{icon}</span><small>{label}</small>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+export function HomeScreen({
+  status, importing, generating, libraryItems, onImport, onScanner, onOpenBook, documentData,
+  fileName, onCreateBook, progressPercent, scanContent = null,
+}) {
+  const recent = libraryItems.slice(0, 3);
+  const latest = recent[0];
+  return (
+    <section className="sb-screen sb-home-screen">
+      <header className="sb-screen-head">
+        <div><small>STUDYBOOK AI</small><h1>Studia meglio, senza perdere ciò che conta.</h1></div>
+        <div className="sb-status">{status}</div>
+      </header>
+
+      <article className="sb-new-book-card">
+        <div className="sb-new-book-copy">
+          <span className="sb-round-plus">＋</span>
+          <div><h2>Nuovo libro</h2><p>Importa una fonte o acquisisci le pagine e crea il tuo libro di studio.</p></div>
+        </div>
+        <div className="sb-source-grid">
+          <button type="button" onClick={onScanner} disabled={importing || generating}><span>⌗</span>Scanner</button>
+          <button type="button" onClick={onImport} disabled={importing || generating}><span>PDF</span>PDF</button>
+          <button type="button" onClick={onImport} disabled={importing || generating}><span>▧</span>Foto</button>
+          <button type="button" onClick={onImport} disabled={importing || generating}><span>▤</span>Documento</button>
+        </div>
+      </article>
+
+      {documentData && (
+        <article className="sb-process-card">
+          <div>
+            <small>FONTE PRONTA</small>
+            <h3>{stripExtension(fileName)}</h3>
+            <p>{documentData.chapters?.length || 0} capitoli · {documentData.structure?.pageCount || documentData.pages?.length || 0} pagine</p>
+          </div>
+          <button type="button" onClick={onCreateBook} disabled={generating}>
+            {generating ? `Elaborazione ${progressPercent}%` : 'Crea Testo di studio'}
+          </button>
+        </article>
+      )}
+
+      {scanContent}
+
+      {latest && (
+        <button type="button" className="sb-continue-card" onClick={() => onOpenBook(latest, 'processed')}>
+          <span>Continua</span>
+          <strong>{stripExtension(latest.fileName)}</strong>
+          <small>{latest.subject || 'Libro di studio'} · aggiornato di recente</small>
+          <b>›</b>
+        </button>
+      )}
+
+      <div className="sb-section-row"><h2>Recenti</h2><span>{recent.length ? 'Tocca una copertina per aprire' : 'La tua libreria comparirà qui'}</span></div>
+      {recent.length > 0 && (
+        <div className="sb-recent-grid">
+          {recent.map((item) => <BookCover key={item.id} item={item} onOpen={onOpenBook} />)}
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function LibraryScreen({ items, onOpenBook }) {
+  const [area, setArea] = useState('subjects');
+  const [view, setView] = useState('processed');
+  const [subject, setSubject] = useState('Tutte');
+  const [sort, setSort] = useState('recent');
+  const subjects = useMemo(() => ['Tutte', ...new Set(items.map((item) => item.subject || 'Altro'))].slice(0, 8), [items]);
+  const collections = useMemo(() => [...new Set(items.flatMap((item) => item.collections || []))], [items]);
+
+  const filtered = useMemo(() => {
+    let output = [...items];
+    if (area === 'favorites') output = output.filter((item) => item.favorite);
+    if (area === 'subjects' && subject !== 'Tutte') output = output.filter((item) => (item.subject || 'Altro') === subject);
+    if (sort === 'az') output.sort((a, b) => stripExtension(a.fileName).localeCompare(stripExtension(b.fileName), 'it'));
+    else output.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+    return output;
+  }, [items, area, subject, sort]);
+
+  return (
+    <section className="sb-screen sb-library-screen">
+      <header className="sb-library-head">
+        <div><small>LA TUA RACCOLTA</small><h1>Libreria</h1></div>
+        <div className="sb-library-tools"><button type="button" aria-label="Cerca">⌕</button></div>
+      </header>
+
+      <div className="sb-segmented">
+        <button className={view === 'processed' ? 'active' : ''} onClick={() => setView('processed')}>Elaborati</button>
+        <button className={view === 'original' ? 'active' : ''} onClick={() => setView('original')}>Originali</button>
+      </div>
+
+      <div className="sb-library-modes">
+        {[
+          ['all','Tutti'],['subjects','Materie'],['collections','Raccolte'],['favorites','Preferiti'],['recent','Recenti'],
+        ].map(([id,label]) => <button key={id} className={area === id ? 'active' : ''} onClick={() => setArea(id)}>{label}</button>)}
+      </div>
+
+      {area === 'subjects' && (
+        <div className="sb-filter-strip">
+          {subjects.map((item) => <button key={item} className={subject === item ? 'active' : ''} onClick={() => setSubject(item)}>{item}</button>)}
+        </div>
+      )}
+
+      {area === 'collections' && (
+        <div className="sb-collection-strip">
+          {(collections.length ? collections : ['Esame gennaio','Da ripassare','Preferiti']).map((item) => <span key={item}>{item}</span>)}
+        </div>
+      )}
+
+      <div className="sb-library-subhead">
+        <span>Organizza per materia o raccolta</span>
+        <select value={sort} onChange={(e) => setSort(e.target.value)}>
+          <option value="recent">Ultima apertura</option>
+          <option value="az">A–Z</option>
+        </select>
+      </div>
+
+      {filtered.length ? (
+        <div className="sb-library-grid">
+          {filtered.map((item) => <BookCover key={item.id} item={item} view={view} onOpen={onOpenBook} />)}
+        </div>
+      ) : <div className="sb-empty-library">Nessun libro in questa sezione.</div>}
+    </section>
+  );
+}
+
+export function StudioScreen({ studyBook, fileName, onRead, onPdf, onStudy }) {
+  if (!studyBook) {
+    return <section className="sb-screen"><div className="sb-empty-library"><h2>Nessun libro aperto</h2><p>Apri una copertina dalla Libreria oppure crea un nuovo libro.</p></div></section>;
+  }
+  const fidelity = studyBook.quality?.fidelityGate;
+  return (
+    <section className="sb-screen sb-studio-screen">
+      <header className="sb-screen-head compact">
+        <div><small>LIBRO APERTO</small><h1>{stripExtension(fileName)}</h1></div>
+        {fidelity && <div className={fidelity.passed ? 'sb-fidelity ok' : 'sb-fidelity warn'}>{fidelity.passed ? '✓ Fedeltà verificata' : 'Verifica richiesta'}</div>}
+      </header>
+      <div className="sb-book-actions">
+        <button type="button" onClick={onRead}><span>Aa</span><strong>Leggi</strong><small>Testo di studio o In parole semplici</small></button>
+        <button type="button" onClick={onPdf}><span>▤</span><strong>PDF</strong><small>Anteprima ed esportazione</small></button>
+        <button type="button" onClick={onStudy}><span>◇</span><strong>Studia</strong><small>Quiz, flashcard e domande orali</small></button>
+      </div>
+      <article className="sb-quality-card">
+        <h2>Controllo del libro</h2>
+        <div><span>Capitoli</span><strong>{studyBook.chapters?.length || 0}</strong></div>
+        <div><span>Unità concettuali</span><strong>{fidelity?.conceptUnits || '—'}</strong></div>
+        <div><span>Copertura media</span><strong>{Number.isFinite(fidelity?.averageCoveragePercent) ? `${fidelity.averageCoveragePercent}%` : '—'}</strong></div>
+        <div><span>Compressione</span><strong>{Number.isFinite(fidelity?.compressionPercent) ? `${fidelity.compressionPercent}%` : '—'}</strong></div>
+      </article>
+    </section>
+  );
+}
+
+function SettingRange({ label, value, min, max, step, suffix = '', onChange }) {
+  return <label className="sb-setting-range"><span>{label}<b>{value}{suffix}</b></span><input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} /></label>;
+}
+
+export function SettingsScreen({ settings, onSettingsChange, profiles, activeProfileId, onProfileChange, onAddProfile }) {
+  const [profileName, setProfileName] = useState('');
+  const setRoot = (patch) => onSettingsChange({ ...settings, ...patch });
+  const setPhone = (patch) => setRoot({ phone: { ...settings.phone, ...patch } });
+  const setPrint = (patch) => setRoot({ print: { ...settings.print, ...patch } });
+
+  return (
+    <section className="sb-screen sb-settings-screen">
+      <header className="sb-screen-head compact"><div><small>PREFERENZE</small><h1>Impostazioni</h1></div></header>
+
+      <article className="sb-settings-card">
+        <div className="sb-settings-card-title"><div><h2>Accessibilità e dislessia</h2><p>Preset immediato oppure regolazioni personali indipendenti.</p></div>
+          <label className="sb-switch"><input type="checkbox" checked={settings.enabled} onChange={(e) => setRoot({ enabled: e.target.checked })}/><span /></label>
+        </div>
+
+        <div className="sb-preset-row">
+          {Object.entries(ACCESSIBILITY_PRESETS).map(([id,preset]) => (
+            <button type="button" key={id} className={settings.quickPreset === id ? 'active' : ''} onClick={() => onSettingsChange({ ...settings, enabled: true, quickPreset: id, phone: { ...preset.phone }, print: { ...preset.print } })}>{preset.label}</button>
+          ))}
+        </div>
+
+        <label className="sb-advanced-toggle"><input type="checkbox" checked={settings.advancedEnabled} onChange={(e) => setRoot({ advancedEnabled: e.target.checked })}/> Personalizzazione avanzata</label>
+
+        {settings.advancedEnabled && (
+          <div className="sb-settings-columns">
+            <div><h3>📱 Studio sul telefono</h3>
+              <SettingRange label="Dimensione testo" value={Math.round(settings.phone.fontScale * 100)} min={85} max={160} step={5} suffix="%" onChange={(v) => setPhone({fontScale:v/100})}/>
+              <SettingRange label="Interlinea" value={settings.phone.lineHeight} min={1.4} max={2.3} step={0.05} onChange={(v) => setPhone({lineHeight:v})}/>
+              <SettingRange label="Spaziatura lettere" value={settings.phone.letterSpacing} min={0} max={0.08} step={0.005} onChange={(v) => setPhone({letterSpacing:v})}/>
+              <SettingRange label="Spaziatura parole" value={settings.phone.wordSpacing} min={0} max={0.2} step={0.01} onChange={(v) => setPhone({wordSpacing:v})}/>
+              <label>Sfondo<select value={settings.phone.background} onChange={(e)=>setPhone({background:e.target.value})}><option value="white">Bianco</option><option value="cream">Crema</option><option value="blue">Azzurro tenue</option><option value="gray">Grigio tenue</option></select></label>
+              <label className="sb-check"><input type="checkbox" checked={settings.phone.readingGuide} onChange={(e)=>setPhone({readingGuide:e.target.checked})}/> Guida di lettura</label>
+            </div>
+            <div><h3>🖨️ Stampa ed esportazione</h3>
+              <SettingRange label="Dimensione testo" value={Math.round(settings.print.fontScale * 100)} min={85} max={150} step={5} suffix="%" onChange={(v)=>setPrint({fontScale:v/100})}/>
+              <SettingRange label="Interlinea" value={settings.print.lineHeight} min={1.3} max={2.2} step={0.05} onChange={(v)=>setPrint({lineHeight:v})}/>
+              <SettingRange label="Margini" value={Math.round(settings.print.marginScale * 100)} min={85} max={140} step={5} suffix="%" onChange={(v)=>setPrint({marginScale:v/100})}/>
+              <label>Sfondo<select value={settings.print.background} onChange={(e)=>setPrint({background:e.target.value})}><option value="white">Bianco</option><option value="cream">Crema</option><option value="blue">Azzurro tenue</option></select></label>
+            </div>
+          </div>
+        )}
+      </article>
+
+      <article className="sb-settings-card">
+        <h2>Profili</h2>
+        <div className="sb-profile-row">
+          {profiles.map((profile) => <button key={profile.id} className={profile.id === activeProfileId ? 'active' : ''} onClick={() => onProfileChange(profile.id)}>{profile.name}</button>)}
+        </div>
+        <div className="sb-add-profile"><input value={profileName} onChange={(e)=>setProfileName(e.target.value)} placeholder="Nuovo profilo"/><button onClick={() => { if(profileName.trim()){onAddProfile(profileName.trim());setProfileName('');} }}>＋ Aggiungi</button></div>
+      </article>
+
+      <article className="sb-settings-card">
+        <h2>Cloud e backup</h2>
+        <div className="sb-cloud-row"><div><strong>Google Drive</strong><span>Originali ed elaborati, con accesso Google</span></div><button type="button" disabled>Accedi con Google</button></div>
+        <p className="sb-note">Il collegamento reale verrà attivato nel guscio Android; nessuna password Google verrà mai salvata dentro StudyBook.</p>
+      </article>
+    </section>
+  );
+}
