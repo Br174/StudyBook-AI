@@ -167,7 +167,8 @@ export function LibraryScreen({ items, onOpenBook }) {
   );
 }
 
-export function StudioScreen({ studyBook, fileName, onRead, onPdf, onStudy }) {
+export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport }) {
+  const [exportVariant, setExportVariant] = useState('study');
   if (!studyBook) {
     return <section className="sb-screen"><div className="sb-empty-library"><h2>Nessun libro aperto</h2><p>Apri una copertina dalla Libreria oppure crea un nuovo libro.</p></div></section>;
   }
@@ -180,9 +181,30 @@ export function StudioScreen({ studyBook, fileName, onRead, onPdf, onStudy }) {
       </header>
       <div className="sb-book-actions">
         <button type="button" onClick={onRead}><span>Aa</span><strong>Leggi</strong><small>Testo di studio o In parole semplici</small></button>
-        <button type="button" onClick={onPdf}><span>▤</span><strong>PDF</strong><small>Anteprima ed esportazione</small></button>
+        <button type="button" onClick={() => onExport('pdf', exportVariant)}><span>▤</span><strong>PDF</strong><small>Impaginazione editoriale con le preferenze di stampa</small></button>
         <button type="button" onClick={onStudy}><span>◇</span><strong>Studia</strong><small>Quiz, flashcard e domande orali</small></button>
       </div>
+
+      <article className="sb-export-card">
+        <div className="sb-export-head">
+          <div><small>ESPORTA</small><h2>Scegli cosa portare con te</h2></div>
+          <div className="sb-export-variant">
+            <button type="button" className={exportVariant === 'study' ? 'active' : ''} onClick={() => setExportVariant('study')}>Testo di studio</button>
+            <button type="button" className={exportVariant === 'simple' ? 'active' : ''} onClick={() => setExportVariant('simple')}>In parole semplici</button>
+            <button type="button" className={exportVariant === 'both' ? 'active' : ''} onClick={() => setExportVariant('both')}>Entrambi</button>
+          </div>
+        </div>
+        <div className="sb-export-formats">
+          <button type="button" onClick={() => onExport('pdf', exportVariant)}>PDF</button>
+          <button type="button" onClick={() => onExport('docx', exportVariant)}>DOCX</button>
+          <button type="button" onClick={() => onExport('html', exportVariant)}>HTML</button>
+          <button type="button" onClick={() => onExport('print', exportVariant)}>Stampa</button>
+          <button type="button" onClick={() => onExport('txt', exportVariant)} disabled={exportVariant === 'both'}>TXT</button>
+          <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>
+        </div>
+        <p>Le impostazioni “Stampa ed esportazione” del profilo vengono applicate a PDF, DOCX, HTML e Stampa.</p>
+      </article>
+
       <article className="sb-quality-card">
         <h2>Controllo del libro</h2>
         <div><span>Capitoli</span><strong>{studyBook.chapters?.length || 0}</strong></div>
