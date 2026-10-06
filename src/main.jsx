@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { PostHogProvider } from '@posthog/react';
+import { Capacitor } from '@capacitor/core';
 import AppV15 from './AppV15.jsx';
 import PwaInstallPrompt from './components/PwaInstallPrompt.jsx';
 import { getPostHogConfig } from './lib/posthogConfig.js';
@@ -11,10 +12,12 @@ import './pwaInstall.css';
 import './studyContinuous.css';
 
 const postHogConfig = getPostHogConfig(import.meta.env);
+const nativeApp = Capacitor.isNativePlatform();
+
 const appContent = (
   <React.StrictMode>
     <AppV15 />
-    <PwaInstallPrompt />
+    {!nativeApp && <PwaInstallPrompt />}
     {postHogConfig && shouldRunPostHogPilotProbe(import.meta.env, window.location.search) && (
       <button
         type="button"
@@ -37,7 +40,7 @@ const rootContent = postHogConfig ? (
 
 ReactDOM.createRoot(document.getElementById('root')).render(rootContent);
 
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+if (!nativeApp && 'serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
