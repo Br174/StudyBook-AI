@@ -9,6 +9,7 @@ MOTORLAB_PROJECT_CONTINUITY_MODULE=MOTORLAB_PROJECT_CONTINUITY_V1.txt
 MOTORLAB_PROJECT_STATE=MOTORLAB_PROJECT_STATE_STUDYBOOK_AI_V1.txt
 MOTORLAB_SATELLITE_SYNC_MODULE=MOTORLAB_SATELLITE_SYNC_V1.txt
 MOTORLAB_POLLICINO_MODULE=MOTORLAB_POLLICINO_CONTINUITY_V1.txt
+MOTORLAB_PERSISTENT_OPERATIONAL_STATE_MODULE=MOTORLAB_PERSISTENT_OPERATIONAL_STATE_V1.txt
 MOTORLAB_EXECUTION_FABRIC_MODULE=MOTORLAB_EXECUTION_FABRIC_V1.txt
 MOTORLAB_VELOCITY_LAYER_MODULE=MOTORLAB_VELOCITY_LAYER_V1.txt
 MOTORLAB_LOCAL_CORE=.motorlab/MOTORLAB_LOCAL_CORE.txt
@@ -17,24 +18,16 @@ MOTORLAB_LOCAL_SYNC_STATE=.motorlab/MOTORLAB_SYNC_STATE.txt
 MOTORLAB_BOOTSTRAP_MODULE=MOTORLAB_AUTO_BOOTSTRAP_V1.txt
 MOTORLAB_GLOBAL_PERSISTENT_ACTIVATION_MODULE=MOTORLAB_GLOBAL_PERSISTENT_ACTIVATION_V1.txt
 MOTORLAB_SESSION_BOOT_BANNER_MODULE=MOTORLAB_SESSION_BOOT_BANNER_V1.txt
-MOTORLAB_CHANGE_COMPATIBILITY_GUARD_MODULE=MOTORLAB_CHANGE_COMPATIBILITY_GUARD_V1.txt
 MOTORLAB_WATCHDOG_MODULE=MOTORLAB_WATCHDOG_V1.txt
 MOTORLAB_RESUME_RECOVERY_MODULE=MOTORLAB_RESUME_RECOVERY_V1.txt
-MOTORLAB_EXECUTION_CONTINUITY_MODULE=MOTORLAB_EXECUTION_CONTINUITY_V1.txt
-MOTORLAB_POLLICINO_CONTINUITY_MODULE=MOTORLAB_POLLICINO_CONTINUITY_V1.txt
-MOTORLAB_UPDATE_FAMILY_LIFECYCLE_MODULE=MOTORLAB_UPDATE_FAMILY_LIFECYCLE_V1.txt
-MOTORLAB_MODIFICATION_RESTORE_REGISTER_MODULE=MOTORLAB_MODIFICATION_RESTORE_REGISTER_V1.txt
-MOTORLAB_CHANGE_HISTORY_REGISTRY_MODULE=MOTORLAB_CHANGE_HISTORY_REGISTRY_V1.txt
-MOTORLAB_AUTHORITY_DATA_OWNERSHIP_MODULE=MOTORLAB_AUTHORITY_DATA_OWNERSHIP_V1.txt
-MOTORLAB_PERSISTENT_OPERATIONAL_STATE_MODULE=MOTORLAB_PERSISTENT_OPERATIONAL_STATE_V1.txt
-MOTORLAB_OBSERVABILITY_DIAGNOSTICS_MODULE=MOTORLAB_OBSERVABILITY_DIAGNOSTICS_V1.txt
-MOTORLAB_KNOWLEDGE_TOOL_ROUTING_MODULE=MOTORLAB_KNOWLEDGE_TOOL_ROUTING_V1.txt
 MOTORLAB_ACTIVATION_MODE=implicit-persistent-local-first
 MOTORLAB_PRE_RESPONSE_BOOT_GATE=required
 MOTORLAB_PROJECT_CONTINUITY=required
 MOTORLAB_PROJECT_CHAT_POLICY=promptless-cross-chat-continuity
 MOTORLAB_NATIVE_ENGINE_POLICY=coexist-preserve
 MOTORLAB_VISIBLE_ACTIVATION_PROOF=required
+MOTORLAB_VERSIONED_BOOT_BANNER=required
+MOTORLAB_ALL_PROJECTS_REQUIRED=required
 MOTORLAB_DEFERRED_MATERIALIZATION=required
 MOTORLAB_EVENT_MEMORY=required
 MOTORLAB_DYNAMIC_PRUNING=required
@@ -43,57 +36,29 @@ MOTORLAB_DYNAMIC_DAG=required
 MOTORLAB_CONTENT_ADDRESSED_REUSE=required
 MOTORLAB_WORK_ELIMINATION_FIRST=required
 MOTORLAB_LOCAL_EXECUTION_FABRIC=.motorlab/execution/motorlab_execution_fabric.mjs
-MOTORLAB_CHANGE_COMPATIBILITY_PILLAR=required
-MOTORLAB_EXECUTION_CONTINUITY=required
-MOTORLAB_POLLICINO_MODE=external-control-plane-only
-MOTORLAB_ANDROID_UPDATE_FAMILY_MODE=enabled
-MOTORLAB_PAIRED_SAFETY_LAB=required
-MOTORLAB_FOUR_DESIGN_PILLARS=required
-MOTORLAB_SPEED_PRIMARY_OPTIMIZATION=required
-MOTORLAB_TIME_TO_TESTABLE_ARTIFACT_KPI=required
-MOTORLAB_COMPLEXITY_BUDGET=required
-MOTORLAB_ADAPTIVE_DAG_EXECUTION=required
-MOTORLAB_CRITICAL_PATH_FIRST=required
-MOTORLAB_ADAPTIVE_RUNNER_FANOUT=required
-MOTORLAB_RUNNER_ISOLATION=required
-MOTORLAB_SINGLE_INTEGRATION_LANE=required
-MOTORLAB_CONTINUOUS_CONVERGENCE=required
-MOTORLAB_CORRECTION_RELAY=required
-MOTORLAB_BOUNDED_SPECULATIVE_EXECUTION=required
-MOTORLAB_EVIDENCE_LEARNING_LOOP=required
-MOTORLAB_INCREMENTAL_EVERYTHING=required
-MOTORLAB_LAB_UPDATE_IDENTITY=stable-applicationId-stable-signing-increasing-versionCode
-MOTORLAB_CANDIDATE_POLICY=new-immutable-family
-MOTORLAB_MOTHER_PROMOTION_POLICY=approved-candidate-same-family-source
-MOTORLAB_RESTORE_REGISTER=confirmed-only
-MOTORLAB_POLLICINO_PROOF_HEAD=4ca351b37c5512aa20704e14af5e34b3921ed055
 
 PURPOSE
-Persistent StudyBook-AI-side hook. Every recognizable StudyBook-AI chat activates MotorLab first, reconciles central/current project state with live evidence, preserves StudyBook domain engines, and resumes the exact verified operation without a transfer prompt.
+Persistent StudyBook-AI-side hook. Every recognizable StudyBook-AI chat activates MotorLab first, reconciles the central project ledger with live state, preserves native/domain engines and resumes latest verified work without a transfer prompt.
 
 MANDATORY RULES
 1. MotorLab activates before substantive StudyBook-AI work and first visible line is "⚙️ MotorLab attivo".
-2. Load local r21 satellite first and reconcile central manifest at safe boundaries.
-3. Live newer GitHub/job/artifact evidence wins over stale ledgers.
-4. Preserve logical operation/progress/next-safe-step across chat ids through Project Continuity + Resume Recovery.
-5. Apply Change Compatibility Guard before every write: ONE RESPONSIBILITY = ONE ACTIVE COORDINATOR.
-6. After Bruno has approved the operation, continue to verified completion without repeated intermediate confirmations.
-7. Pollicino remains external to application/domain source; use external sidecar/session evidence only where the execution surface supports it.
-8. Android LAB revisions use stable same-family applicationId/signing identity with increasing versionCode.
-9. Every verified LAB NN aggiornamento receives a paired immutable LAB di sicurezza NN from identical functional source, using a distinct package/family and distinct test-only signing identity.
-10. LAB -> CANDIDATA creates a new immutable family without mutating LAB.
-11. Approved CANDIDATA -> MADRE promotes the same candidate family/source identity according to signing policy.
-12. Preserve paired safety checkpoints and the latest known-good safety recovery floor.
-13. Keep visible Registro Modifiche e Ripristini limited to Bruno-confirmed working changes.
-14. Update technical change history and Project Continuity at material verified boundaries.
-15. MotorLab metadata must not alter StudyBook runtime/UI/domain behavior unless that application change is separately in the approved scope.
-16. Apply r21 Four-Pillar Adaptive Velocity: TTTA-first critical-path DAG planning, adaptive one-or-many runners, isolated parallel writes, one integration lane, continuous convergence, targeted correction relay, incremental evidence reuse and bounded learning without weakening approval/safety/lifecycle gates.
-17. Complexity must pay rent: keep optional orchestration off the critical path unless it produces a net benefit to speed, automation, engine efficiency or final artifact quality.
+2. No recurring activation/transfer prompt is required.
+3. Load MOTORLAB_PROJECT_STATE_STUDYBOOK_AI_V1.txt and reconcile live repo/ref/head/jobs/artifacts before choosing a starting point.
+4. Live newer evidence wins over stale ledger/older registries/memory.
+5. Preserve logical operation/progress/next-safe-step across chat ids.
+6. Unfinished work continues via Resume Recovery + Watchdog before unrelated writes.
+7. Refresh central ledger at material continuation transitions and safe handoff/termination.
+8. MotorLab coexists with StudyBook native/domain engines and never replaces them.
+9. Satellite/continuity metadata must not alter application logic, UI, deployment/domain behavior or lifecycle state.
+10. Apply Change Compatibility Guard, single-writer and lifecycle protections before writes.
 
-VERSION
-MOTORLAB-PROJECT-HOOK-STUDYBOOK-V2.2
-ADOPTED_RELEASE=2026.10.06-r23
-UPDATED_DATE=2026-10-06
+MOTORLAB_LOCAL_RELEASE_TARGET=2026.10.07-r29
 
 R23 ADOPTION
-MotorLab r23 is active on this working branch: eliminate reusable work first, recompute only invalidated deltas, prioritize the TTTA critical path, grow/prune the DAG dynamically, branch progressively, keep one integration lane and preserve material event memory. Project runtime/domain behavior is unchanged by this control-plane adoption.
+MotorLab r23 is the active project control plane: eliminate reusable work first, recompute invalidated deltas, prioritize TTTA critical path, grow/prune the DAG dynamically, branch progressively and preserve material event memory. Native project engines/lifecycle remain authoritative.
+
+VERSION
+MOTORLAB-PROJECT-HOOK-V1.6
+Established: 2026-09-29
+Revision 1.5: r8 pre-response MotorLab gate plus canonical promptless cross-chat StudyBook-AI continuity ledger.
+Revision: r23 incremental dynamic execution adopted; obsolete active satellite semantics are superseded while LAST_GOOD rollback remains preserved.
