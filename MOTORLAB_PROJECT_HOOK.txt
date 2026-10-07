@@ -41,7 +41,7 @@ PURPOSE
 Persistent StudyBook-AI-side hook. Every recognizable StudyBook-AI chat activates MotorLab first, reconciles the central project ledger with live state, preserves native/domain engines and resumes latest verified work without a transfer prompt.
 
 MANDATORY RULES
-1. MotorLab activates before substantive StudyBook-AI work and first visible line is "⚙️ MotorLab attivo".
+1. MotorLab activates before substantive StudyBook-AI work and first visible line is "⚙️ MotorLab rNN attivo".
 2. No recurring activation/transfer prompt is required.
 3. Load MOTORLAB_PROJECT_STATE_STUDYBOOK_AI_V1.txt and reconcile live repo/ref/head/jobs/artifacts before choosing a starting point.
 4. Live newer evidence wins over stale ledger/older registries/memory.
