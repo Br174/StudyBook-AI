@@ -1,5 +1,5 @@
 {
-  "description": "MotorLab Live Control + Pollicino external continuity safe-point template",
+  "description": "MotorLab r28 pinned bootstrap + Pollicino continuity",
   "hooks": {
     "SessionStart": [
       {
@@ -7,10 +7,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/motorlab_live_control.py\"",
-            "timeout": 5,
-            "statusMessage": "Checking MotorLab Live Control",
-            "additionalContextLimit": 1500
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/motorlab_boot.py\"",
+            "timeout": 3,
+            "statusMessage": "Loading MotorLab pinned bootstrap",
+            "additionalContextLimit": 6000
           },
           {
             "type": "command",
