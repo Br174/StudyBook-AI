@@ -56,8 +56,13 @@ export async function speakStudyText(text, { onStart, onEnd, onError } = {}) {
     onError?.('Non c’è testo da leggere.');
     return false;
   }
-  await stopStudySpeech();
-  const token = generation;
+  // Una richiesta nuova invalida subito le precedenti, anche se arrivano tocchi rapidi.
+  const token = ++generation;
+  try {
+    if (Capacitor.isNativePlatform()) await TextToSpeech.stop();
+    else if (typeof window !== 'undefined') window.speechSynthesis?.cancel();
+  } catch { /* Il TTS verrà verificato alla richiesta successiva. */ }
+  if (token !== generation) return false;
   try {
     if (Capacitor.isNativePlatform()) {
       const support = await TextToSpeech.isLanguageSupported({ lang: LANGUAGE });
