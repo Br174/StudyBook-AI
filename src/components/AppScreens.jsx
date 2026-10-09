@@ -252,8 +252,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
         <div className="sb-open-book-overview">
           <div className="sb-open-book-cover">
             <span>STUDYBOOK</span>
-            <strong>Libro<br />di studio</strong>
-            <small>Conoscenza per nuove opportunità</small>
+            <strong>Libro di studio</strong>
           </div>
           <div className="sb-open-book-copy">
             <small>STAI LAVORANDO SU</small>
