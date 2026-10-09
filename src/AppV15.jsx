@@ -334,7 +334,10 @@ export default function AppV14() {
       setScannerResultReady(Boolean(record.sourceData.scanCount));
       setStatus('Libro riaperto dalla Libreria');
       navigateTo('studio');
-      if (openReader) setStudyModeOpen(true);
+      if (openReader) {
+        setStudyEntryMode('reader');
+        setStudyModeOpen(true);
+      }
     } catch (err) {
       setError(err.message || 'Impossibile aprire il libro.');
     } finally {
