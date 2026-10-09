@@ -135,6 +135,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
   const [readingVariant, setReadingVariant] = useState('study');
   const [studyScope, setStudyScope] = useState('chapter');
   const [toolIndex, setToolIndex] = useState(0);
+  const swipeStart = useRef(null);
   const [flashRevealed, setFlashRevealed] = useState(false);
   const [quizChoice, setQuizChoice] = useState(null);
   const [quizScore, setQuizScore] = useState(0);
@@ -241,6 +242,29 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
     readAloud(text);
   }
 
+  // LAB05: swipe orizzontale alternativo alle frecce, senza bloccare lo scorrimento verticale.
+  function onSwipeStart(event) {
+    const p = event.touches?.[0];
+    if (p) swipeStart.current = { x: p.clientX, y: p.clientY };
+  }
+  function onSwipeEnd(event) {
+    const p = event.changedTouches?.[0], start = swipeStart.current;
+    swipeStart.current = null;
+    if (!p || !start) return;
+    const dx = p.clientX - start.x, dy = p.clientY - start.y;
+    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const direction = dx < 0 ? 1 : -1;
+    if (isReader || tool === 'map') {
+      onChapterChange(Math.min(chapterCount - 1, Math.max(0, chapterIndex + direction)));
+      return;
+    }
+    const length = tool === 'flashcards' ? flashcards.length : tool === 'quiz' ? quiz.length : oralQuestions.length;
+    setToolIndex(index => Math.min(Math.max(length - 1, 0), Math.max(0, index + direction)));
+    setFlashRevealed(false);
+    setOralRevealed(false);
+    setQuizChoice(null);
+  }
+
   function chooseQuizOption(index) {
     if (quizChoice !== null) return;
     setQuizChoice(index);
@@ -325,7 +349,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
       )}
 
       {isReader && (
-        <main className="study-mode-pages">
+        <main className="study-mode-pages" onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
           <article className="study-continuous-sheet">
             <div className="study-continuous-main">
               <header className="study-continuous-chapter-head">
@@ -375,7 +399,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
       )}
 
       {!isReader && tool === 'flashcards' && (
-        <main className="study-tool-stage">
+        <main className="study-tool-stage" onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
           {flashcard ? (
             <section className="study-flashcard-wrap">
               <div className="study-tool-counter">FLASHCARD {toolIndex + 1} / {flashcards.length} · Tocca per svelare la risposta</div>
@@ -395,7 +419,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
       )}
 
       {!isReader && tool === 'quiz' && (
-        <main className="study-tool-stage">
+        <main className="study-tool-stage" onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
           {quizQuestion ? (
             <section className="study-quiz-card">
               <div className="study-tool-counter">Domanda {toolIndex + 1} / {quiz.length} · corrette {quizScore}</div>
@@ -426,7 +450,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
       )}
 
       {!isReader && tool === 'map' && (
-        <main className="study-tool-stage">
+        <main className="study-tool-stage" onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
           {conceptMap.length ? (
             <section className="study-map">
               <div className="study-map-root">{chapter.title}</div>
@@ -443,7 +467,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
       )}
 
       {!isReader && tool === 'oral' && (
-        <main className="study-tool-stage">
+        <main className="study-tool-stage" onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
           {oralQuestion ? (
             <section className="study-oral-card">
               <div className="study-tool-counter">{toolIndex + 1} / {oralQuestions.length}</div>
