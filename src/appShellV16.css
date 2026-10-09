@@ -308,3 +308,41 @@
   .sb-studio-screen .sb-quality-card { padding: 15px; gap: 10px; }
   .sb-studio-screen .sb-quality-card > div { min-height: 75px; padding: 12px; }
 }
+
+/* LAB05 • I titoli completi restano nel pannello; la copertina simulata non li duplica. */
+.sb-studio-screen .sb-open-book-cover {
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 1px solid rgba(83,103,153,.15);
+  background: linear-gradient(145deg, #e5e7f5 0%, #c7ccef 52%, #acb7dc 100%);
+}
+.sb-studio-screen .sb-open-book-cover::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(255,255,255,.5);
+  border-radius: 10px;
+  pointer-events: none;
+}
+.sb-studio-screen .sb-open-book-cover > span {
+  font-size: .54rem;
+  letter-spacing: .2em;
+  color: #536480;
+}
+.sb-studio-screen .sb-open-book-cover > strong {
+  max-width: 100%;
+  font-family: Georgia, serif;
+  font-size: clamp(.95rem, 2.4vw, 1.38rem);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: .01em;
+  color: #293955;
+  overflow-wrap: normal;
+}
+.sb-studio-screen .sb-export-description { color: #66748b; font-size: .87rem; line-height: 1.4; margin: 8px 0; }
+@media(max-width:720px) {
+  .sb-studio-screen .sb-open-book-cover > strong { font-size: clamp(.78rem,3.4vw,1.02rem); }
+  .sb-studio-screen .sb-open-book-cover::before { inset: 8px; }
+}
