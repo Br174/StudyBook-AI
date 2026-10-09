@@ -249,23 +249,23 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
       </header>
 
       <section className="sb-open-book-workspace" aria-label="Libro aperto">
-        <div className="sb-open-book-cover">
-          <span>STUDYBOOK</span>
-          <strong>{stripExtension(fileName)}</strong>
-          <small>{studyBook.chapters?.length || 0} capitoli · libro elaborato</small>
-        </div>
-        <div className="sb-open-book-panel">
+        <div className="sb-open-book-overview">
+          <div className="sb-open-book-cover">
+            <span>STUDYBOOK</span>
+            <strong>{stripExtension(fileName)}</strong>
+            <small>{studyBook.chapters?.length || 0} capitoli · libro elaborato</small>
+          </div>
           <div className="sb-open-book-copy">
             <small>STAI LAVORANDO SU</small>
             <h2>{stripExtension(fileName)}</h2>
             <p>Leggi, studia o porta con te il contenuto elaborato di questo libro.</p>
           </div>
-          <div className="sb-book-quick-actions">
-            <button type="button" onClick={onRead}><span>Aa</span><strong>Leggi</strong></button>
-            <button type="button" onClick={() => onExport('pdf', 'study')}><span>▤</span><strong>PDF elaborato</strong></button>
-            <button type="button" onClick={onStudy}><span>◇</span><strong>Studia</strong></button>
-            <button type="button" className={exportOpen ? 'active' : ''} onClick={() => setExportOpen((value) => !value)}><span>↗</span><strong>Scegli cosa portare con te</strong></button>
-          </div>
+        </div>
+        <div className="sb-book-quick-actions">
+          <button type="button" onClick={onRead}><span aria-hidden="true">Aa</span><strong>Leggi</strong></button>
+          <button type="button" onClick={() => onExport('pdf', 'study')}><span aria-hidden="true">▤</span><strong>PDF elaborato</strong></button>
+          <button type="button" onClick={onStudy}><span aria-hidden="true">◇</span><strong>Studia</strong></button>
+          <button type="button" className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span aria-hidden="true">↗</span><strong>Scegli cosa portare con te</strong></button>
         </div>
       </section>
 
