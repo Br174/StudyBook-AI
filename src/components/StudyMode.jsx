@@ -4,17 +4,29 @@ import { buildConceptMap, buildFlashcards, buildOralQuestions, buildQuiz } from 
 import { readerCssVariables } from '../lib/accessibility.js';
 import { editorialParagraphText } from '../lib/editorialModel.js';
 import { filterGlossaryEntries } from '../lib/glossaryQuality.js';
+import { speakStudyText, stopStudySpeech, installItalianSpeechVoice } from '../lib/studySpeech.js';
 import '../studyMode.css';
 import '../studyTools.css';
 import '../studyContinuous.css';
 
-function speak(text) {
-  const value = String(text || '').trim();
-  if (!value || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(value);
-  utterance.lang = 'it-IT';
-  window.speechSynthesis.speak(utterance);
+// LAB05: definizioni verificate per abbreviazioni ricorrenti, solo se effettivamente presenti nel capitolo.
+const STANDARD_ABBREVIATIONS = {
+  TFR: 'Trattamento di fine rapporto: somma maturata durante il rapporto di lavoro, corrisposta quando termina.',
+  INPS: 'Istituto Nazionale della Previdenza Sociale.',
+  INAIL: 'Istituto Nazionale per l’Assicurazione contro gli Infortuni sul Lavoro.',
+  CCNL: 'Contratto Collettivo Nazionale di Lavoro.',
+  IRPEF: 'Imposta sul Reddito delle Persone Fisiche.',
+};
+function withChapterAbbreviations(entries, chapter) {
+  const text = (chapter?.paragraphs || []).map(p => [p.original, p.summary, p.simpleSummary].filter(Boolean).join(' ')).join(' ');
+  const result = [...entries];
+  const existing = new Set(result.map(e => e.term.toLocaleUpperCase('it-IT')));
+  for (const [term, definition] of Object.entries(STANDARD_ABBREVIATIONS)) {
+    if (!existing.has(term) && new RegExp('\\b' + term + '\\b', 'i').test(text)) {
+      result.push({ term, definition, basis: 'general', paragraphIndex: 0 });
+    }
+  }
+  return result;
 }
 
 function escapeRegExp(value) {
@@ -110,15 +122,18 @@ function EmptyTool({ children }) {
   return <div className="study-tool-empty">{children}</div>;
 }
 
-export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode, accessibility, onClose }) {
+export default function StudyMode({ book, bookTitle, initialMode = 'reader', chapterIndex, onChapterChange, dsaMode, accessibility, onClose }) {
   const [target, setTarget] = useState(null);
   const [answer, setAnswer] = useState(null);
   const [assistantBusy, setAssistantBusy] = useState(false);
   const [assistantError, setAssistantError] = useState('');
   const [question, setQuestion] = useState('');
-  const [tool, setTool] = useState('reader');
+  const isReader = initialMode !== 'study';
+  const [tool, setTool] = useState(isReader ? 'reader' : 'flashcards');
+  const [ttsSpeaking, setTtsSpeaking] = useState(false);
+  const [ttsError, setTtsError] = useState('');
   const [readingVariant, setReadingVariant] = useState('study');
-  const [studyScope, setStudyScope] = useState('book');
+  const [studyScope, setStudyScope] = useState('chapter');
   const [toolIndex, setToolIndex] = useState(0);
   const [flashRevealed, setFlashRevealed] = useState(false);
   const [quizChoice, setQuizChoice] = useState(null);
@@ -143,7 +158,19 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
   const quiz = useMemo(() => buildQuiz(studySource, studyScope === 'book' ? 30 : 18), [studySource, studyScope]);
   const oralQuestions = useMemo(() => buildOralQuestions(studySource, studyScope === 'book' ? 36 : 24), [studySource, studyScope]);
   const conceptMap = useMemo(() => buildConceptMap(studySource, studyScope === 'book' ? 60 : 24), [studySource, studyScope]);
-  const glossary = useMemo(() => chapterGlossary(chapter || {}), [chapter]);
+  const glossary = useMemo(() => withChapterAbbreviations(chapterGlossary(chapter || {}), chapter), [chapter]);
+  useEffect(() => () => { void stopStudySpeech(); }, []);
+  useEffect(() => { void stopStudySpeech(); setTtsSpeaking(false); setTtsError(''); }, [chapterIndex]);
+  function readAloud(text) {
+    setTtsError('');
+    void speakStudyText(text, {
+      onStart: () => setTtsSpeaking(true),
+      onEnd: () => setTtsSpeaking(false),
+      onError: message => { setTtsSpeaking(false); setTtsError(message); },
+    });
+  }
+  function stopReading() { void stopStudySpeech(); setTtsSpeaking(false); setTtsError(''); }
+  function closeReader() { void stopStudySpeech(); onClose(); }
 
   useEffect(() => {
     setToolIndex(0);
@@ -191,7 +218,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
         question: action === 'custom' ? question.trim() : '',
       });
       setAnswer(result);
-      if (autoSpeak) speak(result.answer);
+      if (autoSpeak) readAloud(result.answer);
     } catch (error) {
       setAssistantError(error.message || 'Spiegazione non disponibile.');
     } finally {
@@ -211,7 +238,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
 
   function speakChapter() {
     const text = chapter?.paragraphs?.map(paragraphReadingText).join(' ');
-    speak(text);
+    readAloud(text);
   }
 
   function chooseQuizOption(index) {
@@ -240,28 +267,33 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
 
   return (
     <div className={`study-mode ${accessibility?.enabled ? 'accessibility-on' : ''} ${accessibility?.phone?.readingGuide ? 'reading-guide-on' : ''}`} style={readerCssVariables(accessibility)} role="dialog" aria-modal="true" aria-label="Modalità Studio">
-      <header className="study-mode-header">
+      <header className="study-mode-header sb-lab05-header">
         <div>
-          <span>{modeLabel(book?.level)}</span>
-          <strong>{chapter.title}</strong>
+          <span>STUDYBOOK AI · {isReader ? 'LEGGI SUL TELEFONO' : 'STUDIA SUL TELEFONO'}</span>
+          <strong>{isReader ? 'Leggi sul telefono' : 'Studia sul telefono'}</strong>
+          <small className="sb-lab05-book-title">{String(bookTitle || '').replace(/\\.[^.]+$/, '') || 'Libro di studio'}</small>
         </div>
         <div className="study-mode-header-actions">
-          <button type="button" onClick={speakChapter}>🔊 Capitolo</button>
-          <button type="button" className="study-close" onClick={onClose} aria-label="Chiudi modalità studio">×</button>
+          {isReader && <button type="button" onClick={ttsSpeaking ? stopReading : speakChapter}>{ttsSpeaking ? '■ Ferma voce' : '🔊 Ascolta'}</button>}
+          <button type="button" className="study-close" onClick={closeReader} aria-label="Torna al libro">×</button>
         </div>
       </header>
+      {ttsError && <div className="sb-lab05-tts-error" role="alert">{ttsError} <button type="button" onClick={() => { void installItalianSpeechVoice().catch(error => setTtsError(error?.message || 'Controlla la sintesi vocale Android.')); }}>Installa voce italiana</button></div>
 
-      <div className="study-chapter-nav">
-        <button type="button" onClick={() => onChapterChange(Math.max(0, chapterIndex - 1))} disabled={chapterIndex <= 0}>←</button>
-        <select value={chapterIndex} onChange={(event) => onChapterChange(Number(event.target.value))}>
-          {book.chapters.map((item, index) => <option value={index} key={`${item.title}-${index}`}>{index + 1}. {item.title}</option>)}
-        </select>
-        <button type="button" onClick={() => onChapterChange(Math.min(chapterCount - 1, chapterIndex + 1))} disabled={chapterIndex >= chapterCount - 1}>→</button>
-      </div>
+      <nav className="study-chapter-nav sb-lab05-chapter-nav" aria-label="Navigazione capitoli">
+        <button type="button" onClick={() => onChapterChange(Math.max(0, chapterIndex - 1))} disabled={chapterIndex <= 0} aria-label="Capitolo precedente">←</button>
+        <label className="sb-lab05-chapter-picker">
+          <span>CAPITOLO <b>{chapterIndex + 1} / {chapterCount}</b></span>
+          <select aria-label="Seleziona un capitolo" value={chapterIndex} onChange={(event) => onChapterChange(Number(event.target.value))}>
+            {book.chapters.map((item, index) => <option value={index} key={`${item.title}-${index}`}>{index + 1}. {item.title}</option>)}
+          </select>
+        </label>
+        <button type="button" onClick={() => onChapterChange(Math.min(chapterCount - 1, chapterIndex + 1))} disabled={chapterIndex >= chapterCount - 1} aria-label="Capitolo successivo">→</button>
+      </nav>
+      <div className="sb-lab05-chapter-title"><small>{isReader ? 'IL TUO TESTO' : 'IL CAPITOLO CHE STAI STUDIANDO'}</small><h1>{chapter.title}</h1></div>
 
-      <nav className="study-tool-tabs" aria-label="Strumenti di studio">
+      {!isReader && <nav className="study-tool-tabs sb-lab05-study-tabs" aria-label="Metodi di studio">
         {[
-          ['reader', 'Testo'],
           ['flashcards', 'Flashcard'],
           ['quiz', 'Quiz'],
           ['map', 'Mappa'],
@@ -269,16 +301,16 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
         ].map(([id, label]) => (
           <button type="button" key={id} className={tool === id ? 'active' : ''} onClick={() => setTool(id)}>{label}</button>
         ))}
-      </nav>
+      </nav>}
 
-      {tool !== 'reader' && (
+      {!isReader && (
         <div className="study-scope-switch" aria-label="Ambito strumenti di studio">
           <button type="button" className={studyScope === 'book' ? 'active' : ''} onClick={() => setStudyScope('book')}>Intero libro</button>
           <button type="button" className={studyScope === 'chapter' ? 'active' : ''} onClick={() => setStudyScope('chapter')}>Solo capitolo</button>
         </div>
       )}
 
-      {tool === 'reader' && (
+      {isReader && (
         <>
           <div className="study-reading-variant" aria-label="Versione del testo">
             <button type="button" className={readingVariant === 'study' ? 'active' : ''} onClick={() => setReadingVariant('study')}>Testo di studio</button>
@@ -292,7 +324,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
         </>
       )}
 
-      {tool === 'reader' && (
+      {isReader && (
         <main className="study-mode-pages">
           <article className="study-continuous-sheet">
             <div className="study-continuous-main">
@@ -342,26 +374,27 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
         </main>
       )}
 
-      {tool === 'flashcards' && (
+      {!isReader && tool === 'flashcards' && (
         <main className="study-tool-stage">
           {flashcard ? (
             <section className="study-flashcard-wrap">
-              <div className="study-tool-counter">{toolIndex + 1} / {flashcards.length}</div>
+              <div className="study-tool-counter">FLASHCARD {toolIndex + 1} / {flashcards.length} · Tocca per svelare la risposta</div>
               <button type="button" className={`study-flashcard${flashRevealed ? ' revealed' : ''}`} onClick={() => setFlashRevealed((value) => !value)}>
                 <small>{flashRevealed ? 'RISPOSTA' : 'DOMANDA'}</small>
                 <strong>{flashRevealed ? flashcard.back : flashcard.front}</strong>
                 <span>{flashRevealed ? 'Tocca per tornare alla domanda' : 'Tocca per mostrare la risposta'}</span>
               </button>
               <div className="study-tool-nav">
-                <button type="button" onClick={() => { setToolIndex(Math.max(0, toolIndex - 1)); setFlashRevealed(false); }} disabled={toolIndex <= 0}>← Precedente</button>
-                <button type="button" onClick={() => { setToolIndex(Math.min(flashcards.length - 1, toolIndex + 1)); setFlashRevealed(false); }} disabled={toolIndex >= flashcards.length - 1}>Successiva →</button>
+                <button type="button" onClick={() => { setToolIndex(Math.max(0, toolIndex - 1)); setFlashRevealed(false); }} disabled={toolIndex <= 0}>← Scheda precedente</button>
+                <span className="sb-lab05-item-count">{toolIndex + 1} / {flashcards.length}</span>
+                <button type="button" onClick={() => { setToolIndex(Math.min(flashcards.length - 1, toolIndex + 1)); setFlashRevealed(false); }} disabled={toolIndex >= flashcards.length - 1}>Scheda successiva →</button>
               </div>
             </section>
           ) : <EmptyTool>Non ci sono ancora elementi sufficienti per creare flashcard in questo capitolo.</EmptyTool>}
         </main>
       )}
 
-      {tool === 'quiz' && (
+      {!isReader && tool === 'quiz' && (
         <main className="study-tool-stage">
           {quizQuestion ? (
             <section className="study-quiz-card">
@@ -375,6 +408,11 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
                   return <button type="button" key={`${option}-${index}`} className={`${selected ? 'selected ' : ''}${correct ? 'correct ' : ''}${wrong ? 'wrong' : ''}`.trim()} onClick={() => chooseQuizOption(index)} disabled={quizChoice !== null}>{option}</button>;
                 })}
               </div>
+              <div className="study-tool-nav">
+                <button type="button" onClick={() => { setToolIndex(i => Math.max(0, i - 1)); setQuizChoice(null); }} disabled={toolIndex <= 0}>← Domanda precedente</button>
+                <span className="sb-lab05-item-count">{toolIndex + 1} / {quiz.length}</span>
+                <button type="button" onClick={() => { setToolIndex(i => Math.min(quiz.length - 1, i + 1)); setQuizChoice(null); }} disabled={toolIndex >= quiz.length - 1}>Domanda successiva →</button>
+              </div>
               {quizChoice !== null && (
                 <div className="study-quiz-feedback">
                   <strong>{quizChoice === quizQuestion.correctIndex ? 'Corretto.' : 'Da ripassare.'}</strong>
@@ -387,7 +425,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
         </main>
       )}
 
-      {tool === 'map' && (
+      {!isReader && tool === 'map' && (
         <main className="study-tool-stage">
           {conceptMap.length ? (
             <section className="study-map">
@@ -404,7 +442,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
         </main>
       )}
 
-      {tool === 'oral' && (
+      {!isReader && tool === 'oral' && (
         <main className="study-tool-stage">
           {oralQuestion ? (
             <section className="study-oral-card">
@@ -412,20 +450,21 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
               <small>SIMULAZIONE ORALE</small>
               <h3>{oralQuestion.question}</h3>
               <div className="study-oral-actions">
-                <button type="button" onClick={() => speak(oralQuestion.question)}>🔊 Ascolta domanda</button>
+                <button type="button" onClick={() => readAloud(oralQuestion.question)}>🔊 Ascolta domanda</button>
                 <button type="button" onClick={() => setOralRevealed((value) => !value)}>{oralRevealed ? 'Nascondi traccia' : 'Mostra traccia risposta'}</button>
               </div>
               {oralRevealed && <div className="study-oral-answer">{oralQuestion.answer}</div>}
               <div className="study-tool-nav">
-                <button type="button" onClick={() => { setToolIndex(Math.max(0, toolIndex - 1)); setOralRevealed(false); }} disabled={toolIndex <= 0}>← Precedente</button>
-                <button type="button" onClick={() => { setToolIndex(Math.min(oralQuestions.length - 1, toolIndex + 1)); setOralRevealed(false); }} disabled={toolIndex >= oralQuestions.length - 1}>Successiva →</button>
+                <button type="button" onClick={() => { setToolIndex(Math.max(0, toolIndex - 1)); setOralRevealed(false); }} disabled={toolIndex <= 0}>← Domanda precedente</button>
+                <span className="sb-lab05-item-count">{toolIndex + 1} / {oralQuestions.length}</span>
+                <button type="button" onClick={() => { setToolIndex(Math.min(oralQuestions.length - 1, toolIndex + 1)); setOralRevealed(false); }} disabled={toolIndex >= oralQuestions.length - 1}>Domanda successiva →</button>
               </div>
             </section>
           ) : <EmptyTool>Non ci sono ancora abbastanza elementi per simulare l’interrogazione.</EmptyTool>}
         </main>
       )}
 
-      {target && (
+      {isReader && target && (
         <section className="study-assistant-sheet" aria-live="polite">
           <div className="study-assistant-grip" />
           <div className="study-assistant-head">
@@ -466,7 +505,7 @@ export default function StudyMode({ book, chapterIndex, onChapterChange, dsaMode
               {answer.label && <strong>{answer.label}</strong>}
               <p>{answer.answer}</p>
               <div className="study-answer-actions">
-                <button type="button" onClick={() => speak(answer.answer)}>🔊 Ascolta</button>
+                <button type="button" onClick={() => readAloud(answer.answer)}>🔊 Ascolta</button>
                 {answer.cached && <span>{answer.persisted ? 'Risposta salvata sul dispositivo' : 'Risposta già pronta'}</span>}
               </div>
             </div>
