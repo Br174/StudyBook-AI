@@ -111,6 +111,7 @@ export default function AppV14() {
   const [summaryEditor, setSummaryEditor] = useState(null);
   const [refiningKey, setRefiningKey] = useState('');
   const [studyModeOpen, setStudyModeOpen] = useState(false);
+  const [studyEntryMode, setStudyEntryMode] = useState('reader');
   const [activeScreen, setActiveScreen] = useState('home');
   const [sourceFile, setSourceFile] = useState(null);
   const [profiles, setProfiles] = useState([]);
@@ -857,8 +858,8 @@ export default function AppV14() {
       {activeScreen === 'studio' && (
         <StudioScreen
           studyBook={studyBook} fileName={fileName}
-          onRead={() => setStudyModeOpen(true)}
-          onStudy={() => setStudyModeOpen(true)}
+          onRead={() => { setStudyEntryMode('reader'); setStudyModeOpen(true); }}
+          onStudy={() => { setStudyEntryMode('study'); setStudyModeOpen(true); }}
           onExport={exportCurrentBook}
         />
       )}
@@ -887,7 +888,8 @@ export default function AppV14() {
 
       {studyModeOpen && studyBook && (
         <StudyMode
-          book={studyBook} chapterIndex={selectedChapter} onChapterChange={setSelectedChapter}
+          book={studyBook} bookTitle={fileName} initialMode={studyEntryMode}
+          chapterIndex={selectedChapter} onChapterChange={setSelectedChapter}
           dsaMode={dsaMode} accessibility={accessibility} onClose={() => setStudyModeOpen(false)}
         />
       )}
