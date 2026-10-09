@@ -302,7 +302,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
           <button type="button" className="study-close" onClick={closeReader} aria-label="Torna al libro">×</button>
         </div>
       </header>
-      {ttsError && <div className="sb-lab05-tts-error" role="alert">{ttsError} <button type="button" onClick={() => { void installItalianSpeechVoice().catch(error => setTtsError(error?.message || 'Controlla la sintesi vocale Android.')); }}>Installa voce italiana</button></div>
+      {ttsError && <div className="sb-lab05-tts-error" role="alert">{ttsError} <button type="button" onClick={() => { void installItalianSpeechVoice().catch(error => setTtsError(error?.message || 'Controlla la sintesi vocale Android.')); }}>Installa voce italiana</button></div>}
 
       <nav className="study-chapter-nav sb-lab05-chapter-nav" aria-label="Navigazione capitoli">
         <button type="button" onClick={() => onChapterChange(Math.max(0, chapterIndex - 1))} disabled={chapterIndex <= 0} aria-label="Capitolo precedente">←</button>
