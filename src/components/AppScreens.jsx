@@ -252,8 +252,8 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
         <div className="sb-open-book-overview">
           <div className="sb-open-book-cover">
             <span>STUDYBOOK</span>
-            <strong>{stripExtension(fileName)}</strong>
-            <small>{studyBook.chapters?.length || 0} capitoli · libro elaborato</small>
+            <strong>Libro<br />di studio</strong>
+            <small>Conoscenza per nuove opportunità</small>
           </div>
           <div className="sb-open-book-copy">
             <small>STAI LAVORANDO SU</small>
@@ -262,21 +262,21 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
           </div>
         </div>
         <div className="sb-book-quick-actions">
-          <button type="button" onClick={onRead}><span aria-hidden="true">Aa</span><strong>Leggi</strong></button>
-          <button type="button" onClick={() => onExport('pdf', 'study')}><span aria-hidden="true">▤</span><strong>PDF elaborato</strong></button>
-          <button type="button" onClick={onStudy}><span aria-hidden="true">◇</span><strong>Studia</strong></button>
-          <button type="button" className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span aria-hidden="true">↗</span><strong>Scegli cosa portare con te</strong></button>
+          <button type="button" onClick={onRead}><span aria-hidden="true">Aa</span><strong>Leggi sul telefono</strong></button>
+          <button type="button" onClick={() => onExport('pdf', 'study')}><span aria-hidden="true">▤</span><strong>Leggi in PDF</strong></button>
+          <button type="button" onClick={onStudy}><span aria-hidden="true">◇</span><strong>Studia sul telefono</strong></button>
+          <button type="button" className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span aria-hidden="true">↗</span><strong>Scarica libro</strong></button>
         </div>
       </section>
 
       {exportOpen && (
         <article className="sb-export-card">
           <div className="sb-export-head">
-            <div><small>ESPORTA</small><h2>Scegli cosa portare con te</h2></div>
+            <div><small>ESPORTA</small><h2>Scarica libro</h2><p className="sb-export-description">Scegli la versione del libro e il formato da scaricare o stampare.</p></div>
             <div className="sb-export-variant">
               <button type="button" className={exportVariant === 'study' ? 'active' : ''} onClick={() => setExportVariant('study')}>Testo di studio</button>
               <button type="button" className={exportVariant === 'simple' ? 'active' : ''} onClick={() => setExportVariant('simple')}>In parole semplici</button>
-              <button type="button" className={exportVariant === 'both' ? 'active' : ''} onClick={() => setExportVariant('both')}>Entrambi</button>
+              <button type="button" className={exportVariant === 'both' ? 'active' : ''} onClick={() => setExportVariant('both')}>Due versioni complete</button>
             </div>
           </div>
           <div className="sb-export-formats">
@@ -291,7 +291,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
             <button type="button" onClick={() => onExport('txt', exportVariant)} disabled={exportVariant === 'both'}>TXT</button>
             <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>
           </div>
-          <p>Questa sezione esporta il libro elaborato. L’originale resta separato nella Libreria.</p>
+          <p>«Due versioni complete» include prima tutto il testo di studio, poi tutto il libro in parole semplici nello stesso documento. L’originale resta separato nella Libreria.</p>
         </article>
       )}
 
