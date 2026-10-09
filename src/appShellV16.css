@@ -287,7 +287,7 @@
   .sb-studio-screen .sb-screen-head.compact h1 { font-size: clamp(1.95rem,8vw,2.35rem); }
   .sb-open-book-workspace { gap: 16px; padding: 14px; border-radius: 24px; }
   .sb-open-book-overview {
-    grid-template-columns: minmax(0,40%) minmax(0,60%);
+    grid-template-columns: minmax(0,2fr) minmax(0,3fr);
     gap: 11px;
     padding-right: 11px;
   }
