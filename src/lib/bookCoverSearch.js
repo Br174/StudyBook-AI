@@ -7,7 +7,7 @@ const base=String(import.meta.env?.VITE_COVER_SEARCH_BASE||'').replace(/\/$/,'')
 export function coverSearchEndpoint(){
   return base?base+'/api/book-cover/search':apiEndpoint('/api/book-cover/search');
 }
-export function coverLookupRequest(record){
+export function coverLookupRequest(record,excludeAssets=[]){
   if(!record?.id||isScannerBook(record))throw new Error('Scegli un libro, non una fotografia scannerizzata.');
   return{
     title:String(record.fileName||'').replace(/\.[^/.]{2,7}$/,'').trim().slice(0,140),
@@ -15,10 +15,11 @@ export function coverLookupRequest(record){
     context:coverContext(record).slice(0,1150),
     author:String(record.author||record.metadata?.author||record.sourceData?.author||'').slice(0,100),
     isbn:String(record.isbn||record.metadata?.isbn||record.sourceData?.isbn||'').slice(0,22),
+    excludeAssets:[...new Set(excludeAssets.filter(x=>typeof x==='string'&&x.length<=240))].slice(0,60),
   };
 }
-export async function searchBookCoverOnWeb(record,{onStage=()=>{}}={}){
-  const body=coverLookupRequest(record);
+export async function searchBookCoverOnWeb(record,{onStage=()=>{},excludeAssets=[]}={}){
+  const body=coverLookupRequest(record,excludeAssets);
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),38000);
   try{
@@ -42,7 +43,7 @@ export async function searchBookCoverOnWeb(record,{onStage=()=>{}}={}){
     const src=await prepareCoverPreview(payload.imageData,payload.mimeType,body.title,
       {overlayTitle:payload.kind==='thematic'});
     return {
-      src,kind:payload.kind,label:payload.label||'Copertina trovata online',
+      src,kind:payload.kind,assetId:payload.assetId||'',label:payload.label||'Copertina trovata online',
       source:payload.source||'',sourceUrl:payload.sourceUrl||'',
       license:payload.license||'',attribution:payload.attribution||'',
       matchedTitle:payload.matchedTitle||''
