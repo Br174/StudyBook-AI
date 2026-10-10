@@ -1,11 +1,13 @@
 import summarizeHandler from '../api/summarize.js';
 import explainHandler from '../api/explain.js';
 import refineHandler from '../api/refine.js';
+import coverAiHandler from '../api/coverAi.js';
 
 const API_ROUTES = new Map([
   ['/api/summarize', summarizeHandler],
   ['/api/explain', explainHandler],
   ['/api/refine', refineHandler],
+  ['/api/cover-ai/generate', coverAiHandler],
 ]);
 
 const NATIVE_ORIGINS = new Set([
