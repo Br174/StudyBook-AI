@@ -217,3 +217,31 @@ export async function getLibraryBook(id) {
 export async function deleteLibraryBook(id) {
   await withStore(BOOKS_STORE, 'readwrite', (store) => store.delete(id));
 }
+
+
+/* LAB13: cancella una singola versione, mantenendo l'altra e i dati di
+   lettura. L'eliminazione integrale resta un'azione esplicita separata. */
+export async function deleteLibraryVersion(id, version) {
+  if (version !== 'original' && version !== 'processed') throw new Error('Versione non riconosciuta.');
+  const record = await getLibraryBook(id);
+  if (!record) return false;
+  const next = {
+    ...record,
+    updatedAt: new Date().toISOString(),
+    metadata: { ...(record.metadata || {}) },
+  };
+  if (version === 'original') {
+    next.originalFile = null;
+    next.original = { ...(record.original || {}), available: false };
+    next.metadata.hasOriginal = false;
+  } else {
+    next.studyBook = null;
+    next.metadata.hasProcessed = false;
+  }
+  if (!next.metadata.hasOriginal && !next.metadata.hasProcessed) {
+    await deleteLibraryBook(id);
+  } else {
+    await withStore(BOOKS_STORE, 'readwrite', store => store.put(next));
+  }
+  return true;
+}
