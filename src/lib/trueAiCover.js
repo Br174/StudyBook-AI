@@ -52,7 +52,7 @@ export async function generateTrueBookImage(record,{variant=1,onStage=()=>{}}={}
     throw e;
   }finally{clearTimeout(timeout);}
 }
-export async function prepareCoverPreview(encoded,mime,title){
+export async function prepareCoverPreview(encoded,mime,title,{overlayTitle=true}={}){
   const binary=atob(encoded);
   const bytes=new Uint8Array(binary.length);
   for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
@@ -73,6 +73,7 @@ export async function prepareCoverPreview(encoded,mime,title){
     ctx.drawImage(img,(360-w)/2,(480-h)/2,w,h);
     // The provider generates the ARTWORK; exact user title is overlaid for
     // spelling accuracy, avoiding the known text-rendering weakness of models.
+    if(overlayTitle){
     const fade=ctx.createLinearGradient(0,245,0,480);
     fade.addColorStop(0,'rgba(12,19,34,0)');
     fade.addColorStop(.68,'rgba(12,19,34,.62)');
@@ -94,6 +95,7 @@ export async function prepareCoverPreview(encoded,mime,title){
     ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=6;
     const start=400-(shown.length-1)*size*.58;
     shown.forEach((line,i)=>ctx.fillText(line,180,start+i*size*1.16,320));
+    }
     return canvas.toDataURL('image/jpeg',.82);
   } finally {URL.revokeObjectURL(url);}
 }
