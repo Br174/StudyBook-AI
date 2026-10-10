@@ -61,12 +61,13 @@ export default function ScannerArchive({ entries = [], busy = false, onRestore, 
             {group.photos.map((page, index) => (
               <article className="sb-archive-photo" key={page.id}>
                 <button type="button" className="sb-archive-photo-open" disabled={busy} onClick={() => selectMode ? toggle(page.id) : restore([page.id])} aria-label={selectMode ? 'Seleziona fotografia ' + (index + 1) : 'Rielabora fotografia ' + (index + 1)}>
-                  <img src={thumbs[page.id] || ''} alt={`Scansione ${index + 1}`} loading="lazy" />
+                  <img src={thumbs[page.id] || ''} alt={`Scansione ${index + 1}`} loading="lazy" decoding="async" />
                   {selectMode && <span className={selected.includes(page.id) ? 'sb-archive-check picked' : 'sb-archive-check'}>{selected.includes(page.id) ? '✓' : '+'}</span>}
                 </button>
                 <div className="sb-archive-photo-caption">
                   <strong>Pagina {index + 1}</strong>
                   <span>{page.text?.trim() ? 'OCR salvato' : 'OCR da eseguire'}</span>
+                  {page.createdAt && <span>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(page.createdAt))}</span>}
                   {!selectMode && <button type="button" disabled={busy} onClick={() => remove([page.id])} aria-label="Elimina fotografia">Elimina</button>}
                 </div>
               </article>
