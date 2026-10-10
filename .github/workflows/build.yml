@@ -106,6 +106,8 @@ jobs:
         run: node scripts/test-lab15-direct-original-route.mjs
       - name: Test LAB16 approved Home, horizontal recent and camera/scan previews
         run: node scripts/test-lab16-home-approved.mjs
+      - name: Test LAB17 scanner icons removed and safe bottom scroll
+        run: node scripts/test-lab17-scanner-scroll.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
