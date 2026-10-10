@@ -116,6 +116,8 @@ jobs:
         run: node scripts/test-lab20-scans-covers-recovery.mjs
       - name: Test LAB21 genuine context-aware Gemini image covers
         run: node scripts/test-lab21-true-ai-image.mjs
+      - name: Test LAB22 zero-key original-first cover search, license and exact user label
+        run: node scripts/test-lab22-cover-search.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
