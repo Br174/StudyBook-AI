@@ -40,9 +40,11 @@ export default async function handler(req,res){
   const variant=Number(req.body?.variant)||0;
   if(!title)return res.status(400).json({error:'Il titolo del libro è necessario.',code:'COVER_TITLE_REQUIRED'});
   if(!Number.isFinite(variant)||variant<0||variant>50000)return res.status(400).json({error:'Parametro di rigenerazione non valido.'});
-  const apiKey=process.env.AI_IMAGE_API_KEY||process.env.AI_API_KEY;
+  const nodeEnv=typeof process==='undefined'?{}:(process.env||{});
+  const environment=req.env||nodeEnv;
+  const apiKey=environment.AI_IMAGE_API_KEY||environment.AI_API_KEY;
   if(!apiKey)return res.status(503).json({error:'Motore di immagini AI non configurato sul server.',code:'COVER_IMAGE_NOT_CONFIGURED'});
-  const model=process.env.AI_IMAGE_MODEL||DEFAULT_MODEL;
+  const model=environment.AI_IMAGE_MODEL||DEFAULT_MODEL;
   if(!/^[a-zA-Z0-9._-]{5,80}$/.test(model))return res.status(503).json({error:'Modello immagini non valido.',code:'COVER_MODEL_CONFIG_INVALID'});
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),57000);
@@ -53,15 +55,16 @@ export default async function handler(req,res){
       headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},
       body:JSON.stringify({
         contents:[{role:'user',parts:[{text:prompt}]}],
-        generationConfig:{responseModalities:['IMAGE'],responseFormat:{image:{aspectRatio:'3:4',imageSize:'1K'}}},
+        generationConfig:{responseModalities:['IMAGE'],imageConfig:{aspectRatio:'3:4',imageSize:'1K'}},
       }),
     });
     if(!upstream.ok){
       const code=upstream.status;
       console.error('LAB21 image provider status',code);
-      if(code===429)return res.status(429).json({error:'Limite temporaneo del servizio immagini AI: riprova più tardi.',code:'COVER_IMAGE_QUOTA'});
+      if(code===429)return res.status(429).json({error:'La quota Gemini per creare immagini è esaurita o non attiva. Controlla piano e fatturazione in Google AI Studio.',code:'COVER_IMAGE_QUOTA'});
       if(code===401||code===403)return res.status(502).json({error:'Il servizio immagini non autorizza la chiave configurata.',code:'COVER_IMAGE_AUTH'});
-      if(code===404||code===400)return res.status(502).json({error:'Il modello immagini configurato non è disponibile.',code:'COVER_IMAGE_MODEL'});
+      if(code===404)return res.status(502).json({error:'Il modello immagini non è disponibile per l’account.',code:'COVER_IMAGE_MODEL'});
+      if(code===400)return res.status(502).json({error:'Richiesta immagini rifiutata dal provider.',code:'COVER_IMAGE_BAD_REQUEST'});
       return res.status(502).json({error:'Generazione immagini non riuscita. Riprova.',code:'COVER_IMAGE_PROVIDER'});
     }
     const data=await upstream.json();
