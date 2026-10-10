@@ -4,7 +4,7 @@
  * No Google Images scraping, no generated/fake AI images, no credential,
  * no server-side persistence, no arbitrary URL/image proxy.
  */
-const STOP=new Set('il lo la i gli le un una uno di del della delle degli da in nel nei al alla per con che e ed a su sul sullo dei degli delle libro corso manuale appunti materiale testo volume parte lezioni introduzione guida nuovo nuova studio studi study book the and to of for a an volume vol notes introduction'.split(' '));
+const STOP=new Set('il lo la i gli le un una uno di del della delle degli da in nel nei al alla per con che e ed a su sul sullo dei degli delle libro corso manuale appunti fotografati pagine pagine scannerizzati scansione foto documento materiale testo volume parte lezioni introduzione guida nuovo nuova studio studi study book the and to of for a an volume vol notes introduction'.split(' '));
 const BAD=/\b(logo|icon|poster|book cover|cover art|album|stamp|trademark|screenshot|wallpaper|meme|watermark)\b/i;
 const norm=(v)=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('it-IT').replace(/[^a-z0-9]+/g,' ').trim();
 const tidy=(v,max=120)=>String(v||'').replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim().slice(0,max);
@@ -20,6 +20,7 @@ export function titleMatch(a,b){
   return hits>=2 && precision>=.85 ? precision : 0;
 }
 const hints=[
+  [/sant[ioae]|religio|chies|cristian|gesu|vangelo|bibbi|fede|sacro|prete|religion/i,'Christian religious church stained glass art'],
   [/roman[io]|roma|impero|latino|repubblica romana/i,'ancient Roman architecture ruins colosseum'],
   [/grec[io]|grecia|ellenic/i,'ancient Greece temple'],
   [/mediev|medioev/i,'medieval castle cathedral'],
@@ -43,12 +44,26 @@ const hints=[
   [/animal|zoolog/i,'wildlife animal nature'],
 ];
 export function findTheme(title,subject='',context=''){
-  const joined=[title,subject,context.slice(0,550)].join(' ');
-  const match=hints.find(([re])=>re.test(joined));
-  if(match)return match[1];
-  const key=tokens(title).filter(w=>w.length>3).slice(0,3);
+  // LAB23: title is the authority; context is permitted only if the title
+  // is a generic scan/note name, never allowed to override a specific title.
+  const titleText=norm(title);
+  const generic=/^(?:appunti|fotografat|scannerizzat|scansione|documento|pagina|foto|testo|libro|senza titolo|untitled|nuovo documento|materiale)(?:\\s|$)/i.test(titleText);
+  const titleHint=hints.find(([re])=>re.test(titleText));
+  if(titleHint)return titleHint[1];
+  const subjectHint=hints.find(([re])=>re.test(norm(subject)));
+  if(subjectHint)return subjectHint[1];
+  if(generic){
+    const contentHint=hints.find(([re])=>re.test(norm(context).slice(0,520)));
+    if(contentHint)return contentHint[1];
+  }
+  const key=tokens(title).filter(w=>w.length>3).slice(0,4);
   const extra=tokens(subject).filter(w=>w.length>3).slice(0,1);
-  return [...key,...extra].join(' ').slice(0,105);
+  const search=[...key,...extra].join(' ').slice(0,105);
+  return searchTokensAreUseful(search) ? search : '';
+}
+function searchTokensAreUseful(theme){
+  const key=tokens(theme);
+  return key.length>=1&&key.some(x=>x.length>=5);
 }
 const defaultFetch=(...a)=>fetch(...a);
 async function getJson(url,fetcher,timeout=7000){
@@ -76,7 +91,7 @@ export async function searchCatalog({title,author='',isbn=''},fetcher=defaultFet
     if(!authorMatches(b.author_name,author))continue;
     found.push({score:(isbnHit?3:score)+(author?.length?1:0),kind:'original',label:'Copertina dal catalogo Open Library',
       url:'https://covers.openlibrary.org/b/id/'+b.cover_i+'-L.jpg?default=false',
-      source:'Open Library',sourceUrl:'https://openlibrary.org',license:'Catalog cover — bibliographic reference',
+      source:'Open Library',assetId:'ol:'+b.cover_i,sourceUrl:'https://openlibrary.org',license:'Catalog cover — bibliographic reference',
       matchedTitle:b.title});
   }
   const googleBooks=work[1].status==='fulfilled'?work[1].value.items||[]:[];
@@ -92,7 +107,7 @@ export async function searchCatalog({title,author='',isbn=''},fetcher=defaultFet
     let parsed;try{parsed=new URL(image.replace(/^http:\/\//,'https://'));}catch{continue;}
     if(!['books.google.com','books.googleusercontent.com','books.google.it'].includes(parsed.hostname))continue;
     found.push({score:(isbnHit?3:score)+(author?.length?.1:0),kind:'original',label:'Copertina dal catalogo Google Books',
-      url:parsed.href,source:'Google Books',sourceUrl:b.volumeInfo?.infoLink||'https://books.google.com',
+      url:parsed.href,assetId:'google:'+String(b.id||v.title||'').slice(0,90),source:'Google Books',sourceUrl:b.volumeInfo?.infoLink||'https://books.google.com',
       license:'Catalog cover — bibliographic reference',matchedTitle:v.title});
   }
   return found.sort((a,b)=>b.score-a.score);
@@ -107,7 +122,7 @@ export function isPublicDomain(meta={}){
 }
 export async function searchCommons({title,subject='',context=''},fetcher=defaultFetch){
   const theme=findTheme(title,subject,context);
-  if(theme.length<5)return[];
+  if(!theme || theme.length<5)return[];
   const url=new URL('https://commons.wikimedia.org/w/api.php');
   url.searchParams.set('action','query');url.searchParams.set('format','json');url.searchParams.set('generator','search');
   url.searchParams.set('gsrsearch',theme);url.searchParams.set('gsrnamespace','6');url.searchParams.set('gsrlimit','24');
@@ -130,7 +145,7 @@ export async function searchCommons({title,subject='',context=''},fetcher=defaul
     const uri=img.thumburl||img.url;
     if(!uri)continue;
     try{if(new URL(uri).hostname!=='upload.wikimedia.org')continue;}catch{continue;}
-    results.push({kind:'thematic',score:hits/(searchTokens.length||1),url:uri,
+    results.push({kind:'thematic',score:hits/(searchTokens.length||1),assetId:'commons:'+page.pageid,url:uri,
       label:'Immagine tematica da Wikimedia Commons',source:'Wikimedia Commons',
       sourceUrl:img.descriptionurl||'https://commons.wikimedia.org',
       license:tidy(img.extmetadata?.LicenseShortName?.value||'Public domain',50),
@@ -185,6 +200,8 @@ export async function searchAndFetchCover(body,fetcher=defaultFetch){
   const title=tidy(body?.title,140),subject=tidy(body?.subject,100);
   const context=tidy(body?.context,1150),author=tidy(body?.author,110);
   const isbn=tidy(body?.isbn,22);
+  const excluded=new Set((Array.isArray(body?.excludeAssets)?body.excludeAssets:[])
+    .filter(x=>typeof x==='string'&&x.length<=240).slice(0,70));
   if(title.length<3)return {error:'Il titolo del libro è troppo breve.',status:400,code:'COVER_TITLE'};
   const [catalog,commons]=await Promise.allSettled([
     searchCatalog({title,author,isbn},fetcher),
@@ -192,11 +209,12 @@ export async function searchAndFetchCover(body,fetcher=defaultFetch){
   // A genuine original catalog match ALWAYS takes priority over themed pictures.
   for(const group of [catalog,commons]){
     if(group.status!=='fulfilled')continue;
-    for(const candidate of group.value.slice(0,5)){
+    for(const candidate of group.value.slice(0,18)){
+      if(excluded.has(candidate.assetId)||excluded.has(candidate.sourceUrl)||excluded.has(candidate.url))continue;
       try{
         const {encoded,mime}=await fetchSafeImage(candidate,fetcher);
         return {status:200,type:'web-cover',kind:candidate.kind,label:candidate.label,
-          imageData:encoded,mimeType:mime,source:candidate.source,sourceUrl:candidate.sourceUrl,
+          imageData:encoded,mimeType:mime,assetId:candidate.assetId,source:candidate.source,sourceUrl:candidate.sourceUrl,
           license:candidate.license,attribution:candidate.attribution||'',
           matchedTitle:candidate.matchedTitle||'',isOriginalCatalog:candidate.kind==='original'};
       }catch{/* try the next eligible image, not an unrelated false positive */ }
