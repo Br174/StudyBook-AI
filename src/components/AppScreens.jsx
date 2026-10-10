@@ -173,7 +173,7 @@ function ScanPhotoPreview({ blob, title }) {
   return url ? <img src={url} alt={title} loading="lazy" decoding="async" /> : <StudyIcon name="photo" size={21}/>;
 }
 
-export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onSetCoverFile, onGenerateCover, onApplyCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
+export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
   const [area, setArea] = useState('subjects');
   const [view, setView] = useState(initialView);
   const [subject, setSubject] = useState('Tutte');
@@ -184,9 +184,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
   const [coverProcessing, setCoverProcessing] = useState('');
   const [coverMessage, setCoverMessage] = useState('');
   const [coverNotice, setCoverNotice] = useState('');
-  const [coverPreview, setCoverPreview] = useState(null);
   const [coverPhase, setCoverPhase] = useState('idle');
-  const [coverAttempt, setCoverAttempt] = useState(0);
   const coverFileInputRef = useRef(null);
   const coverFileTargetRef = useRef('');
   const [visibleScanCount, setVisibleScanCount] = useState(20);
@@ -249,7 +247,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
 
       {filtered.length ? (
         <div className="sb-library-grid">
-          {filtered.map((item) => <BookCover key={item.id} item={item} view={view === 'all' ? (item.metadata?.hasProcessed ? 'processed' : 'original') : view} onOpen={onOpenBook} onDeleteRequest={item => setDeleteCandidate({ ...item, deleteView: view })} onRenameRequest={setRenameCandidate} onBookActions={item => { setActionCandidate(item); setCoverMessage(''); setCoverPreview(null); setCoverPhase('idle'); setCoverAttempt(0); }} />)}
+          {filtered.map((item) => <BookCover key={item.id} item={item} view={view === 'all' ? (item.metadata?.hasProcessed ? 'processed' : 'original') : view} onOpen={onOpenBook} onDeleteRequest={item => setDeleteCandidate({ ...item, deleteView: view })} onRenameRequest={setRenameCandidate} onBookActions={item => { setActionCandidate(item); setCoverMessage('');  setCoverPhase('idle');  }} />)}
         </div>
       ) : <div className="sb-empty-library">Nessun libro in questa sezione.</div>}
       {view === 'all' && scannerProps.entries?.length > 0 && (
@@ -286,48 +284,31 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
         <div className="sb-confirm-overlay" role="presentation" onClick={event=>{if(event.target===event.currentTarget&&!coverProcessing)setActionCandidate(null);}}>
           <div className="sb-confirm-dialog sb-library-action-dialog" role="dialog" aria-modal="true" aria-label={'Azioni per '+stripExtension(actionCandidate.fileName)}>
             <h2>{stripExtension(actionCandidate.fileName)}</h2>
-            <p>Una vera intelligenza artificiale crea l'immagine da titolo e contesto. Il PDF originale resta invariato.</p>
+            <p>Cerca prima la copertina del libro; altrimenti sceglie una fotografia libera e pertinente. Nessun servizio AI a pagamento. Il libro originale resta invariato.</p>
             {coverProcessing && <div className="sb-true-cover-progress" role="status" aria-live="polite">
               <span className="sb-true-cover-spinner" aria-hidden="true"/>
-              <div><strong>{coverPhase === 'analysing' ? 'Analisi del libro…' :
-                coverPhase === 'preparing' ? 'Preparo l’anteprima…' : coverPhase === 'applying' ? 'Salvataggio copertina…' :
-                'Generazione immagine AI…'}</strong>
-                <small>{coverPhase === 'generating' ? 'Il modello crea una vera illustrazione. Può richiedere alcuni secondi.' :
+              <div><strong>{coverPhase === 'analysing' ? 'Leggo titolo e contesto…' :
+                coverPhase === 'preparing' ? 'Preparo la copertina…' : coverPhase === 'saving' ? 'Salvataggio nel libro…' :
+                'Cerco copertina originale e foto pertinente…'}</strong>
+                <small>{coverPhase === 'searching' ? 'Open Library, Google Books e foto libere Wikimedia Commons.' :
                 'L’operazione è in corso.'}</small>
               </div>
-            </div>}
-            {coverPreview && <div className="sb-true-cover-preview">
-              <img src={coverPreview.src} alt={'Copertina AI creata per '+stripExtension(actionCandidate.fileName)}/>
-              <strong>Copertina generata con AI — anteprima</strong>
-              <small>Salvala soltanto se ti piace. Rigenera per ottenere una nuova immagine.</small>
-              <button type="button" className="sb-true-cover-apply" disabled={Boolean(coverProcessing)}
-                onClick={async()=>{
-                  setCoverProcessing(actionCandidate.id);setCoverPhase('applying');setCoverMessage('');
-                  try {const ok=await onApplyCover?.(actionCandidate.id,coverPreview);
-                    if(!ok)throw new Error('Salvataggio non riuscito.');
-                    setCoverNotice('Vera copertina AI salvata sul libro.');
-                    setActionCandidate(null);setCoverPreview(null);
-                  }catch(e){setCoverMessage(e.message||'Impossibile salvare la copertina.');}
-                  finally{setCoverProcessing('');setCoverPhase('idle');}
-                }}>✓ Usa questa copertina</button>
-              <button type="button" disabled={Boolean(coverProcessing)}
-                onClick={()=>{setCoverPreview(null);setCoverMessage('Anteprima scartata.');}}>Annulla anteprima</button>
             </div>}
             <div className="sb-library-action-list">
               <button type="button" disabled={Boolean(coverProcessing)} onClick={()=>{setRenameCandidate(actionCandidate);setActionCandidate(null);}}>✎ Rinomina libro</button>
               <button type="button" disabled={Boolean(coverProcessing)} onClick={()=>{coverFileTargetRef.current=actionCandidate.id;coverFileInputRef.current?.click();}}>▧ Scegli copertina dal telefono</button>
               <button type="button" disabled={Boolean(coverProcessing)||!onGenerateCover} onClick={async()=>{
                 const id=actionCandidate.id;
-                const variant=coverAttempt+1;
-                setCoverAttempt(variant);setCoverPreview(null);
                 setCoverProcessing(id);setCoverPhase('analysing');setCoverMessage('');
                 try {
-                  const preview=await onGenerateCover(id,{variant,onStage:setCoverPhase});
-                  if(!preview?.src?.startsWith('data:image/jpeg;base64,'))throw new Error('Il generatore AI non ha restituito un’immagine reale.');
-                  setCoverPreview(preview);setCoverPhase('preview');
-                }catch(error){setCoverMessage(error.message||'Generazione immagini non riuscita.');setCoverPhase('error');}
+                  const found=await onGenerateCover(id,{onStage:setCoverPhase});
+                  if(!found||!['original','thematic'].includes(found.kind))throw new Error('Nessuna copertina disponibile.');
+                  const message=found.kind==='original'?'Copertina del catalogo salvata automaticamente.':
+                    'Fotografia tematica salvata come copertina.';
+                  setCoverNotice(message);setActionCandidate(null);
+                }catch(error){setCoverMessage(error.message||'Ricerca copertina non riuscita.');setCoverPhase('error');}
                 finally{setCoverProcessing('');}
-              }}>✦ {coverProcessing?'Generazione in corso…':coverPreview?'Rigenera con vera AI immagini':'Crea copertina con vera AI immagini'}</button>
+              }}>▧ {coverProcessing?'Ricerca in corso…':'Trova copertina automaticamente'}</button>
               {(actionCandidate.coverOriginal||actionCandidate.coverCustom||actionCandidate.coverAI) && (
                 <button type="button" disabled={Boolean(coverProcessing)} onClick={async()=>{
                   setCoverProcessing(actionCandidate.id);
