@@ -70,13 +70,22 @@ export function renderAICover({title,theme='generale',variant=0}) {
   const [base,medium,dark,motif]=palette;
   const line=wrapTitle(title);
   const textSize=line.some(s=>s.length>16)?23:line.some(s=>s.length>11)?26:31;
-  const titleY=variant%2===0?146:151;
+  const option=((Number(variant)||0)%4+4)%4;
+  const titleY=option%2===0?146:151;
   const icon=ICONS[motif]||ICONS.arch;
+  // LAB20: rigenerare deve produrre una variazione visibile, non spostare solo il titolo.
+  const accent=[
+    '<path d="M30 245h260" stroke="currentColor" stroke-width="1.5" opacity=".15"/>',
+    '<path d="M30 90Q160 10 292 98M30 338Q160 422 292 330" fill="none" stroke="currentColor" stroke-width="4" opacity=".20"/>',
+    '<circle cx="160" cy="318" r="110" fill="none" stroke="currentColor" stroke-width="3" opacity=".17"/>',
+    '<path d="M15 386l290-90M15 408l290-90" stroke="currentColor" stroke-width="3" opacity=".22"/>',
+  ][option];
   const blocks=line.map((value,i)=>'<tspan x="160" dy="'+(i?textSize*1.25:0)+'">'+value+'</tspan>').join('');
   const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 430" width="320" height="430">'+
     '<defs><linearGradient id="g" x2="0.95" y2="1"><stop stop-color="'+base+'"/><stop offset="1" stop-color="'+medium+'"/></linearGradient></defs>'+
     '<rect width="320" height="430" rx="14" fill="url(#g)"/><path d="M14 0v430" stroke="'+dark+'" opacity=".24" stroke-width="4"/>'+
     '<circle cx="270" cy="70" r="92" fill="#fff" opacity=".22"/><circle cx="61" cy="385" r="72" fill="#fff" opacity=".18"/>'+
+    '<g color="'+dark+'">'+accent+'</g>'+
     '<text x="160" y="43" fill="'+dark+'" text-anchor="middle" font-size="11" font-family="Arial,sans-serif" letter-spacing="3">STUDYBOOK</text>'+
     '<text x="160" y="'+titleY+'" fill="'+dark+'" text-anchor="middle" font-size="'+textSize+'" font-weight="600" font-family="Georgia,serif">'+blocks+'</text>'+
     '<path d="M100 246h120" stroke="'+dark+'" stroke-width="2" opacity=".5"/>'+
