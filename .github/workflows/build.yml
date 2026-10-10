@@ -88,6 +88,8 @@ jobs:
         run: node scripts/test-lab06-ui.mjs
       - name: Test LAB07 Home Continua opens full book overview
         run: node scripts/test-lab07-home-continue.mjs
+      - name: Test LAB08 Library Elaborati and clean book header
+        run: node scripts/test-lab08-library-overview.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
