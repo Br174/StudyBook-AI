@@ -1,0 +1,35 @@
+name: LAB23 Commons topic coverage diagnostic
+on:
+  push:
+    branches: [lab/studybook-cover23-live-acceptance]
+    paths: ['.github/workflows/commons-topic-diagnostic.yml']
+permissions:
+  contents: read
+jobs:
+  commons:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Count public-domain results for alternative image searches
+        run: |
+          node --input-type=module <<'NODE'
+          const terms=['Roman ruins','Colosseum Rome','ancient Roman architecture','Roman mosaic','Rome Pantheon','Christian church','Church stained glass','Catholic cathedral','Christian religious art','saints painting','Byzantine mosaic Jesus','religious icon'];
+          for(const q of terms){
+            const u=new URL('https://commons.wikimedia.org/w/api.php');
+            u.searchParams.set('action','query');u.searchParams.set('format','json');u.searchParams.set('generator','search');
+            u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','50');
+            u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|size|mime|extmetadata');u.searchParams.set('iiurlwidth','660');
+            try {
+              const res=await fetch(u,{signal:AbortSignal.timeout(16000)});
+              const body=await res.json();
+              const pages=Object.values(body?.query?.pages||{});
+              const usable=pages.filter(p=>{
+                const i=p.imageinfo?.[0],lic=i?.extmetadata?.LicenseShortName?.value||'';
+                return /^CC0(?: 1.0)?$|^public domain$|^PD-[a-z0-9_.-]+$/i.test(lic)&&
+                    ['image/jpeg','image/png','image/webp'].includes(i?.mime) &&
+                    i.width>=420&&i.height>=300;
+              });
+              console.log('COVER_QUERY',JSON.stringify({q,http:res.status,count:pages.length,publicDomain:usable.length,examples:usable.slice(0,2).map(x=>({title:x.title,id:x.pageid}))}));
+            }catch(e){console.log('COVER_QUERY_ERROR',JSON.stringify({q,error:String(e).slice(0,120)}))}
+          }
+          NODE
