@@ -90,6 +90,8 @@ jobs:
         run: node scripts/test-lab07-home-continue.mjs
       - name: Test LAB08 Library Elaborati and clean book header
         run: node scripts/test-lab08-library-overview.mjs
+      - name: Test LAB09 approved compact design and SVG icons
+        run: node scripts/test-lab09-approved-ui.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
