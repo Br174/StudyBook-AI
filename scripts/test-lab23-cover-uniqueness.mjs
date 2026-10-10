@@ -15,7 +15,7 @@ assert.doesNotMatch(findTheme('Tutti santi me compreso','Altro','Roma antica'),/
 assert.ok(search.includes('if(excluded.has(candidate.assetId)'),'duplicate avoidance in server');
 assert.ok(client.includes('excludeAssets'),'client forwards used covers');
 assert.ok(app.includes('findDuplicateWebCovers(libraryItems)'),'app heals old repeated pictures');
-assert.ok(app.includes('coverOrigin:\\'online-duplicate-repair\\''),'only known web theme covers reconciled');
+assert.ok(app.includes("coverOrigin:'online-duplicate-repair'"),'only known web theme covers reconciled');
 assert.ok(screens.includes('Aggiungi copertina'));
 assert.ok(workflow.includes('StudyBook-AI-LAB-23-AGGIORNAMENTO'));
 
