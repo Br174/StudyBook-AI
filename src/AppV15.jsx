@@ -5,6 +5,7 @@ import { exportDocx, exportEpub, exportHtml, exportJson, exportMarkdown, exportO
 import {
   createLibraryId,
   deleteLibraryBook,
+  deleteLibraryVersion,
   ensureDefaultProfile,
   getLibraryBook,
   listLibraryBooks,
@@ -446,12 +447,13 @@ export default function AppV14() {
     }
   }
 
-  async function removeLibraryItem(id) {
+  async function removeLibraryItem(id, view = 'all') {
     if (libraryBusy) return false;
     setLibraryBusy(true);
     try {
-      await deleteLibraryBook(id);
-      if (libraryId === id) {
+      if (view === 'original' || view === 'processed') await deleteLibraryVersion(id, view);
+      else await deleteLibraryBook(id);
+      if (libraryId === id && view !== 'original') {
         setLibraryId('');
         setStudyBook(null);
         setDocumentData(null);
@@ -460,7 +462,8 @@ export default function AppV14() {
         setStudyModeOpen(false);
       }
       await refreshLibrary(activeProfileId);
-      setStatus('Libro eliminato definitivamente dalla Libreria');
+      if (originalRecord?.id === id && view !== 'processed') { setOriginalRecord(null); setOriginalReading(false); }
+      setStatus(view === 'all' ? 'Libro eliminato definitivamente dalla Libreria' : 'Versione eliminata · altre versioni conservate');
       return true;
     } catch (err) {
       setError(err.message || 'Impossibile eliminare il libro.');
