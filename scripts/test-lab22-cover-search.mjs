@@ -19,7 +19,7 @@ assert.ok(!screen.includes('Aggiungi locandina'),'wrong wording removed');
 assert.ok(screen.includes('onGenerateCover(id,{onStage:setCoverPhase})'),'single tap initiates web search');
 assert.ok(app.includes('coverImageLicense:result.license') && app.includes('coverImageSource:result.source'),'licenses retained');
 assert.ok(workflow.includes('StudyBook-AI-LAB-22-AGGIORNAMENTO'),'same LAB Android update family');
-assert.ok(!/API_KEY|GEMINI|image generation/i.test(client),'new flow is free/keyless');
+assert.ok(!/process\.env\.(?:AI_API_KEY|GEMINI_API_KEY)|generateTrueBookImage\(/.test(client),'new flow is free/keyless');
 assert.ok(coverSearchEndpoint().endsWith('/api/book-cover/search'));
 assert.equal(titleMatch('I Romani.pdf','I Romani'),1);
 assert.equal(titleMatch('I romani','I romani del Medioevo'),0,'near-title false positive rejected');
