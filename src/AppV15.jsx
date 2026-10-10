@@ -414,7 +414,7 @@ export default function AppV14() {
       coverWorkerRef.current=true;
       try {
         for(const book of waiting) {
-          if(cancelled)break;
+          // Continue the bounded queue even when refreshLibrary re-renders after each completed cover.
           coverQueueRef.current.add(book.id);
           try {await generateLibraryCover(book.id,{automatic:true});}
           catch(error){console.warn('LAB19 background cover skipped:',error.message);}
