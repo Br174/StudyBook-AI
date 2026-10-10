@@ -324,6 +324,11 @@ export default function AppV14() {
       const ok = await renameArchivedCollection(ids,clean,{manual:true});
       if (!ok) throw new Error('Rinomina raccolta non riuscita.');
       setArchivedScans(await listArchivedScannerPages());
+      if(scanPagesRef.current.some(page=>ids.includes(page.archiveId || page.id))) {
+        scanTitleManualRef.current=true;
+        scanSessionNameRef.current=clean;
+        setScanSessionName(clean);
+      }
       setStatus(`Raccolta rinominata: ${clean}`);
       return true;
     } catch (err) { setError(err.message); return false; }
@@ -541,6 +546,11 @@ export default function AppV14() {
           scanPagesRef.current.forEach((page) => page.previewUrl && URL.revokeObjectURL(page.previewUrl));
           setScanPagesNow([]);
           await clearScannerSessionStore();
+          // Nuovo libro = nuova raccolta. Il titolo automatico non eredita il nome precedente.
+          scanSessionNameRef.current='Appunti fotografati';
+          scanTitleManualRef.current=false;
+          scanAutoTitleConfidenceRef.current=0;
+          setScanSessionName('Appunti fotografati');
         } else setError('Libro creato, ma il salvataggio delle foto non è confermato: raccolta scanner conservata.');
         await refreshScannerStorage();
       }
@@ -927,7 +937,16 @@ export default function AppV14() {
     try {
       const entries = await getArchivedScannerPages(ids);
       if (entries.length !== ids.length) throw new Error('Alcune fotografie non sono più presenti nell’archivio.');
-      if (!scanPagesRef.current.length) void requestScannerPersistence();
+      if (!scanPagesRef.current.length) {
+        void requestScannerPersistence();
+        const restoredCollection=entries[0]?.collection;
+        if(restoredCollection && entries.every(p=>p.collection===restoredCollection)) {
+          scanSessionNameRef.current=restoredCollection;
+          setScanSessionName(restoredCollection);
+          scanTitleManualRef.current=entries.some(p=>p.collectionManual)||!isGenericTitle(restoredCollection);
+          scanAutoTitleConfidenceRef.current=0;
+        }
+      }
       for (const entry of entries) {
         const file = new File([entry.blob], entry.fileName || scanFileName(), {
           type: entry.fileType || entry.blob.type || 'image/jpeg',
