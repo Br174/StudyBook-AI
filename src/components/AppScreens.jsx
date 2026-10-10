@@ -16,6 +16,9 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRename
   const title = stripExtension(item.fileName);
   const subject = item.subject || 'Altro';
   const pages = item.metadata?.pages || 0;
+  // LAB18: le copertine reali restano prioritarie quando presenti;
+  // in assenza di copertina usiamo un volume disegnato senza modificare il record.
+  const coverUrl = item.coverUrl || item.metadata?.coverUrl || null;
   const available = view === 'original' ? item.metadata?.hasOriginal !== false : item.metadata?.hasProcessed !== false;
 
   function clearHold() {
@@ -55,10 +58,12 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRename
         disabled={!available}
         aria-label={`${title}. Pressione prolungata per eliminare`}
       >
-        <div className="sb-cover" data-subject={subject}>
-          <span>{view === 'original' ? 'ORIGINALE' : 'STUDYBOOK'}</span>
-          <strong>{title}</strong>
-          <small>{subject}</small>
+        <div className={coverUrl ? 'sb-cover sb-library-compact-cover has-image' : 'sb-cover sb-library-compact-cover'} data-subject={subject}>
+          {coverUrl ? <img className="sb-library-cover-image" src={coverUrl} alt={'Copertina di ' + title} loading="lazy" decoding="async" /> : <>
+            <span className="sb-cover-brand">{view === 'original' ? 'ORIGINALE' : 'STUDYBOOK'}</span>
+            <strong className="sb-cover-title" title={title}>{title}</strong>
+            <small className="sb-cover-subject">{subject}</small>
+          </>}
         </div>
         <div className="sb-book-meta">
           <strong>{title}</strong>
