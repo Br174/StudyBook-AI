@@ -96,6 +96,12 @@ jobs:
               echo "STUDYBOOK_APP_NAME=StudyBook AI LAB 03 Ripristino" >> "$GITHUB_ENV"
               echo "STUDYBOOK_SIGNING_MODE=recovery" >> "$GITHUB_ENV"
               ;;
+            lab/studybook-core-android-01-update-12)
+              echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-12-AGGIORNAMENTO" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APP_NAME=StudyBook AI LAB" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_SIGNING_MODE=update" >> "$GITHUB_ENV"
+              ;;
             lab/studybook-core-android-01-update-11)
               echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-11-AGGIORNAMENTO" >> "$GITHUB_ENV"
               echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab" >> "$GITHUB_ENV"
