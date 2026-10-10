@@ -94,6 +94,8 @@ jobs:
         run: node scripts/test-lab09-approved-ui.mjs
       - name: Test LAB10 universal interactive glossary
         run: node scripts/test-lab10-universal-glossary.mjs
+      - name: Test LAB11 Scanner Turbo and persistent scanned-photo archive
+        run: node scripts/test-lab11-scanner-turbo.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
