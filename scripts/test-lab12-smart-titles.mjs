@@ -60,7 +60,7 @@ const [ui, archive, app, storage, css, oldTest] = await Promise.all([
   'src/components/AppScreens.jsx','src/components/ScannerArchive.jsx','src/AppV15.jsx',
   'src/lib/scannerSessionStore.js','src/renameTitle.css','scripts/test-lab11-scanner-turbo.mjs',
 ].map(f=>readFile(f,'utf8')));
-assert.ok(ui.includes('onRenameRequest={setRenameCandidate}') && ui.includes('onRenameBook={') ,'book rename in library');
+assert.ok(ui.includes('onRenameRequest={setRenameCandidate}') && ui.includes('onSave={name=>onRenameBook(renameCandidate.id,name)}') ,'book rename in library');
 assert.ok(ui.includes('className="sb-studio-rename"') && ui.includes('Rinomina libro di studio'),'book overview supports rename');
 assert.ok(archive.includes('onRenameCollection') && archive.includes('onRenamePhoto') && archive.includes('RenameTitleDialog'),'photo and archive collection can be renamed');
 assert.ok(app.includes('scanTitleManualRef.current') && app.includes('suggestDocumentTitle'),'scan OCR title has explicit manual override');
