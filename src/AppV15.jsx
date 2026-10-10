@@ -18,6 +18,7 @@ import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
 import { isScannerBook, coverContext, pickLocalTheme, requestAiCoverTheme, renderAICover, imageBlobToThumbnail, extractOriginalCover } from './lib/libraryCoverEngine.js';
 import { generateTrueBookImage } from './lib/trueAiCover.js';
 import { searchBookCoverOnWeb } from './lib/bookCoverSearch.js';
+import {coverAssetIdentity,usedCoverAssets,findDuplicateWebCovers} from './lib/coverUniqueness.js';
 import { BottomNav, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
 import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
@@ -448,7 +449,18 @@ export default function AppV14() {
     if(!id)throw new Error('Libro non trovato.');
     const original=await getLibraryBook(id);
     if(!original||isScannerBook(original))throw new Error('Questa fotografia scannerizzata non può essere modificata.');
-    const result=await searchBookCoverOnWeb(original,{onStage});
+    const otherBooks=await listLibraryBooks({profileId:original.profileId||activeProfileId});
+    const excluded=usedCoverAssets(otherBooks,id);
+    const currentAsset=coverAssetIdentity(original);
+    if(currentAsset)excluded.push(currentAsset);
+    const result=await searchBookCoverOnWeb(original,{onStage,excludeAssets:excluded});
+    // LAB23: if an older stored record used the same Commons photo under a
+    // legacy URL identity, do not write a duplicate, even if the server
+    // accidentally returned one.
+    const refreshedBooks=await listLibraryBooks({profileId:original.profileId||activeProfileId});
+    const used=usedCoverAssets(refreshedBooks,id);
+    if(used.includes(result.assetId)||used.includes(result.sourceUrl))
+      throw new Error('Questa foto è già presente su un altro libro. Riprova per cercarne una diversa.');
     if(!result?.src?.startsWith('data:image/jpeg;base64,'))
       throw new Error('La ricerca non ha restituito una copertina utilizzabile.');
     onStage('saving');
@@ -459,6 +471,7 @@ export default function AppV14() {
       coverOrigin:result.kind==='original'?'online-catalog':'online-thematic',
       coverImageSource:result.source,
       coverImageSourceUrl:result.sourceUrl,
+      coverImageAssetId:result.assetId||'',
       coverImageLicense:result.license,
       coverImageAttribution:result.attribution,
       coverCatalogMatchedTitle:result.matchedTitle,
@@ -487,6 +500,40 @@ export default function AppV14() {
     await refreshLibrary();
     return true;
   }
+  /* LAB23: heal duplicate thematic covers from LAB22 one time per library view.
+     Only web-sourced copies are touched. Real scanned photos, imported covers,
+     book bytes and individually chosen pictures are never rewritten.
+     On successful search, replacement is persisted to the correct book ID. */
+  const repairingCoversRef=useRef(false);
+  useEffect(()=>{
+    if(repairingCoversRef.current||activeScreen!=='library'||!libraryItems.length)return;
+    const duplicates=findDuplicateWebCovers(libraryItems);
+    if(!duplicates.length)return;
+    repairingCoversRef.current=true;
+    (async()=>{
+      for(const item of duplicates.slice(0,8)){
+        try{
+          const record=await getLibraryBook(item.id);
+          if(!record || record.coverOrigin!=='online-thematic'
+             ||record.coverImageSourceUrl!==item.coverImageSourceUrl)continue;
+          // Remove only a provably duplicated online thematic custom cover.
+          await updateLibraryMetadata(item.id,{
+            coverCustom:null,
+            coverAI:record.coverAI===record.coverCustom?null:record.coverAI,
+            coverOrigin:'online-duplicate-repair',
+            coverStatus:'needs-new-cover',
+            coverImageSourceUrl:'',
+            coverImageAssetId:'',
+          });
+          await refreshLibrary();
+          try{await findAndApplyLibraryCover(item.id);}catch(error){
+            console.warn('LAB23 replacement not available for',item.id,error?.message);
+          }
+        }catch(error){console.warn('LAB23 safe duplicate reconciliation skipped',error?.message);}
+      }
+      repairingCoversRef.current=false;
+    })();
+  },[libraryItems,activeScreen,activeProfileId]);
   useEffect(()=>{
     if(importing||generating||coverWorkerRef.current||!libraryItems.length)return;
     // Process only incomplete books; each attempt is stored to avoid retry storms.
