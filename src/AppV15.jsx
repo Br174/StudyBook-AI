@@ -209,7 +209,8 @@ export default function AppV14() {
     const persist = async () => {
       timers.delete(page.id);
       await saveScannerPageRecord(page);
-      refreshScannerStorage();
+      if (page.status === 'ready' || page.status === 'error') void updateArchivedScannerText(page, scanSessionName);
+      void refreshScannerStorage();
     };
 
     if (delay > 0) timers.set(page.id, setTimeout(persist, delay));
@@ -240,6 +241,8 @@ export default function AppV14() {
       const restored = await loadScannerSession();
       if (cancelled) return;
       if (restored?.pages?.length) {
+        // LAB11: migra anche le fotografie ancora presenti nella raccolta LAB10.
+        await archiveScannerSessionPages(restored.pages, restored.name);
         const restoredPages = restored.pages.map((page) => ({
           ...page,
           previewUrl: URL.createObjectURL(page.file),
@@ -625,9 +628,13 @@ export default function AppV14() {
         if (!job || scanOcrCancelledRef.current.has(job.id)) continue;
         if (!scanPagesRef.current.some(page => page.id === job.id)) continue;
         const start = performance.now();
+        let lastPercent = -10;
         try {
           const text = await recognizeScannerImage(job.file, fraction => {
-            setStatus(`Pagina ${job.pageNumber} · OCR ${Math.round(fraction*100)}% · ${scanOcrQueueRef.current.length} in coda`);
+            const percent = Math.round(fraction*100);
+            if (percent < 100 && percent - lastPercent < 10) return; // Evita re-render inutili
+            lastPercent = percent;
+            setStatus(`Pagina ${job.pageNumber} · OCR ${percent}% · ${scanOcrQueueRef.current.length} in coda`);
           });
           if (scanOcrCancelledRef.current.has(job.id) || !scanPagesRef.current.some(p=>p.id===job.id)) continue;
           patchScanPage(job.id, { status: 'ready', text, error: '', ocrMs: Math.round(performance.now()-start) });
@@ -949,7 +956,7 @@ export default function AppV14() {
       <div className="scan-page-grid">
         {scanPages.map((page, index) => (
           <article className={`scan-page-card ${page.status}`} key={page.id}>
-            <div className="scan-thumb-wrap"><img className="scan-thumb" src={page.previewUrl} alt={`Pagina ${index + 1}`} /><span className="scan-page-number">{index + 1}</span></div>
+            <div className="scan-thumb-wrap"><img className="scan-thumb" src={page.previewUrl} alt={`Pagina ${index + 1}`} loading="lazy" decoding="async" /><span className="scan-page-number">{index + 1}</span></div>
             <div className="scan-page-body">
               <div className="scan-page-title"><strong>Pagina {index + 1}</strong><span className={`scan-status ${page.status}`}>{page.status === 'ready' ? 'Pronta' : page.status === 'error' ? 'Da rifare' : 'OCR…'}</span></div>
               {page.status === 'ready' && <details className="scan-text-preview"><summary>Controlla testo OCR</summary><textarea value={page.text} onChange={(event) => patchScanPage(page.id, { text: event.target.value }, { persistDelay: 600 })} /></details>}
