@@ -13,13 +13,13 @@ const studio = screens.slice(bookStart, screens.indexOf('function SettingRange('
 const openCode = app.slice(app.indexOf('async function openLibraryItem('), app.indexOf('async function removeLibraryItem('));
 const handlers = app.slice(app.indexOf('function openFromLibrary('), app.indexOf('const scannerPanel'));
 
-assert.ok(library.includes('<BookCover') && library.includes('view={view}') && library.includes('onOpen={onOpenBook}'), 'Library cover honors selected Elaborati/Originali tab');
-assert.ok(app.includes('<LibraryScreen items={libraryItems} onOpenBook={openFromLibraryCover}'), 'Library uses dedicated opener');
+assert.ok(library.includes('<BookCover') && library.includes("view={view === 'all'") && library.includes('onOpen={onOpenBook}'), 'Library cover honors selected Elaborati/Originali tab');
+assert.ok(app.includes('<LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover}'), 'Library uses dedicated opener');
 assert.ok(handlers.includes("function openFromLibraryCover(item, view = 'processed')"), 'Processed cover routed separately');
 assert.ok(handlers.includes("openLibraryItem(item.id, { original: view === 'original', openReader: false })"), 'Processed item does not auto-enter Reader');
 assert.ok(openCode.includes("navigateTo('studio')"), 'Processed book navigates to StudioScreen');
 assert.ok(openCode.includes('setStudyModeOpen(false)'), 'Processed books close any previous reading overlay');
-assert.ok(openCode.includes("if (original) {") && openCode.includes('record.originalFile') && openCode.includes('preferOpen: true'), 'Original view still opens original file externally');
+assert.ok(openCode.includes("if (original) {") && openCode.includes('record.originalFile') && openCode.includes("navigateTo('original')"), 'Original view opens its dedicated screen without rewriting raw file');
 assert.ok(handlers.includes("function openContinueBook(item)"), 'Home Continue still has its own callback');
 assert.ok(app.includes("onOpenBook={openFromLibrary} onContinueBook={openContinueBook}"), 'Home Recenti and Continua untouched');
 assert.ok(studio.includes('LIBRO APERTO') && studio.includes('sb-open-book-workspace'), 'Complete page kept');
