@@ -243,9 +243,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
         <div>
           <small>LIBRO APERTO</small>
           <h1>Il tuo libro di studio</h1>
-          <p className="sb-open-book-context">Tutto quello che fai qui appartiene a <strong>{stripExtension(fileName)}</strong>.</p>
         </div>
-        {fidelity && <div className={fidelity.passed ? 'sb-fidelity ok' : 'sb-fidelity warn'}>{fidelity.passed ? '✓ Fedeltà verificata' : 'Verifica richiesta'}</div>}
       </header>
 
       <section className="sb-open-book-workspace" aria-label="Libro aperto">
