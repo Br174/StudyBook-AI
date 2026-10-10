@@ -264,13 +264,29 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, i
   );
 }
 
-export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, generating = false }) {
+export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, generating = false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility }) {
   const [exportVariant, setExportVariant] = useState('study');
   const [exportOpen, setExportOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [prepareOpen, setPrepareOpen] = useState(false);
   if (!studyBook && !isOriginalOnly) {
-    return <section className="sb-screen"><div className="sb-empty-library"><h2>Nessun libro aperto</h2><p>Apri una copertina dalla Libreria oppure crea un nuovo libro.</p></div></section>;
+    // LAB15 • Percorso diretto: se non esiste un originale selezionato,
+    // la scelta rimane nella stessa schermata «Il tuo libro di studio».
+    return (
+      <section className="sb-screen sb-studio-screen">
+        <header className="sb-screen-head compact"><div><small>LIBRO APERTO</small><h1>Il tuo libro di studio</h1></div></header>
+        <article className="sb-open-book-workspace sb-original-picker">
+          <h2>Scegli un libro originale</h2>
+          <p>{availableOriginals.length ? 'Apri un libro già conservato, oppure importane uno nuovo.' : 'Non ci sono ancora libri originali nella Libreria. Importa un documento per cominciare.'}</p>
+          {availableOriginals.slice(0, 12).map(item => (
+            <button key={item.id} type="button" className="sb-original-picker-item" onClick={() => onChooseOriginal?.(item)}>
+              <StudyIcon name="book" size={22} /><span>{stripExtension(item.original?.name || item.fileName)}</span><strong>Apri →</strong>
+            </button>
+          ))}
+          <button type="button" className="sb-original-picker-import" onClick={onImportOriginal}>Importa PDF / eBook</button>
+        </article>
+      </section>
+    );
   }
   const fidelity = studyBook?.quality?.fidelityGate;
   const sourceChapters = sourceData?.chapters || [];
@@ -308,6 +324,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         </div>
       </section>
 
+      {isOriginalOnly && originalReading && originalRecord && (
+        <OriginalInlineReader key={originalRecord.id} record={originalRecord} accessibility={accessibility}
+          onClose={onCloseOriginalReader} onOpenNative={onOpenOriginalNative} />
+      )}
       {isOriginalOnly && prepareOpen && (
         <article className="sb-export-card sb-original-study-consent" aria-label="Scelta di elaborazione">
           <div className="sb-export-head"><div><small>SCELTA LIBERA</small><h2>Preparare il testo di studio?</h2></div></div>
@@ -432,62 +452,36 @@ export function SettingsScreen({ settings, onSettingsChange, profiles, activePro
 
 /* LAB13 — I byte originali restano nell'archivio; qui si legge soltanto il testo
    importato, senza riassunti o interventi del motore di studio. */
-export function OriginalBookScreen({ record, reading, onRead, onCloseRead, onExport, onOpenNative, onStudyBook, accessibility }) {
+
+/* LAB15 • Lettore originale integrato nella pagina Libro aperto.
+   Nessuna vecchia schermata Versione originale: il blob in Libreria resta immutato. */
+function OriginalInlineReader({ record, accessibility, onClose, onOpenNative }) {
   const [chapterIndex, setChapterIndex] = useState(0);
-  if (!record) return <section className="sb-screen"><p>Nessun originale selezionato.</p></section>;
-  const chapters = record.sourceData?.chapters || [];
-  const chapter = chapters[Math.min(chapterIndex, Math.max(0, chapters.length - 1))];
-  const originalName = record.original?.name || record.originalFile?.name || record.fileName;
-  const readable = chapters.length > 0;
+  const chapters = record?.sourceData?.chapters || [];
+  const currentIndex = Math.min(chapterIndex, Math.max(0, chapters.length - 1));
+  const chapter = chapters[currentIndex];
   return (
-    <section className="sb-screen sb-original-screen" aria-label="Versione originale">
-      <header className="sb-library-head">
-        <div><small>DOCUMENTO INALTERATO</small><h1>Versione originale</h1></div>
-      </header>
-      <article className="sb-process-card sb-original-summary">
-        <div><small>FILE ORIGINALE CONSERVATO</small><h2>{stripExtension(originalName)}</h2>
-          <p>{originalName} · {record.original?.size ? (record.original.size / 1024 / 1024).toFixed(1) + ' MB' : 'Formato originale'}</p>
-          <p>L'esportazione del file originale restituisce i byte importati, senza modifiche.</p>
+    <article className="sb-original-reading" style={readerCssVariables(accessibility)} aria-label="Lettura del libro originale">
+      <h2>Leggi il libro originale</h2>
+      {chapters.length ? <>
+        <div className="sb-original-chapter-control">
+          <label htmlFor="sb-original-chapter-inline">Capitolo originale</label>
+          <select id="sb-original-chapter-inline" value={currentIndex} onChange={event => setChapterIndex(Number(event.target.value))}>
+            {chapters.map((item, index) => <option key={index} value={index}>{item.title || 'Capitolo ' + (index + 1)}</option>)}
+          </select>
         </div>
-        <div className="sb-original-actions">
-          <button type="button" onClick={onStudyBook}>Studia libro</button>
-          <button type="button" className="sb-original-secondary" onClick={() => onExport('original')}>Esporta originale</button>
+        <h2>{chapter?.title || 'Testo originale'}</h2>
+        {(chapter?.paragraphs || []).map((paragraph, index) => (
+          <p key={index}>{typeof paragraph === 'string' ? paragraph : String(paragraph?.original || paragraph?.text || '')}</p>
+        ))}
+        <div className="sb-original-chapter-nav">
+          <button type="button" disabled={currentIndex === 0} onClick={() => setChapterIndex(index => Math.max(0, index - 1))}>← Precedente</button>
+          <button type="button" disabled={currentIndex === chapters.length - 1} onClick={() => setChapterIndex(index => Math.min(chapters.length - 1, index + 1))}>Successivo →</button>
         </div>
-      </article>
-      {reading && (
-        <article className="sb-original-reading" style={readerCssVariables(accessibility)}>
-          {readable ? <>
-            <div className="sb-original-chapter-control">
-              <label htmlFor="original-chapter">Capitolo originale</label>
-              <select id="original-chapter" value={Math.min(chapterIndex, chapters.length - 1)} onChange={event => setChapterIndex(Number(event.target.value))}>
-                {chapters.map((item, index) => <option key={index} value={index}>{item.title || 'Capitolo ' + (index + 1)}</option>)}
-              </select>
-            </div>
-            <h2>{chapter?.title || 'Testo originale'}</h2>
-            {(chapter?.paragraphs || []).map((paragraph, index) => (
-              <p key={index}>{typeof paragraph === 'string' ? paragraph : String(paragraph?.original || paragraph?.text || '')}</p>
-            ))}
-            <div className="sb-original-chapter-nav">
-              <button disabled={chapterIndex === 0} onClick={() => setChapterIndex(index => Math.max(0, index - 1))}>← Precedente</button>
-              <button disabled={chapterIndex >= chapters.length - 1} onClick={() => setChapterIndex(index => Math.min(chapters.length - 1, index + 1))}>Successivo →</button>
-            </div>
-            <p className="sb-original-notice">Lettura del testo estratto, senza rielaborazione. Per conservare anche l'impaginazione originale apri il file nel suo lettore.</p>
-          </> : <p>Per questo formato non è disponibile il testo interno. Puoi aprire il file integro con il lettore del telefono.</p>}
-          <button type="button" className="sb-original-secondary" onClick={onOpenNative}>Apri il file nel suo lettore</button>
-          <button type="button" className="sb-original-secondary" onClick={onCloseRead}>Chiudi lettura</button>
-        </article>
-      )}
-      <article className="sb-original-export-card">
-        <h2>Esporta la versione originale</h2>
-        <p>Il file nel suo formato mantiene contenuto e impaginazione. Le conversioni generano una copia dal testo originale, senza cambiare il file conservato.</p>
-        <div className="sb-original-formats">
-          {['original','pdf','epub','docx','txt','html'].map(format => (
-            <button type="button" key={format} disabled={format !== 'original' && !readable} onClick={() => onExport(format)}>
-              {format === 'original' ? 'Formato originale' : format.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      </article>
-    </section>
+        <p className="sb-original-notice">Testo estratto senza rielaborazioni. Per vedere l'impaginazione esatta, apri il file originale nel lettore del telefono.</p>
+      </> : <p>Il testo di questo documento non è disponibile. Puoi aprire il file originale nel lettore del telefono.</p>}
+      <button type="button" className="sb-original-secondary" onClick={onOpenNative}>Apri file originale nel lettore</button>
+      <button type="button" className="sb-original-secondary" onClick={onClose}>Chiudi lettura</button>
+    </article>
   );
 }
