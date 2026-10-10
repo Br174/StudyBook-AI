@@ -1006,3 +1006,16 @@
 .sb-library-screen .sb-library-scans-compact > button:nth-last-child(2):not(:has(img)) {
  grid-column:1/-1;min-height:42px;justify-items:center;
 }
+
+
+/* LAB20 — feedback sulla creazione copertina, visibile anche dopo la chiusura del menu. */
+.sb-library-screen .sb-library-cover-notice {
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:11px 13px;margin:10px 0 14px;border:1px solid #d4e3f4;
+  border-radius:13px;background:#f2f8ff;color:#2d638a;
+  font-size:.78rem;line-height:1.4;font-weight:700;
+}
+.sb-library-screen .sb-library-cover-notice button {
+  width:31px;height:31px;min-width:31px;border:0;border-radius:50%;
+  background:#e5f0fc;color:#3870a7;font-size:1.2rem;
+}
