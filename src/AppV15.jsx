@@ -333,7 +333,7 @@ export default function AppV14() {
   async function generateLibraryCover(id, { forceAI=false, automatic=false } = {}) {
     if(!id) return false;
     let record=await getLibraryBook(id);
-    if(!record || (automatic && (record.coverCustom || record.coverOriginal || record.coverAI || record.coverStatus==='failed')))return false;
+    if(!record || (automatic && (record.coverCustom || record.coverOriginal || record.coverAI)))return false;
     if(isScannerBook(record)) {
       if(forceAI)throw new Error('Le scansioni mantengono sempre la fotografia originale.');
       if(record.coverOriginal)return true;
@@ -433,7 +433,7 @@ export default function AppV14() {
     // Process only incomplete books; each attempt is stored to avoid retry storms.
     const waiting=libraryItems.filter(item=>!coverQueueRef.current.has(item.id)
       && !item.coverCustom&&!item.coverOriginal&&!item.coverAI
-      && item.coverStatus!=='failed').slice(0,20);
+).slice(0,20);
     if(!waiting.length)return;
     let cancelled=false;
     const timer=setTimeout(async()=>{
