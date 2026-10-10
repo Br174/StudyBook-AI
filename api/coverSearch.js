@@ -138,23 +138,48 @@ export async function searchCommons({title,subject='',context=''},fetcher=defaul
   }
   return results.sort((a,b)=>b.score-a.score);
 }
-const ALLOWED_ORIGINS=new Set(['https://covers.openlibrary.org','https://books.google.com','https://books.googleusercontent.com','https://books.google.it','https://upload.wikimedia.org']);
+const ALLOWED_ORIGINS=new Set([
+ 'https://covers.openlibrary.org','https://books.google.com',
+ 'https://books.googleusercontent.com','https://books.google.it',
+ 'https://upload.wikimedia.org','https://archive.org',
+ 'https://lh3.googleusercontent.com','https://lh4.googleusercontent.com'
+]);
+function safeImageHost(uri){
+ let u;try{u=new URL(uri);}catch{return false;}
+ if(u.protocol!=='https:'||u.username||u.password)return false;
+ if(ALLOWED_ORIGINS.has(u.origin))return true;
+ // Open Library covers are sent via HTTPS redirects to Archive.org image CDNs.
+ // Never follow an arbitrary Location supplied by a remote service.
+ if(/^(?:ia[0-9]{2,7}|dn[0-9]{2,7})\.[a-z0-9-]+\.archive\.org$/i.test(u.hostname))return true;
+ return false;
+}
 export async function fetchSafeImage(candidate,fetcher=defaultFetch){
-  const u=new URL(candidate.url);
-  if(u.protocol!=='https:'||!ALLOWED_ORIGINS.has(u.origin))throw Error('Image host not allowed');
-  const r=await fetcher(u.href,{signal:AbortSignal.timeout(9500),redirect:'manual',
-    headers:{Accept:'image/jpeg,image/png,image/webp','User-Agent':'StudyBookAI/1.0 (public educational book cover lookup)'}});
-  if(!r.ok||r.status>=300)throw Error('Image is unavailable');
-  const size=Number(r.headers?.get('content-length')||0);
-  if(size>2800000)throw Error('Image exceeds size limit');
-  const mime=(r.headers?.get('content-type')||'').split(';')[0].toLowerCase();
-  if(!['image/jpeg','image/png','image/webp'].includes(mime))throw Error('Not a safe image');
-  const raw=await r.arrayBuffer();
-  if(raw.byteLength<900||raw.byteLength>2800000)throw Error('Invalid image length');
-  const bytes=new Uint8Array(raw);let encoded='';
-  for(let i=0;i<bytes.length;i+=8190)encoded+=btoa(String.fromCharCode(...bytes.subarray(i,i+8190)));
-  // Chunk-by-chunk encoding needs 3-byte boundaries; 8190 is divisible by 3.
-  return {encoded,mime};
+ let url=candidate.url;
+ if(!safeImageHost(url))throw Error('Image host not allowed');
+ let r;
+ for(let hop=0;hop<=4;hop++){
+   r=await fetcher(url,{signal:AbortSignal.timeout(9500),redirect:'manual',
+     headers:{Accept:'image/jpeg,image/png,image/webp','User-Agent':'StudyBookAI/1.0 (educational cover lookup)'}});
+   if([301,302,303,307,308].includes(r.status)){
+     if(hop>=4)throw Error('Image redirects exceeded');
+     const location=r.headers?.get('location')||'';
+     const next=new URL(location,url).href;
+     if(!safeImageHost(next))throw Error('Unsafe image redirect');
+     url=next;continue;
+   }
+   break;
+ }
+ if(!r.ok)throw Error('Image is unavailable');
+ const size=Number(r.headers?.get('content-length')||0);
+ if(size>2800000)throw Error('Image exceeds size limit');
+ const mime=(r.headers?.get('content-type')||'').split(';')[0].toLowerCase();
+ if(!['image/jpeg','image/png','image/webp'].includes(mime))throw Error('Not a safe image');
+ const raw=await r.arrayBuffer();
+ if(raw.byteLength<900||raw.byteLength>2800000)throw Error('Invalid image length');
+ const bytes=new Uint8Array(raw);let encoded='';
+ // Keep non-final chunks divisible by three or concatenated base64 corrupts.
+ for(let i=0;i<bytes.length;i+=8190)encoded+=btoa(String.fromCharCode(...bytes.subarray(i,i+8190)));
+ return {encoded,mime};
 }
 export async function searchAndFetchCover(body,fetcher=defaultFetch){
   const title=tidy(body?.title,140),subject=tidy(body?.subject,100);
