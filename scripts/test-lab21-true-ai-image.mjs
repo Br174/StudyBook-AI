@@ -20,7 +20,7 @@ assert.ok(ui.includes('Annulla anteprima')&&ui.includes('Rigenera con vera AI im
 assert.ok(client.includes("canvas.toDataURL('image/jpeg'")&&client.includes("ctx.drawImage(img"),'real image decoding and local correct-title overlay');
 assert.ok(!client.includes('AI_API_KEY'),'no secret inside APK');
 assert.ok(!api.includes('Bearer ${apiKey}'),'no accidental reliance on client auth header');
-assert.ok(api.includes("process.env.AI_IMAGE_API_KEY||process.env.AI_API_KEY"),'provider key solely server-side');
+assert.ok(api.includes('const environment=req.env||nodeEnv;')&&worker.includes('runLegacyApi(handler, request, env)'),'Cloudflare secret binding reaches provider without leaking to APK');
 assert.ok(buildAndroid.includes('StudyBook-AI-LAB-21-AGGIORNAMENTO'),'real version in Android workflow');
 assert.ok(archive.includes('entries.map((page, index)'),'scanner photos unchanged');
 
@@ -46,12 +46,12 @@ try {
     assert.equal(options.headers['x-goog-api-key'],'only-for-lab21-tests');
     const input=JSON.parse(options.body);
     assert.deepEqual(input.generationConfig.responseModalities,['IMAGE']);
-    assert.equal(input.generationConfig.responseFormat.image.aspectRatio,'3:4');
+    assert.equal(input.generationConfig.imageConfig.aspectRatio,'3:4');
     assert.ok(input.contents[0].parts[0].text.includes('Romani'));
     return {ok:true,status:200,json:async()=>({candidates:[{content:{parts:[{inlineData:{mimeType:'image/png',data:'A'.repeat(900)}}]}}]})};
   };
   let res=mockRes();
-  await coverHandler({method:'POST',body:{title:'I Romani',subject:'Storia',context:content}},res);
+  await coverHandler({method:'POST',env:{AI_API_KEY:'only-for-lab21-tests',AI_IMAGE_MODEL:'gemini-3.1-flash-image'},body:{title:'I Romani',subject:'Storia',context:content}},res);
   assert.equal(res.code,200);assert.equal(res.body.type,'generated-image');assert.equal(res.body.mimeType,'image/png');assert.equal(calls,1);
   assert.equal(res.body.imageData.length,900);
   assert.ok(!JSON.stringify(res.body).includes('only-for-lab21-tests'),'server key never disclosed');
