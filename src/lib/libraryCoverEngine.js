@@ -24,7 +24,10 @@ const ICONS = {
   music: '<path d="M99 61v98c0 24-46 26-46 3s46-24 46-3M99 68l85-17v90c0 24-46 26-46 3s46-24 46-3" fill="none" stroke="currentColor" stroke-width="7"/>',
 };
 export function isScannerBook(record) {
-  return record?.sourceData?.sourceFormat === 'scan' || record?.metadata?.sourceFormat === 'scan';
+  // LAB20: the scan *photo* archive keeps its real picture. A processed
+  // study book CREATED FROM scanned pages is a book and may receive an AI cover.
+  const fromScan=record?.sourceData?.sourceFormat === 'scan' || record?.metadata?.sourceFormat === 'scan';
+  return Boolean(fromScan && !record?.studyBook && !record?.metadata?.hasProcessed);
 }
 export function coverContext(record) {
   const source = record?.sourceData?.chapters || record?.studyBook?.chapters || [];
