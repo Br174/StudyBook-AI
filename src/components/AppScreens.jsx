@@ -163,6 +163,16 @@ export function HomeScreen({
   );
 }
 
+function ScanPhotoPreview({ blob, title }) {
+  const [url,setUrl]=useState('');
+  useEffect(()=>{
+    if(!(blob instanceof Blob))return;
+    const next=URL.createObjectURL(blob);setUrl(next);
+    return ()=>URL.revokeObjectURL(next);
+  },[blob]);
+  return url ? <img src={url} alt={title} loading="lazy" decoding="async" /> : <StudyIcon name="photo" size={21}/>;
+}
+
 export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
   const [area, setArea] = useState('subjects');
   const [view, setView] = useState(initialView);
@@ -244,7 +254,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
           {scannerProps.entries.slice(0, visibleScanCount).map(page => (
             <button key={page.id} type="button" disabled={scannerProps.busy}
               onClick={() => scannerProps.onRestore?.([page.id])}>
-              <span><StudyIcon name="photo" size={21}/></span>
+              <ScanPhotoPreview blob={page.blob} title={page.pageTitle || 'Scansione originale'} />
               <strong>{page.pageTitle || page.collection || 'Pagina scannerizzata'}</strong>
               <small>Rielabora →</small>
             </button>
