@@ -1,0 +1,46 @@
+name: LAB23 live distinct-book covers
+
+on:
+  push:
+    branches:
+      - lab/studybook-cover23-live-acceptance
+    paths:
+      - '.github/workflows/studybook-cover23-live.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  book-covers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Verify original images are never reused for unrelated titles
+        run: |
+          node --input-type=module <<'NODE'
+          const url='https://studybook-ai-coversearch-lab23.brunoverlezza.workers.dev/api/book-cover/search';
+          const books=[
+            {title:'I romani',subject:'Altro',context:'Roma antica, senato, Colosseo e impero'},
+            {title:'Appunti fotografati - 1 pagine',subject:'Altro',context:'Il mondo romano. Senato romano, Roma antica.'},
+            {title:'Tutti santi me compreso Luciano D',subject:'Altro',context:'I santi, la fede, la chiesa e la tradizione cristiana. Si cita brevemente Roma.'}
+          ];
+          const excluded=[];let wrong=0;
+          for(const [i,book] of books.entries()){
+            const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({...book,excludeAssets:excluded}),signal:AbortSignal.timeout(46000)});
+            const r=await response.json().catch(()=>({}));
+            const actual=r.kind==='original'||r.kind==='thematic';
+            const key=r.assetId||r.sourceUrl||'';
+            console.log('BOOK'+(i+1)+'_HTTP='+response.status);
+            console.log('BOOK'+(i+1)+'_KIND='+(r.kind||'NONE'));
+            console.log('BOOK'+(i+1)+'_ASSET='+key.slice(0,145));
+            console.log('BOOK'+(i+1)+'_IMAGE='+Boolean(actual && r.imageData?.length>1200));
+            console.log('BOOK'+(i+1)+'_CODE='+(r.code||'NONE'));
+            if(actual&&!key)wrong++;
+            if(key&&excluded.includes(key))wrong++;
+            if(actual){excluded.push(key);if(r.sourceUrl)excluded.push(r.sourceUrl);}
+            if(i===0 && !actual)wrong++;
+            if(i===2 && r.kind==='thematic'&&/roman|coloss|rome|ancient/i.test(key))wrong++;
+          }
+          if(wrong)throw Error('LAB23 real cover selection failed: '+wrong+' bad results');
+          NODE
