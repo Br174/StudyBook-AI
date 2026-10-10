@@ -264,7 +264,19 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, i
   );
 }
 
-export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, generating = false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility }) {
+/* LAB16: anteprima fotografica temporanea, originale archiviato non modificato. */
+function ScannedBookPhoto({ blob }) {
+  const [url,setUrl] = useState('');
+  useEffect(() => {
+    if (!(blob instanceof Blob)) { setUrl(''); return undefined; }
+    const next=URL.createObjectURL(blob);
+    setUrl(next);
+    return () => URL.revokeObjectURL(next);
+  },[blob]);
+  return url ? <img className="sb-scanned-book-cover-photo" src={url} alt="Fotografia reale della pagina scannerizzata" /> : null;
+}
+
+export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, generating = false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility, scannedPhoto = null }) {
   const [exportVariant, setExportVariant] = useState('study');
   const [exportOpen, setExportOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -303,9 +315,11 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
       <section className="sb-open-book-workspace" aria-label="Libro aperto">
         <div className="sb-open-book-overview">
-          <div className="sb-open-book-cover">
-            <span>{isOriginalOnly ? 'ORIGINALE' : 'STUDYBOOK'}</span>
-            <strong>{isOriginalOnly ? 'Libro originale' : 'Libro di studio'}</strong>
+          <div className={scannedPhoto ? 'sb-open-book-cover sb-scanned-book-cover' : 'sb-open-book-cover'}>
+            {scannedPhoto ? <ScannedBookPhoto blob={scannedPhoto} /> : <>
+              <span>{isOriginalOnly ? 'ORIGINALE' : 'STUDYBOOK'}</span>
+              <strong>{isOriginalOnly ? 'Libro originale' : 'Libro di studio'}</strong>
+            </>}
           </div>
           <div className="sb-open-book-copy">
             <small>STAI LAVORANDO SU</small>
