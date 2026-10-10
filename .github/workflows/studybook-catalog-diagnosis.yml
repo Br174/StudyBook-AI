@@ -1,0 +1,44 @@
+name: LAB22 live catalog diagnosis
+
+on:
+  push:
+    branches:
+      - lab/studybook-coversearch-live-check-01
+    paths:
+      - '.github/workflows/studybook-catalog-diagnosis.yml'
+permissions:
+  contents: read
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Inspect public catalog responses without API keys
+        run: |
+          node --input-type=module <<'NODE'
+          const q='The Great Gatsby';
+          const urls={
+            open:'https://openlibrary.org/search.json?title='+encodeURIComponent(q)+'&limit=12&fields=title,cover_i,author_name,isbn',
+            google:'https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent('intitle:'+q)+'&maxResults=10&printType=books',
+          };
+          for(const [name,url] of Object.entries(urls)){
+            try{
+              const r=await fetch(url,{signal:AbortSignal.timeout(17000),headers:{'User-Agent':'StudyBookAI/1.0 (educational cover lookup)'}});
+              const data=await r.json().catch(()=>({}));
+              const list=name==='open'?data.docs:data.items;
+              console.log(name.toUpperCase()+'_HTTP='+r.status);
+              console.log(name.toUpperCase()+'_COUNT='+(list?.length||0));
+              console.log(name.toUpperCase()+'_ERROR='+JSON.stringify(data.error||data.message||'none').slice(0,200));
+              console.log(name.toUpperCase()+'_TOP='+JSON.stringify((list||[]).slice(0,6).map(b=>({
+                title:b.title||b.volumeInfo?.title,cover:b.cover_i,
+                thumbnail:b.volumeInfo?.imageLinks?.thumbnail?.slice(0,200)}))).slice(0,1700));
+              if(name==='open'){
+                const first=(list||[]).find(x=>x.cover_i&&x.title.toLowerCase()===q.toLowerCase());
+                if(first){
+                  const img=await fetch('https://covers.openlibrary.org/b/id/'+first.cover_i+'-L.jpg?default=false',{signal:AbortSignal.timeout(17000),redirect:'manual'});
+                  console.log('OPEN_COVER_HTTP='+img.status+' TYPE='+img.headers.get('content-type')+' HOST='+new URL(img.url).hostname);
+                }
+              }
+            }catch(e){console.log(name.toUpperCase()+'_FETCH_ERROR='+String(e).slice(0,250))}
+          }
+          NODE
