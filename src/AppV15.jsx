@@ -11,6 +11,7 @@ import {
   listProfiles,
   saveLibraryBook,
   saveProfile,
+  updateLibraryMetadata,
 } from './lib/library.js';
 import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
 import { BottomNav, HomeScreen, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
@@ -24,6 +25,8 @@ import {
   deleteArchivedScannerPages,
   updateArchivedScannerText,
   archiveScannerSessionPages,
+  renameArchivedCollection,
+  renameArchivedPhoto,
   deleteScannerPage as deleteScannerPageRecord,
   loadScannerSession,
   saveScannerMeta,
@@ -32,6 +35,7 @@ import {
 import { compressScannerImage, estimateScannerStorage, formatStorageBytes, requestScannerPersistence } from './lib/scannerStorage.js';
 import { recognizeScannerImage, releaseScannerOcr } from './lib/scannerOcrRuntime.js';
 import ScannerArchive from './components/ScannerArchive.jsx';
+import { isGenericTitle, sanitizeTitle, suggestDocumentTitle } from './lib/smartTitles.js';
 import './v11.css';
 import './scanner-storage.css';
 
@@ -132,6 +136,8 @@ export default function AppV14() {
   const [scanPages, setScanPages] = useState([]);
   const [scanProcessing, setScanProcessing] = useState(false);
   const [scanSessionName, setScanSessionName] = useState('Appunti fotografati');
+  const scanSessionNameRef = useRef('Appunti fotografati');
+  const scanTitleManualRef = useRef(false);
   const [scannerResultReady, setScannerResultReady] = useState(false);
   const [scannerStoreReady, setScannerStoreReady] = useState(false);
   const [scannerStorageInfo, setScannerStorageInfo] = useState(null);
@@ -254,6 +260,8 @@ export default function AppV14() {
         scanPagesRef.current = restoredPages;
         setScanPages(restoredPages);
         setScanSessionName(restored.name || 'Appunti fotografati');
+        scanSessionNameRef.current = restored.name || 'Appunti fotografati';
+        scanTitleManualRef.current = !isGenericTitle(restored.name);
         const interrupted = restoredPages.filter((page) => page.status === 'error').length;
         setStatus(`Raccolta scanner ripristinata · ${restoredPages.length} pagine${interrupted ? ` · ${interrupted} da riprendere` : ''}`);
       }
@@ -285,6 +293,65 @@ export default function AppV14() {
 
   async function refreshLibrary(profileId = activeProfileId) {
     try { setLibraryItems(await listLibraryBooks({ profileId })); } catch { setLibraryItems([]); }
+  }
+
+  /* LAB12: il nome del libro è un metadato. Non modifica immagini, struttura o testi. */
+  async function renameLibraryBook(id, title) {
+    const clean = sanitizeTitle(title);
+    if (!id || !clean || libraryBusy) return false;
+    setLibraryBusy(true);
+    try {
+      const record = await updateLibraryMetadata(id,{fileName:clean});
+      if (libraryId === id) setFileName(record.fileName);
+      await refreshLibrary();
+      setStatus(`Libro rinominato: ${clean}`);
+      return true;
+    } catch (err) { setError(err.message || 'Rinomina libro non riuscita.'); return false; }
+    finally { setLibraryBusy(false); }
+  }
+
+  async function renameCurrentBook(title) {
+    if (!libraryId) { setError('Salva prima il libro nella Libreria.'); return false; }
+    return renameLibraryBook(libraryId,title);
+  }
+
+  async function renameScannerArchiveCollection(ids, title) {
+    const clean = sanitizeTitle(title);
+    if (!clean || archiveBusy) return false;
+    setArchiveBusy(true);
+    try {
+      const ok = await renameArchivedCollection(ids,clean,{manual:true});
+      if (!ok) throw new Error('Rinomina raccolta non riuscita.');
+      setArchivedScans(await listArchivedScannerPages());
+      setStatus(`Raccolta rinominata: ${clean}`);
+      return true;
+    } catch (err) { setError(err.message); return false; }
+    finally { setArchiveBusy(false); }
+  }
+
+  async function renameScannerArchivePhoto(id, title) {
+    const clean = sanitizeTitle(title);
+    if (!clean || archiveBusy) return false;
+    setArchiveBusy(true);
+    try {
+      const ok = await renameArchivedPhoto(id,clean);
+      if (!ok) throw new Error('Rinomina fotografia non riuscita.');
+      setArchivedScans(await listArchivedScannerPages());
+      setStatus(`Fotografia rinominata: ${clean}`);
+      return true;
+    } catch (err) { setError(err.message); return false; }
+    finally { setArchiveBusy(false); }
+  }
+
+  async function saveCurrentScannerName(name,{manual=true}={}) {
+    const clean=sanitizeTitle(name) || 'Appunti fotografati';
+    const ids=scanPagesRef.current.map(p=>p.archiveId || p.id).filter(Boolean);
+    const success=ids.length?await renameArchivedCollection(ids,clean,{manual}):true;
+    if(!success) { setError('Nome raccolta non salvato nell’archivio.'); return false; }
+    scanSessionNameRef.current=clean;
+    if(manual) scanTitleManualRef.current=true;
+    setScanSessionName(clean);
+    return true;
   }
 
   function updateAccessibility(next) {
@@ -1008,13 +1075,13 @@ export default function AppV14() {
         />
       )}
 
-      {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} />}
+      {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} onRenameCollection={renameScannerArchiveCollection} onRenamePhoto={renameScannerArchivePhoto} />}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} />}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} />}
 
       {activeScreen === 'studio' && (
         <StudioScreen
-          studyBook={studyBook} fileName={fileName}
+          studyBook={studyBook} fileName={fileName} onRenameBook={renameCurrentBook}
           onRead={() => { setStudyEntryMode('reader'); setStudyModeOpen(true); }}
           onStudy={() => { setStudyEntryMode('study'); setStudyModeOpen(true); }}
           onExport={exportCurrentBook}
