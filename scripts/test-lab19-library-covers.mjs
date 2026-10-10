@@ -14,7 +14,7 @@ assert.ok(screens.includes('onBookActions')&&screens.includes('onPointerDown={st
 for(const value of ['Rinomina libro','Elimina libro','Scegli copertina dal telefono','Crea / rigenera copertina AI','Ripristina copertina originale'])assert.ok(screens.includes(value),'long-press menu '+value);
 assert.ok(screens.includes('onClick={openBook}'),'tap-to-open retained');
 assert.ok(screens.includes('setDeleteCandidate')&&screens.includes('onDeleteBook(deleteCandidate.id'),'deletion confirmation retained');
-assert.ok(app.includes('requestAiCoverTheme(record,{signal:controller.signal})'),'real configured AI endpoint consulted, not misleading local AI claim');
+assert.ok(app.includes('requestAiCoverTheme(originalRecord,{signal:controller.signal})'),'real configured AI endpoint consulted, not misleading local AI claim');
 assert.ok(app.includes('extractOriginalCover(record.originalFile)'),'original PDF/ePub extraction prioritized');
 assert.ok(app.includes('isScannerBook(record)')&&app.includes('getArchivedScannerPages(ids.slice(0,1))'),'scan-origin book uses real scan photo only');
 assert.ok(app.includes('coverQueueRef')&&app.includes('coverWorkerRef'),'nonblocking bounded image queue');
