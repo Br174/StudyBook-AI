@@ -278,12 +278,18 @@ jobs:
           umask 077
           printf 'AI_API_KEY=%s\n' "$IMAGE_KEY" > .lab21-image-worker.secrets
           trap 'rm -f .lab21-image-worker.secrets' EXIT
-          npx wrangler deploy --name studybook-ai-covers-lab21 --secrets-file .lab21-image-worker.secrets
+          npx wrangler deploy --config wrangler.lab21-cover.jsonc --secrets-file .lab21-image-worker.secrets
           COVER_URL="https://studybook-ai-covers-lab21.brunoverlezza.workers.dev"
-          STATUS=$(curl --max-time 20 --silent --output /tmp/lab21-cover-route.json --write-out '%{http_code}' "$COVER_URL/api/cover-ai/generate")
+          STATUS="0"
+          for ATTEMPT in $(seq 1 12); do
+            STATUS=$(curl --max-time 12 --silent --output /tmp/lab21-cover-route.json --write-out '%{http_code}' "$COVER_URL/api/cover-ai/generate" || true)
+            if [ "$STATUS" = "405" ]; then break; fi
+            echo "Waiting for isolated Cloudflare route: attempt $ATTEMPT, HTTP $STATUS"
+            sleep 4
+          done
           if [ "$STATUS" != "405" ]; then
-            echo "::error::LAB21 isolated cover backend route is not responding (status $STATUS)"
-            cat /tmp/lab21-cover-route.json
+            echo "::error::LAB21 isolated image endpoint did not become available (HTTP $STATUS)"
+            cat /tmp/lab21-cover-route.json || true
             exit 1
           fi
           echo "VITE_COVER_AI_BASE=$COVER_URL" >> "$GITHUB_ENV"
