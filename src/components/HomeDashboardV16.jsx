@@ -34,7 +34,7 @@ export function HomeDashboardV16({
   function open(item) {
     if(item.type === 'scan') onRecentScan([item.data.id]);
     else if(item.type === 'processed') onContinueBook(item.data);
-    else onOpenOriginal(item.data);
+    else if(item.type === 'original') onOpenOriginal(item.data);
   }
 
   const scansCount = archivedScans.length;
