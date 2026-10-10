@@ -1,0 +1,59 @@
+name: LAB21 Gemini image key one-shot verification
+
+on:
+  push:
+    branches:
+      - lab/studybook-cover-gemini-key-check-01
+    paths:
+      - '.github/workflows/studybook-gemini-key-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  image-key-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify existing Cloudflare image endpoint and bound Gemini secret
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          const endpoint='https://studybook-ai-covers-lab21.brunoverlezza.workers.dev/api/cover-ai/generate';
+          const verify=await fetch(endpoint,{method:'GET',signal:AbortSignal.timeout(20000)});
+          console.log('CLOUDFLARE_COVER_ENDPOINT_STATUS='+verify.status);
+          if(verify.status!==405)throw new Error('Cover Worker is not accessible; skipping model call.');
+          // Exactly ONE sample AI image request to test the ALREADY DEPLOYED
+          // Cloudflare secret: no key passed into this workflow, no private book data.
+          const response=await fetch(endpoint,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              title:'I romani - verifica tecnica',
+              subject:'Storia',
+              context:'Roma antica: repubblica, senato, architettura classica e vita quotidiana.',
+              variant:1
+            }),
+            signal:AbortSignal.timeout(85000)
+          });
+          const data=await response.json().catch(()=>({code:'UNREADABLE_RESPONSE'}));
+          const generated=response.ok&&data?.type==='generated-image'
+            && /^image\/(png|jpeg|webp)$/.test(data.mimeType||'')
+            && typeof data.imageData==='string'&&data.imageData.length>5000;
+          console.log('GEMINI_COVER_HTTP_STATUS='+response.status);
+          console.log('GEMINI_COVER_RESULT='+(generated?'REAL_IMAGE_GENERATED':'NOT_GENERATED'));
+          console.log('GEMINI_COVER_ERROR_CODE='+(generated?'NONE':String(data?.code||'UNCLASSIFIED')));
+          console.log('GEMINI_COVER_MODEL='+(generated?String(data.model||'unknown'):'unverified'));
+          console.log('GEMINI_COVER_IMAGE_BYTES_APPROX='+(generated?Math.floor(data.imageData.length*3/4):0));
+          const note=generated?'REAL_IMAGE_GENERATED':String(data?.code||'ERROR');
+          await import('node:fs').then(fs=>fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            '### StudyBook Gemini Cloudflare key verification\n\n'+
+            'HTTP '+response.status+' — '+note+'\n\n'+
+            'No Gemini secret or image bytes were printed to logs.\n'));
+          if(!generated){
+            console.log('GEMINI_COVER_USER_ERROR='+String(data?.error||'no error details').slice(0,240));
+            process.exitCode=1;
+          }
+          NODE
