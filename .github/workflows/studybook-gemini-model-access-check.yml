@@ -1,0 +1,36 @@
+name: LAB21 Gemini image model access verification
+
+on:
+  push:
+    branches:
+      - lab/studybook-cover-gemini-key-check-01
+    paths:
+      - '.github/workflows/studybook-gemini-model-access-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check-image-model-availability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - name: Verify enabled image models without generating images
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          const key=process.env.GEMINI_API_KEY;
+          if(!key)throw new Error('GEMINI_API_KEY not configured in GitHub; cannot verify');
+          for(const version of ['v1','v1beta']){
+            for(const model of ['gemini-3.1-flash-image','gemini-2.5-flash-image','gemini-3-pro-image-preview']){
+              const r=await fetch('https://generativelanguage.googleapis.com/'+version+'/models/'+model,{
+                headers:{'x-goog-api-key':key},signal:AbortSignal.timeout(12000)});
+              const j=await r.json().catch(()=>({}));
+              const supports=j.supportedGenerationMethods||[];
+              console.log('MODEL_ACCESS='+version+'/'+model+' HTTP='+r.status+' generateContent='+(supports.includes('generateContent')?'YES':supports.length?supports.join(','):'UNVERIFIED')+' ERR_STATUS='+(j.error?.status||'NONE'));
+            }
+          }
+          NODE
