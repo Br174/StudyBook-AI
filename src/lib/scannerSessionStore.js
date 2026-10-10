@@ -2,6 +2,7 @@ const DB_NAME = 'studybook-ai-scanner';
 const DB_VERSION = 1; // Rimane compatibile con LAB10 e con eventuale rollback
 const ARCHIVE_DB_NAME = 'studybook-ai-scanned-archive';
 const ARCHIVE_STORE = 'archive'; // fotografie persistenti in database separato
+import { sanitizeTitle, suggestPageTitle } from './smartTitles.js';
 const META_STORE = 'meta';
 const PAGE_STORE = 'pages';
 const ACTIVE_SESSION = 'active';
@@ -243,6 +244,9 @@ export function archiveScannerPageRecord(page, collectionName = 'Appunti fotogra
     collection: cleanName(collectionName),
     createdAt: existing?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    pageTitle: existing?.pageTitle || page.pageTitle || '',
+    pageTitleManual: Boolean(existing?.pageTitleManual || page.pageTitleManual),
+    collectionManual: Boolean(existing?.collectionManual || page.collectionManual),
     // Il nome della pagina originale è conservato per la rielaborazione.
   };
 }
@@ -282,6 +286,7 @@ export async function updateArchivedScannerText(page, collectionName = 'Appunti 
       ...existing,
       collection: existing.collection || cleanName(collectionName),
       text: String(page.text || ''),
+      pageTitle: existing.pageTitleManual ? existing.pageTitle : (suggestPageTitle(page.text)?.title || existing.pageTitle || ''),
       status: page.status === 'ready' ? 'ready' : page.status === 'error' ? 'error' : 'processing',
       updatedAt: new Date().toISOString(),
     });
@@ -359,6 +364,45 @@ export async function deleteArchivedScannerPages(ids = []) {
     db = await openArchiveDb();
     const tx = db.transaction(ARCHIVE_STORE,'readwrite');
     for (const key of keys) tx.objectStore(ARCHIVE_STORE).delete(key);
+    await transactionDone(tx);
+    return true;
+  } catch { return false; }
+  finally { db?.close(); }
+}
+
+/* LAB12: rinomina non distruttiva. Metadati aggiornati senza riscrivere immagini e OCR. */
+export async function renameArchivedCollection(ids = [], title, {manual = true} = {}) {
+  const name=sanitizeTitle(title,90);
+  if (!name || !ids.length) return false;
+  const keys=Array.from(new Set(ids.map(String).filter(Boolean)));
+  let db;
+  try {
+    db=await openArchiveDb();
+    const tx=db.transaction(ARCHIVE_STORE,'readwrite');
+    const store=tx.objectStore(ARCHIVE_STORE);
+    for(const id of keys) {
+      const current=await requestResult(store.get(id));
+      if (!current) continue; // non riportare in vita fotografie eliminate
+      if (current.collectionManual && !manual) continue; // nomi scelti dall'utente prioritari
+      store.put({...current,collection:name,collectionManual:Boolean(manual||current.collectionManual),updatedAt:new Date().toISOString()});
+    }
+    await transactionDone(tx);
+    return true;
+  } catch { return false; }
+  finally { db?.close(); }
+}
+
+export async function renameArchivedPhoto(id,title) {
+  const name=sanitizeTitle(title,90);
+  if(!id || !name) return false;
+  let db;
+  try {
+    db=await openArchiveDb();
+    const tx=db.transaction(ARCHIVE_STORE,'readwrite');
+    const store=tx.objectStore(ARCHIVE_STORE);
+    const current=await requestResult(store.get(String(id)));
+    if(!current) { await transactionDone(tx); return false; }
+    store.put({...current,pageTitle:name,pageTitleManual:true,updatedAt:new Date().toISOString()});
     await transactionDone(tx);
     return true;
   } catch { return false; }
