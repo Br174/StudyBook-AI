@@ -15,7 +15,8 @@ import {
   updateLibraryMetadata,
 } from './lib/library.js';
 import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
-import { BottomNav, HomeScreen, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
+import { BottomNav, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
+import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { deliverBlob } from './lib/fileDelivery.js';
 import {
@@ -243,6 +244,16 @@ export default function AppV14() {
       refreshScannerStorage();
     })();
   }, []);
+  // LAB16: aggiorna Recenti sulla Home e quando le fotografie cambiano.
+  useEffect(() => {
+    if (activeScreen !== 'home') return undefined;
+    let cancelled = false;
+    void listArchivedScannerPages().then(pages => {
+      if (!cancelled) setArchivedScans(pages);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [activeScreen, scanPages.length]);
+
   useEffect(() => {
     setAccessibility(loadAccessibility(activeProfileId));
     refreshLibrary(activeProfileId);
@@ -1246,9 +1257,13 @@ export default function AppV14() {
       {error && <div className="error-box sb-global-error">{error}</div>}
 
       {activeScreen === 'home' && (
-        <HomeScreen
-          status={status} importing={importing} generating={generating} libraryItems={libraryItems}
+        <HomeDashboardV16
+          status={status} importing={importing} generating={generating} libraryItems={libraryItems} archivedScans={archivedScans}
           onImport={() => documentFileInputRef.current?.click()} onScanner={openScanner} onScannerArchive={openScannerArchive} onOpenOriginals={openOriginalHome} onOpenBook={openFromLibrary} onContinueBook={openContinueBook}
+          onCategory={view => { setLibraryInitialView(view); navigateTo('library'); }}
+          onViewAll={() => { setLibraryInitialView('all'); navigateTo('library'); }}
+          onRecentScan={restoreScannerArchiveSelection}
+          onOpenOriginal={item => openLibraryItem(item.id, { original:true, openReader:false })}
           documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
           scanContent={scannerPanel}
         />
