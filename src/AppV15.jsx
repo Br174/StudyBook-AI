@@ -138,6 +138,7 @@ export default function AppV14() {
   const [scanSessionName, setScanSessionName] = useState('Appunti fotografati');
   const scanSessionNameRef = useRef('Appunti fotografati');
   const scanTitleManualRef = useRef(false);
+  const scanAutoTitleConfidenceRef = useRef(0);
   const [scannerResultReady, setScannerResultReady] = useState(false);
   const [scannerStoreReady, setScannerStoreReady] = useState(false);
   const [scannerStorageInfo, setScannerStorageInfo] = useState(null);
@@ -521,7 +522,13 @@ export default function AppV14() {
         },
       });
       setStudyBook(result);
-      const saved = await persistBook(result, sourceData, sourceName, libraryId);
+      // LAB12: il titolo finale considera l'intero documento elaborato; non sostituisce mai il nome manuale.
+      const suggestedFinal = fromScanner && !scanTitleManualRef.current
+        ? suggestDocumentTitle(sourceData.pages || [], result.chapters || []) : null;
+      const nameToSave = suggestedFinal?.title
+        ? `${sanitizeTitle(suggestedFinal.title)}.pdf` : sourceName;
+      setFileName(nameToSave);
+      const saved = await persistBook(result, sourceData, nameToSave, libraryId);
       setScannerResultReady(fromScanner);
       if (fromScanner && saved) {
         scanPersistTimersRef.current.forEach((timer) => clearTimeout(timer));
@@ -710,7 +717,20 @@ export default function AppV14() {
           if (scanOcrCancelledRef.current.has(job.id) || !scanPagesRef.current.some(p=>p.id===job.id)) continue;
           patchScanPage(job.id, { status: 'ready', text, error: '', ocrMs: Math.round(performance.now()-start) });
           const updated = scanPagesRef.current.find(page=>page.id===job.id);
-          if (updated) void updateArchivedScannerText(updated, scanSessionName);
+          if (updated) void updateArchivedScannerText(updated, scanSessionNameRef.current);
+          // LAB12: suggerimento incrementale dopo l'OCR, mai al posto di un nome manuale.
+          if (!scanTitleManualRef.current) {
+            const suggested = suggestDocumentTitle(scanPagesRef.current.filter(p=>p.status==='ready').map(p=>({text:p.text})));
+            if (suggested && suggested.confidence > scanAutoTitleConfidenceRef.current + .015) {
+              const ids=scanPagesRef.current.map(p=>p.archiveId||p.id).filter(Boolean);
+              const saved=await renameArchivedCollection(ids,suggested.title,{manual:false});
+              if (saved) {
+                scanAutoTitleConfidenceRef.current=suggested.confidence;
+                scanSessionNameRef.current=suggested.title;
+                setScanSessionName(suggested.title);
+              }
+            }
+          }
           setStatus(`Pagina ${job.pageNumber} pronta · OCR ${((performance.now()-start)/1000).toFixed(1)} s · ${scanOcrQueueRef.current.length} in coda`);
         } catch(err) {
           if (scanOcrCancelledRef.current.has(job.id) || !scanPagesRef.current.some(p=>p.id===job.id)) continue;
@@ -849,7 +869,10 @@ export default function AppV14() {
         textFirst: true,
       },
     };
-    const sourceName = `${scanSessionName.trim() || 'Scansione libro'} - ${pages.length} pagine.pdf`;
+    const fullSuggestion=suggestDocumentTitle(pages,chapters);
+    const chosen = scanTitleManualRef.current ? scanSessionNameRef.current
+      : (fullSuggestion?.title || scanSessionNameRef.current || 'Scansione libro');
+    const sourceName = `${sanitizeTitle(chosen) || 'Scansione libro'}.pdf`;
     setLibraryId('');
     setFileName(sourceName);
     setDocumentData(sourceData);
@@ -1016,7 +1039,12 @@ export default function AppV14() {
     <section className="panel scan-basket sb-inline-scanner">
       <div className="scan-basket-head">
         <div><span className="eyebrow dark">SCANSIONI</span><h2>{scanPages.length} {scanPages.length === 1 ? 'pagina' : 'pagine'} · {scanReadyCount} pronte</h2><p>Le foto servono soltanto per l’OCR e non entreranno nel libro elaborato.</p></div>
-        <label className="scan-name-field">Nome raccolta<input value={scanSessionName} onChange={(event) => setScanSessionName(event.target.value)} maxLength={80} /></label>
+        <label className="scan-name-field">Nome raccolta
+          <input value={scanSessionName} onChange={(event)=>{ scanTitleManualRef.current=true; scanSessionNameRef.current=event.target.value; setScanSessionName(event.target.value); }} onBlur={()=>{ if(scanTitleManualRef.current) void saveCurrentScannerName(scanSessionName); }} maxLength={90} />
+          {scanPages.length>0 && suggestDocumentTitle(scanPages.filter(p=>p.text).map(p=>({text:p.text}))) && (
+            <button className="sb-smart-title-choice" type="button" onClick={()=>void saveCurrentScannerName(suggestDocumentTitle(scanPages.filter(p=>p.text).map(p=>({text:p.text}))).title,{manual:false})}>✦ Usa titolo suggerito</button>
+          )}
+        </label>
       </div>
       {scannerStorageInfo && (
         <div className={`scanner-storage-meter ${scannerStorageInfo.risk || 'unknown'}`}>
