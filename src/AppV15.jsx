@@ -605,35 +605,60 @@ export default function AppV14() {
     if (nextPage) scheduleScannerPageSave(nextPage, persistDelay);
   }
 
-  async function recognizeScanPage(id, file, pageNumber) {
-    setScanProcessing(true);
+  /* LAB11: OCR in una coda seriale con motore ita+eng persistente.
+     L'acquisizione delle altre fotografie non attende questa coda. */
+  function recognizeScanPage(id, file, pageNumber) {
+    if (!id || !file || scanOcrQueueRef.current.some(job => job.id === id)) return;
+    scanOcrCancelledRef.current.delete(id);
+    scanOcrQueueRef.current.push({ id, file, pageNumber });
     patchScanPage(id, { status: 'processing', error: '' });
+    void drainScanOcrQueue();
+  }
+
+  async function drainScanOcrQueue() {
+    if (scanOcrRunningRef.current) return;
+    scanOcrRunningRef.current = true;
+    setScanProcessing(true);
     try {
-      const parsed = await readSourceFile(file, {
-        autoOcr: true,
-        onProgress(update) {
-          if (update?.phase === 'ocr-recognize') setStatus(`Pagina ${pageNumber} · OCR ${Math.round((update.fraction || 0) * 100)}%`);
-        },
-      });
-      patchScanPage(id, { status: 'ready', parsed, text: parsed.fullText, error: '' });
-      setStatus(`Pagina ${pageNumber} pronta · salvata automaticamente`);
-    } catch (err) {
-      patchScanPage(id, { status: 'error', error: err.message || 'Testo non riconosciuto. Riprova la foto.' });
-      setStatus(`Pagina ${pageNumber} da rifare`);
+      while (scanOcrQueueRef.current.length) {
+        const job = scanOcrQueueRef.current.shift();
+        if (!job || scanOcrCancelledRef.current.has(job.id)) continue;
+        if (!scanPagesRef.current.some(page => page.id === job.id)) continue;
+        const start = performance.now();
+        try {
+          const text = await recognizeScannerImage(job.file, fraction => {
+            setStatus(`Pagina ${job.pageNumber} · OCR ${Math.round(fraction*100)}% · ${scanOcrQueueRef.current.length} in coda`);
+          });
+          if (scanOcrCancelledRef.current.has(job.id) || !scanPagesRef.current.some(p=>p.id===job.id)) continue;
+          patchScanPage(job.id, { status: 'ready', text, error: '', ocrMs: Math.round(performance.now()-start) });
+          const updated = scanPagesRef.current.find(page=>page.id===job.id);
+          if (updated) void updateArchivedScannerText(updated, scanSessionName);
+          setStatus(`Pagina ${job.pageNumber} pronta · OCR ${((performance.now()-start)/1000).toFixed(1)} s · ${scanOcrQueueRef.current.length} in coda`);
+        } catch(err) {
+          if (scanOcrCancelledRef.current.has(job.id) || !scanPagesRef.current.some(p=>p.id===job.id)) continue;
+          patchScanPage(job.id, { status: 'error', error: err.message || 'OCR non riuscito. Riprova la foto.' });
+          const updated = scanPagesRef.current.find(page=>page.id===job.id);
+          if (updated) void updateArchivedScannerText(updated, scanSessionName);
+          setStatus(`Pagina ${job.pageNumber} da rifare · ${scanOcrQueueRef.current.length} in coda`);
+        }
+      }
     } finally {
+      scanOcrRunningRef.current = false;
       setScanProcessing(false);
+      if (scanOcrQueueRef.current.length) void drainScanOcrQueue();
     }
   }
 
   async function addScanPage(file) {
-    if (!file || scanProcessing || scannerOptimizing) return;
+    if (!file || scannerOptimizing) return;
     setScannerOptimizing(true);
     setError('');
     try {
       setStatus('Ottimizzo la foto per OCR e spazio locale…');
       if (!scanPagesRef.current.length) requestScannerPersistence();
+      const acquisitionStart = performance.now();
       const optimizedFile = await compressScannerImage(file);
-      const storage = await refreshScannerStorage(optimizedFile.size);
+      const storage = await refreshScannerStorage(optimizedFile.size * 2);
       if (storage?.risk === 'blocked') {
         throw new Error('Spazio locale insufficiente per aggiungere un’altra pagina in sicurezza. Completa o svuota la raccolta prima di continuare.');
       }
@@ -651,12 +676,16 @@ export default function AppV14() {
         originalBytes: Number(file.size || optimizedFile.size || 0),
         storedBytes: Number(optimizedFile.size || 0),
         optimized: Number(optimizedFile.size || 0) < Number(file.size || 0) * 0.98,
+        captureMs: Math.round(performance.now() - acquisitionStart),
       };
+      // Salvataggio atomico PRIMA dell'OCR: foto disponibile in Scannerizzati.
+      const stored = await saveCapturedScannerPage(page, scanSessionName);
+      if (!stored) { URL.revokeObjectURL(previewUrl); throw new Error('Impossibile salvare la fotografia sul telefono.'); }
       setScannerResultReady(false);
       setScanPagesNow((pages) => [...pages, page]);
-      scheduleScannerPageSave(page);
-      await recognizeScanPage(id, optimizedFile, pageNumber);
-      await refreshScannerStorage();
+      recognizeScanPage(id, optimizedFile, pageNumber);
+      setStatus(`Pagina ${pageNumber} acquisita in ${((performance.now()-acquisitionStart)/1000).toFixed(1)} s · OCR in background`);
+      void refreshScannerStorage();
     } catch (err) {
       setError(err.message || 'Non riesco ad aggiungere questa pagina.');
       setStatus('Pagina non aggiunta');
@@ -682,11 +711,12 @@ export default function AppV14() {
       const file = new File([blob], scanFileName(), { type: 'image/jpeg' });
       canvas.width = 1;
       canvas.height = 1;
-      stopCamera();
       await addScanPage(file);
+      // Lo scanner resta aperto e pronto per la fotografia successiva.
     } catch (err) {
-      setCameraCapturing(false);
       setError(err.message || 'Errore durante lo scatto.');
+    } finally {
+      setCameraCapturing(false);
     }
   }
 
@@ -697,7 +727,7 @@ export default function AppV14() {
   }
 
   function moveScanPage(index, direction) {
-    if (scanProcessing) return;
+    if (generating) return;
     setScanPagesNow((pages) => {
       const target = index + direction;
       if (target < 0 || target >= pages.length) return pages;
@@ -708,7 +738,9 @@ export default function AppV14() {
   }
 
   function removeScanPage(id) {
-    if (scanProcessing || generating) return;
+    if (generating) return;
+    scanOcrCancelledRef.current.add(id);
+    scanOcrQueueRef.current = scanOcrQueueRef.current.filter(job => job.id !== id);
     const page = scanPagesRef.current.find((item) => item.id === id);
     if (page?.previewUrl) URL.revokeObjectURL(page.previewUrl);
     const timer = scanPersistTimersRef.current.get(id);
@@ -751,7 +783,8 @@ export default function AppV14() {
     if (scanProcessing || generating) return;
     scanPersistTimersRef.current.forEach((timer) => clearTimeout(timer));
     scanPersistTimersRef.current.clear();
-    scanPagesRef.current.forEach((page) => page.previewUrl && URL.revokeObjectURL(page.previewUrl));
+    scanOcrQueueRef.current = [];
+    scanPagesRef.current.forEach((page) => { scanOcrCancelledRef.current.add(page.id); if (page.previewUrl) URL.revokeObjectURL(page.previewUrl); });
     setScanPagesNow([]);
     clearScannerSessionStore().finally(() => refreshScannerStorage());
     setScannerResultReady(false);
