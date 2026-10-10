@@ -264,14 +264,17 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, i
   );
 }
 
-export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook }) {
+export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, generating = false }) {
   const [exportVariant, setExportVariant] = useState('study');
   const [exportOpen, setExportOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
-  if (!studyBook) {
+  const [prepareOpen, setPrepareOpen] = useState(false);
+  if (!studyBook && !isOriginalOnly) {
     return <section className="sb-screen"><div className="sb-empty-library"><h2>Nessun libro aperto</h2><p>Apri una copertina dalla Libreria oppure crea un nuovo libro.</p></div></section>;
   }
-  const fidelity = studyBook.quality?.fidelityGate;
+  const fidelity = studyBook?.quality?.fidelityGate;
+  const sourceChapters = sourceData?.chapters || [];
+  const canPrepare = sourceChapters.some(chapter => chapter.paragraphs?.length);
   return (
     <section className="sb-screen sb-studio-screen">
       <header className="sb-screen-head compact">
@@ -285,57 +288,77 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       <section className="sb-open-book-workspace" aria-label="Libro aperto">
         <div className="sb-open-book-overview">
           <div className="sb-open-book-cover">
-            <span>STUDYBOOK</span>
-            <strong>Libro di studio</strong>
+            <span>{isOriginalOnly ? 'ORIGINALE' : 'STUDYBOOK'}</span>
+            <strong>{isOriginalOnly ? 'Libro originale' : 'Libro di studio'}</strong>
           </div>
           <div className="sb-open-book-copy">
             <small>STAI LAVORANDO SU</small>
             <h2>{stripExtension(fileName)}</h2>
             <button type="button" className="sb-studio-rename" onClick={()=>setRenameOpen(true)}>✎ Rinomina libro</button>
-            <p>Leggi, studia o porta con te il contenuto elaborato di questo libro.</p>
+            <p>{isOriginalOnly ? 'Scegli come utilizzare il libro. Il file originale resta invariato; potrai decidere se creare un testo di studio.' : 'Leggi, studia o porta con te il contenuto elaborato di questo libro.'}</p>
           </div>
         </div>
         <div className="sb-book-quick-actions">
           <button type="button" onClick={onRead}><span className="sb-action-icon"><StudyIcon name="book" size={25} /></span><strong>Leggi sul telefono</strong></button>
-          <button type="button" onClick={() => onExport('pdf', 'study')}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>Leggi in PDF</strong></button>
-          <button type="button" onClick={onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>
+          <button type="button" onClick={() => onExport('pdf', isOriginalOnly ? 'original' : 'study')}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>Leggi in PDF</strong></button>
+          <button type="button" onClick={isOriginalOnly ? () => setPrepareOpen(true) : onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>
           <button type="button" className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>Scarica libro</strong></button>
         </div>
       </section>
 
+      {isOriginalOnly && prepareOpen && (
+        <article className="sb-export-card sb-original-study-consent" aria-label="Scelta di elaborazione">
+          <div className="sb-export-head"><div><small>SCELTA LIBERA</small><h2>Preparare il testo di studio?</h2></div></div>
+          <p>Puoi continuare a leggere o esportare il file originale senza modificarlo. Se scegli di preparare il testo di studio, StudyBook creerà una versione separata nella categoria Modificati.</p>
+          {!canPrepare && <p>Il testo di questo originale non è ancora disponibile per l'elaborazione. Importa nuovamente il documento per completarne il riconoscimento.</p>}
+          <div className="sb-original-study-decision">
+            <button type="button" className="sb-original-secondary" onClick={() => setPrepareOpen(false)}>Non adesso</button>
+            <button type="button" disabled={!canPrepare || generating} onClick={() => { setPrepareOpen(false); onPrepareOriginal?.(); }}>
+              {generating ? 'Elaborazione…' : 'Prepara testo di studio'}
+            </button>
+          </div>
+        </article>
+      )}
       {exportOpen && (
         <article className="sb-export-card">
           <div className="sb-export-head">
-            <div><small>ESPORTA</small><h2>Scarica libro</h2><p className="sb-export-description">Scegli la versione del libro e il formato da scaricare o stampare.</p></div>
-            <div className="sb-export-variant">
+            <div><small>ESPORTA</small><h2>Scarica libro</h2><p className="sb-export-description">{isOriginalOnly ? 'Scegli il formato: il file importato rimane invariato.' : 'Scegli la versione del libro e il formato da scaricare o stampare.'}</p></div>
+            {!isOriginalOnly && <div className="sb-export-variant">
               <button type="button" className={exportVariant === 'study' ? 'active' : ''} onClick={() => setExportVariant('study')}>Testo di studio</button>
               <button type="button" className={exportVariant === 'simple' ? 'active' : ''} onClick={() => setExportVariant('simple')}>In parole semplici</button>
               <button type="button" className={exportVariant === 'both' ? 'active' : ''} onClick={() => setExportVariant('both')}>Due versioni complete</button>
-            </div>
+            </div>}
           </div>
           <div className="sb-export-formats">
-            <button type="button" onClick={() => onExport('pdf', exportVariant)}>PDF</button>
-            <button type="button" onClick={() => onExport('docx', exportVariant)}>DOCX</button>
-            <button type="button" onClick={() => onExport('html', exportVariant)}>HTML</button>
-            <button type="button" onClick={() => onExport('epub', exportVariant)}>EPUB</button>
-            <button type="button" onClick={() => onExport('odt', exportVariant)}>ODT</button>
-            <button type="button" onClick={() => onExport('rtf', exportVariant)}>RTF</button>
-            <button type="button" onClick={() => onExport('md', exportVariant)}>Markdown</button>
-            <button type="button" onClick={() => onExport('print', exportVariant)}>Stampa</button>
-            <button type="button" onClick={() => onExport('txt', exportVariant)} disabled={exportVariant === 'both'}>TXT</button>
-            <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>
+            {isOriginalOnly && <button type="button" onClick={() => onExport('original', 'original')}>Formato originale</button>}
+            <button type="button" onClick={() => onExport('pdf', isOriginalOnly ? 'original' : exportVariant)}>PDF</button>
+            <button type="button" onClick={() => onExport('docx', isOriginalOnly ? 'original' : exportVariant)}>DOCX</button>
+            <button type="button" onClick={() => onExport('html', isOriginalOnly ? 'original' : exportVariant)}>HTML</button>
+            <button type="button" onClick={() => onExport('epub', isOriginalOnly ? 'original' : exportVariant)}>EPUB</button>
+            {!isOriginalOnly && <button type="button" onClick={() => onExport('odt', exportVariant)}>ODT</button>}
+            {!isOriginalOnly && <button type="button" onClick={() => onExport('rtf', exportVariant)}>RTF</button>}
+            {!isOriginalOnly && <button type="button" onClick={() => onExport('md', exportVariant)}>Markdown</button>}
+            {!isOriginalOnly && <button type="button" onClick={() => onExport('print', exportVariant)}>Stampa</button>}
+            <button type="button" onClick={() => onExport('txt', isOriginalOnly ? 'original' : exportVariant)} disabled={!isOriginalOnly && exportVariant === 'both'}>TXT</button>
+            {!isOriginalOnly && <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>}
           </div>
-          <p>«Due versioni complete» include prima tutto il testo di studio, poi tutto il libro in parole semplici nello stesso documento. L’originale resta separato nella Libreria.</p>
+          {!isOriginalOnly && <p>«Due versioni complete» include prima tutto il testo di studio, poi tutto il libro in parole semplici nello stesso documento. L’originale resta separato nella Libreria.</p>}
         </article>
       )}
 
-      <article className="sb-quality-card">
+      {isOriginalOnly ? (
+        <article className="sb-quality-card sb-original-preparation-info">
+          <h2>Libro originale</h2>
+          <div><span>Capitoli riconosciuti</span><strong>{sourceChapters.length}</strong><StudyIcon name="book" size={19} /></div>
+          <div><span>Stato</span><strong>Non modificato</strong><StudyIcon name="document" size={19} /></div>
+        </article>
+      ) : <article className="sb-quality-card">
         <h2>Controllo del libro</h2>
         <div><span>Capitoli</span><strong>{studyBook.chapters?.length || 0}</strong><StudyIcon name="book" size={19} /></div>
         <div><span>Unità concettuali</span><strong>{fidelity?.conceptUnits || '—'}</strong><StudyIcon name="units" size={19} /></div>
         <div><span>Copertura media</span><strong>{Number.isFinite(fidelity?.averageCoveragePercent) ? `${fidelity.averageCoveragePercent}%` : '—'}</strong><StudyIcon name="coverage" size={19} /></div>
         <div><span>Compressione</span><strong>{Number.isFinite(fidelity?.compressionPercent) ? `${fidelity.compressionPercent}%` : '—'}</strong><StudyIcon name="compression" size={19} /></div>
-      </article>
+      </article>}
     </section>
   );
 }
@@ -407,7 +430,7 @@ export function SettingsScreen({ settings, onSettingsChange, profiles, activePro
 
 /* LAB13 — I byte originali restano nell'archivio; qui si legge soltanto il testo
    importato, senza riassunti o interventi del motore di studio. */
-export function OriginalBookScreen({ record, reading, onRead, onCloseRead, onExport, onOpenNative, accessibility }) {
+export function OriginalBookScreen({ record, reading, onRead, onCloseRead, onExport, onOpenNative, onStudyBook, accessibility }) {
   const [chapterIndex, setChapterIndex] = useState(0);
   if (!record) return <section className="sb-screen"><p>Nessun originale selezionato.</p></section>;
   const chapters = record.sourceData?.chapters || [];
@@ -425,7 +448,7 @@ export function OriginalBookScreen({ record, reading, onRead, onCloseRead, onExp
           <p>L'esportazione del file originale restituisce i byte importati, senza modifiche.</p>
         </div>
         <div className="sb-original-actions">
-          <button type="button" onClick={onRead}>{reading ? 'Chiudi lettura' : 'Leggi sul telefono'}</button>
+          <button type="button" onClick={onStudyBook}>Studia libro</button>
           <button type="button" className="sb-original-secondary" onClick={() => onExport('original')}>Esporta originale</button>
         </div>
       </article>
