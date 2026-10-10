@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import 'fake-indexeddb/auto';
-import {renderAICover,pickLocalTheme,coverContext} from '../src/lib/libraryCoverEngine.js';
+import {renderAICover,pickLocalTheme,coverContext,isScannerBook} from '../src/lib/libraryCoverEngine.js';
 import {saveLibraryBook,updateLibraryMetadata,getLibraryBook,listLibraryBooks} from '../src/lib/library.js';
 const [archive,scanCss,app,ui,libCss,android] = await Promise.all([
   'src/components/ScannerArchive.jsx','src/scannerArchive.css','src/AppV15.jsx',
@@ -45,6 +45,10 @@ const c=decodeURIComponent(renderAICover({title:'Storia romana',theme:'storia',v
 assert.notEqual(a,b);assert.notEqual(b,c);
 assert.ok(b.includes('M30 90Q160 10 292 98'),'different layout ornament on regenerate');
 assert.equal(pickLocalTheme('I romani e la storia antica'),'storia');
+assert.equal(isScannerBook({sourceData:{sourceFormat:'scan'}}),true,'unprocessed scan remains photo');
+assert.equal(isScannerBook({sourceData:{sourceFormat:'scan'},studyBook:{chapters:[]}}),false,'processed scanned book can generate AI cover');
+assert.equal(isScannerBook({metadata:{sourceFormat:'scan',hasProcessed:true}}),false,'stored processed scan book may regenerate AI cover');
+
 assert.ok(coverContext({fileName:'Matematica',sourceData:{chapters:[{title:'Calcolo',paragraphs:['L equazione']} ]}}).includes('equazione'));
 
 await saveLibraryBook({id:'lab20-book',fileName:'Storia antica.pdf',profileId:'default'});
