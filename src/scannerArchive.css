@@ -56,3 +56,46 @@
  .sb-scanner-archive .sb-archive-grid {grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
  .sb-scanner-archive .sb-archive-group {padding:8px;}
 }
+
+
+/* LAB20 — unica galleria compatta senza schede/raggruppamenti che spezzano le righe. */
+.sb-scanner-archive .sb-archive-collection-tools {
+  display:flex;align-items:center;gap:8px;max-width:100%;overflow-x:auto;
+  margin:0 0 14px;padding:3px 0 7px;scrollbar-width:thin;
+}
+.sb-scanner-archive .sb-archive-collection-tools button {
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;
+  min-height:39px;border:1px solid #dbe6f3;border-radius:13px;
+  padding:8px 11px;background:#fff;color:#2176bc;
+  font-size:.76rem;font-weight:800;
+}
+.sb-scanner-archive .sb-archive-collection-tools small {
+  display:inline-grid;place-items:center;min-width:20px;height:20px;
+  padding:0 4px;border-radius:11px;background:#ebf3fd;color:#566b85;
+}
+.sb-scanner-archive > .sb-archive-grid {
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(7px,2vw,12px);
+  padding-bottom:calc(120px + env(safe-area-inset-bottom,0px));
+}
+.sb-scanner-archive .sb-archive-photo {background:#fff;}
+.sb-scanner-archive .sb-archive-photo-caption strong {
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;font-size:clamp(.66rem,2.5vw,.82rem);
+}
+.sb-scanner-archive .sb-archive-photo-collection {
+  color:#3378a7;font-weight:700;white-space:nowrap;
+  text-overflow:ellipsis;overflow:hidden;max-width:100%;
+}
+.sb-scanner-archive .sb-archive-photo-caption button {
+  max-width:100%;overflow-wrap:anywhere;
+}
+@media (max-width:420px) {
+  .sb-scanner-archive > .sb-archive-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
+  }
+  .sb-scanner-archive {padding-inline:12px;}
+  .sb-scanner-archive .sb-archive-photo {padding:3px;}
+  .sb-scanner-archive .sb-archive-photo-caption {padding:5px 2px;}
+}
