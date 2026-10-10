@@ -5,6 +5,7 @@ import { readerCssVariables } from '../lib/accessibility.js';
 import { editorialParagraphText } from '../lib/editorialModel.js';
 import { filterGlossaryEntries } from '../lib/glossaryQuality.js';
 import { speakStudyText, stopStudySpeech, installItalianSpeechVoice } from '../lib/studySpeech.js';
+import { StudyBackIcon, StudySoundIcon } from './StudyUiIcons.jsx';
 import '../studyMode.css';
 import '../studyTools.css';
 import '../studyContinuous.css';
@@ -172,6 +173,21 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
   }
   function stopReading() { void stopStudySpeech(); setTtsSpeaking(false); setTtsError(''); }
   function closeReader() { void stopStudySpeech(); onClose(); }
+  function changeChapter(nextIndex) {
+    if (nextIndex < 0 || nextIndex >= chapterCount || nextIndex === chapterIndex) return;
+    onChapterChange(nextIndex);
+    // LAB06: quando si sfoglia un nuovo capitolo, le domande seguono quel capitolo.
+    if (!isReader) setStudyScope('chapter');
+  }
+  function listenToCurrentContent() {
+    if (isReader) { speakChapter(); return; }
+    const text = tool === 'flashcards'
+      ? (flashRevealed ? flashcards[toolIndex]?.back : flashcards[toolIndex]?.front)
+      : tool === 'quiz' ? quiz[toolIndex]?.question
+        : tool === 'oral' ? oralQuestions[toolIndex]?.question
+          : [chapter?.title, ...(conceptMap || []).map(node => node.title)].filter(Boolean).join('. ');
+    readAloud(text || '');
+  }
 
   useEffect(() => {
     setToolIndex(0);
@@ -255,7 +271,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
     if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     const direction = dx < 0 ? 1 : -1;
     if (isReader || tool === 'map') {
-      onChapterChange(Math.min(chapterCount - 1, Math.max(0, chapterIndex + direction)));
+      changeChapter(Math.min(chapterCount - 1, Math.max(0, chapterIndex + direction)));
       return;
     }
     const length = tool === 'flashcards' ? flashcards.length : tool === 'quiz' ? quiz.length : oralQuestions.length;
@@ -291,30 +307,24 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
 
   return (
     <div className={`study-mode ${accessibility?.enabled ? 'accessibility-on' : ''} ${accessibility?.phone?.readingGuide ? 'reading-guide-on' : ''}`} style={readerCssVariables(accessibility)} role="dialog" aria-modal="true" aria-label="Modalità Studio">
-      <header className="study-mode-header sb-lab05-header">
-        <div>
-          <span>STUDYBOOK AI · {isReader ? 'LEGGI SUL TELEFONO' : 'STUDIA SUL TELEFONO'}</span>
-          <strong>{isReader ? 'Leggi sul telefono' : 'Studia sul telefono'}</strong>
-          <small className="sb-lab05-book-title">{String(bookTitle || '').replace(/\\.[^.]+$/, '') || 'Libro di studio'}</small>
-        </div>
-        <div className="study-mode-header-actions">
-          {isReader && <button type="button" onClick={ttsSpeaking ? stopReading : speakChapter}>{ttsSpeaking ? '■ Ferma voce' : '🔊 Ascolta'}</button>}
-          <button type="button" className="study-close" onClick={closeReader} aria-label="Torna al libro">×</button>
-        </div>
+      <header className="study-mode-header sb-lab06-compact-header">
+        <button type="button" className="sb-lab06-back" onClick={closeReader} aria-label="Torna alla pagina del libro" title="Torna alla pagina del libro"><StudyBackIcon /></button>
+        <strong className="sb-lab06-brand">StudyBook <span>AI</span></strong>
+        <button type="button" className={`sb-lab06-audio${ttsSpeaking ? ' playing' : ''}`} onClick={ttsSpeaking ? stopReading : listenToCurrentContent} aria-label={ttsSpeaking ? 'Ferma la lettura vocale' : isReader ? 'Ascolta il capitolo' : 'Ascolta il contenuto di studio'} title={ttsSpeaking ? 'Ferma audio' : 'Ascolta'}><StudySoundIcon /></button>
       </header>
       {ttsError && <div className="sb-lab05-tts-error" role="alert">{ttsError} <button type="button" onClick={() => { void installItalianSpeechVoice().catch(error => setTtsError(error?.message || 'Controlla la sintesi vocale Android.')); }}>Installa voce italiana</button></div>}
 
-      <nav className="study-chapter-nav sb-lab05-chapter-nav" aria-label="Navigazione capitoli">
-        <button type="button" onClick={() => onChapterChange(Math.max(0, chapterIndex - 1))} disabled={chapterIndex <= 0} aria-label="Capitolo precedente">←</button>
-        <label className="sb-lab05-chapter-picker">
-          <span>CAPITOLO <b>{chapterIndex + 1} / {chapterCount}</b></span>
-          <select aria-label="Seleziona un capitolo" value={chapterIndex} onChange={(event) => onChapterChange(Number(event.target.value))}>
+      <nav className="study-chapter-nav sb-lab05-chapter-nav sb-lab06-chapter-nav" aria-label="Navigazione tra i capitoli">
+        <button type="button" onClick={() => changeChapter(chapterIndex - 1)} disabled={chapterIndex <= 0} aria-label="Capitolo precedente">←</button>
+        <label className="sb-lab06-chapter-center">
+          <span className="sb-lab06-chapter-counter">CAPITOLO <b>{chapterIndex + 1} / {chapterCount}</b></span>
+          <span className="sb-lab06-chapter-full-title">{chapter.title}<span className="sb-lab06-dropdown" aria-hidden="true">⌄</span></span>
+          <select aria-label="Scegli un capitolo dalla lista" value={chapterIndex} onChange={(event) => changeChapter(Number(event.target.value))}>
             {book.chapters.map((item, index) => <option value={index} key={`${item.title}-${index}`}>{index + 1}. {item.title}</option>)}
           </select>
         </label>
-        <button type="button" onClick={() => onChapterChange(Math.min(chapterCount - 1, chapterIndex + 1))} disabled={chapterIndex >= chapterCount - 1} aria-label="Capitolo successivo">→</button>
+        <button type="button" onClick={() => changeChapter(chapterIndex + 1)} disabled={chapterIndex >= chapterCount - 1} aria-label="Capitolo successivo">→</button>
       </nav>
-      <div className="sb-lab05-chapter-title"><small>{isReader ? 'IL TUO TESTO' : 'IL CAPITOLO CHE STAI STUDIANDO'}</small><h1>{chapter.title}</h1></div>
 
       {!isReader && <nav className="study-tool-tabs sb-lab05-study-tabs" aria-label="Metodi di studio">
         {[
@@ -474,7 +484,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
               <small>SIMULAZIONE ORALE</small>
               <h3>{oralQuestion.question}</h3>
               <div className="study-oral-actions">
-                <button type="button" onClick={() => readAloud(oralQuestion.question)}>🔊 Ascolta domanda</button>
+                <button type="button" className="sb-lab06-listen" onClick={() => readAloud(oralQuestion.question)}><StudySoundIcon size={21} /> Ascolta domanda</button>
                 <button type="button" onClick={() => setOralRevealed((value) => !value)}>{oralRevealed ? 'Nascondi traccia' : 'Mostra traccia risposta'}</button>
               </div>
               {oralRevealed && <div className="study-oral-answer">{oralQuestion.answer}</div>}
@@ -529,7 +539,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
               {answer.label && <strong>{answer.label}</strong>}
               <p>{answer.answer}</p>
               <div className="study-answer-actions">
-                <button type="button" onClick={() => readAloud(answer.answer)}>🔊 Ascolta</button>
+                <button type="button" className="sb-lab06-listen" onClick={() => readAloud(answer.answer)}><StudySoundIcon size={21} /> Ascolta</button>
                 {answer.cached && <span>{answer.persisted ? 'Risposta salvata sul dispositivo' : 'Risposta già pronta'}</span>}
               </div>
             </div>
