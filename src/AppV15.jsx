@@ -1042,7 +1042,7 @@ export default function AppV14() {
         <label className="scan-name-field">Nome raccolta
           <input value={scanSessionName} onChange={(event)=>{ scanTitleManualRef.current=true; scanSessionNameRef.current=event.target.value; setScanSessionName(event.target.value); }} onBlur={()=>{ if(scanTitleManualRef.current) void saveCurrentScannerName(scanSessionName); }} maxLength={90} />
           {scanPages.length>0 && suggestDocumentTitle(scanPages.filter(p=>p.text).map(p=>({text:p.text}))) && (
-            <button className="sb-smart-title-choice" type="button" onClick={()=>void saveCurrentScannerName(suggestDocumentTitle(scanPages.filter(p=>p.text).map(p=>({text:p.text}))).title,{manual:false})}>✦ Usa titolo suggerito</button>
+            <button className="sb-smart-title-choice" type="button" onClick={()=>void saveCurrentScannerName(suggestDocumentTitle(scanPages.filter(p=>p.text).map(p=>({text:p.text}))).title,{manual:true})}>✦ Usa titolo suggerito</button>
           )}
         </label>
       </div>
