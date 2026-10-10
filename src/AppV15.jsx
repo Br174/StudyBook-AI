@@ -16,6 +16,7 @@ import {
 } from './lib/library.js';
 import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
 import { isScannerBook, coverContext, pickLocalTheme, requestAiCoverTheme, renderAICover, imageBlobToThumbnail, extractOriginalCover } from './lib/libraryCoverEngine.js';
+import { generateTrueBookImage } from './lib/trueAiCover.js';
 import { BottomNav, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
 import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
@@ -362,6 +363,9 @@ export default function AppV14() {
     }
     record=await getLibraryBook(id);
     if(!record || (automatic && (record.coverCustom || record.coverOriginal || record.coverAI)))return false;
+    // LAB21: no automatically fabricated SVG covers. True image generation is explicit,
+    // because each provider call may be billable. Only original extraction stays automatic.
+    if(automatic)return false;
 
     // LAB20: cover generation is guaranteed locally, even without internet.
     // The online AI's job is refining THEME; it does not gate the UI or block the user.
@@ -409,6 +413,32 @@ export default function AppV14() {
       coverRemoteTailRef.current=coverRemoteTailRef.current.catch(()=>{}).then(improve);
     }
     if(forceAI) setStatus('Copertina illustrata pronta · il tema AI si aggiorna se il servizio è disponibile');
+    return true;
+  }
+  /* LAB21: REAL image generation. A manual click starts one Gemini image request.
+     This produces a preview; it saves NOTHING until the user accepts it.
+     Never claim that a generated SVG is an AI-created image. */
+  async function generateRealCoverPreview(id,{variant=1,onStage=()=>{}}={}){
+    if(!id)throw new Error('Libro non trovato.');
+    const record=await getLibraryBook(id);
+    if(!record)throw new Error('Questo libro non è più in Libreria.');
+    if(isScannerBook(record))throw new Error('Le fotografie scannerizzate conservano la loro immagine originale.');
+    return generateTrueBookImage(record,{variant,onStage});
+  }
+  async function applyRealAICover(id,preview){
+    if(!id||!preview?.src?.startsWith('data:image/jpeg;base64,'))
+      throw new Error('La copertina generata non è una vera immagine JPEG.');
+    const current=await getLibraryBook(id);
+    if(!current || isScannerBook(current))throw new Error('Libro non disponibile.');
+    await updateLibraryMetadata(id,{
+      coverAI:preview.src,coverCustom:preview.src,
+      coverStatus:'ready',coverOrigin:'ai-image',
+      coverImageProvider:preview.provider||'Gemini Image',
+      coverAiPrompt:preview.prompt||'',coverAiGeneratedAt:preview.generatedAt||new Date().toISOString(),
+      coverVariant:(Number(current.coverVariant)||0)+1,
+    });
+    await refreshLibrary();
+    setStatus('Vera copertina AI salvata in Libreria · il file originale è invariato');
     return true;
   }
   async function chooseLibraryCover(id,file) {
@@ -1420,7 +1450,7 @@ export default function AppV14() {
 
       {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} onRenameCollection={renameScannerArchiveCollection} onRenamePhoto={renameScannerArchivePhoto} />}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onSetCoverFile={chooseLibraryCover} onGenerateCover={id=>generateLibraryCover(id,{forceAI:true})} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onSetCoverFile={chooseLibraryCover} onGenerateCover={generateRealCoverPreview} onApplyCover={applyRealAICover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
       {activeScreen === 'studio' && (
         <StudioScreen
