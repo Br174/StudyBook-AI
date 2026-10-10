@@ -222,7 +222,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, i
 
       {filtered.length ? (
         <div className="sb-library-grid">
-          {filtered.map((item) => <BookCover key={item.id} item={item} view={view === 'all' ? (item.metadata?.hasProcessed ? 'processed' : 'original') : view} onOpen={onOpenBook} onDeleteRequest={setDeleteCandidate} onRenameRequest={setRenameCandidate} />)}
+          {filtered.map((item) => <BookCover key={item.id} item={item} view={view === 'all' ? (item.metadata?.hasProcessed ? 'processed' : 'original') : view} onOpen={onOpenBook} onDeleteRequest={item => setDeleteCandidate({ ...item, deleteView: view })} onRenameRequest={setRenameCandidate} />)}
         </div>
       ) : <div className="sb-empty-library">Nessun libro in questa sezione.</div>}
       </>}
@@ -233,10 +233,10 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, i
           <div className="sb-confirm-dialog">
             <div className="sb-confirm-icon">!</div>
             <h2>Eliminare definitivamente?</h2>
-            <p><strong>{stripExtension(deleteCandidate.fileName)}</strong> verrà rimosso da questa Libreria. L’operazione non può essere annullata.</p>
+            <p><strong>{stripExtension(deleteCandidate.fileName)}</strong> {deleteCandidate.deleteView === 'all' ? 'e tutte le sue versioni verranno eliminate' : deleteCandidate.deleteView === 'processed' ? 'verrà rimossa solo la versione modificata' : 'verrà rimosso solo il file originale'}. L’operazione non può essere annullata.</p>
             <div className="sb-confirm-actions">
               <button type="button" onClick={() => setDeleteCandidate(null)}>Annulla</button>
-              <button type="button" className="danger" onClick={async () => { await onDeleteBook(deleteCandidate.id); setDeleteCandidate(null); }}>Sì, elimina</button>
+              <button type="button" className="danger" onClick={async () => { await onDeleteBook(deleteCandidate.id, deleteCandidate.deleteView); setDeleteCandidate(null); }}>Sì, elimina</button>
             </div>
           </div>
         </div>
