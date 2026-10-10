@@ -98,6 +98,8 @@ jobs:
         run: node scripts/test-lab11-scanner-turbo.mjs
       - name: Test LAB12 smart document naming and rename persistence
         run: node scripts/test-lab12-smart-titles.mjs
+      - name: Test LAB13 original source and four-category library
+        run: node scripts/test-lab13-original-library.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
