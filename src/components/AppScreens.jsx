@@ -1,13 +1,14 @@
 import { useMemo, useRef, useState } from 'react';
 import { ACCESSIBILITY_PRESETS } from '../lib/accessibility.js';
 import { StudyIcon } from './StudyUiIcons.jsx';
+import RenameTitleDialog from './RenameTitleDialog.jsx';
 import '../appShellV16.css';
 
 function stripExtension(value = '') {
   return String(value || 'StudyBook').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'StudyBook';
 }
 
-function BookCover({ item, view = 'processed', onOpen, onDeleteRequest }) {
+function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRenameRequest }) {
   const [deleteArmed, setDeleteArmed] = useState(false);
   const holdTimer = useRef(null);
   const suppressClick = useRef(false);
@@ -63,6 +64,9 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest }) {
           <span>{pages ? `${pages} pagine` : (item.metadata?.chapters ? `${item.metadata.chapters} capitoli` : subject)}</span>
         </div>
       </button>
+      {view === 'processed' && onRenameRequest && (
+        <button type="button" className="sb-library-rename" aria-label={'Rinomina ' + title} onClick={()=>onRenameRequest(item)}>✎ Rinomina</button>
+      )}
       {deleteArmed && onDeleteRequest && (
         <button
           type="button"
@@ -152,12 +156,13 @@ export function HomeScreen({
   );
 }
 
-export function LibraryScreen({ items, onOpenBook, onDeleteBook }) {
+export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook }) {
   const [area, setArea] = useState('subjects');
   const [view, setView] = useState('processed');
   const [subject, setSubject] = useState('Tutte');
   const [sort, setSort] = useState('recent');
   const [deleteCandidate, setDeleteCandidate] = useState(null);
+  const [renameCandidate, setRenameCandidate] = useState(null);
   const subjects = useMemo(() => ['Tutte', ...new Set(items.map((item) => item.subject || 'Altro'))].slice(0, 8), [items]);
   const collections = useMemo(() => [...new Set(items.flatMap((item) => item.collections || []))], [items]);
 
@@ -210,10 +215,11 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook }) {
 
       {filtered.length ? (
         <div className="sb-library-grid">
-          {filtered.map((item) => <BookCover key={item.id} item={item} view={view} onOpen={onOpenBook} onDeleteRequest={setDeleteCandidate} />)}
+          {filtered.map((item) => <BookCover key={item.id} item={item} view={view} onOpen={onOpenBook} onDeleteRequest={setDeleteCandidate} onRenameRequest={setRenameCandidate} />)}
         </div>
       ) : <div className="sb-empty-library">Nessun libro in questa sezione.</div>}
 
+      {renameCandidate && <RenameTitleDialog key={renameCandidate.id} label="Rinomina libro di studio" current={stripExtension(renameCandidate.fileName)} onClose={()=>setRenameCandidate(null)} onSave={name=>onRenameBook(renameCandidate.id,name)} />}
       {deleteCandidate && (
         <div className="sb-confirm-overlay" role="dialog" aria-modal="true" aria-label="Conferma eliminazione">
           <div className="sb-confirm-dialog">
@@ -231,9 +237,10 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook }) {
   );
 }
 
-export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport }) {
+export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook }) {
   const [exportVariant, setExportVariant] = useState('study');
   const [exportOpen, setExportOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
   if (!studyBook) {
     return <section className="sb-screen"><div className="sb-empty-library"><h2>Nessun libro aperto</h2><p>Apri una copertina dalla Libreria oppure crea un nuovo libro.</p></div></section>;
   }
@@ -247,6 +254,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
         </div>
       </header>
 
+      {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
       <section className="sb-open-book-workspace" aria-label="Libro aperto">
         <div className="sb-open-book-overview">
           <div className="sb-open-book-cover">
@@ -256,6 +264,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
           <div className="sb-open-book-copy">
             <small>STAI LAVORANDO SU</small>
             <h2>{stripExtension(fileName)}</h2>
+            <button type="button" className="sb-studio-rename" onClick={()=>setRenameOpen(true)}>✎ Rinomina libro</button>
             <p>Leggi, studia o porta con te il contenuto elaborato di questo libro.</p>
           </div>
         </div>
