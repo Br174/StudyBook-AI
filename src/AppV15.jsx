@@ -337,6 +337,9 @@ export default function AppV14() {
       if (openReader) {
         setStudyEntryMode('reader');
         setStudyModeOpen(true);
+      } else {
+        // LAB07 • Aprendo un libro dalla Home si deve vedere l'intera pagina Libro aperto.
+        setStudyModeOpen(false);
       }
     } catch (err) {
       setError(err.message || 'Impossibile aprire il libro.');
@@ -793,6 +796,12 @@ export default function AppV14() {
     return openLibraryItem(item.id, { original: view === 'original', openReader: view !== 'original' });
   }
 
+  function openContinueBook(item) {
+    // LAB07 • Il riquadro "Continua" carica il libro e apre l'intera StudioScreen.
+    // Le copertine di Recenti e Libreria conservano la loro navigazione precedente.
+    return openLibraryItem(item.id, { original: false, openReader: false });
+  }
+
   const scannerPanel = scanPages.length > 0 ? (
     <section className="panel scan-basket sb-inline-scanner">
       <div className="scan-basket-head">
@@ -850,7 +859,7 @@ export default function AppV14() {
       {activeScreen === 'home' && (
         <HomeScreen
           status={status} importing={importing} generating={generating} libraryItems={libraryItems}
-          onImport={() => documentFileInputRef.current?.click()} onScanner={openScanner} onOpenBook={openFromLibrary}
+          onImport={() => documentFileInputRef.current?.click()} onScanner={openScanner} onOpenBook={openFromLibrary} onContinueBook={openContinueBook}
           documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
           scanContent={scannerPanel}
         />
