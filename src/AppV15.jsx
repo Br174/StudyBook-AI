@@ -242,11 +242,15 @@ export default function AppV14() {
       if (cancelled) return;
       if (restored?.pages?.length) {
         // LAB11: migra anche le fotografie ancora presenti nella raccolta LAB10.
-        await archiveScannerSessionPages(restored.pages, restored.name);
+        const migrated = await archiveScannerSessionPages(restored.pages, restored.name);
         const restoredPages = restored.pages.map((page) => ({
           ...page,
+          archiveId: page.archiveId || (migrated ? page.id : null),
           previewUrl: URL.createObjectURL(page.file),
         }));
+        // Segna anche nell'archivio della sessione le fotografie già migrate:
+        // una successiva eliminazione da Scannerizzati non dovrà farle ricomparire.
+        if (migrated) await Promise.all(restoredPages.filter(p=>p.archiveId && !restored.pages.find(r=>r.id===p.id)?.archiveId).map(page=>saveScannerPageRecord(page)));
         scanPagesRef.current = restoredPages;
         setScanPages(restoredPages);
         setScanSessionName(restored.name || 'Appunti fotografati');
