@@ -29,23 +29,23 @@ const [app, ui, css, workflow] = await Promise.all([
   'src/appShellV16.css', '.github/workflows/android-apk.yml',
 ].map(file=>readFile(file,'utf8')));
 
-const originalScreen=ui.slice(ui.indexOf('export function OriginalBookScreen('));
+const originalReader=ui.slice(ui.indexOf('function OriginalInlineReader('));
 const studyScreen=ui.slice(ui.indexOf('export function StudioScreen('),ui.indexOf('function SettingRange('));
-const originalHandler=app.slice(app.indexOf('async function openOriginalStudyBook()'),app.indexOf('function readOriginalFromBook()'));
-assert.ok(originalScreen.includes('onClick={onStudyBook}>Studia libro</button>'), 'main original button renamed');
-assert.ok(!originalScreen.includes("onClick={onRead}>{reading ? 'Chiudi lettura' : 'Leggi sul telefono'}"), 'old immediate reader entry retired');
-assert.ok(app.includes('onStudyBook={openOriginalStudyBook}'), 'CTA points to study overview');
-assert.ok(originalHandler.includes('getLibraryBook(originalRecord.id)'), 'reload original from library');
+const originalHandler=app.slice(app.indexOf('async function openLibraryItem('),app.indexOf('async function removeLibraryItem('));
+assert.ok(!ui.includes('export function OriginalBookScreen('), 'obsolete original page removed');
+assert.ok(originalReader.includes('Leggi il libro originale') && originalReader.includes('Chiudi lettura'), 'source reader now lives inside full book view');
+assert.ok(app.includes('onOpenOriginals={openOriginalHome}'), 'Home CTA directly selects an original');
+assert.ok(originalHandler.includes('getLibraryBook(id)'), 'reload selected source from library');
 assert.ok(originalHandler.includes('setStudyBook(record.studyBook || null)'), 'already processed and original-only supported');
 assert.ok(originalHandler.includes("navigateTo('studio')"), 'same Libro aperto route');
-assert.ok(!originalHandler.includes('createStudyBook(') && !originalHandler.includes('setStudyModeOpen(true)'), 'click does not auto-read or auto-generate');
+assert.ok(!originalHandler.includes('createStudyBook(') && originalHandler.includes('setStudyModeOpen(false)'), 'click does not auto-read or auto-generate');
 assert.ok(studyScreen.includes('Il tuo libro di studio') && studyScreen.includes('sb-open-book-workspace'), 'same approved overview');
 assert.ok(studyScreen.includes('isOriginalOnly = false') && studyScreen.includes('!studyBook && !isOriginalOnly'), 'original does not need study data');
 assert.ok(studyScreen.includes('setPrepareOpen(true)') && studyScreen.includes('Prepara testo di studio') && studyScreen.includes('Non adesso'), 'study requires explicit second confirmation');
 assert.ok(app.includes('async function prepareOriginalForStudy()') && app.includes('await createStudyBook(documentData, fileName)'), 'processing only after choice');
 assert.ok(app.includes('readOriginalFromBook()') && app.includes('openOriginalPdfFromBook()'), 'original reader and original PDF paths');
 assert.ok(app.includes('sourceFile={sourceFile}') === false, 'no unwanted extra reader dependency');
-assert.ok(app.includes("setOriginalReading(true)") && app.includes("navigateTo('original')"), 'original reading available from chooser');
+assert.ok(app.includes("setOriginalReading(true)") && !app.includes("navigateTo('original')"), 'original reading remains in book overview');
 assert.ok(app.includes('if (format === \'pdf\' && variant === \'original\') return openOriginalPdfFromBook();'), 'PDF chooser favors original');
 assert.ok(workflow.includes('StudyBook-AI-LAB-14-AGGIORNAMENTO') && workflow.includes('it.studybook.ai.lab'), 'Android identity unchanged');
 assert.ok(css.includes('.sb-original-study-consent'), 'consent UI uses existing visual language');
