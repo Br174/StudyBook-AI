@@ -1199,7 +1199,7 @@ export default function AppV14() {
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
       {activeScreen === 'original' && <OriginalBookScreen record={originalRecord} reading={originalReading}
         onRead={() => setOriginalReading(reading => !reading)} onCloseRead={() => setOriginalReading(false)}
-        onOpenNative={openOriginalNative} onExport={exportOriginal} />}
+        onOpenNative={openOriginalNative} onExport={exportOriginal} accessibility={accessibility} />}
 
       {activeScreen === 'studio' && (
         <StudioScreen
