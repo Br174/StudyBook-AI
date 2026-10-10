@@ -594,3 +594,40 @@
   .sb-lab06-chapter-full-title { font-size: clamp(.96rem,3.95vw,1.13rem); line-height: 1.3; }
   .sb-lab06-dropdown { right: 8px; }
 }
+
+
+/* LAB09 • Scheda Studio: stessi pulsanti approvati, con icone sopra e titoli proporzionati. */
+.study-mode .sb-lab05-study-tabs button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 63px;
+  padding: 7px 2px 6px;
+  font-size: clamp(.65rem,1.85vw,.78rem);
+  line-height: 1.14;
+  font-weight: 750;
+}
+.study-mode .sb-lab05-study-tabs button svg {
+  display: block;
+  flex: 0 0 auto;
+  color: var(--sb-blue, #1677ea);
+  width: 23px;
+  height: 23px;
+}
+.study-mode .sb-lab05-study-tabs button.active svg { color: currentColor; }
+.study-mode .sb-lab05-study-tabs button span { overflow-wrap: anywhere; }
+.study-mode .sb-lab06-chapter-full-title {
+  font-size: clamp(.98rem,3.3vw,1.25rem);
+  line-height: 1.25;
+}
+.study-mode .study-flashcard strong {
+  font-size: clamp(1.14rem,3.5vw,1.52rem);
+  line-height: 1.35;
+}
+@media(max-width:640px) {
+  .study-mode .sb-lab05-study-tabs button { min-height: 58px; gap: 4px; font-size: .67rem; }
+  .study-mode .sb-lab05-study-tabs button svg { width: 21px; height: 21px; }
+  .study-mode .sb-lab06-chapter-full-title { font-size: clamp(.94rem,3.7vw,1.08rem); }
+}
