@@ -100,6 +100,8 @@ jobs:
         run: node scripts/test-lab12-smart-titles.mjs
       - name: Test LAB13 original source and four-category library
         run: node scripts/test-lab13-original-library.mjs
+      - name: Test LAB14 original to StudyBook chooser and optional processing
+        run: node scripts/test-lab14-original-study-entry.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
