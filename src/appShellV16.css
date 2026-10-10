@@ -346,3 +346,108 @@
   .sb-studio-screen .sb-open-book-cover > strong { font-size: clamp(.78rem,3.4vw,1.02rem); }
   .sb-studio-screen .sb-open-book-cover::before { inset: 8px; }
 }
+
+
+/* LAB09 — proporzioni approvate: titoli meno grandi, icone sopra i nomi, tre pagine coerenti.
+   La pagina fissa Libro aperto ha priorità sul fit verticale ma MAI sul testo accessibile:
+   con titoli enormi o zoom Android lo scroll resta disponibile per evitare clipping. */
+.sb-home-screen .sb-screen-head h1 {
+  font-size: clamp(1.8rem, 5.3vw, 2.8rem);
+  line-height: 1.12;
+  letter-spacing: -.044em;
+}
+.sb-home-screen .sb-new-book-copy h2 { font-size: clamp(1.22rem, 3.8vw, 1.45rem); }
+.sb-home-screen .sb-process-card h3 { font-size: clamp(1rem, 3.2vw, 1.15rem); line-height: 1.25; }
+.sb-home-screen .sb-new-book-card { padding: clamp(14px, 3.3vw, 20px); }
+.sb-home-screen .sb-source-grid { margin-top: 15px; gap: 9px; }
+.sb-home-screen .sb-source-grid button {
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  min-height: 76px; padding: 10px 7px; gap: 7px;
+  font-size: .83rem; line-height: 1.15; text-align: center;
+}
+.sb-home-screen .sb-source-grid button strong { font-weight: 800; font-size: .83rem; }
+.sb-source-icon,.sb-action-icon,.sb-nav-icon {
+  display: grid; place-items: center; color: var(--sb-blue); line-height: 1;
+}
+.sb-source-icon svg,.sb-action-icon svg,.sb-nav-icon svg { display: block; }
+.sb-bottom-nav .sb-nav-icon { color: inherit; }
+.sb-bottom-nav .sb-nav-icon svg { width: 20px; height: 20px; }
+.sb-bottom-nav button small { font-size: .69rem; }
+/* Libro aperto: nessun componente rimosso; stessa posizione e quattro azioni. */
+.sb-studio-screen { padding-top: 12px; padding-bottom: 12px; }
+.sb-studio-screen .sb-screen-head.compact { margin-bottom: 12px; gap: 5px; }
+.sb-studio-screen .sb-screen-head.compact h1 {
+  font-size: clamp(1.35rem, 4.6vw, 2.05rem);
+  line-height: 1.1; margin-top: 4px;
+}
+.sb-studio-screen .sb-open-book-workspace { gap: 10px; padding: 13px; border-radius: 23px; }
+.sb-studio-screen .sb-open-book-overview { gap: 12px; }
+.sb-studio-screen .sb-open-book-copy h2 {
+  font-size: clamp(1.03rem, 3.3vw, 1.5rem);
+  margin: 5px 0 7px;
+  line-height: 1.16;
+}
+.sb-studio-screen .sb-open-book-copy p { font-size: .82rem; line-height: 1.32; }
+.sb-studio-screen .sb-open-book-cover { min-height: 155px; padding: 12px; border-radius: 17px; }
+.sb-studio-screen .sb-book-quick-actions { gap: 8px; }
+.sb-studio-screen .sb-book-quick-actions button {
+  min-height: 65px; padding: 9px 7px; border-radius: 14px; gap: 4px;
+}
+.sb-studio-screen .sb-book-quick-actions button strong {
+  font-size: clamp(.76rem, 2vw, .91rem); line-height: 1.23;
+}
+.sb-studio-screen .sb-book-quick-actions button .sb-action-icon {
+  font-size: inherit; width: 25px; height: 25px;
+}
+.sb-studio-screen .sb-book-quick-actions button .sb-action-icon svg {
+  width: 24px; height: 24px;
+}
+.sb-studio-screen .sb-quality-card {
+  margin-top: 10px; padding: 13px; gap: 7px; border-radius: 22px;
+}
+.sb-studio-screen .sb-quality-card h2 {
+  font-size: clamp(1.13rem, 3.7vw, 1.65rem);
+  margin: 0 0 1px; line-height: 1.2;
+}
+.sb-studio-screen .sb-quality-card > div {
+  position: relative; min-height: 60px; padding: 10px 34px 9px 10px;
+  border-radius: 14px;
+}
+.sb-studio-screen .sb-quality-card > div span { font-size: .7rem; }
+.sb-studio-screen .sb-quality-card > div strong { margin-top: 4px; font-size: 1rem; }
+.sb-studio-screen .sb-quality-card > div svg {
+  position: absolute; top: 50%; right: 10px; transform: translateY(-50%);
+  width: 19px; height: 19px; color: var(--sb-blue);
+}
+@media(max-width:720px) {
+  .sb-home-screen .sb-screen-head h1 { font-size: clamp(1.75rem, 6.4vw, 2rem); }
+  .sb-home-screen .sb-screen-head { margin-bottom: 14px; }
+  .sb-home-screen .sb-new-book-copy h2 { font-size: 1.35rem; }
+  .sb-studio-screen { width: calc(100% - 20px); padding-top: 9px; }
+  .sb-studio-screen .sb-screen-head.compact h1 { font-size: clamp(1.42rem, 6vw, 1.77rem); }
+  .sb-studio-screen .sb-open-book-workspace { padding: 11px; gap: 9px; }
+  .sb-studio-screen .sb-open-book-overview {
+    grid-template-columns: minmax(0, 36fr) minmax(0, 64fr);
+    gap: 10px; padding-right: 0;
+  }
+  .sb-studio-screen .sb-open-book-cover { min-height: 130px; padding: 9px; }
+  .sb-studio-screen .sb-open-book-copy h2 { font-size: clamp(.96rem, 4.15vw, 1.16rem); }
+  .sb-studio-screen .sb-open-book-copy p { font-size: .77rem; line-height: 1.24; }
+  .sb-studio-screen .sb-book-quick-actions button { min-height: 62px; padding: 8px 4px; }
+  .sb-studio-screen .sb-book-quick-actions button strong { font-size: .76rem; }
+  .sb-studio-screen .sb-quality-card > div { min-height: 57px; padding: 8px 30px 7px 9px; }
+  .sb-studio-screen .sb-quality-card > div strong { font-size: .96rem; }
+}
+@media (max-width:720px) and (max-height:760px) {
+  .sb-studio-screen { padding-top: 5px; padding-bottom: 6px; }
+  .sb-studio-screen .sb-screen-head.compact { margin-bottom: 7px; }
+  .sb-studio-screen .sb-open-book-workspace { gap: 6px; padding: 9px; }
+  .sb-studio-screen .sb-open-book-cover { min-height: 113px; padding: 7px; }
+  .sb-studio-screen .sb-open-book-copy p { font-size: .74rem; line-height: 1.2; }
+  .sb-studio-screen .sb-book-quick-actions { gap: 6px; }
+  .sb-studio-screen .sb-book-quick-actions button { min-height: 54px; padding: 5px 4px; gap: 3px; }
+  .sb-studio-screen .sb-book-quick-actions button .sb-action-icon svg { width: 21px; height: 21px; }
+  .sb-studio-screen .sb-quality-card { gap: 5px; padding: 9px; margin-top: 7px; }
+  .sb-studio-screen .sb-quality-card > div { min-height: 49px; padding: 6px 28px 5px 8px; }
+  .sb-studio-screen .sb-quality-card h2 { font-size: 1.1rem; }
+}
