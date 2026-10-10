@@ -431,3 +431,166 @@
   .study-mode .study-tool-nav button { font-size: .72rem; padding: 8px 5px; }
   .sb-lab05-item-count { font-size: .74rem; }
 }
+
+
+/* LAB06 · Anteprima approvata: testata minima, un solo navigatore di capitoli,
+   frecce fisiche e titolo completo; controlli TTS nello stesso stile in tutta l'app. */
+.study-mode .sb-lab06-compact-header {
+  width: 100%;
+  min-height: 74px;
+  padding: 10px max(16px,env(safe-area-inset-left)) 10px max(16px,env(safe-area-inset-right));
+  display: grid;
+  grid-template-columns: 54px minmax(0,1fr) 54px;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 0;
+  box-shadow: none;
+  background: #fafcff;
+}
+.study-mode .sb-lab06-compact-header > button {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #e3eaf6;
+  border-radius: 17px;
+  background: #f2f5fc;
+  color: #1677ea;
+  cursor: pointer;
+}
+.study-mode .sb-lab06-compact-header > button:focus-visible {
+  outline: 3px solid #1677ea;
+  outline-offset: 2px;
+}
+.study-mode .sb-lab06-compact-header > .sb-lab06-brand {
+  display: block;
+  min-width: 0;
+  overflow: visible;
+  white-space: normal;
+  text-align: center;
+  color: #13223c;
+  font-size: clamp(1.25rem, 4.5vw, 1.55rem);
+  font-weight: 900;
+  letter-spacing: -.05em;
+  line-height: 1.25;
+}
+.sb-lab06-brand span { color: #1677ea; }
+.study-mode .sb-lab06-compact-header .sb-lab06-audio { color: #1677ea; }
+.study-mode .sb-lab06-compact-header .sb-lab06-audio.playing {
+  background: #dceafe;
+  border-color: #82b3fa;
+}
+.study-mode .sb-lab06-chapter-nav {
+  width: min(1100px,calc(100% - 24px));
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 48px minmax(0,1fr) 48px;
+  gap: 8px;
+  align-items: stretch;
+  padding: 0;
+  margin: 10px auto 16px;
+  background: none;
+}
+.study-mode .sb-lab06-chapter-nav > button {
+  padding: 0;
+  min-height: 84px;
+  width: 100%;
+  align-self: stretch;
+  border-radius: 19px;
+  border: 1px solid #dee7f4;
+  font-size: 1.7rem;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(24,50,100,.04);
+}
+.study-mode .sb-lab06-chapter-nav > button:disabled {
+  opacity: .28;
+  background: #f8f9fc;
+  cursor: default;
+}
+.sb-lab06-chapter-center {
+  position: relative;
+  display: grid;
+  gap: 7px;
+  align-content: center;
+  min-width: 0;
+  padding: 17px 38px 17px 19px;
+  border: 1px solid #dee7f4;
+  border-radius: 21px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(24,50,100,.04);
+  cursor: pointer;
+}
+.sb-lab06-chapter-counter {
+  color: #728096;
+  font-size: .73rem;
+  font-weight: 850;
+  letter-spacing: .11em;
+}
+.sb-lab06-chapter-counter b {
+  margin-left: 4px;
+  font-size: 1.05rem;
+  color: #1677ea;
+  letter-spacing: 0;
+}
+.sb-lab06-chapter-full-title {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  color: #16253e;
+  font-size: clamp(1.04rem,3.6vw,1.37rem);
+  font-weight: 850;
+  line-height: 1.32;
+  letter-spacing: -.018em;
+}
+.sb-lab06-dropdown {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #60738e;
+}
+.study-mode .sb-lab06-chapter-center > select {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.sb-lab06-chapter-center:focus-within {
+  outline: 3px solid rgba(22,119,234,.42);
+  outline-offset: 2px;
+}
+.study-mode .sb-lab06-listen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #243856;
+}
+.study-mode .sb-lab06-listen svg { flex: 0 0 auto; color: #1677ea; }
+@media (max-width:640px) {
+  .study-mode .sb-lab06-compact-header {
+    min-height: 64px;
+    padding: 8px 12px;
+    grid-template-columns: 46px minmax(0,1fr) 46px;
+  }
+  .study-mode .sb-lab06-compact-header > button { width: 46px; height: 46px; border-radius: 15px; }
+  .study-mode .sb-lab06-compact-header > .sb-lab06-brand { font-size: 1.34rem; }
+  .study-mode .sb-lab06-chapter-nav { grid-template-columns: 42px minmax(0,1fr) 42px; gap: 6px; margin-top: 9px; margin-bottom: 13px; }
+  .study-mode .sb-lab06-chapter-nav > button { min-height: 88px; border-radius: 16px; font-size: 1.48rem; }
+  .sb-lab06-chapter-center { padding: 13px 27px 14px 12px; border-radius: 17px; gap: 6px; }
+  .sb-lab06-chapter-counter { font-size: .67rem; }
+  .sb-lab06-chapter-counter b { font-size: .98rem; }
+  .sb-lab06-chapter-full-title { font-size: clamp(.96rem,3.95vw,1.13rem); line-height: 1.3; }
+  .sb-lab06-dropdown { right: 8px; }
+}
