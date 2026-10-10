@@ -14,7 +14,7 @@ import {
   updateLibraryMetadata,
 } from './lib/library.js';
 import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
-import { BottomNav, HomeScreen, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
+import { BottomNav, HomeScreen, LibraryScreen, OriginalBookScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { deliverBlob } from './lib/fileDelivery.js';
 import {
@@ -149,6 +149,9 @@ export default function AppV14() {
   const [libraryItems, setLibraryItems] = useState([]);
   const [libraryId, setLibraryId] = useState('');
   const [libraryBusy, setLibraryBusy] = useState(false);
+  const [libraryInitialView, setLibraryInitialView] = useState('all');
+  const [originalRecord, setOriginalRecord] = useState(null);
+  const [originalReading, setOriginalReading] = useState(false);
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -182,6 +185,10 @@ export default function AppV14() {
   function goBack() {
     if (studyModeOpen) {
       setStudyModeOpen(false);
+      return;
+    }
+    if (activeScreen === 'original' && originalReading) {
+      setOriginalReading(false);
       return;
     }
     const previous = screenHistoryRef.current.pop() || 'home';
@@ -405,13 +412,10 @@ export default function AppV14() {
       if (!record) throw new Error('Libro non disponibile.');
       if (original) {
         if (!record.originalFile) throw new Error('Il file originale non è disponibile su questo dispositivo.');
-        await deliverBlob(
-          record.originalFile,
-          record.original?.name || record.originalFile?.name || record.fileName,
-          'Apri originale con il lettore del formato',
-          { preferOpen: true },
-        );
-        setStatus('Originale aperto con il lettore del formato');
+        setOriginalRecord(record);
+        setOriginalReading(false);
+        setStatus('Versione originale pronta · nessuna modifica');
+        navigateTo('original');
         return;
       }
       if (!record.studyBook || !record.sourceData) throw new Error('Libro elaborato non disponibile.');
@@ -482,11 +486,23 @@ export default function AppV14() {
     setImporting(true);
 
     try {
+      // LAB13: conservazione anticipata del file esatto prima di OCR/rielaborazione.
+      // Un errore del parser non deve far perdere il documento originale importato.
+      const originalSaved = await saveLibraryBook({
+        id: createLibraryId(), fileName: file.name, profileId: activeProfileId, originalFile: file,
+      });
+      setLibraryId(originalSaved.id);
+      await refreshLibrary(activeProfileId);
       const parsed = await readSourceFile(file, {
         autoOcr: true,
         onProgress(update) { setStatus(importStatus(update)); },
       });
       setDocumentData(parsed);
+      await saveLibraryBook({
+        id: originalSaved.id, fileName: file.name, profileId: activeProfileId,
+        originalFile: file, sourceData: parsed,
+      });
+      await refreshLibrary(activeProfileId);
       setSelectedChapter(0);
       const recovered = parsed.ocrApplied?.length || 0;
       const unresolved = parsed.needsOcr?.length || 0;
@@ -1038,6 +1054,58 @@ export default function AppV14() {
 
   const activeProfile = profiles.find((profile) => profile.id === activeProfileId) || { id: 'default', name: 'Bruno' };
 
+  function openOriginalLibrary() {
+    setLibraryInitialView('original');
+    navigateTo('library');
+  }
+
+  async function refreshArchiveForLibrary() {
+    setArchiveBusy(true);
+    try { setArchivedScans(await listArchivedScannerPages()); }
+    catch (err) { setError(err.message || 'Archivio scansioni non disponibile.'); }
+    finally { setArchiveBusy(false); }
+  }
+
+  async function openOriginalNative() {
+    if (!originalRecord?.originalFile) { setError('File originale non disponibile.'); return; }
+    try {
+      await deliverBlob(originalRecord.originalFile, originalRecord.original?.name || originalRecord.fileName, 'Apri il file originale', { preferOpen: true });
+    } catch (err) { setError(err.message || 'Non riesco ad aprire il file.'); }
+  }
+
+  async function exportOriginal(format) {
+    const record = originalRecord;
+    if (!record?.originalFile) { setError('File originale non disponibile.'); return; }
+    try {
+      const name = record.original?.name || record.originalFile?.name || record.fileName;
+      if (format === 'original') {
+        await deliverBlob(record.originalFile, name, 'Esporta versione originale');
+        return;
+      }
+      if (!record.sourceData?.chapters?.length) throw new Error('Conversione indisponibile: non è stato possibile leggere il testo originale.');
+      // Adatta esclusivamente una copia in memoria, mai il blob o il record originale.
+      const sourceBook = {
+        chapters: record.sourceData.chapters.map(chapter => ({
+          title: chapter.title,
+          paragraphs: (chapter.paragraphs || []).map(paragraph => {
+            const value = typeof paragraph === 'string' ? paragraph : String(paragraph?.original || paragraph?.text || '');
+            return { original: value, summary: value, dsaSummary: value, simpleSummary: value, glossary: [] };
+          }),
+        })),
+      };
+      const outputName = name.replace(/\.[^.]+$/, '') + '_originale';
+      if (format === 'pdf') await exportPdf(sourceBook, outputName, false);
+      else if (format === 'docx') await exportDocx(sourceBook, outputName, false);
+      else if (format === 'epub') await exportEpub(sourceBook, outputName, false);
+      else if (format === 'html') await exportHtml(sourceBook, outputName, false);
+      else if (format === 'txt') {
+        const text = sourceBook.chapters.map(chapter => [chapter.title, ...chapter.paragraphs.map(p => p.original)].join('\n\n')).join('\n\n');
+        await deliverBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), outputName + '.txt', 'Esporta testo originale');
+      }
+      setStatus('Copia convertita dal testo originale · file originale invariato');
+    } catch (err) { setError(err.message || 'Esportazione originale non riuscita.'); }
+  }
+
   function openFromLibrary(item, view = 'processed') {
     return openLibraryItem(item.id, { original: view === 'original', openReader: view !== 'original' });
   }
@@ -1116,7 +1184,7 @@ export default function AppV14() {
       {activeScreen === 'home' && (
         <HomeScreen
           status={status} importing={importing} generating={generating} libraryItems={libraryItems}
-          onImport={() => documentFileInputRef.current?.click()} onScanner={openScanner} onScannerArchive={openScannerArchive} onOpenBook={openFromLibrary} onContinueBook={openContinueBook}
+          onImport={() => documentFileInputRef.current?.click()} onScanner={openScanner} onScannerArchive={openScannerArchive} onOpenOriginals={openOriginalLibrary} onOpenBook={openFromLibrary} onContinueBook={openContinueBook}
           documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
           scanContent={scannerPanel}
         />
@@ -1124,7 +1192,11 @@ export default function AppV14() {
 
       {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} onRenameCollection={renameScannerArchiveCollection} onRenamePhoto={renameScannerArchivePhoto} />}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} />}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onRefreshScans={refreshArchiveForLibrary}
+        scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
+      {activeScreen === 'original' && <OriginalBookScreen record={originalRecord} reading={originalReading}
+        onRead={() => setOriginalReading(reading => !reading)} onCloseRead={() => setOriginalReading(false)}
+        onOpenNative={openOriginalNative} onExport={exportOriginal} />}
 
       {activeScreen === 'studio' && (
         <StudioScreen
@@ -1143,7 +1215,7 @@ export default function AppV14() {
         />
       )}
 
-      <BottomNav active={activeScreen === 'settings' || activeScreen === 'scans' ? 'home' : activeScreen} onChange={navigateTo} />
+      <BottomNav active={activeScreen === 'settings' || activeScreen === 'scans' ? 'home' : activeScreen === 'original' ? 'library' : activeScreen} onChange={screen => { if (screen === 'library') setLibraryInitialView('all'); navigateTo(screen); }} />
       <input ref={cameraFileInputRef} className="camera-fallback-input" type="file" accept="image/*" capture="environment" onChange={handleCameraFallback} />
 
       {cameraOpen && (
