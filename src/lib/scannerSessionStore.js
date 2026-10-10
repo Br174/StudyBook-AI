@@ -1,5 +1,6 @@
 const DB_NAME = 'studybook-ai-scanner';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
+const ARCHIVE_STORE = 'archive'; // LAB11: fotografie persistenti, indipendenti dalla raccolta attiva
 const META_STORE = 'meta';
 const PAGE_STORE = 'pages';
 const ACTIVE_SESSION = 'active';
@@ -20,6 +21,10 @@ function openDb() {
       }
       if (!db.objectStoreNames.contains(PAGE_STORE)) {
         db.createObjectStore(PAGE_STORE, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(ARCHIVE_STORE)) {
+        const archive = db.createObjectStore(ARCHIVE_STORE, { keyPath: 'id' });
+        archive.createIndex('createdAt', 'createdAt');
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -209,4 +214,136 @@ export async function loadScannerSession() {
   } finally {
     db?.close();
   }
+}
+
+/* LAB11 — Archivio permanente Scannerizzati.
+   Ogni acquisizione viene salvata ATOMICAMENTE sia nella sessione sia nell'archivio.
+   Il precedente schema v1 è migrato senza cancellare le raccolte esistenti. */
+
+export function archiveScannerPageRecord(page, collectionName = 'Appunti fotografati', existing = null) {
+  const record = scannerPageToRecord(page);
+  return {
+    ...record,
+    id: String(page.archiveId || page.id || ''),
+    collection: cleanName(collectionName),
+    createdAt: existing?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    // Il nome della pagina originale è conservato per la rielaborazione.
+  };
+}
+
+export async function saveCapturedScannerPage(page, collectionName = 'Appunti fotografati', { archive = true } = {}) {
+  const record = scannerPageToRecord(page);
+  if (!record.id || !record.blob) return false;
+  let db;
+  try {
+    db = await openDb();
+    const stores = archive ? [PAGE_STORE, ARCHIVE_STORE] : [PAGE_STORE];
+    const tx = db.transaction(stores, 'readwrite');
+    tx.objectStore(PAGE_STORE).put(record);
+    if (archive) tx.objectStore(ARCHIVE_STORE).put(archiveScannerPageRecord(page, collectionName));
+    await transactionDone(tx);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    db?.close();
+  }
+}
+
+export async function updateArchivedScannerText(page, collectionName = 'Appunti fotografati') {
+  if (!page?.id) return false;
+  let db;
+  try {
+    db = await openDb();
+    const key = String(page.archiveId || page.id);
+    const tx = db.transaction(ARCHIVE_STORE, 'readwrite');
+    const store = tx.objectStore(ARCHIVE_STORE);
+    const existing = await requestResult(store.get(key));
+    if (!existing) return false; // una foto eliminata non deve essere ricreata dall'OCR
+    store.put({
+      ...existing,
+      collection: existing.collection || cleanName(collectionName),
+      text: String(page.text || ''),
+      status: page.status === 'ready' ? 'ready' : page.status === 'error' ? 'error' : 'processing',
+      updatedAt: new Date().toISOString(),
+    });
+    await transactionDone(tx);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    db?.close();
+  }
+}
+
+export async function archiveScannerSessionPages(pages = [], collectionName = 'Appunti fotografati') {
+  const candidates = pages.filter(page => page?.id && page?.file instanceof Blob);
+  if (!candidates.length) return true;
+  let db;
+  try {
+    db = await openDb();
+    // Non sovrascrive una fotografia eliminata intenzionalmente nel frattempo.
+    // Le sessioni pre-LAB11, senza origin archiviata, vengono migrate.
+    const tx = db.transaction(ARCHIVE_STORE, 'readwrite');
+    const store = tx.objectStore(ARCHIVE_STORE);
+    for (const page of candidates) {
+      if (page.archiveId) continue;
+      const key = String(page.id);
+      const old = await requestResult(store.get(key));
+      if (old) {
+        store.put({...old, text:String(page.text || old.text || ''), status:page.status, updatedAt:new Date().toISOString()});
+      } else {
+        store.put(archiveScannerPageRecord(page, collectionName));
+      }
+    }
+    await transactionDone(tx);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    db?.close();
+  }
+}
+
+export async function listArchivedScannerPages() {
+  let db;
+  try {
+    db = await openDb();
+    const tx = db.transaction(ARCHIVE_STORE, 'readonly');
+    const entries = await requestResult(tx.objectStore(ARCHIVE_STORE).getAll());
+    await transactionDone(tx);
+    return entries.filter(page => page.id && page.blob instanceof Blob)
+      .sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  } catch { return []; }
+  finally { db?.close(); }
+}
+
+export async function getArchivedScannerPages(ids = []) {
+  const ordered = Array.from(new Set(ids.map(String).filter(Boolean)));
+  if (!ordered.length) return [];
+  let db;
+  try {
+    db = await openDb();
+    const tx = db.transaction(ARCHIVE_STORE,'readonly');
+    const requests = ordered.map(id => requestResult(tx.objectStore(ARCHIVE_STORE).get(id)));
+    const records = await Promise.all(requests);
+    await transactionDone(tx);
+    return records.filter(p => p && p.blob instanceof Blob);
+  } catch { return []; }
+  finally { db?.close(); }
+}
+
+export async function deleteArchivedScannerPages(ids = []) {
+  const keys = Array.from(new Set(ids.map(String).filter(Boolean)));
+  if (!keys.length) return true;
+  let db;
+  try {
+    db = await openDb();
+    const tx = db.transaction(ARCHIVE_STORE,'readwrite');
+    for (const key of keys) tx.objectStore(ARCHIVE_STORE).delete(key);
+    await transactionDone(tx);
+    return true;
+  } catch { return false; }
+  finally { db?.close(); }
 }
