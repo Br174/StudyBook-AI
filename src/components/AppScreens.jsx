@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { ACCESSIBILITY_PRESETS } from '../lib/accessibility.js';
+import { StudyIcon } from './StudyUiIcons.jsx';
 import '../appShellV16.css';
 
 function stripExtension(value = '') {
@@ -76,15 +77,15 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest }) {
 
 export function BottomNav({ active, onChange }) {
   const items = [
-    ['home', '⌂', 'Home'],
-    ['library', '▥', 'Libreria'],
-    ['studio', '◇', 'Studio'],
+    ['home', 'home', 'Home'],
+    ['library', 'library', 'Libreria'],
+    ['studio', 'graduate', 'Studio'],
   ];
   return (
     <nav className="sb-bottom-nav" aria-label="Navigazione principale">
       {items.map(([id, icon, label]) => (
         <button type="button" key={id} className={active === id ? 'active' : ''} onClick={() => onChange(id)}>
-          <span>{icon}</span><small>{label}</small>
+          <span className="sb-nav-icon"><StudyIcon name={icon} size={20} /></span><small>{label}</small>
         </button>
       ))}
     </nav>
@@ -110,10 +111,10 @@ export function HomeScreen({
           <div><h2>Nuovo libro</h2><p>Importa una fonte o acquisisci le pagine e crea il tuo libro di studio.</p></div>
         </div>
         <div className="sb-source-grid">
-          <button type="button" onClick={onScanner} disabled={importing || generating}><span>⌗</span>Scanner</button>
-          <button type="button" onClick={onImport} disabled={importing || generating}><span>BOOK</span>PDF / eBook</button>
-          <button type="button" onClick={onImport} disabled={importing || generating}><span>▧</span>Foto</button>
-          <button type="button" onClick={onImport} disabled={importing || generating}><span>▤</span>Documento</button>
+          <button type="button" onClick={onScanner} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="scanner" size={25} /></span><strong>Scanner</strong></button>
+          <button type="button" onClick={onImport} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="book" size={25} /></span><strong>PDF / eBook</strong></button>
+          <button type="button" onClick={onImport} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="photo" size={25} /></span><strong>Foto</strong></button>
+          <button type="button" onClick={onImport} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="document" size={25} /></span><strong>Documento</strong></button>
         </div>
       </article>
 
@@ -259,10 +260,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
           </div>
         </div>
         <div className="sb-book-quick-actions">
-          <button type="button" onClick={onRead}><span aria-hidden="true">Aa</span><strong>Leggi sul telefono</strong></button>
-          <button type="button" onClick={() => onExport('pdf', 'study')}><span aria-hidden="true">▤</span><strong>Leggi in PDF</strong></button>
-          <button type="button" onClick={onStudy}><span aria-hidden="true">◇</span><strong>Studia sul telefono</strong></button>
-          <button type="button" className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span aria-hidden="true">↗</span><strong>Scarica libro</strong></button>
+          <button type="button" onClick={onRead}><span className="sb-action-icon"><StudyIcon name="book" size={25} /></span><strong>Leggi sul telefono</strong></button>
+          <button type="button" onClick={() => onExport('pdf', 'study')}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>Leggi in PDF</strong></button>
+          <button type="button" onClick={onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>
+          <button type="button" className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>Scarica libro</strong></button>
         </div>
       </section>
 
@@ -294,10 +295,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport })
 
       <article className="sb-quality-card">
         <h2>Controllo del libro</h2>
-        <div><span>Capitoli</span><strong>{studyBook.chapters?.length || 0}</strong></div>
-        <div><span>Unità concettuali</span><strong>{fidelity?.conceptUnits || '—'}</strong></div>
-        <div><span>Copertura media</span><strong>{Number.isFinite(fidelity?.averageCoveragePercent) ? `${fidelity.averageCoveragePercent}%` : '—'}</strong></div>
-        <div><span>Compressione</span><strong>{Number.isFinite(fidelity?.compressionPercent) ? `${fidelity.compressionPercent}%` : '—'}</strong></div>
+        <div><span>Capitoli</span><strong>{studyBook.chapters?.length || 0}</strong><StudyIcon name="book" size={19} /></div>
+        <div><span>Unità concettuali</span><strong>{fidelity?.conceptUnits || '—'}</strong><StudyIcon name="units" size={19} /></div>
+        <div><span>Copertura media</span><strong>{Number.isFinite(fidelity?.averageCoveragePercent) ? `${fidelity.averageCoveragePercent}%` : '—'}</strong><StudyIcon name="coverage" size={19} /></div>
+        <div><span>Compressione</span><strong>{Number.isFinite(fidelity?.compressionPercent) ? `${fidelity.compressionPercent}%` : '—'}</strong><StudyIcon name="compression" size={19} /></div>
       </article>
     </section>
   );
