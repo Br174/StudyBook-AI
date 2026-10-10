@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StudyIcon } from './StudyUiIcons.jsx';
 import RenameTitleDialog from './RenameTitleDialog.jsx';
-import { suggestDocumentTitle } from '../lib/smartTitles.js';
+import { suggestDocumentTitle, suggestPageTitle } from '../lib/smartTitles.js';
 import '../scannerArchive.css';
 
 /* LAB11: archivio locale delle foto. Le anteprime sono URL temporanei,
@@ -75,7 +75,7 @@ export default function ScannerArchive({ entries = [], busy = false, onRestore, 
                   <span>{page.text?.trim() ? 'OCR salvato' : 'OCR da eseguire'}</span>
                   {page.createdAt && <span>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(page.createdAt))}</span>}
                   {!selectMode && <>
-                    <button type="button" className="sb-archive-rename" disabled={busy} onClick={()=>setRenameTarget({type:'photo',id:page.id,name:page.pageTitle || `Pagina ${index+1}`,suggestion:page.pageTitleManual ? '' : (page.pageTitle || '')})} aria-label="Rinomina fotografia">✎ Rinomina</button>
+                    <button type="button" className="sb-archive-rename" disabled={busy} onClick={()=>setRenameTarget({type:'photo',id:page.id,name:page.pageTitle || `Pagina ${index+1}`,suggestion:page.pageTitleManual ? '' : (suggestPageTitle(page.text)?.title || page.pageTitle || '')})} aria-label="Rinomina fotografia">✎ Rinomina</button>
                     <button type="button" disabled={busy} onClick={() => remove([page.id])} aria-label="Elimina fotografia">Elimina</button>
                   </>}
                 </div>
