@@ -7,7 +7,7 @@ import '../scannerArchive.css';
 /* LAB11: archivio locale delle foto. Le anteprime sono URL temporanei,
    rilasciati quando si abbandona la schermata. Nessuna foto viene cancellata
    quando si rielabora o crea un libro. */
-export default function ScannerArchive({ entries = [], busy = false, onRestore, onDelete, onRenameCollection, onRenamePhoto, onBack }) {
+export default function ScannerArchive({ entries = [], busy = false, onRestore, onDelete, onRenameCollection, onRenamePhoto, onBack, backLabel = '← Torna alla Home' }) {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState([]);
   const [thumbs, setThumbs] = useState({});
@@ -53,7 +53,7 @@ export default function ScannerArchive({ entries = [], busy = false, onRestore, 
         <p>{entries.length} {entries.length === 1 ? 'fotografia conservata' : 'fotografie conservate'} sul telefono. Tocca una fotografia per rielaborarla.</p>
       </header>
       <div className="sb-archive-toolbar">
-        <button type="button" onClick={onBack}>← Torna alla Home</button>
+        <button type="button" onClick={onBack}>{backLabel}</button>
         <button type="button" disabled={!entries.length || busy} onClick={() => { setSelectMode(value=>!value); setSelected([]); }}>{selectMode ? 'Annulla selezione' : 'Seleziona più pagine'}</button>
       </div>
       {!entries.length && <div className="sb-archive-empty"><StudyIcon name="photo" size={39}/><strong>Nessuna fotografia scannerizzata</strong><p>Usa Scanner per fotografare le pagine. Le nuove fotografie rimarranno disponibili qui anche dopo aver creato un libro.</p></div>}
