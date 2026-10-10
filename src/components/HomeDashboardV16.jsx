@@ -40,7 +40,11 @@ export function HomeDashboardV16({
   const scansCount = archivedScans.length;
   const processedCount = libraryItems.filter(book=>book.metadata?.hasProcessed).length;
   const originalsCount = libraryItems.filter(book=>book.metadata?.hasOriginal).length;
-  return <section className="sb-screen sb-home-screen sb-home-v16">
+  // LAB17: durante le scansioni, dedicare tutta l'area al documento:
+  // il carosello Recenti (con le piccole anteprime a icona) non deve
+  // invadere le informazioni o i comandi dello scanner.
+  const scannerActive = Boolean(scanContent);
+  return <section className={scannerActive ? 'sb-screen sb-home-screen sb-home-v16 sb-home-scanning' : 'sb-screen sb-home-screen sb-home-v16'}>
     <div className="sb-home-primary">
       <div className="sb-home-source-actions">
         <button onClick={onScanner} disabled={importing||generating}><StudyIcon name="scanner" size={25}/><strong>Scanner</strong></button>
@@ -58,7 +62,7 @@ export function HomeDashboardV16({
       {scanContent}
       {!scanContent && !documentData && !generating && <div className="sb-home-placeholder"><StudyIcon name="document" size={44}/><strong>Qui presto nuove funzionalità</strong><p>Scannerizza, elabora e organizza i tuoi appunti in un unico posto.</p></div>}
     </div>
-    <section className="sb-home-recent" aria-label="Recenti">
+    {!scannerActive && <section className="sb-home-recent" aria-label="Recenti">
       <header><h2>Recenti</h2><button onClick={onViewAll}>Vedi tutti ›</button></header>
       {recent.length ? <>
         <div className="sb-home-recent-track" ref={strip} onScroll={e=>setPosition(Math.round(e.currentTarget.scrollLeft / 220))} role="region" aria-label="Scorri i documenti recenti da destra a sinistra" tabIndex={0}>
@@ -71,6 +75,6 @@ export function HomeDashboardV16({
         </div>
         <div className="sb-home-carousel-progress"><span>{Math.min(recent.length,position+1)} / {recent.length}</span><button onClick={()=>strip.current?.scrollBy({left:220,behavior:'smooth'})} aria-label="Avanti nei recenti">›</button></div>
       </> : <p className="sb-home-recent-empty">I tuoi contenuti recenti appariranno qui.</p>}
-    </section>
+    </section>}
   </section>;
 }
