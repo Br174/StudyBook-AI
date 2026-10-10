@@ -4,40 +4,17 @@ import { buildConceptMap, buildFlashcards, buildOralQuestions, buildQuiz } from 
 import { readerCssVariables } from '../lib/accessibility.js';
 import { editorialParagraphText } from '../lib/editorialModel.js';
 import { filterGlossaryEntries } from '../lib/glossaryQuality.js';
+import { buildUniversalGlossary, splitUniversalText } from '../lib/universalGlossary.js';
 import { speakStudyText, stopStudySpeech, installItalianSpeechVoice } from '../lib/studySpeech.js';
 import { StudyBackIcon, StudySoundIcon, StudyIcon } from './StudyUiIcons.jsx';
 import '../studyMode.css';
 import '../studyTools.css';
 import '../studyContinuous.css';
 
-// LAB05: definizioni verificate per abbreviazioni ricorrenti, solo se effettivamente presenti nel capitolo.
-const STANDARD_ABBREVIATIONS = {
-  TFR: 'Trattamento di fine rapporto: somma maturata durante il rapporto di lavoro, corrisposta quando termina.',
-  INPS: 'Istituto Nazionale della Previdenza Sociale.',
-  INAIL: 'Istituto Nazionale per l’Assicurazione contro gli Infortuni sul Lavoro.',
-  CCNL: 'Contratto Collettivo Nazionale di Lavoro.',
-  IRPEF: 'Imposta sul Reddito delle Persone Fisiche.',
-};
-function withChapterAbbreviations(entries, chapter) {
-  const text = (chapter?.paragraphs || []).map(p => [p.original, p.summary, p.simpleSummary].filter(Boolean).join(' ')).join(' ');
-  const result = [...entries];
-  const existing = new Set(result.map(e => e.term.toLocaleUpperCase('it-IT')));
-  for (const [term, definition] of Object.entries(STANDARD_ABBREVIATIONS)) {
-    if (!existing.has(term) && new RegExp('\\b' + term + '\\b', 'i').test(text)) {
-      result.push({ term, definition, basis: 'general', paragraphIndex: 0 });
-    }
-  }
-  return result;
-}
-
-function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 function cleanGlossary(entries = []) {
   return filterGlossaryEntries(entries, { limit: 24 }).map((entry) => ({
     ...entry,
-    placement: 'side',
+    placement: 'inline',
     basis: entry?.basis || 'source',
     paragraphIndex: Number.isInteger(entry?.paragraphIndex) ? entry.paragraphIndex : null,
   }));
@@ -67,54 +44,32 @@ function normalizedSection(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
-function InteractiveText({ text, glossary, onPick }) {
+function InteractiveText({ text, glossary, chapterTerms, onPick }) {
   const ref = useRef(null);
-  const glossaryEntries = useMemo(() => cleanGlossary(glossary), [glossary]);
-  const glossaryMap = useMemo(
-    () => new Map(glossaryEntries.map((entry) => [entry.term.toLocaleLowerCase('it-IT'), entry])),
-    [glossaryEntries],
+  const glossaryEntries = useMemo(
+    () => buildUniversalGlossary(text, cleanGlossary(glossary), chapterTerms),
+    [text, glossary, chapterTerms],
   );
-  const segments = useMemo(() => {
-    const value = String(text || '');
-    if (!glossaryEntries.length) return [value];
-    const terms = glossaryEntries
-      .map((entry) => entry.term)
-      .sort((a, b) => b.length - a.length)
-      .map(escapeRegExp);
-    if (!terms.length) return [value];
-    return value.split(new RegExp(`(${terms.join('|')})`, 'giu'));
-  }, [text, glossaryEntries]);
+  const segments = useMemo(() => splitUniversalText(text, glossaryEntries), [text, glossaryEntries]);
 
   function useSelection() {
     const selection = window.getSelection?.();
     const value = selection?.toString?.().trim();
     if (!value || value.length > 1400 || !ref.current) return;
-    const anchor = selection.anchorNode;
-    const focus = selection.focusNode;
+    const anchor = selection.anchorNode, focus = selection.focusNode;
     if ((anchor && ref.current.contains(anchor)) || (focus && ref.current.contains(focus))) onPick(value, null);
   }
 
   return (
-    <p
-      ref={ref}
-      className="study-interactive-text"
-      onMouseUp={useSelection}
-      onTouchEnd={() => window.setTimeout(useSelection, 0)}
-    >
-      {segments.map((segment, index) => {
-        const entry = glossaryMap.get(String(segment || '').toLocaleLowerCase('it-IT'));
-        if (!entry) return <span key={`plain-${index}`}>{segment}</span>;
-        return (
-          <button
-            type="button"
-            className="study-legal-term"
-            key={`${entry.term}-${index}`}
-            onClick={() => onPick(segment, entry)}
-          >
-            <strong>{segment}</strong>
-          </button>
-        );
-      })}
+    <p ref={ref} className="study-interactive-text"
+       onMouseUp={useSelection} onTouchEnd={() => window.setTimeout(useSelection, 0)}>
+      {segments.map(({ text: segment, entry }, index) => entry ? (
+        <button type="button" className="study-legal-term sb-lab10-glossary-term"
+          key={index} title={entry.definition ? 'Apri la spiegazione' : 'Chiedi il significato nel contesto'}
+          aria-label={'Glossario: ' + segment} onClick={() => onPick(segment, entry)}>
+          <strong>{segment}</strong>
+        </button>
+      ) : <span key={index}>{segment}</span>)}
     </p>
   );
 }
@@ -160,7 +115,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
   const quiz = useMemo(() => buildQuiz(studySource, studyScope === 'book' ? 30 : 18), [studySource, studyScope]);
   const oralQuestions = useMemo(() => buildOralQuestions(studySource, studyScope === 'book' ? 36 : 24), [studySource, studyScope]);
   const conceptMap = useMemo(() => buildConceptMap(studySource, studyScope === 'book' ? 60 : 24), [studySource, studyScope]);
-  const glossary = useMemo(() => withChapterAbbreviations(chapterGlossary(chapter || {}), chapter), [chapter]);
+  const glossary = useMemo(() => chapterGlossary(chapter || {}), [chapter]);
   useEffect(() => () => { void stopStudySpeech(); }, []);
   useEffect(() => { void stopStudySpeech(); setTtsSpeaking(false); setTtsError(''); }, [chapterIndex]);
   function readAloud(text) {
@@ -209,9 +164,9 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
       sectionTitle: paragraph.sourceSection || '',
       glossaryEntry,
     });
-    setAnswer(glossaryEntry ? {
+    setAnswer(glossaryEntry?.definition ? {
       answer: glossaryEntry.definition,
-      label: 'Terminologia',
+      label: glossaryEntry.kind === 'reference' ? 'Riferimento' : 'Glossario',
       basis: glossaryEntry.basis || 'source',
       glossary: true,
     } : null);
@@ -367,6 +322,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
               <header className="study-continuous-chapter-head">
                 <small>CAPITOLO {chapterIndex + 1}</small>
                 <h1>{chapter.title}</h1>
+                <p className="sb-lab10-hint">Tocca i termini in grassetto per scoprirne il significato, oppure seleziona qualsiasi parola.</p>
               </header>
 
               {chapter.paragraphs.map((paragraph, index) => {
@@ -387,6 +343,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
                     <InteractiveText
                       text={text}
                       glossary={localGlossary}
+                      chapterTerms={glossary}
                       onPick={(selection, glossaryEntry) => openTarget(selection, paragraph, glossaryEntry)}
                     />
                   </section>
@@ -394,18 +351,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
               })}
             </div>
 
-            <aside className="study-chapter-glossary" aria-label="Terminologia del capitolo">
-              <small>TERMINOLOGIA</small>
-              {glossary.length ? glossary.map((entry) => {
-                const paragraph = chapter.paragraphs[entry.paragraphIndex] || chapter.paragraphs[0];
-                return (
-                  <button type="button" key={entry.term} onClick={() => openTarget(entry.term, paragraph, entry)}>
-                    <strong>{entry.term}</strong>
-                    <span>{entry.definition}</span>
-                  </button>
-                );
-              }) : <span className="study-tool-empty">Nessun termine specialistico da spiegare in questo capitolo.</span>}
-            </aside>
+
           </article>
         </main>
       )}
@@ -501,16 +447,26 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
       )}
 
       {isReader && target && (
-        <section className="study-assistant-sheet" aria-live="polite">
+        <>
+        <button type="button" className="sb-lab10-glossary-backdrop" aria-label="Chiudi glossario" onClick={() => setTarget(null)} />
+        <section className="study-assistant-sheet sb-lab10-glossary-sheet" role="dialog" aria-modal="true" aria-label="Glossario intelligente" aria-live="polite">
           <div className="study-assistant-grip" />
           <div className="study-assistant-head">
             <div>
-              <small>STAI CHIEDENDO DI</small>
+              <small>GLOSSARIO INTELLIGENTE</small>
               <strong>{target.selection}</strong>
             </div>
             <button type="button" onClick={() => setTarget(null)} aria-label="Chiudi spiegazione">×</button>
           </div>
 
+
+          {!answer && !assistantBusy && <div className="sb-lab10-unverified">
+            <p>{target.glossaryEntry?.kind === 'reference'
+              ? 'Riferimento rilevato nel testo. Per conoscere il contenuto e la sua eventuale versione vigente serve una verifica della fonte.'
+              : 'La definizione non è presente nel glossario disponibile. Puoi chiedere una spiegazione riferita a questo libro.'}</p>
+            <button type="button" onClick={() => runAction('meaning')}>Che significa?</button>
+          </div>}
+          <details className="sb-lab10-more-actions"><summary>Altre spiegazioni e domande</summary>
           <div className="study-action-grid">
             {STUDY_ACTIONS.map((action) => (
               <button type="button" key={action.id} disabled={assistantBusy} onClick={() => runAction(action.id)}>{action.label}</button>
@@ -532,11 +488,13 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
             Leggi automaticamente le spiegazioni
           </label>
 
+          </details>
           {assistantBusy && <div className="study-assistant-loading">Sto preparando la spiegazione…</div>}
           {assistantError && <div className="study-assistant-error">{assistantError}</div>}
           {answer && (
             <div className="study-answer">
-              {answer.basis === 'general' && <div className="study-answer-basis">Spiegazione aggiuntiva · non è testo dell’autore</div>}
+              {answer.basis === 'general' && <div className="study-answer-basis">Definizione generale · non è testo dell’autore</div>}
+              {answer.fallback && <div className="sb-lab10-source-warning">Spiegazione ricavata dal contesto disponibile, non una definizione verificata.</div>}
               {answer.glossary && answer.basis === 'source' && <div className="study-answer-basis source">Definizione ricavata dal testo del libro</div>}
               {answer.label && <strong>{answer.label}</strong>}
               <p>{answer.answer}</p>
@@ -547,6 +505,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
             </div>
           )}
         </section>
+        </>
       )}
     </div>
   );
