@@ -183,6 +183,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
   const [actionCandidate, setActionCandidate] = useState(null);
   const [coverProcessing, setCoverProcessing] = useState('');
   const [coverMessage, setCoverMessage] = useState('');
+  const [coverNotice, setCoverNotice] = useState('');
   const coverFileInputRef = useRef(null);
   const coverFileTargetRef = useRef('');
   const [visibleScanCount, setVisibleScanCount] = useState(20);
@@ -267,6 +268,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
       )}
       </>}
 
+      {coverNotice && <div className="sb-library-cover-notice" role="status">{coverNotice}<button type="button" aria-label="Chiudi avviso copertina" onClick={()=>setCoverNotice('')}>×</button></div>}
       <input ref={coverFileInputRef} type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" hidden
         onChange={async event => {
           const file=event.target.files?.[0], id=coverFileTargetRef.current;
@@ -287,7 +289,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
               <button type="button" disabled={Boolean(coverProcessing)} onClick={()=>{coverFileTargetRef.current=actionCandidate.id;coverFileInputRef.current?.click();}}>▧ Scegli copertina dal telefono</button>
               <button type="button" disabled={Boolean(coverProcessing)||!onGenerateCover} onClick={async()=>{
                 const id=actionCandidate.id;setCoverProcessing(id);setCoverMessage('');
-                try{const ok=await onGenerateCover(id);setCoverMessage(ok?'Nuova copertina AI salvata.':'Impossibile creare la copertina AI ora.');if(ok)setActionCandidate(null);}
+                try{const ok=await onGenerateCover(id);const message=ok?'Copertina illustrata creata. Il tema viene affinato dall’AI online se disponibile.':'Non è stato possibile creare la copertina.';setCoverMessage(message);if(ok){setCoverNotice(message);setActionCandidate(null);}}
                 catch(error){setCoverMessage(error.message||'Servizio AI non disponibile.');}
                 finally{setCoverProcessing('');}
               }}>✦ {coverProcessing?'Creazione in corso…':'Crea / rigenera copertina AI'}</button>
