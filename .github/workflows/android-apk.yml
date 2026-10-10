@@ -15,6 +15,7 @@ on:
       - lab/studybook-core-android-01-update-09
       - lab/studybook-core-android-01-update-10
       - lab/studybook-core-android-01-update-11
+      - lab/studybook-core-android-01-update-22
       - lab/studybook-core-android-01-update-21
       - lab/studybook-core-android-01-update-20
       - lab/studybook-core-android-01-update-19
@@ -104,6 +105,12 @@ jobs:
               echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab.recovery03" >> "$GITHUB_ENV"
               echo "STUDYBOOK_APP_NAME=StudyBook AI LAB 03 Ripristino" >> "$GITHUB_ENV"
               echo "STUDYBOOK_SIGNING_MODE=recovery" >> "$GITHUB_ENV"
+              ;;
+            lab/studybook-core-android-01-update-22)
+              echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-22-AGGIORNAMENTO" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APP_NAME=StudyBook AI LAB" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_SIGNING_MODE=update" >> "$GITHUB_ENV"
               ;;
             lab/studybook-core-android-01-update-21)
               echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-21-AGGIORNAMENTO" >> "$GITHUB_ENV"
@@ -297,6 +304,45 @@ jobs:
 
       - name: Rebuild LAB21 Android assets with verified cover service URL
         if: github.ref == 'refs/heads/lab/studybook-core-android-01-update-21'
+        env:
+          VITE_NATIVE_API_BASE: https://studybook-ai.brunoverlezza.workers.dev
+        run: npm run build
+
+      - name: Test LAB22 original-first keyless cover search
+        if: github.ref == 'refs/heads/lab/studybook-core-android-01-update-22'
+        run: node scripts/test-lab22-cover-search.mjs
+
+      # LAB22 is an independent, cost-free search service. Do not change or
+      # rely on the Gemini image Worker or the production study assistant.
+      - name: Deploy LAB22 book cover search Worker
+        if: github.ref == 'refs/heads/lab/studybook-core-android-01-update-22'
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo "::error::Missing Cloudflare token"; exit 1; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || { echo "::error::Missing Cloudflare account"; exit 1; }
+          npx wrangler deploy --config wrangler.lab22-cover.jsonc
+          COVER_SEARCH_URL="https://studybook-ai-coversearch-lab22.brunoverlezza.workers.dev"
+          STATUS=0
+          for ATTEMPT in $(seq 1 12); do
+            STATUS=$(curl --max-time 12 --silent --output /tmp/lab22-api.json --write-out '%{http_code}' "$COVER_SEARCH_URL/api/book-cover/search" || true)
+            if [ "$STATUS" = "405" ]; then break; fi
+            echo "Waiting for isolated cover search: attempt $ATTEMPT, HTTP $STATUS"
+            sleep 4
+          done
+          if [ "$STATUS" != "405" ]; then
+            echo "::error::LAB22 keyless image search service inaccessible (HTTP $STATUS)"
+            exit 1
+          fi
+          echo "VITE_COVER_SEARCH_BASE=$COVER_SEARCH_URL" >> "$GITHUB_ENV"
+          echo "LAB22 isolated keyless cover search READY: $COVER_SEARCH_URL"
+
+      - name: Rebuild LAB22 Android web assets with verified search service
+        if: github.ref == 'refs/heads/lab/studybook-core-android-01-update-22'
         env:
           VITE_NATIVE_API_BASE: https://studybook-ai.brunoverlezza.workers.dev
         run: npm run build
