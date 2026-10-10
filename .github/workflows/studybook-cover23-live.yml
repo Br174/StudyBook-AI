@@ -44,3 +44,5 @@ jobs:
           }
           if(wrong)throw Error('LAB23 real cover selection failed: '+wrong+' bad results');
           NODE
+
+# Retest LAB23 expanded Roman and religious searches (unique photos).
