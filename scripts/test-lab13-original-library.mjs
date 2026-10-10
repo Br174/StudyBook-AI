@@ -39,8 +39,8 @@ for (const label of ['Scannerizzati','Modificati','Originali','Tutti']) {
 assert.ok(screens.includes('onOpenOriginals') && !screens.includes('<strong>Documento</strong>'), 'tile Documento sostituita');
 assert.ok(screens.includes('<ScannerArchive {...scannerProps}') && gallery.includes('backLabel'), 'scansioni riusate nella Libreria');
 assert.ok(app.includes('const originalSaved = await saveLibraryBook(') && app.includes('sourceData: parsed'), 'import salva file originale e poi testo estratto');
-assert.ok(app.includes('setOriginalRecord(record)') && app.includes("navigateTo('original')"), 'originali aprono scheda dedicata');
-assert.ok(screens.includes('export function OriginalBookScreen') && screens.includes('Leggi sul telefono') && screens.includes('Esporta originale'), 'lettura ed esportazione');
+assert.ok(app.includes('setOriginalRecord(record)') && app.includes("navigateTo('studio')"), 'originali aprono la scheda Libro aperto');
+assert.ok(screens.includes('function OriginalInlineReader') && screens.includes('Leggi sul telefono') && screens.includes('Formato originale'), 'lettura e esportazione nella scheda unificata');
 assert.ok(app.includes("format === 'original'") && app.includes('record.originalFile') && app.includes('new Blob([text]'), 'originale binario e conversione separati');
 assert.ok(css.includes('.sb-library-categories') && css.includes('.sb-original-reading'), 'quattro categorie responsive');
 console.log('LAB13: immutabilità originali, categorie, lettura, esportazioni e eliminazione selettiva: PASS');
