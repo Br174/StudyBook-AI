@@ -11,7 +11,7 @@ assert.ok(archive.includes('<img src={thumbs[page.id]'),'original photo thumbnai
 assert.ok(appCss.includes('.sb-library-screen .sb-library-scans-compact {display:grid;grid-template-columns:repeat(3,minmax(0,1fr))'),'all view has three photo previews');
 assert.ok(screens.includes('<ScanPhotoPreview blob={page.blob}'),'all view uses archived original photo');
 assert.ok(screens.includes('onBookActions')&&screens.includes('onPointerDown={startHold}'),'long press opens book action menu');
-for(const value of ['Rinomina libro','Elimina libro','Scegli copertina dal telefono','Crea copertina con vera AI immagini','Ripristina copertina originale'])assert.ok(screens.includes(value),'long-press menu '+value);
+for(const value of ['Rinomina libro','Elimina libro','Scegli copertina dal telefono','Trova copertina automaticamente','Ripristina copertina originale'])assert.ok(screens.includes(value),'long-press menu '+value);
 assert.ok(screens.includes('onClick={openBook}'),'tap-to-open retained');
 assert.ok(screens.includes('setDeleteCandidate')&&screens.includes('onDeleteBook(deleteCandidate.id'),'deletion confirmation retained');
 assert.ok(app.includes('requestAiCoverTheme(originalRecord,{signal:controller.signal})'),'real configured AI endpoint consulted, not misleading local AI claim');
