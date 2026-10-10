@@ -93,7 +93,7 @@ export function BottomNav({ active, onChange }) {
 }
 
 export function HomeScreen({
-  status, importing, generating, libraryItems, onImport, onScanner, onOpenBook, onContinueBook, documentData,
+  status, importing, generating, libraryItems, onImport, onScanner, onScannerArchive, onOpenBook, onContinueBook, documentData,
   fileName, onCreateBook, progressPercent, scanContent = null,
 }) {
   const recent = libraryItems.slice(0, 3);
@@ -113,7 +113,7 @@ export function HomeScreen({
         <div className="sb-source-grid">
           <button type="button" onClick={onScanner} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="scanner" size={25} /></span><strong>Scanner</strong></button>
           <button type="button" onClick={onImport} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="book" size={25} /></span><strong>PDF / eBook</strong></button>
-          <button type="button" onClick={onImport} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="photo" size={25} /></span><strong>Foto</strong></button>
+          <button type="button" onClick={onScannerArchive} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="photo" size={25} /></span><strong>Scannerizzati</strong></button>
           <button type="button" onClick={onImport} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="document" size={25} /></span><strong>Documento</strong></button>
         </div>
       </article>
