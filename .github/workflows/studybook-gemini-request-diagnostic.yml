@@ -1,0 +1,44 @@
+name: LAB21 Gemini image request diagnostic
+
+on:
+  push:
+    branches:
+      - lab/studybook-cover-gemini-key-check-01
+    paths:
+      - '.github/workflows/studybook-gemini-request-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose-image-request:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - name: Diagnose Google Gemini image request with existing key (no image data logged)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          const key=process.env.GEMINI_API_KEY;
+          if(!key)throw new Error('Gemini key unavailable');
+          const controller=AbortSignal.timeout(65000);
+          const r=await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-image:generateContent',{
+            method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},
+            signal:controller,
+            body:JSON.stringify({
+              contents:[{role:'user',parts:[{text:'Generate a clean vertical cover artwork of ancient Roman architecture, without words.'}]}],
+              generationConfig:{responseModalities:['IMAGE'],responseFormat:{image:{aspectRatio:'3:4',imageSize:'1K'}}}
+            }),
+          });
+          const data=await r.json().catch(()=>({}));
+          const parts=(data.candidates||[]).flatMap(c=>c.content?.parts||[]);
+          const image=parts.find(x=>x.inlineData||x.inline_data);
+          console.log('DIRECT_MODEL_HTTP='+r.status);
+          console.log('DIRECT_MODEL_ERROR_STATUS='+String(data.error?.status||'NONE'));
+          console.log('DIRECT_MODEL_ERROR_MSG='+String(data.error?.message||'NONE').slice(0,850).replace(/key=[^& ]+/gi,'key=[REDACTED]'));
+          console.log('DIRECT_MODEL_IMAGE_PRESENT='+Boolean(image));
+          console.log('DIRECT_MODEL_CANDIDATE_COUNT='+(data.candidates?.length||0));
+          NODE
