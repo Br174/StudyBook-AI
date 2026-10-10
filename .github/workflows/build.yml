@@ -110,6 +110,8 @@ jobs:
         run: node scripts/test-lab17-scanner-scroll.mjs
       - name: Test LAB18 three-book library and large navigation tabs
         run: node scripts/test-lab18-library-layout.mjs
+      - name: Test LAB19 original scanner photos and AI book covers
+        run: node scripts/test-lab19-library-covers.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
