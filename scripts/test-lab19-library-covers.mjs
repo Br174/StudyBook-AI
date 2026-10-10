@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import 'fake-indexeddb/auto';
+import {renderAICover, pickLocalTheme, coverContext, isScannerBook, requestAiCoverTheme} from '../src/lib/libraryCoverEngine.js';
+import {saveLibraryBook, getLibraryBook, updateLibraryMetadata, listLibraryBooks} from '../src/lib/library.js';
+
+const files=await Promise.all(['src/components/AppScreens.jsx','src/components/ScannerArchive.jsx','src/scannerArchive.css','src/appShellV16.css','src/AppV15.jsx','.github/workflows/android-apk.yml'].map(x=>readFile(x,'utf8')));
+const [screens,archive,css,appCss,app,android]=files;
+assert.ok(css.includes('/* LAB19')&&css.includes('.sb-scanner-archive .sb-archive-grid')&&css.includes('repeat(3,minmax(0,1fr))'),'three scan photos per row on phone');
+assert.ok(archive.includes('<img src={thumbs[page.id]'),'original photo thumbnail used, not generated');
+assert.ok(appCss.includes('.sb-library-screen .sb-library-scans-compact {display:grid;grid-template-columns:repeat(3,minmax(0,1fr))'),'all view has three photo previews');
+assert.ok(screens.includes('<ScanPhotoPreview blob={page.blob}'),'all view uses archived original photo');
+assert.ok(screens.includes('onBookActions')&&screens.includes('onPointerDown={startHold}'),'long press opens book action menu');
+for(const value of ['Rinomina libro','Elimina libro','Scegli copertina dal telefono','Crea / rigenera copertina AI','Ripristina copertina originale'])assert.ok(screens.includes(value),'long-press menu '+value);
+assert.ok(screens.includes('onClick={openBook}'),'tap-to-open retained');
+assert.ok(screens.includes('setDeleteCandidate')&&screens.includes('onDeleteBook(deleteCandidate.id'),'deletion confirmation retained');
+assert.ok(app.includes('requestAiCoverTheme(record,{signal:controller.signal})'),'real configured AI endpoint consulted, not misleading local AI claim');
+assert.ok(app.includes('extractOriginalCover(record.originalFile)'),'original PDF/ePub extraction prioritized');
+assert.ok(app.includes('isScannerBook(record)')&&app.includes('getArchivedScannerPages(ids.slice(0,1))'),'scan-origin book uses real scan photo only');
+assert.ok(app.includes('coverQueueRef')&&app.includes('coverWorkerRef'),'nonblocking bounded image queue');
+assert.ok(app.includes('onSetCoverFile={chooseLibraryCover}')&&app.includes('onResetCover={resetLibraryCover}'),'upload and restore connected');
+assert.ok(android.includes('StudyBook-AI-LAB-19-AGGIORNAMENTO')&&android.includes('STUDYBOOK_SIGNING_MODE=update'),'APK family signing stable');
+assert.equal(pickLocalTheme('La rivoluzione francese nella storia'),'storia');
+assert.equal(isScannerBook({sourceData:{sourceFormat:'scan'}}),true);
+assert.ok(coverContext({fileName:'Lezioni di biologia',sourceData:{chapters:[{title:'Cellula',paragraphs:['Il nucleo è importante.']}]}}).includes('nucleo'));
+const svg=decodeURIComponent(renderAICover({title:'Biologia generale',theme:'scienza',variant:0}).split(',')[1]);
+assert.ok(svg.startsWith('<svg')&&svg.includes('Biologia generale')&&!svg.includes('<script'),'AI-driven rendered cover');
+const malicious=decodeURIComponent(renderAICover({title:'<script>alert(1)</script>',theme:'storia'}).split(',')[1]);
+assert.ok(!malicious.includes('<script>'),'untrusted book title XML escaped');
+const before=globalThis.fetch;
+globalThis.fetch=async(url,options)=>{assert.ok(String(url).endsWith('/api/explain'));const body=JSON.parse(options.body);assert.equal(body.action,'custom');assert.ok(body.question.includes('tema illustrato'));return {ok:true,json:async()=>({answer:'storia'})};};
+try{assert.equal(await requestAiCoverTheme({fileName:'Storia romana',subject:'Storia'}),'storia');}
+finally{globalThis.fetch=before;}
+await saveLibraryBook({id:'lab19-existing-record',fileName:'Un PDF originale.pdf',profileId:'default'});
+await updateLibraryMetadata('lab19-existing-record',{coverAI:renderAICover({title:'Un PDF originale'}),coverStatus:'ready'});
+await updateLibraryMetadata('lab19-existing-record',{fileName:'Titolo rinominato'});
+let book=await getLibraryBook('lab19-existing-record');
+assert.equal(book.fileName,'Titolo rinominato');assert.ok(book.coverAI.startsWith('data:image/svg+xml'));
+await saveLibraryBook({id:'lab19-existing-record',fileName:'Titolo rinominato',profileId:'default',studyBook:{chapters:[]}});
+book=await getLibraryBook('lab19-existing-record');assert.ok(book.coverAI.startsWith('data:image/svg+xml'),'reprocessing preserves cover and original record');
+assert.equal((await listLibraryBooks({profileId:'default'})).length,1,'no duplicated record');
+console.log('LAB19 scanned photos 3/row, AI theme provider, real PDF fallback, cover change/rename/delete, IndexedDB retention: PASS');
