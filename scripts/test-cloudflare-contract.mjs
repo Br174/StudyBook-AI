@@ -14,7 +14,7 @@ assert.ok(config.assets?.run_worker_first?.includes('/api/*'));
 assert.equal(config.vars?.AI_API_URL, 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
 assert.ok(config.vars?.AI_MODEL);
 
-for (const route of ['/api/summarize', '/api/explain', '/api/refine']) {
+for (const route of ['/api/summarize', '/api/explain', '/api/refine', '/api/cover-ai/generate']) {
   assert.ok(worker.includes(`['${route}'`), `Worker route missing: ${route}`);
 }
 assert.match(worker, /runLegacyApi/);
