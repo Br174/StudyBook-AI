@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
-import { ACCESSIBILITY_PRESETS } from '../lib/accessibility.js';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ACCESSIBILITY_PRESETS, readerCssVariables } from '../lib/accessibility.js';
 import { StudyIcon } from './StudyUiIcons.jsx';
 import RenameTitleDialog from './RenameTitleDialog.jsx';
 import ScannerArchive from './ScannerArchive.jsx';
@@ -164,6 +164,8 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, i
   const [sort, setSort] = useState('recent');
   const [deleteCandidate, setDeleteCandidate] = useState(null);
   const [renameCandidate, setRenameCandidate] = useState(null);
+  const [visibleScanCount, setVisibleScanCount] = useState(20);
+  useEffect(() => { void onRefreshScans?.(); }, []);
   const subjects = useMemo(() => ['Tutte', ...new Set(items.map((item) => item.subject || 'Altro'))].slice(0, 8), [items]);
   const collections = useMemo(() => [...new Set(items.flatMap((item) => item.collections || []))], [items]);
 
@@ -225,6 +227,23 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, i
           {filtered.map((item) => <BookCover key={item.id} item={item} view={view === 'all' ? (item.metadata?.hasProcessed ? 'processed' : 'original') : view} onOpen={onOpenBook} onDeleteRequest={item => setDeleteCandidate({ ...item, deleteView: view })} onRenameRequest={setRenameCandidate} />)}
         </div>
       ) : <div className="sb-empty-library">Nessun libro in questa sezione.</div>}
+      {view === 'all' && scannerProps.entries?.length > 0 && (
+        <section className="sb-library-scans-compact" aria-label="Scansioni nella vista Tutti">
+          <h2>Scannerizzati <small>{scannerProps.entries.length} fotografie</small></h2>
+          {scannerProps.entries.slice(0, visibleScanCount).map(page => (
+            <button key={page.id} type="button" disabled={scannerProps.busy}
+              onClick={() => scannerProps.onRestore?.([page.id])}>
+              <span><StudyIcon name="photo" size={21}/></span>
+              <strong>{page.pageTitle || page.collection || 'Pagina scannerizzata'}</strong>
+              <small>Rielabora →</small>
+            </button>
+          ))}
+          {visibleScanCount < scannerProps.entries.length && (
+            <button type="button" onClick={() => setVisibleScanCount(value => value + 20)}>Mostra altre scansioni</button>
+          )}
+          <button type="button" onClick={() => { setView('scans'); void onRefreshScans?.(); }}>Apri archivio Scannerizzati</button>
+        </section>
+      )}
       </>}
 
       {renameCandidate && <RenameTitleDialog key={renameCandidate.id} label="Rinomina libro di studio" current={stripExtension(renameCandidate.fileName)} onClose={()=>setRenameCandidate(null)} onSave={name=>onRenameBook(renameCandidate.id,name)} />}
@@ -388,7 +407,7 @@ export function SettingsScreen({ settings, onSettingsChange, profiles, activePro
 
 /* LAB13 — I byte originali restano nell'archivio; qui si legge soltanto il testo
    importato, senza riassunti o interventi del motore di studio. */
-export function OriginalBookScreen({ record, reading, onRead, onCloseRead, onExport, onOpenNative }) {
+export function OriginalBookScreen({ record, reading, onRead, onCloseRead, onExport, onOpenNative, accessibility }) {
   const [chapterIndex, setChapterIndex] = useState(0);
   if (!record) return <section className="sb-screen"><p>Nessun originale selezionato.</p></section>;
   const chapters = record.sourceData?.chapters || [];
@@ -411,7 +430,7 @@ export function OriginalBookScreen({ record, reading, onRead, onCloseRead, onExp
         </div>
       </article>
       {reading && (
-        <article className="sb-original-reading">
+        <article className="sb-original-reading" style={readerCssVariables(accessibility)}>
           {readable ? <>
             <div className="sb-original-chapter-control">
               <label htmlFor="original-chapter">Capitolo originale</label>
