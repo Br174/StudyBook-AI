@@ -37,6 +37,7 @@ jobs:
                 if(first){
                   const img=await fetch('https://covers.openlibrary.org/b/id/'+first.cover_i+'-L.jpg?default=false',{signal:AbortSignal.timeout(17000),redirect:'manual'});
                   console.log('OPEN_COVER_HTTP='+img.status+' TYPE='+img.headers.get('content-type')+' HOST='+new URL(img.url).hostname);
+                  console.log('OPEN_COVER_LOCATION='+String(img.headers.get('location')||'').slice(0,300));
                 }
               }
             }catch(e){console.log(name.toUpperCase()+'_FETCH_ERROR='+String(e).slice(0,250))}
