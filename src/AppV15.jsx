@@ -190,7 +190,9 @@ export default function AppV14() {
     }
     if (activeScreen === 'original' && originalReading) {
       setOriginalReading(false);
-      return;
+      // Se la lettura è stata avviata dalla scheda Libro aperto, ritorna lì
+      // con un solo indietro. Dalla pagina originale chiudi invece l'anteprima.
+      if (screenHistoryRef.current.at(-1) !== 'studio') return;
     }
     const previous = screenHistoryRef.current.pop() || 'home';
     setActiveScreen(previous);
@@ -1069,6 +1071,63 @@ export default function AppV14() {
     finally { setArchiveBusy(false); }
   }
 
+  /* LAB14: il comando Studia libro mostra la stessa scheda LIBRO APERTO,
+     senza avviare né lettura né AI. Ripristina lo stato dal singolo record della Libreria. */
+  async function openOriginalStudyBook() {
+    if (!originalRecord?.id || libraryBusy || generating || importing) return;
+    setLibraryBusy(true);
+    setError('');
+    try {
+      const record = await getLibraryBook(originalRecord.id);
+      if (!record?.originalFile) throw new Error('Il documento originale non è disponibile.');
+      setOriginalRecord(record);
+      setLibraryId(record.id);
+      setFileName(record.fileName);
+      setDocumentData(record.sourceData || null);
+      setSourceFile(record.originalFile);
+      setStudyBook(record.studyBook || null);
+      setLevel(record.studyBook?.level || 'studio');
+      setDsaMode(record.dsaMode !== false);
+      setSelectedChapter(0);
+      setSourceEditor(null);
+      setSummaryEditor(null);
+      setOriginalReading(false);
+      setStudyModeOpen(false);
+      setStatus(record.studyBook ? 'Libro di studio pronto · scegli come utilizzarlo' : 'Originale pronto · scegli come utilizzarlo');
+      navigateTo('studio');
+    } catch (err) {
+      setError(err.message || 'Impossibile aprire la scheda del libro.');
+    } finally { setLibraryBusy(false); }
+  }
+
+  function readOriginalFromBook() {
+    if (!originalRecord?.originalFile) { setError('File originale non disponibile.'); return; }
+    setOriginalReading(true);
+    navigateTo('original');
+  }
+
+  async function openOriginalPdfFromBook() {
+    if (!originalRecord?.originalFile) { setError('File originale non disponibile.'); return; }
+    const name = originalRecord.original?.name || originalRecord.originalFile?.name || originalRecord.fileName;
+    try {
+      if (/\\.pdf$/i.test(name) || originalRecord.originalFile.type === 'application/pdf') {
+        await deliverBlob(originalRecord.originalFile, name, 'Leggi il PDF originale', { preferOpen: true });
+      } else {
+        await exportOriginal('pdf');
+      }
+    } catch (err) { setError(err.message || 'Impossibile aprire il PDF originale.'); }
+  }
+
+  async function prepareOriginalForStudy() {
+    if (generating || importing || libraryBusy) return;
+    if (!documentData?.chapters?.some(chapter => chapter.paragraphs?.length)) {
+      setError('Testo originale non disponibile: importa di nuovo il documento per riconoscerlo.');
+      return;
+    }
+    // L'elaborazione è consentita solo dopo il secondo clic esplicito di conferma.
+    await createStudyBook(documentData, fileName);
+  }
+
   async function openOriginalNative() {
     if (!originalRecord?.originalFile) { setError('File originale non disponibile.'); return; }
     try {
@@ -1199,14 +1258,25 @@ export default function AppV14() {
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
       {activeScreen === 'original' && <OriginalBookScreen record={originalRecord} reading={originalReading}
         onRead={() => setOriginalReading(reading => !reading)} onCloseRead={() => setOriginalReading(false)}
-        onOpenNative={openOriginalNative} onExport={exportOriginal} accessibility={accessibility} />}
+        onStudyBook={openOriginalStudyBook} onOpenNative={openOriginalNative} onExport={exportOriginal} accessibility={accessibility} />}
 
       {activeScreen === 'studio' && (
         <StudioScreen
           studyBook={studyBook} fileName={fileName} onRenameBook={renameCurrentBook}
-          onRead={() => { setStudyEntryMode('reader'); setStudyModeOpen(true); }}
+          isOriginalOnly={!studyBook && Boolean(originalRecord?.id === libraryId && sourceFile)}
+          sourceData={documentData} generating={generating} onPrepareOriginal={prepareOriginalForStudy}
+          onRead={() => {
+            if (!studyBook && originalRecord?.id === libraryId) { readOriginalFromBook(); return; }
+            setStudyEntryMode('reader'); setStudyModeOpen(true);
+          }}
           onStudy={() => { setStudyEntryMode('study'); setStudyModeOpen(true); }}
-          onExport={exportCurrentBook}
+          onExport={(format, variant) => {
+            if (!studyBook && originalRecord?.id === libraryId) {
+              if (format === 'pdf' && variant === 'original') return openOriginalPdfFromBook();
+              return exportOriginal(format);
+            }
+            return exportCurrentBook(format, variant);
+          }}
         />
       )}
 
