@@ -9,7 +9,7 @@ function stripExtension(value = '') {
   return String(value || 'StudyBook').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'StudyBook';
 }
 
-function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRenameRequest }) {
+function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRenameRequest, onBookActions }) {
   const [deleteArmed, setDeleteArmed] = useState(false);
   const holdTimer = useRef(null);
   const suppressClick = useRef(false);
@@ -18,7 +18,7 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRename
   const pages = item.metadata?.pages || 0;
   // LAB18: le copertine reali restano prioritarie quando presenti;
   // in assenza di copertina usiamo un volume disegnato senza modificare il record.
-  const coverUrl = item.coverUrl || item.metadata?.coverUrl || null;
+  const coverUrl = item.coverCustom || item.coverOriginal || item.coverAI || item.coverUrl || item.metadata?.coverUrl || null;
   const available = view === 'original' ? item.metadata?.hasOriginal !== false : item.metadata?.hasProcessed !== false;
 
   function clearHold() {
@@ -31,7 +31,8 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRename
     suppressClick.current = false;
     holdTimer.current = window.setTimeout(() => {
       suppressClick.current = true;
-      setDeleteArmed(true);
+      if (onBookActions) onBookActions(item, view);
+      else setDeleteArmed(true);
       try { navigator.vibrate?.(35); } catch { /* best effort */ }
     }, 520);
   }
@@ -162,13 +163,18 @@ export function HomeScreen({
   );
 }
 
-export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, initialView = 'all', scannerProps = {}, onRefreshScans }) {
+export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
   const [area, setArea] = useState('subjects');
   const [view, setView] = useState(initialView);
   const [subject, setSubject] = useState('Tutte');
   const [sort, setSort] = useState('recent');
   const [deleteCandidate, setDeleteCandidate] = useState(null);
   const [renameCandidate, setRenameCandidate] = useState(null);
+  const [actionCandidate, setActionCandidate] = useState(null);
+  const [coverProcessing, setCoverProcessing] = useState('');
+  const [coverMessage, setCoverMessage] = useState('');
+  const coverFileInputRef = useRef(null);
+  const coverFileTargetRef = useRef('');
   const [visibleScanCount, setVisibleScanCount] = useState(20);
   useEffect(() => { void onRefreshScans?.(); }, []);
   const subjects = useMemo(() => ['Tutte', ...new Set(items.map((item) => item.subject || 'Altro'))].slice(0, 8), [items]);
@@ -229,7 +235,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, i
 
       {filtered.length ? (
         <div className="sb-library-grid">
-          {filtered.map((item) => <BookCover key={item.id} item={item} view={view === 'all' ? (item.metadata?.hasProcessed ? 'processed' : 'original') : view} onOpen={onOpenBook} onDeleteRequest={item => setDeleteCandidate({ ...item, deleteView: view })} onRenameRequest={setRenameCandidate} />)}
+          {filtered.map((item) => <BookCover key={item.id} item={item} view={view === 'all' ? (item.metadata?.hasProcessed ? 'processed' : 'original') : view} onOpen={onOpenBook} onDeleteRequest={item => setDeleteCandidate({ ...item, deleteView: view })} onRenameRequest={setRenameCandidate} onBookActions={item => { setActionCandidate(item); setCoverMessage(''); }} />)}
         </div>
       ) : <div className="sb-empty-library">Nessun libro in questa sezione.</div>}
       {view === 'all' && scannerProps.entries?.length > 0 && (
@@ -251,6 +257,44 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, i
       )}
       </>}
 
+      <input ref={coverFileInputRef} type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" hidden
+        onChange={async event => {
+          const file=event.target.files?.[0], id=coverFileTargetRef.current;
+          event.target.value='';
+          if(!file||!id||coverProcessing)return;
+          setCoverProcessing(id);setCoverMessage('');
+          try { const ok=await onSetCoverFile?.(id,file);setCoverMessage(ok?'Copertina scelta dal telefono e salvata.':'Impossibile salvare la copertina.');if(ok)setActionCandidate(null); }
+          catch(error){setCoverMessage(error.message||'Impossibile leggere la fotografia.');}
+          finally{setCoverProcessing('');}
+        }} />
+      {actionCandidate && (
+        <div className="sb-confirm-overlay" role="presentation" onClick={event=>{if(event.target===event.currentTarget&&!coverProcessing)setActionCandidate(null);}}>
+          <div className="sb-confirm-dialog sb-library-action-dialog" role="dialog" aria-modal="true" aria-label={'Azioni per '+stripExtension(actionCandidate.fileName)}>
+            <h2>{stripExtension(actionCandidate.fileName)}</h2>
+            <p>Gestisci il libro e la sua copertina senza modificare il file originale.</p>
+            <div className="sb-library-action-list">
+              <button type="button" disabled={Boolean(coverProcessing)} onClick={()=>{setRenameCandidate(actionCandidate);setActionCandidate(null);}}>✎ Rinomina libro</button>
+              <button type="button" disabled={Boolean(coverProcessing)} onClick={()=>{coverFileTargetRef.current=actionCandidate.id;coverFileInputRef.current?.click();}}>▧ Scegli copertina dal telefono</button>
+              <button type="button" disabled={Boolean(coverProcessing)||!onGenerateCover} onClick={async()=>{
+                const id=actionCandidate.id;setCoverProcessing(id);setCoverMessage('');
+                try{const ok=await onGenerateCover(id);setCoverMessage(ok?'Nuova copertina AI salvata.':'Impossibile creare la copertina AI ora.');if(ok)setActionCandidate(null);}
+                catch(error){setCoverMessage(error.message||'Servizio AI non disponibile.');}
+                finally{setCoverProcessing('');}
+              }}>✦ {coverProcessing?'Creazione in corso…':'Crea / rigenera copertina AI'}</button>
+              {(actionCandidate.coverOriginal||actionCandidate.coverCustom||actionCandidate.coverAI) && (
+                <button type="button" disabled={Boolean(coverProcessing)} onClick={async()=>{
+                  setCoverProcessing(actionCandidate.id);
+                  try {const ok=await onResetCover?.(actionCandidate.id);setCoverMessage(ok?'Copertina originale ripristinata.':'Copertina originale non presente.');if(ok)setActionCandidate(null);}
+                  finally{setCoverProcessing('');}
+                }}>↺ Ripristina copertina originale</button>
+              )}
+              <button type="button" className="sb-library-action-danger" disabled={Boolean(coverProcessing)} onClick={()=>{setDeleteCandidate({...actionCandidate,deleteView:view});setActionCandidate(null);}}>× Elimina libro</button>
+              <button type="button" className="sb-library-action-cancel" disabled={Boolean(coverProcessing)} onClick={()=>setActionCandidate(null)}>Chiudi</button>
+            </div>
+            {coverMessage&&<p role="status">{coverMessage}</p>}
+          </div>
+        </div>
+      )}
       {renameCandidate && <RenameTitleDialog key={renameCandidate.id} label="Rinomina libro di studio" current={stripExtension(renameCandidate.fileName)} onClose={()=>setRenameCandidate(null)} onSave={name=>onRenameBook(renameCandidate.id,name)} />}
       {deleteCandidate && (
         <div className="sb-confirm-overlay" role="dialog" aria-modal="true" aria-label="Conferma eliminazione">
