@@ -36,7 +36,9 @@ assert.ok(cover.includes('coverAI:localCover') && cover.includes('coverStatus:\'
 assert.ok(cover.includes('latest.coverVariant!==variant') && cover.includes('latest.coverAI!==localCover'),'late AI results cannot overwrite newer user edits');
 assert.ok(!app.includes("item.coverStatus!=='failed'"),'failed LAB19 entries are retried/recovered by LAB20');
 assert.ok(ui.includes('setCoverNotice(message)'),'cover action shows visible status');
-assert.ok(ui.includes('onGenerateCover(id)'),'long-press button remains connected');
+assert.ok(ui.includes('onGenerateCover(id,{variant,onStage:setCoverPhase})'),'LAB21 true-image preview stays connected via long-press');
+assert.ok(ui.includes('onApplyCover?.(actionCandidate.id,coverPreview)'),'LAB21 requires explicit acceptance');
+assert.ok(app.includes('if(automatic)return false;'),'LAB21 never generates misleading fake art automatically');
 
 // Regeneration changes actual SVG artwork, not merely a 5-pixel text offset.
 const a=decodeURIComponent(renderAICover({title:'Storia romana',theme:'storia',variant:0}).split(',')[1]);
