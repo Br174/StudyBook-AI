@@ -19,7 +19,7 @@ assert.ok(handlers.includes("function openFromLibraryCover(item, view = 'process
 assert.ok(handlers.includes("openLibraryItem(item.id, { original: view === 'original', openReader: false })"), 'Processed item does not auto-enter Reader');
 assert.ok(openCode.includes("navigateTo('studio')"), 'Processed book navigates to StudioScreen');
 assert.ok(openCode.includes('setStudyModeOpen(false)'), 'Processed books close any previous reading overlay');
-assert.ok(openCode.includes("if (original) {") && openCode.includes('record.originalFile') && openCode.includes("navigateTo('original')"), 'Original view opens its dedicated screen without rewriting raw file');
+assert.ok(openCode.includes("if (original) {") && openCode.includes('record.originalFile') && openCode.includes("navigateTo('studio')"), 'Original view opens shared book overview without rewriting raw file');
 assert.ok(handlers.includes("function openContinueBook(item)"), 'Home Continue still has its own callback');
 assert.ok(app.includes("onOpenBook={openFromLibrary} onContinueBook={openContinueBook}"), 'Home Recenti and Continua untouched');
 assert.ok(studio.includes('LIBRO APERTO') && studio.includes('sb-open-book-workspace'), 'Complete page kept');
