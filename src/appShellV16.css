@@ -451,3 +451,10 @@
   .sb-studio-screen .sb-quality-card > div { min-height: 49px; padding: 6px 28px 5px 8px; }
   .sb-studio-screen .sb-quality-card h2 { font-size: 1.1rem; }
 }
+
+
+/* LAB12 • microazioni di rinomina senza modificare i riquadri approvati. */
+.sb-library-rename { width:100%; min-height:35px; padding: 4px 0; text-align: center; border:0; background:transparent; color:#2177cb; font-size:.76rem; font-weight:800; }
+.sb-library-rename:focus-visible,.sb-studio-rename:focus-visible { outline:2px solid #1878eb; outline-offset:2px; }
+.sb-studio-rename { display: inline-flex; align-items: center; border:0; border-radius:8px; padding:3px 6px; background:#eaf3ff; color:#216ab2; font-weight:750; font-size:.68rem; line-height:1.1; margin: 0 0 4px; min-height:27px; }
+.sb-smart-title-choice { display:inline-block; border:1px solid #d7e8ff; background:#ebf5ff; color:#216ab2; font-size:.69rem; border-radius:9px; margin-top:6px; padding:7px; text-align:left; }
