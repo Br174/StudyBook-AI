@@ -15,6 +15,7 @@ on:
       - lab/studybook-core-android-01-update-09
       - lab/studybook-core-android-01-update-10
       - lab/studybook-core-android-01-update-11
+      - lab/studybook-core-android-01-update-18
       - lab/studybook-core-android-01-update-17
       - lab/studybook-core-android-01-update-16
       - lab/studybook-core-android-01-update-15
@@ -100,6 +101,12 @@ jobs:
               echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab.recovery03" >> "$GITHUB_ENV"
               echo "STUDYBOOK_APP_NAME=StudyBook AI LAB 03 Ripristino" >> "$GITHUB_ENV"
               echo "STUDYBOOK_SIGNING_MODE=recovery" >> "$GITHUB_ENV"
+              ;;
+            lab/studybook-core-android-01-update-18)
+              echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-18-AGGIORNAMENTO" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APP_NAME=StudyBook AI LAB" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_SIGNING_MODE=update" >> "$GITHUB_ENV"
               ;;
             lab/studybook-core-android-01-update-17)
               echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-17-AGGIORNAMENTO" >> "$GITHUB_ENV"
