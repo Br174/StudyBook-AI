@@ -733,3 +733,54 @@
 .sb-studio-screen .sb-open-book-cover.sb-scanned-book-cover { padding:0; position:relative; background:#f0f3f7; overflow:hidden; }
 .sb-studio-screen .sb-scanned-book-cover-photo { display:block; width:100%; height:100%; min-height:inherit; object-fit:cover; border-radius:inherit; }
 @media(prefers-reduced-motion:reduce){ .sb-camera-shutter { transition:none; } }
+
+
+/* LAB17 — scanner workspace: scroll continuo sino ai pulsanti, senza
+   sovrapposizione con la navigazione fissa Home / Libreria / Studio.
+   Regole circoscritte allo scanner; la Home LAB16 resta approvata. */
+.sb-home-v16.sb-home-scanning {
+  min-height: auto;
+  height: auto;
+  display: block;
+  overflow: visible;
+  padding-bottom: calc(126px + env(safe-area-inset-bottom, 0px));
+}
+.sb-home-v16.sb-home-scanning .sb-home-workspace {
+  flex: none;
+  min-height: 0;
+  height: auto;
+  display: block;
+  overflow: visible;
+  padding: 12px 0 22px;
+}
+.sb-home-v16.sb-home-scanning .scan-basket,
+.sb-home-v16.sb-home-scanning .sb-inline-scanner,
+.sb-home-v16.sb-home-scanning .scan-basket-actions {
+  position: relative;
+  overflow: visible;
+}
+.sb-home-v16.sb-home-scanning .scan-basket-actions {
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 22px;
+  padding-bottom: 12px;
+}
+.sb-home-v16.sb-home-scanning .scan-basket-actions button {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  margin: 0;
+  touch-action: manipulation;
+}
+@media (max-width: 720px) {
+  .sb-app-frame:has(.sb-home-scanning) {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+    overflow: visible;
+  }
+  .sb-home-v16.sb-home-scanning .sb-home-workspace .scan-page-grid {
+    overflow: visible;
+  }
+}
