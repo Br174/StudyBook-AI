@@ -40,3 +40,5 @@ jobs:
             }catch(e){console.log('LAB22_LIVE',JSON.stringify({case:index+1,error:String(e).slice(0,120)}));if(index===0)process.exitCode=1;}
           }
           NODE
+
+# LAB22 repeat after safe Archive.org redirect support.
