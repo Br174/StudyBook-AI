@@ -57,6 +57,7 @@ export function scannerPageToRecord(page = {}) {
   const originalBytes = Number(page.originalBytes || storedBytes || 0);
   return {
     id: String(page.id || ''),
+    archiveId: page.archiveId ? String(page.archiveId) : null,
     blob: source,
     fileName: page.file?.name || page.fileName || 'pagina.jpg',
     fileType: page.file?.type || page.fileType || source?.type || 'image/jpeg',
@@ -88,6 +89,7 @@ export function scannerPageFromRecord(record = {}) {
   const originalBytes = Number(record.originalBytes || storedBytes || 0);
   return {
     id: String(record.id || ''),
+    archiveId: record.archiveId || null,
     file,
     parsed: null,
     originalBytes,
