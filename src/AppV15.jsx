@@ -18,12 +18,20 @@ import StudyMode from './components/StudyMode.jsx';
 import { deliverBlob } from './lib/fileDelivery.js';
 import {
   clearScannerSessionStore,
+  saveCapturedScannerPage,
+  listArchivedScannerPages,
+  getArchivedScannerPages,
+  deleteArchivedScannerPages,
+  updateArchivedScannerText,
+  archiveScannerSessionPages,
   deleteScannerPage as deleteScannerPageRecord,
   loadScannerSession,
   saveScannerMeta,
   saveScannerPage as saveScannerPageRecord,
 } from './lib/scannerSessionStore.js';
 import { compressScannerImage, estimateScannerStorage, formatStorageBytes, requestScannerPersistence } from './lib/scannerStorage.js';
+import { recognizeScannerImage, releaseScannerOcr } from './lib/scannerOcrRuntime.js';
+import ScannerArchive from './components/ScannerArchive.jsx';
 import './v11.css';
 import './scanner-storage.css';
 
@@ -128,6 +136,8 @@ export default function AppV14() {
   const [scannerStoreReady, setScannerStoreReady] = useState(false);
   const [scannerStorageInfo, setScannerStorageInfo] = useState(null);
   const [scannerOptimizing, setScannerOptimizing] = useState(false);
+  const [archivedScans, setArchivedScans] = useState([]);
+  const [archiveBusy, setArchiveBusy] = useState(false);
 
   const [libraryItems, setLibraryItems] = useState([]);
   const [libraryId, setLibraryId] = useState('');
@@ -139,6 +149,9 @@ export default function AppV14() {
   const documentFileInputRef = useRef(null);
   const scanPagesRef = useRef([]);
   const scanPersistTimersRef = useRef(new Map());
+  const scanOcrQueueRef = useRef([]);
+  const scanOcrRunningRef = useRef(false);
+  const scanOcrCancelledRef = useRef(new Set());
   const scannerRestoreStartedRef = useRef(false);
   const screenHistoryRef = useRef([]);
 
@@ -260,6 +273,7 @@ export default function AppV14() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     scanPersistTimersRef.current.forEach((timer) => clearTimeout(timer));
     scanPagesRef.current.forEach((page) => page.previewUrl && URL.revokeObjectURL(page.previewUrl));
+    void releaseScannerOcr();
   }, []);
 
   async function refreshLibrary(profileId = activeProfileId) {
@@ -438,9 +452,15 @@ export default function AppV14() {
       if (fromScanner && saved) {
         scanPersistTimersRef.current.forEach((timer) => clearTimeout(timer));
         scanPersistTimersRef.current.clear();
-        scanPagesRef.current.forEach((page) => page.previewUrl && URL.revokeObjectURL(page.previewUrl));
-        setScanPagesNow([]);
-        await clearScannerSessionStore();
+        // Foto salvate indipendentemente dal libro: non svuotare la raccolta se l'archivio fallisce.
+        const archived = await archiveScannerSessionPages(scanPagesRef.current, scanSessionName);
+        if (archived) {
+          scanPersistTimersRef.current.forEach((timer) => clearTimeout(timer));
+          scanPersistTimersRef.current.clear();
+          scanPagesRef.current.forEach((page) => page.previewUrl && URL.revokeObjectURL(page.previewUrl));
+          setScanPagesNow([]);
+          await clearScannerSessionStore();
+        } else setError('Libro creato, ma il salvataggio delle foto non è confermato: raccolta scanner conservata.');
         await refreshScannerStorage();
       }
       const engineLabel = result.engine === 'ai' ? 'AI' : result.engine === 'misto' ? 'AI + sicurezza locale' : 'modalità locale';
@@ -558,7 +578,7 @@ export default function AppV14() {
   }
 
   async function openScanner() {
-    if (importing || generating || scanProcessing) return;
+    if (importing || generating || scannerOptimizing) return;
     setError('');
     if (!navigator.mediaDevices?.getUserMedia) {
       cameraFileInputRef.current?.click();
