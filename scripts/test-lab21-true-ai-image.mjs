@@ -17,7 +17,7 @@ assert.ok(app.includes("coverOrigin:'ai-image'"),'book metadata indicates real A
 assert.ok(app.includes('if(automatic)return false;'),'automatic fake SVGs disabled');
 assert.ok(ui.includes('Generazione immagine AI…')&&ui.includes('Usa questa copertina'),'visible progress/accept');
 assert.ok(ui.includes('Annulla anteprima')&&ui.includes('Rigenera con vera AI immagini'),'cancel/regenerate');
-assert.ok(client.includes("data:image/jpeg")&&client.includes("ctx.drawImage(img"),'real image decoding and local correct-title overlay');
+assert.ok(client.includes("canvas.toDataURL('image/jpeg'")&&client.includes("ctx.drawImage(img"),'real image decoding and local correct-title overlay');
 assert.ok(!client.includes('AI_API_KEY'),'no secret inside APK');
 assert.ok(!api.includes('Bearer ${apiKey}'),'no accidental reliance on client auth header');
 assert.ok(api.includes("process.env.AI_IMAGE_API_KEY||process.env.AI_API_KEY"),'provider key solely server-side');
