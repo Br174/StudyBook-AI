@@ -15,6 +15,7 @@ import {
   updateLibraryMetadata,
 } from './lib/library.js';
 import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
+import { isScannerBook, requestAiCoverTheme, renderAICover, imageBlobToThumbnail, extractOriginalCover } from './lib/libraryCoverEngine.js';
 import { BottomNav, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
 import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
@@ -156,6 +157,8 @@ export default function AppV14() {
   const [libraryId, setLibraryId] = useState('');
   const [libraryBusy, setLibraryBusy] = useState(false);
   const [libraryInitialView, setLibraryInitialView] = useState('all');
+  const coverQueueRef = useRef(new Set());
+  const coverWorkerRef = useRef(false);
   const [originalRecord, setOriginalRecord] = useState(null);
   const [originalReading, setOriginalReading] = useState(false);
 
@@ -320,6 +323,106 @@ export default function AppV14() {
   async function refreshLibrary(profileId = activeProfileId) {
     try { setLibraryItems(await listLibraryBooks({ profileId })); } catch { setLibraryItems([]); }
   }
+
+  /* LAB19 — asynchronous cover pipeline. No scanner images sent to AI, no mutation
+     of original PDF/eBook bytes, and never wait for artwork before showing the book.
+     Only one worker per session; completed/failed covers are cached in IndexedDB. */
+  async function generateLibraryCover(id, { forceAI=false, automatic=false } = {}) {
+    if(!id) return false;
+    let record=await getLibraryBook(id);
+    if(!record || (automatic && (record.coverCustom || record.coverOriginal || record.coverAI || record.coverStatus==='failed')))return false;
+    if(isScannerBook(record)) {
+      if(forceAI)throw new Error('Le scansioni mantengono sempre la fotografia originale.');
+      if(record.coverOriginal)return true;
+      const ids=record.sourceData?.scanArchivePhotoIds||[];
+      if(!ids.length)return false;
+      const archived=await getArchivedScannerPages(ids.slice(0,1));
+      if(!archived[0]?.blob)return false;
+      const image=await imageBlobToThumbnail(archived[0].blob);
+      const fresh=await getLibraryBook(id);
+      if(!fresh||fresh.coverCustom)return false;
+      await updateLibraryMetadata(id,{coverOriginal:image,coverStatus:'ready',coverOrigin:'scan'});
+      await refreshLibrary();
+      return true;
+    }
+    if(!forceAI && !record.coverOriginal && !record.coverCustom && record.originalFile) {
+      try {
+        const image=await extractOriginalCover(record.originalFile);
+        if(image) {
+          const fresh=await getLibraryBook(id);
+          if(!fresh||fresh.coverCustom||fresh.coverOriginal)return false;
+          await updateLibraryMetadata(id,{coverOriginal:image,coverStatus:'ready',coverOrigin:'original'});
+          await refreshLibrary();
+          return true;
+        }
+      }catch(error) { console.warn('LAB19 original-cover extraction skipped:',error.message); }
+    }
+    record=await getLibraryBook(id);
+    if(!record || (automatic&&(record.coverCustom||record.coverOriginal||record.coverAI)))return false;
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),10500);
+    try{
+      const theme=await requestAiCoverTheme(record,{signal:controller.signal});
+      const current=await getLibraryBook(id);
+      if(!current || (automatic&&(current.coverCustom||current.coverOriginal||current.coverAI)))return false;
+      const variant=(Number(current.coverVariant)||0)+(forceAI?1:0);
+      const image=renderAICover({title:current.fileName,theme,variant});
+      await updateLibraryMetadata(id,{
+        coverAI:image,coverCustom:forceAI?image:(current.coverCustom||null),
+        coverStatus:'ready',coverOrigin:forceAI?'ai-manual':'ai',coverVariant:variant,
+      });
+      await refreshLibrary();
+      return true;
+    }catch(error){
+      if(!forceAI){
+        const current=await getLibraryBook(id);
+        if(current&&!current.coverOriginal&&!current.coverCustom)
+          await updateLibraryMetadata(id,{coverStatus:'failed',coverOrigin:'none'});
+        await refreshLibrary();
+      }
+      if(!automatic)throw new Error('Copertina AI non disponibile: controlla la connessione o riprova.');
+      return false;
+    }finally {clearTimeout(timeout);}
+  }
+  async function chooseLibraryCover(id,file) {
+    if(!id||!file||!['image/jpeg','image/png','image/webp'].includes(file.type))throw new Error('Scegli una foto JPG, PNG o WebP.');
+    const image=await imageBlobToThumbnail(file);
+    const record=await getLibraryBook(id);
+    if(!record || isScannerBook(record))throw new Error('Questa copertina non può essere cambiata.');
+    await updateLibraryMetadata(id,{coverCustom:image,coverOrigin:'custom',coverStatus:'ready'});
+    await refreshLibrary();
+    setStatus('Copertina personale salvata · PDF originale invariato');
+    return true;
+  }
+  async function resetLibraryCover(id) {
+    const record=await getLibraryBook(id);
+    if(!record?.coverOriginal)return false;
+    await updateLibraryMetadata(id,{coverCustom:null,coverOrigin:'original',coverStatus:'ready'});
+    await refreshLibrary();
+    return true;
+  }
+  useEffect(()=>{
+    if(importing||generating||coverWorkerRef.current||!libraryItems.length)return;
+    // Process only incomplete books; each attempt is stored to avoid retry storms.
+    const waiting=libraryItems.filter(item=>!coverQueueRef.current.has(item.id)
+      && !item.coverCustom&&!item.coverOriginal&&!item.coverAI
+      && item.coverStatus!=='failed').slice(0,20);
+    if(!waiting.length)return;
+    let cancelled=false;
+    const timer=setTimeout(async()=>{
+      if(coverWorkerRef.current||cancelled)return;
+      coverWorkerRef.current=true;
+      try {
+        for(const book of waiting) {
+          if(cancelled)break;
+          coverQueueRef.current.add(book.id);
+          try {await generateLibraryCover(book.id,{automatic:true});}
+          catch(error){console.warn('LAB19 background cover skipped:',error.message);}
+        }
+      } finally {coverWorkerRef.current=false;}
+    },500);
+    return ()=>{cancelled=true;clearTimeout(timer);};
+  },[libraryItems,importing,generating,activeProfileId]);
 
   /* LAB12: il nome del libro è un metadato. Non modifica immagini, struttura o testi. */
   async function renameLibraryBook(id, title) {
@@ -1290,7 +1393,7 @@ export default function AppV14() {
 
       {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} onRenameCollection={renameScannerArchiveCollection} onRenamePhoto={renameScannerArchivePhoto} />}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onRefreshScans={refreshArchiveForLibrary}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onSetCoverFile={chooseLibraryCover} onGenerateCover={id=>generateLibraryCover(id,{forceAI:true})} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
       {activeScreen === 'studio' && (
         <StudioScreen
