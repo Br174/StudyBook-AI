@@ -791,6 +791,78 @@ export default function AppV14() {
     setStatus('Raccolta scansioni svuotata');
   }
 
+  /* LAB11: archivio Scannerizzati separato dai file temporanei della sessione. */
+  async function openScannerArchive() {
+    setArchiveBusy(true);
+    setError('');
+    try {
+      const entries = await listArchivedScannerPages();
+      setArchivedScans(entries);
+      navigateTo('scans');
+    } catch (err) { setError(err.message || 'Impossibile aprire Scannerizzati.'); }
+    finally { setArchiveBusy(false); }
+  }
+
+  async function deleteScannerArchiveSelection(ids) {
+    if (!ids.length || archiveBusy) return false;
+    setArchiveBusy(true);
+    try {
+      const ok = await deleteArchivedScannerPages(ids);
+      if (!ok) throw new Error('Archivio non modificato: eliminazione non riuscita.');
+      setArchivedScans(await listArchivedScannerPages());
+      setStatus(`${ids.length} fotografie eliminate definitivamente dall’archivio`);
+      return true;
+    } catch(err) { setError(err.message); return false; }
+    finally { setArchiveBusy(false); }
+  }
+
+  async function restoreScannerArchiveSelection(ids) {
+    if (!ids.length || archiveBusy || generating || importing || scannerOptimizing) return false;
+    setArchiveBusy(true);
+    setError('');
+    const prepared = [];
+    const writtenIds = [];
+    try {
+      const entries = await getArchivedScannerPages(ids);
+      if (entries.length !== ids.length) throw new Error('Alcune fotografie non sono più presenti nell’archivio.');
+      if (!scanPagesRef.current.length) void requestScannerPersistence();
+      for (const entry of entries) {
+        const file = new File([entry.blob], entry.fileName || scanFileName(), {
+          type: entry.fileType || entry.blob.type || 'image/jpeg',
+          lastModified: Number(entry.lastModified || Date.now()),
+        });
+        prepared.push({
+          id: scanId(), archiveId: entry.id, file,
+          previewUrl: URL.createObjectURL(file),
+          status: entry.text?.trim() ? 'ready' : 'processing',
+          text: String(entry.text || ''), error: '',
+          originalBytes: Number(entry.originalBytes || file.size),
+          storedBytes: Number(file.size), optimized: Boolean(entry.optimized),
+        });
+      }
+      // Nessuna immagine viene tolta dall'archivio. Il testo OCR pronto si riutilizza.
+      for (const page of prepared) {
+        const ok = await saveCapturedScannerPage(page, scanSessionName, { archive: false });
+        if (!ok) throw new Error('Salvataggio delle fotografie recuperate non riuscito.');
+        writtenIds.push(page.id);
+      }
+      setScanPagesNow(pages => [...pages, ...prepared]);
+      setDocumentData(null);
+      setScannerResultReady(false);
+      for (const page of prepared) if (!page.text.trim()) {
+        recognizeScanPage(page.id, page.file, scanPagesRef.current.findIndex(p => p.id === page.id) + 1);
+      }
+      setStatus(`${prepared.length} fotografie recuperate · ${prepared.filter(p=>p.text.trim()).length} OCR riutilizzati`);
+      goHome();
+      return true;
+    } catch(err) {
+      for (const id of writtenIds) await deleteScannerPageRecord(id);
+      for (const page of prepared) URL.revokeObjectURL(page.previewUrl);
+      setError(err.message || 'Ripresa delle fotografie non riuscita.');
+      return false;
+    } finally { setArchiveBusy(false); }
+  }
+
   const originalChapter = documentData?.chapters?.[selectedChapter];
   const generatedChapter = studyBook?.chapters?.[selectedChapter];
   const visibleChapter = generatedChapter || originalChapter;
@@ -882,8 +954,8 @@ export default function AppV14() {
               {page.status === 'ready' && <details className="scan-text-preview"><summary>Controlla testo OCR</summary><textarea value={page.text} onChange={(event) => patchScanPage(page.id, { text: event.target.value }, { persistDelay: 600 })} /></details>}
               {page.status === 'error' && <div className="scan-page-error">{page.error}</div>}
               <div className="scan-page-actions">
-                <button type="button" onClick={() => moveScanPage(index, -1)} disabled={index === 0 || scanProcessing}>↑</button>
-                <button type="button" onClick={() => moveScanPage(index, 1)} disabled={index === scanPages.length - 1 || scanProcessing}>↓</button>
+                <button type="button" onClick={() => moveScanPage(index, -1)} disabled={index === 0 || generating}>↑</button>
+                <button type="button" onClick={() => moveScanPage(index, 1)} disabled={index === scanPages.length - 1 || generating}>↓</button>
                 {page.status === 'error' && <button type="button" onClick={() => recognizeScanPage(page.id, page.file, index + 1)} disabled={scanProcessing}>Riprova OCR</button>}
                 <button type="button" className="danger-link" onClick={() => removeScanPage(page.id)} disabled={scanProcessing}>Elimina</button>
               </div>
@@ -893,7 +965,7 @@ export default function AppV14() {
       </div>
       <div className="scan-basket-actions">
         <button type="button" className="secondary-button" onClick={clearScanSession} disabled={scanProcessing || generating}>Svuota</button>
-        <button type="button" className="scanner-button" onClick={openScanner} disabled={scanProcessing || generating || scannerOptimizing}>📷 Aggiungi pagina</button>
+        <button type="button" className="scanner-button" onClick={openScanner} disabled={generating || scannerOptimizing}>📷 Aggiungi pagina</button>
         <button type="button" className="primary-button finish-scan-button" onClick={finishScanSession} disabled={scanProcessing || generating || scanHasErrors || scanReadyCount !== scanPages.length}>{generating ? `Elaborazione ${progressPercent}%` : 'Fine scansione · Crea libro'}</button>
       </div>
     </section>
@@ -918,11 +990,13 @@ export default function AppV14() {
       {activeScreen === 'home' && (
         <HomeScreen
           status={status} importing={importing} generating={generating} libraryItems={libraryItems}
-          onImport={() => documentFileInputRef.current?.click()} onScanner={openScanner} onOpenBook={openFromLibrary} onContinueBook={openContinueBook}
+          onImport={() => documentFileInputRef.current?.click()} onScanner={openScanner} onScannerArchive={openScannerArchive} onOpenBook={openFromLibrary} onContinueBook={openContinueBook}
           documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
           scanContent={scannerPanel}
         />
       )}
+
+      {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} />}
 
       {activeScreen === 'library' && <LibraryScreen items={libraryItems} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} />}
 
@@ -943,7 +1017,7 @@ export default function AppV14() {
         />
       )}
 
-      <BottomNav active={activeScreen === 'settings' ? 'home' : activeScreen} onChange={navigateTo} />
+      <BottomNav active={activeScreen === 'settings' || activeScreen === 'scans' ? 'home' : activeScreen} onChange={navigateTo} />
       <input ref={cameraFileInputRef} className="camera-fallback-input" type="file" accept="image/*" capture="environment" onChange={handleCameraFallback} />
 
       {cameraOpen && (
@@ -951,8 +1025,8 @@ export default function AppV14() {
           <div className="camera-sheet">
             <div className="camera-header"><div><span className="eyebrow">SCANNER · PAGINA {scanPages.length + 1}</span><h2>Fotografa la pagina</h2></div><button type="button" className="camera-close" onClick={stopCamera}>×</button></div>
             <div className="camera-stage"><video ref={videoRef} playsInline muted onLoadedMetadata={() => setCameraReady(true)} /><div className="scan-frame" aria-hidden="true" /></div>
-            <p className="camera-help">La foto serve all’OCR durante l’acquisizione. Nel libro finale salviamo il testo, non l’immagine.</p>
-            <div className="camera-actions"><button type="button" className="secondary-button" onClick={stopCamera}>Annulla</button><button type="button" className="capture-button" onClick={capturePhoto} disabled={!cameraReady || cameraCapturing}>{cameraCapturing ? 'Acquisizione…' : 'Scatta pagina'}</button></div>
+            <p className="camera-help">Scatta più pagine di seguito: l’OCR procede mentre fotografi. Le immagini rimangono nell’archivio Scannerizzati.</p>
+            <div className="camera-actions"><button type="button" className="secondary-button" onClick={stopCamera}>Fine foto</button><button type="button" className="capture-button" onClick={capturePhoto} disabled={!cameraReady || cameraCapturing}>{cameraCapturing ? 'Acquisizione…' : 'Scatta pagina'}</button></div>
           </div>
         </div>
       )}
