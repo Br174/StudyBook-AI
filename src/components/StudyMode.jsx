@@ -5,7 +5,7 @@ import { readerCssVariables } from '../lib/accessibility.js';
 import { editorialParagraphText } from '../lib/editorialModel.js';
 import { filterGlossaryEntries } from '../lib/glossaryQuality.js';
 import { speakStudyText, stopStudySpeech, installItalianSpeechVoice } from '../lib/studySpeech.js';
-import { StudyBackIcon, StudySoundIcon } from './StudyUiIcons.jsx';
+import { StudyBackIcon, StudySoundIcon, StudyIcon } from './StudyUiIcons.jsx';
 import '../studyMode.css';
 import '../studyTools.css';
 import '../studyContinuous.css';
@@ -328,12 +328,14 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
 
       {!isReader && <nav className="study-tool-tabs sb-lab05-study-tabs" aria-label="Metodi di studio">
         {[
-          ['flashcards', 'Flashcard'],
-          ['quiz', 'Quiz'],
-          ['map', 'Mappa'],
-          ['oral', 'Interrogazione'],
-        ].map(([id, label]) => (
-          <button type="button" key={id} className={tool === id ? 'active' : ''} onClick={() => setTool(id)}>{label}</button>
+          ['flashcards', 'Flashcard', 'flashcards'],
+          ['quiz', 'Quiz', 'quiz'],
+          ['map', 'Mappa', 'map'],
+          ['oral', 'Interrogazione', 'oral'],
+        ].map(([id, label, icon]) => (
+          <button type="button" key={id} className={tool === id ? 'active' : ''} onClick={() => setTool(id)}>
+            <StudyIcon name={icon} size={23} /><span>{label}</span>
+          </button>
         ))}
       </nav>}
 
