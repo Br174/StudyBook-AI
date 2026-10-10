@@ -120,38 +120,64 @@ export function isPublicDomain(meta={}){
       || /creativecommons\.org\/publicdomain\/zero\//i.test(licenseUrl)
       || (/public domain/i.test(conditions)&&!/(?:CC BY|CC-BY|noncommercial)/i.test(conditions));
 }
+export function coverThemeQueries(theme){
+  if(/\broman\b|colosseum|rome/i.test(theme))
+    return ['Roman ruins','Colosseum Rome','Roman mosaic'];
+  if(/christian|church|religious|saint/i.test(theme))
+    return ['saints painting','Christian religious art','Church stained glass'];
+  const words=tokens(theme);
+  const broad=words.slice(0,3).join(' ');
+  return [...new Set([theme,broad])].filter(x=>x.length>=5).slice(0,2);
+}
 export async function searchCommons({title,subject='',context=''},fetcher=defaultFetch){
   const theme=findTheme(title,subject,context);
   if(!theme || theme.length<5)return[];
-  const url=new URL('https://commons.wikimedia.org/w/api.php');
-  url.searchParams.set('action','query');url.searchParams.set('format','json');url.searchParams.set('generator','search');
-  url.searchParams.set('gsrsearch',theme);url.searchParams.set('gsrnamespace','6');url.searchParams.set('gsrlimit','24');
-  url.searchParams.set('prop','imageinfo');url.searchParams.set('iiprop','url|size|mime|extmetadata');
-  url.searchParams.set('iiurlwidth','660');
-  const data=await getJson(url.href,fetcher,7500);
-  const pages=Object.values(data?.query?.pages||{});
-  const searchTokens=tokens(theme);
-  const results=[];
-  for(const page of pages){
-    const img=page.imageinfo?.[0];
-    if(!img||!['image/jpeg','image/png','image/webp'].includes(img.mime))continue;
-    if((img.width||0)<420||(img.height||0)<300)continue;
-    if(BAD.test(page.title||''))continue;
-    if(!isPublicDomain(img.extmetadata||{}))continue;
-    const filename=norm(page.title).replace(/^file /,'');
-    const desc=norm(String(img.extmetadata?.ImageDescription?.value||'').replace(/<[^>]+>/g,' ').slice(0,700));
-    const hits=searchTokens.filter(t=>(filename+' '+desc).includes(t)).length;
-    if(hits<1)continue;
-    const uri=img.thumburl||img.url;
-    if(!uri)continue;
-    try{if(new URL(uri).hostname!=='upload.wikimedia.org')continue;}catch{continue;}
-    results.push({kind:'thematic',score:hits/(searchTokens.length||1),assetId:'commons:'+page.pageid,url:uri,
-      label:'Immagine tematica da Wikimedia Commons',source:'Wikimedia Commons',
-      sourceUrl:img.descriptionurl||'https://commons.wikimedia.org',
-      license:tidy(img.extmetadata?.LicenseShortName?.value||'Public domain',50),
-      attribution:tidy(String(img.extmetadata?.Artist?.value||'').replace(/<[^>]+>/g,' '),125)});
+  const queries=coverThemeQueries(theme);
+  const roman=/\broman\b|colosseum|rome/i.test(theme);
+  const faith=/christian|church|religious|saint/i.test(theme);
+  // Parallel diversified searches: one shared source with distinct, title-relevant
+  // artwork instead of the same first Colosseum image for every book.
+  const work=await Promise.allSettled(queries.map(async query=>{
+    const url=new URL('https://commons.wikimedia.org/w/api.php');
+    url.searchParams.set('action','query');url.searchParams.set('format','json');
+    url.searchParams.set('generator','search');url.searchParams.set('gsrsearch',query);
+    url.searchParams.set('gsrnamespace','6');url.searchParams.set('gsrlimit','50');
+    url.searchParams.set('prop','imageinfo');url.searchParams.set('iiprop','url|size|mime|extmetadata');
+    url.searchParams.set('iiurlwidth','660');
+    return {query,data:await getJson(url.href,fetcher,8500)};
+  }));
+  const matches=new Map();
+  for(const result of work){
+    if(result.status!=='fulfilled')continue;
+    const {query,data}=result.value;
+    const searchTokens=tokens(query);
+    for(const page of Object.values(data?.query?.pages||{})){
+      const img=page.imageinfo?.[0];
+      if(!img||!['image/jpeg','image/png','image/webp'].includes(img.mime))continue;
+      if((img.width||0)<420||(img.height||0)<300)continue;
+      if(BAD.test(page.title||''))continue;
+      if(!isPublicDomain(img.extmetadata||{}))continue;
+      const filename=norm(page.title).replace(/^file /,'');
+      const desc=norm(String(img.extmetadata?.ImageDescription?.value||'').replace(/<[^>]+>/g,' ').slice(0,700));
+      const searchable=filename+' '+desc;
+      if(roman&&!/\broman\b|roma\b|rome\b|colosseum|colosseo|roman[aoie]\b|roman ruins|roman mosaic/.test(searchable))continue;
+      if(faith&&!/saint|christ|religio|church|cathedral|madonna|holy|trinity|virgin|angel|jesus|bible|icon|altar|gesu|sant[ioae]/.test(searchable))continue;
+      const hits=searchTokens.filter(t=>searchable.includes(t)).length;
+      if(hits<1)continue;
+      const uri=img.thumburl||img.url;
+      if(!uri)continue;
+      try{if(new URL(uri).hostname!=='upload.wikimedia.org')continue;}catch{continue;}
+      const key='commons:'+page.pageid;
+      const candidate={kind:'thematic',assetId:key,
+        score:hits/(searchTokens.length||1)+(query===queries[0]?0.02:0),
+        url:uri,label:'Immagine tematica da Wikimedia Commons',
+        source:'Wikimedia Commons',sourceUrl:img.descriptionurl||'https://commons.wikimedia.org',
+        license:tidy(img.extmetadata?.LicenseShortName?.value||'Public domain',50),
+        attribution:tidy(String(img.extmetadata?.Artist?.value||'').replace(/<[^>]+>/g,' '),125)};
+      if(!matches.has(key)||matches.get(key).score<candidate.score)matches.set(key,candidate);
+    }
   }
-  return results.sort((a,b)=>b.score-a.score);
+  return [...matches.values()].sort((a,b)=>b.score-a.score);
 }
 const ALLOWED_ORIGINS=new Set([
  'https://covers.openlibrary.org','https://books.google.com',
