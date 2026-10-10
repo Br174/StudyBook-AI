@@ -92,7 +92,7 @@ export function BottomNav({ active, onChange }) {
 }
 
 export function HomeScreen({
-  status, importing, generating, libraryItems, onImport, onScanner, onOpenBook, documentData,
+  status, importing, generating, libraryItems, onImport, onScanner, onOpenBook, onContinueBook, documentData,
   fileName, onCreateBook, progressPercent, scanContent = null,
 }) {
   const recent = libraryItems.slice(0, 3);
@@ -133,7 +133,7 @@ export function HomeScreen({
       {scanContent}
 
       {latest && (
-        <button type="button" className="sb-continue-card" onClick={() => onOpenBook(latest, 'processed')}>
+        <button type="button" className="sb-continue-card" onClick={() => onContinueBook(latest)}>
           <span>Continua</span>
           <strong>{stripExtension(latest.fileName)}</strong>
           <small>{latest.subject || 'Libro di studio'} · aggiornato di recente</small>
