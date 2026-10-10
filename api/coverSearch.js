@@ -47,7 +47,7 @@ export function findTheme(title,subject='',context=''){
   // LAB23: title is the authority; context is permitted only if the title
   // is a generic scan/note name, never allowed to override a specific title.
   const titleText=norm(title);
-  const generic=/^(?:appunti|fotografat|scannerizzat|scansione|documento|pagina|foto|testo|libro|senza titolo|untitled|nuovo documento|materiale)(?:\\s|$)/i.test(titleText);
+  const generic=/^(?:appunti|fotografat|scannerizzat|scansione|documento|pagina|foto|testo|libro|senza titolo|untitled|nuovo documento|materiale)(?:\s|$)/i.test(titleText);
   const titleHint=hints.find(([re])=>re.test(titleText));
   if(titleHint)return titleHint[1];
   const subjectHint=hints.find(([re])=>re.test(norm(subject)));
