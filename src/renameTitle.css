@@ -1,0 +1,12 @@
+.sb-title-overlay { position: fixed; inset: 0; z-index: 999; display: grid; place-items: center; padding: 16px; background: #192b4866; }
+.sb-title-dialog { width: min(430px,100%); background: #fff; border-radius: 23px; display: grid; gap: 12px; padding: 23px; box-shadow: 0 18px 55px #1b355339; }
+.sb-title-dialog h2 { margin: 0 0 4px; font-size: 1.33rem; color: #18253d; }
+.sb-title-dialog label { font-size: .78rem; font-weight: 800; color: #65758a; }
+.sb-title-dialog input { border: 1px solid #ced9ea; border-radius: 12px; height: 48px; padding: 10px 13px; font-size: 1rem; width: 100%; background: #fff; color: #18253d; }
+.sb-title-dialog input:focus { outline: 2px solid #4a9cf5; outline-offset: 1px; }
+.sb-title-dialog p { font-size: .79rem; color: #718196; line-height: 1.4; margin: 0; }
+.sb-title-actions { display: flex; gap: 9px; }
+.sb-title-actions button { flex:1; min-height: 46px; border-radius: 12px; border: 1px solid #d6e1ef; background: #f5f8fd; color: #215482; font-weight: 800; }
+.sb-title-actions button[type=submit] { background: #1879ea; border-color: #1879ea; color: #fff; }
+.sb-title-actions button:disabled { opacity: .45; }
+.sb-title-suggestion { text-align: left; background: #edf6ff; border: 1px solid #cde4ff; padding: 10px; border-radius: 12px; color: #1767b5; font-size: .84rem; }
