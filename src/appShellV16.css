@@ -505,3 +505,15 @@
 .sb-original-study-decision button { min-height:48px; border:0; border-radius:13px; padding:11px; color:#fff; background:var(--sb-blue); font-weight:800; }
 .sb-original-study-decision button:disabled { opacity:.45; }
 @media(max-width:420px) { .sb-original-study-decision { grid-template-columns:1fr; } }
+
+/* LAB15 • Il vecchio passaggio «Versione originale» è stato rimosso.
+   Riusa la schermata Libro aperto già approvata; solo la scelta senza libri è nuova. */
+.sb-original-picker { padding:22px; display:grid; gap:12px; }
+.sb-original-picker h2 { margin:0; font-size:1.35rem; }
+.sb-original-picker p { margin:0 0 8px; color:var(--sb-muted); line-height:1.5; }
+.sb-original-picker-item { display:flex; align-items:center; text-align:left; gap:12px; width:100%; padding:13px 14px; background:#f7faff; border:1px solid var(--sb-line); border-radius:15px; color:var(--sb-text); }
+.sb-original-picker-item svg { flex-shrink:0; color:var(--sb-blue); }
+.sb-original-picker-item span { min-width:0; flex:1; overflow-wrap:anywhere; font-weight:750; }
+.sb-original-picker-item strong { color:var(--sb-blue); font-size:.8rem; }
+.sb-original-picker-import { border:0; border-radius:14px; background:var(--sb-blue); color:white; min-height:48px; font-weight:800; margin-top:4px; }
+.sb-studio-screen .sb-original-reading { margin-top:16px; }
