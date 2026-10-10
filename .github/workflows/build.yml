@@ -104,6 +104,8 @@ jobs:
         run: node scripts/test-lab14-original-study-entry.mjs
       - name: Test LAB15 direct Originali route, archive empty and in-place reading
         run: node scripts/test-lab15-direct-original-route.mjs
+      - name: Test LAB16 approved Home, horizontal recent and camera/scan previews
+        run: node scripts/test-lab16-home-approved.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
