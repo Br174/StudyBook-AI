@@ -1,0 +1,78 @@
+name: LAB21 Cloudflare Gemini secret backend hotfix
+
+on:
+  push:
+    branches:
+      - lab/studybook-cover-gemini-cloudflare-hotfix-01
+    paths:
+      - '.github/workflows/studybook-cover-cloudflare-hotfix.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-existing-secret:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --prefer-offline --no-audit --no-fund
+      - name: Test genuine image generation request and Worker bindings
+        run: |
+          node --check api/coverAi.js
+          node --check worker/index.js
+          node scripts/test-lab21-true-ai-image.mjs
+          node scripts/test-cloudflare-contract.mjs
+      - name: Deploy API-only cover Worker WITHOUT resetting its existing Gemini secret
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" || exit 1
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || exit 1
+          # Important: no --secrets-file, no Gemini key passed to this run.
+          # Retain the secret AI_API_KEY already stored in the Cloudflare Worker.
+          npx wrangler deploy --config wrangler.lab21-cover.jsonc
+      - name: Verify isolated cover service without leaking secrets or generated image
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const url='https://studybook-ai-covers-lab21.brunoverlezza.workers.dev/api/cover-ai/generate';
+          let available=false;
+          for(let i=0;i<15;i++){
+            try{
+              const r=await fetch(url,{method:'GET',signal:AbortSignal.timeout(12000)});
+              if(r.status===405){available=true;break;}
+            }catch{}
+            await new Promise(r=>setTimeout(r,3000));
+          }
+          if(!available)throw new Error('Cloudflare image Worker GET route not available');
+          console.log('CLOUDFLARE_ROUTE=READY');
+          const response=await fetch(url,{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({title:'I romani - verifica connessione',subject:'Storia',
+              context:'Roma antica, Senato e architettura classica.',variant:1}),
+            signal:AbortSignal.timeout(85000)
+          });
+          const body=await response.json().catch(()=>({}));
+          const generated=response.status===200 && body?.type==='generated-image' &&
+            typeof body.imageData==='string'&&body.imageData.length>5000;
+          console.log('GEMINI_HTTP='+response.status);
+          console.log('GEMINI_CODE='+String(body.code||'NONE'));
+          console.log('GEMINI_RESULT='+(generated?'REAL_IMAGE_GENERATED':
+            body.code==='COVER_IMAGE_QUOTA'?'KEY_VALID_QUOTA_EXHAUSTED':'FAILED'));
+          const fs=await import('node:fs');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            '### LAB21 existing Cloudflare Gemini secret\n\n'+
+            'Status: '+response.status+' '+String(body.code||'')+'\n\n'+
+            'Result: '+(generated?'REAL_IMAGE_GENERATED':body.code==='COVER_IMAGE_QUOTA'?'KEY_VALID_QUOTA_EXHAUSTED':'ERROR')+'\n');
+          if(!generated && body.code!=='COVER_IMAGE_QUOTA')
+            throw new Error('Cloudflare image service has an unexpected error: '+String(body.code||response.status));
+          NODE
