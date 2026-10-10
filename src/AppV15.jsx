@@ -15,7 +15,7 @@ import {
   updateLibraryMetadata,
 } from './lib/library.js';
 import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
-import { BottomNav, HomeScreen, LibraryScreen, OriginalBookScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
+import { BottomNav, HomeScreen, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { deliverBlob } from './lib/fileDelivery.js';
 import {
@@ -188,11 +188,9 @@ export default function AppV14() {
       setStudyModeOpen(false);
       return;
     }
-    if (activeScreen === 'original' && originalReading) {
+    if (activeScreen === 'studio' && originalReading) {
       setOriginalReading(false);
-      // Se la lettura è stata avviata dalla scheda Libro aperto, ritorna lì
-      // con un solo indietro. Dalla pagina originale chiudi invece l'anteprima.
-      if (screenHistoryRef.current.at(-1) !== 'studio') return;
+      return;
     }
     const previous = screenHistoryRef.current.pop() || 'home';
     setActiveScreen(previous);
@@ -414,14 +412,29 @@ export default function AppV14() {
       const record = await getLibraryBook(id);
       if (!record) throw new Error('Libro non disponibile.');
       if (original) {
+        // LAB15: la copia originale apre direttamente la scheda Libro aperto.
+        // Non si avvia alcuna elaborazione e non si crea un altro record.
         if (!record.originalFile) throw new Error('Il file originale non è disponibile su questo dispositivo.');
         setOriginalRecord(record);
         setOriginalReading(false);
-        setStatus('Versione originale pronta · nessuna modifica');
-        navigateTo('original');
+        setLibraryId(record.id);
+        setFileName(record.fileName);
+        setDocumentData(record.sourceData || null);
+        setSourceFile(record.originalFile);
+        setStudyBook(record.studyBook || null);
+        setLevel(record.studyBook?.level || 'studio');
+        setDsaMode(record.dsaMode !== false);
+        setSelectedChapter(0);
+        setSourceEditor(null);
+        setSummaryEditor(null);
+        setStudyModeOpen(false);
+        setStatus(record.studyBook ? 'Libro pronto · scegli come utilizzarlo' : 'Originale pronto · scegli come utilizzarlo');
+        navigateTo('studio');
         return;
       }
       if (!record.studyBook || !record.sourceData) throw new Error('Libro elaborato non disponibile.');
+      setOriginalRecord(null);
+      setOriginalReading(false);
       setLibraryId(record.id);
       setFileName(record.fileName);
       setDocumentData(record.sourceData);
@@ -497,16 +510,19 @@ export default function AppV14() {
         id: createLibraryId(), fileName: file.name, profileId: activeProfileId, originalFile: file,
       });
       setLibraryId(originalSaved.id);
+      setOriginalRecord(originalSaved);
+      setOriginalReading(false);
       await refreshLibrary(activeProfileId);
       const parsed = await readSourceFile(file, {
         autoOcr: true,
         onProgress(update) { setStatus(importStatus(update)); },
       });
       setDocumentData(parsed);
-      await saveLibraryBook({
+      const parsedOriginal = await saveLibraryBook({
         id: originalSaved.id, fileName: file.name, profileId: activeProfileId,
         originalFile: file, sourceData: parsed,
       });
+      setOriginalRecord(parsedOriginal);
       await refreshLibrary(activeProfileId);
       setSelectedChapter(0);
       const recovered = parsed.ocrApplied?.length || 0;
@@ -1059,9 +1075,24 @@ export default function AppV14() {
 
   const activeProfile = profiles.find((profile) => profile.id === activeProfileId) || { id: 'default', name: 'Bruno' };
 
-  function openOriginalLibrary() {
-    setLibraryInitialView('original');
-    navigateTo('library');
+  function openOriginalHome() {
+    // LAB15: ultimo originale usato, altrimenti il più recente del profilo.
+    const originals = libraryItems.filter(item => item.metadata?.hasOriginal);
+    const selected = originals.find(item => item.id === originalRecord?.id) || originals[0];
+    if (selected) {
+      void openLibraryItem(selected.id, { original: true, openReader: false });
+      return;
+    }
+    // Nessun libro: mostra scelta/importazione nella stessa schermata Libro aperto.
+    setOriginalRecord(null);
+    setOriginalReading(false);
+    setLibraryId('');
+    setSourceFile(null);
+    setDocumentData(null);
+    setStudyBook(null);
+    setStudyModeOpen(false);
+    setFileName('');
+    navigateTo('studio');
   }
 
   async function refreshArchiveForLibrary() {
@@ -1071,39 +1102,10 @@ export default function AppV14() {
     finally { setArchiveBusy(false); }
   }
 
-  /* LAB14: il comando Studia libro mostra la stessa scheda LIBRO APERTO,
-     senza avviare né lettura né AI. Ripristina lo stato dal singolo record della Libreria. */
-  async function openOriginalStudyBook() {
-    if (!originalRecord?.id || libraryBusy || generating || importing) return;
-    setLibraryBusy(true);
-    setError('');
-    try {
-      const record = await getLibraryBook(originalRecord.id);
-      if (!record?.originalFile) throw new Error('Il documento originale non è disponibile.');
-      setOriginalRecord(record);
-      setLibraryId(record.id);
-      setFileName(record.fileName);
-      setDocumentData(record.sourceData || null);
-      setSourceFile(record.originalFile);
-      setStudyBook(record.studyBook || null);
-      setLevel(record.studyBook?.level || 'studio');
-      setDsaMode(record.dsaMode !== false);
-      setSelectedChapter(0);
-      setSourceEditor(null);
-      setSummaryEditor(null);
-      setOriginalReading(false);
-      setStudyModeOpen(false);
-      setStatus(record.studyBook ? 'Libro di studio pronto · scegli come utilizzarlo' : 'Originale pronto · scegli come utilizzarlo');
-      navigateTo('studio');
-    } catch (err) {
-      setError(err.message || 'Impossibile aprire la scheda del libro.');
-    } finally { setLibraryBusy(false); }
-  }
-
   function readOriginalFromBook() {
     if (!originalRecord?.originalFile) { setError('File originale non disponibile.'); return; }
+    // LAB15: lettura integrata; non ripresentare la vecchia schermata intermedia.
     setOriginalReading(true);
-    navigateTo('original');
   }
 
   async function openOriginalPdfFromBook() {
@@ -1174,7 +1176,7 @@ export default function AppV14() {
 
   function openFromLibraryCover(item, view = 'processed') {
     // LAB08: nella Libreria gli Elaborati aprono la pagina completa «Libro aperto».
-    // Gli Originali mantengono la consegna al lettore esterno già prevista.
+    // LAB15: anche gli Originali aprono direttamente la scheda Libro aperto.
     return openLibraryItem(item.id, { original: view === 'original', openReader: false });
   }
 
@@ -1246,7 +1248,7 @@ export default function AppV14() {
       {activeScreen === 'home' && (
         <HomeScreen
           status={status} importing={importing} generating={generating} libraryItems={libraryItems}
-          onImport={() => documentFileInputRef.current?.click()} onScanner={openScanner} onScannerArchive={openScannerArchive} onOpenOriginals={openOriginalLibrary} onOpenBook={openFromLibrary} onContinueBook={openContinueBook}
+          onImport={() => documentFileInputRef.current?.click()} onScanner={openScanner} onScannerArchive={openScannerArchive} onOpenOriginals={openOriginalHome} onOpenBook={openFromLibrary} onContinueBook={openContinueBook}
           documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
           scanContent={scannerPanel}
         />
@@ -1256,15 +1258,17 @@ export default function AppV14() {
 
       {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onRefreshScans={refreshArchiveForLibrary}
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
-      {activeScreen === 'original' && <OriginalBookScreen record={originalRecord} reading={originalReading}
-        onRead={() => setOriginalReading(reading => !reading)} onCloseRead={() => setOriginalReading(false)}
-        onStudyBook={openOriginalStudyBook} onOpenNative={openOriginalNative} onExport={exportOriginal} accessibility={accessibility} />}
-
       {activeScreen === 'studio' && (
         <StudioScreen
           studyBook={studyBook} fileName={fileName} onRenameBook={renameCurrentBook}
           isOriginalOnly={!studyBook && Boolean(originalRecord?.id === libraryId && sourceFile)}
           sourceData={documentData} generating={generating} onPrepareOriginal={prepareOriginalForStudy}
+          originalRecord={originalRecord?.id === libraryId ? originalRecord : null}
+          originalReading={originalReading} onCloseOriginalReader={() => setOriginalReading(false)}
+          onOpenOriginalNative={openOriginalNative} accessibility={accessibility}
+          availableOriginals={libraryItems.filter(item => item.metadata?.hasOriginal)}
+          onChooseOriginal={item => openLibraryItem(item.id, { original: true, openReader: false })}
+          onImportOriginal={() => documentFileInputRef.current?.click()}
           onRead={() => {
             if (!studyBook && originalRecord?.id === libraryId) { readOriginalFromBook(); return; }
             setStudyEntryMode('reader'); setStudyModeOpen(true);
@@ -1288,7 +1292,7 @@ export default function AppV14() {
         />
       )}
 
-      <BottomNav active={activeScreen === 'settings' || activeScreen === 'scans' ? 'home' : activeScreen === 'original' ? 'library' : activeScreen} onChange={screen => { if (screen === 'library') setLibraryInitialView('all'); navigateTo(screen); }} />
+      <BottomNav active={activeScreen === 'settings' || activeScreen === 'scans' ? 'home' : activeScreen} onChange={screen => { if (screen === 'library') setLibraryInitialView('all'); navigateTo(screen); }} />
       <input ref={cameraFileInputRef} className="camera-fallback-input" type="file" accept="image/*" capture="environment" onChange={handleCameraFallback} />
 
       {cameraOpen && (
