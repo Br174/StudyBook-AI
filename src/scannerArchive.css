@@ -1,0 +1,33 @@
+/* LAB11 - Scannerizzati segue la grafica minimal gia' approvata della Libreria. */
+.sb-scanner-archive { padding: 22px 18px 110px; max-width: 1100px; margin-inline: auto; }
+.sb-archive-header > span { font-size: .73rem; letter-spacing: .14em; font-weight: 900; color: #1877d7; }
+.sb-archive-header h1 { font-size: clamp(1.65rem, 6vw, 2.1rem); margin: 5px 0 8px; color: #192339; }
+.sb-archive-header p { margin: 0; color: #6b778a; line-height: 1.45; font-size: .9rem; }
+.sb-archive-toolbar { display: flex; gap: 10px; justify-content: space-between; margin: 22px 0 18px; }
+.sb-archive-toolbar button { border: 1px solid #dce5f2; border-radius: 14px; background: #fff; padding: 10px 12px; color: #2677c6; font-weight: 800; min-height: 44px; }
+.sb-archive-group { background: #fff; border-radius: 24px; padding: 16px; margin-bottom: 14px; border: 1px solid #e3e8f3; }
+.sb-archive-group h2 { font-size: 1.11rem; margin: 0 0 14px; overflow-wrap: anywhere; color: #17233b; }
+.sb-archive-group h2 small { color: #8290a1; font-size: .7rem; font-weight: 600; margin-left: 6px; }
+.sb-archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px,1fr)); gap: 12px; }
+.sb-archive-photo { min-width: 0; border: 1px solid #e3e9f4; border-radius: 16px; padding: 6px; background: #f9fbff; }
+.sb-archive-photo-open { display: block; width: 100%; position: relative; padding: 0; background: #f1f4fc; border: 0; border-radius: 11px; overflow: hidden; aspect-ratio: 3/4; }
+.sb-archive-photo-open img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sb-archive-check { position: absolute; right: 7px; top: 7px; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: #146dd0; background: #fff; box-shadow: 0 1px 6px #9995; font-size: 1.1rem; font-weight: 800; }
+.sb-archive-check.picked { color: #fff; background: #1878ec; }
+.sb-archive-photo-caption { display: grid; gap: 3px; padding: 8px 5px 4px; }
+.sb-archive-photo-caption strong { font-size: .84rem; color: #17233b; }
+.sb-archive-photo-caption span { font-size: .69rem; color: #697a90; }
+.sb-archive-photo-caption button { background: transparent; color: #b85057; border: 0; width: fit-content; min-height: 30px; padding: 3px 0; font-size: .77rem; font-weight: 800; }
+.sb-archive-selection { position: sticky; bottom: 76px; z-index: 5; display:flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; background: #fff; padding: 10px; border-radius: 17px; box-shadow: 0 2px 20px #1932593c; }
+.sb-archive-selection strong { font-size: .8rem; }
+.sb-archive-selection button { flex: 1; min-width: 110px; padding: 10px; min-height: 44px; background: #1877ed; border: 0; color: #fff; border-radius: 12px; font-weight: 800; font-size: .78rem; }
+.sb-archive-selection button.danger { background: #a9414a; }
+.sb-archive-selection button:disabled, .sb-archive-toolbar button:disabled { opacity: .42; }
+.sb-archive-empty { display:grid; justify-items:center; text-align:center; gap: 9px; padding: 35px 22px; border-radius: 22px; background: #fff; border: 1px solid #e2e8f3; color: #6b7d90; }
+.sb-archive-empty strong { color: #192841; }
+.sb-archive-empty p { max-width: 350px; line-height:1.5; }
+@media(max-width:420px) {
+  .sb-scanner-archive { padding-inline: 12px; }
+  .sb-archive-group { padding: 10px; }
+  .sb-archive-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+}
