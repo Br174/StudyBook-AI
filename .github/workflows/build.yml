@@ -112,6 +112,8 @@ jobs:
         run: node scripts/test-lab18-library-layout.mjs
       - name: Test LAB19 original scanner photos and AI book covers
         run: node scripts/test-lab19-library-covers.mjs
+      - name: Test LAB20 continuous scanner grid and resilient AI cover regeneration
+        run: node scripts/test-lab20-scans-covers-recovery.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
