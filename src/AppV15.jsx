@@ -796,6 +796,12 @@ export default function AppV14() {
     return openLibraryItem(item.id, { original: view === 'original', openReader: view !== 'original' });
   }
 
+  function openFromLibraryCover(item, view = 'processed') {
+    // LAB08: nella Libreria gli Elaborati aprono la pagina completa «Libro aperto».
+    // Gli Originali mantengono la consegna al lettore esterno già prevista.
+    return openLibraryItem(item.id, { original: view === 'original', openReader: false });
+  }
+
   function openContinueBook(item) {
     // LAB07 • Il riquadro "Continua" carica il libro e apre l'intera StudioScreen.
     // Le copertine di Recenti e Libreria conservano la loro navigazione precedente.
@@ -865,7 +871,7 @@ export default function AppV14() {
         />
       )}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} onOpenBook={openFromLibrary} onDeleteBook={removeLibraryItem} />}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} />}
 
       {activeScreen === 'studio' && (
         <StudioScreen
