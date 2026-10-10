@@ -135,6 +135,10 @@ export default function AppV14() {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraCapturing, setCameraCapturing] = useState(false);
+  const [cameraFlash, setCameraFlash] = useState(false);
+  const [cameraFeedback, setCameraFeedback] = useState('');
+  const cameraFlashTimerRef = useRef(null);
+  const cameraFeedbackTimerRef = useRef(null);
   const [scanPages, setScanPages] = useState([]);
   const [scanProcessing, setScanProcessing] = useState(false);
   const [scanSessionName, setScanSessionName] = useState('Appunti fotografati');
@@ -308,6 +312,8 @@ export default function AppV14() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     scanPersistTimersRef.current.forEach((timer) => clearTimeout(timer));
     scanPagesRef.current.forEach((page) => page.previewUrl && URL.revokeObjectURL(page.previewUrl));
+    clearTimeout(cameraFlashTimerRef.current);
+    clearTimeout(cameraFeedbackTimerRef.current);
     void releaseScannerOcr();
   }, []);
 
@@ -600,6 +606,7 @@ export default function AppV14() {
           scanAutoTitleConfidenceRef.current=0;
           setScanSessionName('Appunti fotografati');
         } else setError('Libro creato, ma il salvataggio delle foto non è confermato: raccolta scanner conservata.');
+        setArchivedScans(await listArchivedScannerPages());
         await refreshScannerStorage();
       }
       const engineLabel = result.engine === 'ai' ? 'AI' : result.engine === 'misto' ? 'AI + sicurezza locale' : 'modalità locale';
@@ -841,11 +848,18 @@ export default function AppV14() {
       setScannerResultReady(false);
       setScanPagesNow((pages) => [...pages, page]);
       recognizeScanPage(id, optimizedFile, pageNumber);
+      // LAB16: conferma visiva soltanto dopo la scrittura verificata.
+      setCameraFeedback('✓ Foto acquisita · OCR avviato');
+      clearTimeout(cameraFeedbackTimerRef.current);
+      cameraFeedbackTimerRef.current = setTimeout(() => setCameraFeedback(''), 1500);
       setStatus(`Pagina ${pageNumber} acquisita in ${((performance.now()-acquisitionStart)/1000).toFixed(1)} s · OCR in background`);
       void refreshScannerStorage();
+      return true;
     } catch (err) {
+      setCameraFeedback('');
       setError(err.message || 'Non riesco ad aggiungere questa pagina.');
       setStatus('Pagina non aggiunta');
+      return false;
     } finally {
       setScannerOptimizing(false);
     }
@@ -860,6 +874,10 @@ export default function AppV14() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext('2d', { alpha: false }).drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Feedback fotografico immediato: fotogramma acquisito prima dell'OCR.
+      setCameraFlash(true);
+      clearTimeout(cameraFlashTimerRef.current);
+      cameraFlashTimerRef.current = setTimeout(() => setCameraFlash(false), 180);
       const blob = await new Promise((resolve, reject) => canvas.toBlob(
         (value) => value ? resolve(value) : reject(new Error('Impossibile acquisire la foto.')),
         'image/jpeg',
@@ -918,6 +936,7 @@ export default function AppV14() {
       needsOcr: [],
       ocrApplied: pages.map((page) => page.pageNumber),
       scanCount: pages.length,
+      scanArchivePhotoIds: scanPages.map(page => page.archiveId || page.id),
       sourceFormat: 'scan',
       structure: {
         pageCount: pages.length,
@@ -1281,6 +1300,7 @@ export default function AppV14() {
           originalRecord={originalRecord?.id === libraryId ? originalRecord : null}
           originalReading={originalReading} onCloseOriginalReader={() => setOriginalReading(false)}
           onOpenOriginalNative={openOriginalNative} accessibility={accessibility}
+          scannedPhoto={documentData?.sourceFormat === 'scan' ? (archivedScans.find(page => documentData.scanArchivePhotoIds?.includes(page.id))?.blob || archivedScans.find(page => page.collection && fileName.startsWith(page.collection))?.blob || null) : null}
           availableOriginals={libraryItems.filter(item => item.metadata?.hasOriginal)}
           onChooseOriginal={item => openLibraryItem(item.id, { original: true, openReader: false })}
           onImportOriginal={() => documentFileInputRef.current?.click()}
@@ -1314,7 +1334,8 @@ export default function AppV14() {
         <div className="camera-overlay" role="dialog" aria-modal="true" aria-label="Scanner pagina">
           <div className="camera-sheet">
             <div className="camera-header"><div><span className="eyebrow">SCANNER · PAGINA {scanPages.length + 1}</span><h2>Fotografa la pagina</h2></div><button type="button" className="camera-close" onClick={stopCamera}>×</button></div>
-            <div className="camera-stage"><video ref={videoRef} playsInline muted onLoadedMetadata={() => setCameraReady(true)} /><div className="scan-frame" aria-hidden="true" /></div>
+            <div className="camera-stage"><video ref={videoRef} playsInline muted onLoadedMetadata={() => setCameraReady(true)} /><div className="scan-frame" aria-hidden="true" /><div className={cameraFlash ? 'sb-camera-shutter active' : 'sb-camera-shutter'} aria-hidden="true"/></div>
+            {cameraFeedback && <div role="status" className="sb-camera-captured">{cameraFeedback}</div>}
             <p className="camera-help">Scatta più pagine di seguito: l’OCR procede mentre fotografi. Le immagini rimangono nell’archivio Scannerizzati.</p>
             <div className="camera-actions"><button type="button" className="secondary-button" onClick={stopCamera}>Fine foto</button><button type="button" className="capture-button" onClick={capturePhoto} disabled={!cameraReady || cameraCapturing}>{cameraCapturing ? 'Acquisizione…' : 'Scatta pagina'}</button></div>
           </div>
