@@ -15,6 +15,7 @@ on:
       - lab/studybook-core-android-01-update-09
       - lab/studybook-core-android-01-update-10
       - lab/studybook-core-android-01-update-11
+      - lab/studybook-core-android-01-update-12
       - lab/recovery-studybook-core-android-02
       - lab/recovery-studybook-core-android-03
     paths:
