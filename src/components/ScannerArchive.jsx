@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StudyIcon } from './StudyUiIcons.jsx';
+import RenameTitleDialog from './RenameTitleDialog.jsx';
+import { suggestDocumentTitle } from '../lib/smartTitles.js';
 import '../scannerArchive.css';
 
 /* LAB11: archivio locale delle foto. Le anteprime sono URL temporanei,
    rilasciati quando si abbandona la schermata. Nessuna foto viene cancellata
    quando si rielabora o crea un libro. */
-export default function ScannerArchive({ entries = [], busy = false, onRestore, onDelete, onBack }) {
+export default function ScannerArchive({ entries = [], busy = false, onRestore, onDelete, onRenameCollection, onRenamePhoto, onBack }) {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState([]);
   const [thumbs, setThumbs] = useState({});
+  const [renameTarget, setRenameTarget] = useState(null);
 
   useEffect(() => {
     const refs = {};
@@ -56,7 +59,10 @@ export default function ScannerArchive({ entries = [], busy = false, onRestore, 
       {!entries.length && <div className="sb-archive-empty"><StudyIcon name="photo" size={39}/><strong>Nessuna fotografia scannerizzata</strong><p>Usa Scanner per fotografare le pagine. Le nuove fotografie rimarranno disponibili qui anche dopo aver creato un libro.</p></div>}
       {groups.map(group => (
         <section className="sb-archive-group" key={group.label}>
-          <h2>{group.label} <small>{group.photos.length} pagine</small></h2>
+          <div className="sb-archive-group-heading">
+            <h2>{group.label} <small>{group.photos.length} pagine</small></h2>
+            <button type="button" disabled={busy} title="Rinomina raccolta" aria-label={'Rinomina raccolta ' + group.label} onClick={()=>setRenameTarget({type:'collection',name:group.label,ids:group.photos.map(p=>p.id),suggestion:suggestDocumentTitle(group.photos)?.title || ''})}>✎ Rinomina</button>
+          </div>
           <div className="sb-archive-grid">
             {group.photos.map((page, index) => (
               <article className="sb-archive-photo" key={page.id}>
@@ -65,16 +71,27 @@ export default function ScannerArchive({ entries = [], busy = false, onRestore, 
                   {selectMode && <span className={selected.includes(page.id) ? 'sb-archive-check picked' : 'sb-archive-check'}>{selected.includes(page.id) ? '✓' : '+'}</span>}
                 </button>
                 <div className="sb-archive-photo-caption">
-                  <strong>Pagina {index + 1}</strong>
+                  <strong>{page.pageTitle || `Pagina ${index + 1}`}</strong>
                   <span>{page.text?.trim() ? 'OCR salvato' : 'OCR da eseguire'}</span>
                   {page.createdAt && <span>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(page.createdAt))}</span>}
-                  {!selectMode && <button type="button" disabled={busy} onClick={() => remove([page.id])} aria-label="Elimina fotografia">Elimina</button>}
+                  {!selectMode && <>
+                    <button type="button" className="sb-archive-rename" disabled={busy} onClick={()=>setRenameTarget({type:'photo',id:page.id,name:page.pageTitle || `Pagina ${index+1}`,suggestion:page.pageTitleManual ? '' : (page.pageTitle || '')})} aria-label="Rinomina fotografia">✎ Rinomina</button>
+                    <button type="button" disabled={busy} onClick={() => remove([page.id])} aria-label="Elimina fotografia">Elimina</button>
+                  </>}
                 </div>
               </article>
             ))}
           </div>
         </section>
       ))}
+      {renameTarget && <RenameTitleDialog
+        key={renameTarget.id || renameTarget.name}
+        label={renameTarget.type === 'collection' ? 'Rinomina raccolta scannerizzata' : 'Rinomina fotografia'}
+        current={renameTarget.name}
+        suggestion={renameTarget.suggestion}
+        onClose={()=>setRenameTarget(null)}
+        onSave={name=>renameTarget.type==='collection' ? onRenameCollection(renameTarget.ids,name) : onRenamePhoto(renameTarget.id,name)}
+      />}
       {selectMode && entries.length > 0 && (
         <div className="sb-archive-selection" role="group" aria-label="Azioni sulle fotografie selezionate">
           <strong>{selected.length} selezionate</strong>
