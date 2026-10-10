@@ -649,7 +649,7 @@ export default function AppV14() {
     }
   }
 
-  async function addScanPage(file) {
+  async function addScanPage(file, { precompressed = false } = {}) {
     if (!file || scannerOptimizing) return;
     setScannerOptimizing(true);
     setError('');
@@ -657,7 +657,7 @@ export default function AppV14() {
       setStatus('Ottimizzo la foto per OCR e spazio locale…');
       if (!scanPagesRef.current.length) requestScannerPersistence();
       const acquisitionStart = performance.now();
-      const optimizedFile = await compressScannerImage(file);
+      const optimizedFile = precompressed ? file : await compressScannerImage(file);
       const storage = await refreshScannerStorage(optimizedFile.size * 2);
       if (storage?.risk === 'blocked') {
         throw new Error('Spazio locale insufficiente per aggiungere un’altra pagina in sicurezza. Completa o svuota la raccolta prima di continuare.');
@@ -668,6 +668,7 @@ export default function AppV14() {
       const previewUrl = URL.createObjectURL(optimizedFile);
       const page = {
         id,
+        archiveId: id, // LAB11: marca la foto gia' salvata permanentemente, evita riesumazioni dopo eliminazione
         file: optimizedFile,
         previewUrl,
         status: 'processing',
@@ -711,7 +712,7 @@ export default function AppV14() {
       const file = new File([blob], scanFileName(), { type: 'image/jpeg' });
       canvas.width = 1;
       canvas.height = 1;
-      await addScanPage(file);
+      await addScanPage(file, { precompressed: true });
       // Lo scanner resta aperto e pronto per la fotografia successiva.
     } catch (err) {
       setError(err.message || 'Errore durante lo scatto.');
