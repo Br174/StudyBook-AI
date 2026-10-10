@@ -17,6 +17,7 @@ import {
 import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
 import { isScannerBook, coverContext, pickLocalTheme, requestAiCoverTheme, renderAICover, imageBlobToThumbnail, extractOriginalCover } from './lib/libraryCoverEngine.js';
 import { generateTrueBookImage } from './lib/trueAiCover.js';
+import { searchBookCoverOnWeb } from './lib/bookCoverSearch.js';
 import { BottomNav, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
 import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
@@ -440,6 +441,34 @@ export default function AppV14() {
     await refreshLibrary();
     setStatus('Vera copertina AI salvata in Libreria · il file originale è invariato');
     return true;
+  }
+  /* LAB22 · Original first; royalty-free thematic art otherwise.
+     Manual one-tap action, no provider secrets, original book/scanned photos unchanged. */
+  async function findAndApplyLibraryCover(id,{onStage=()=>{}}={}){
+    if(!id)throw new Error('Libro non trovato.');
+    const original=await getLibraryBook(id);
+    if(!original||isScannerBook(original))throw new Error('Questa fotografia scannerizzata non può essere modificata.');
+    const result=await searchBookCoverOnWeb(original,{onStage});
+    if(!result?.src?.startsWith('data:image/jpeg;base64,'))
+      throw new Error('La ricerca non ha restituito una copertina utilizzabile.');
+    onStage('saving');
+    const current=await getLibraryBook(id);
+    if(!current||isScannerBook(current))throw new Error('Libro non più disponibile.');
+    await updateLibraryMetadata(id,{
+      coverCustom:result.src,coverStatus:'ready',
+      coverOrigin:result.kind==='original'?'online-catalog':'online-thematic',
+      coverImageSource:result.source,
+      coverImageSourceUrl:result.sourceUrl,
+      coverImageLicense:result.license,
+      coverImageAttribution:result.attribution,
+      coverCatalogMatchedTitle:result.matchedTitle,
+      coverVariant:(Number(current.coverVariant)||0)+1
+    });
+    await refreshLibrary();
+    setStatus(result.kind==='original'
+      ? 'Copertina del catalogo trovata e salvata · PDF originale invariato'
+      : 'Fotografia tematica trovata e salvata · PDF originale invariato');
+    return result;
   }
   async function chooseLibraryCover(id,file) {
     if(!id||!file||!['image/jpeg','image/png','image/webp'].includes(file.type))throw new Error('Scegli una foto JPG, PNG o WebP.');
@@ -1450,7 +1479,7 @@ export default function AppV14() {
 
       {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} onRenameCollection={renameScannerArchiveCollection} onRenamePhoto={renameScannerArchivePhoto} />}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onSetCoverFile={chooseLibraryCover} onGenerateCover={generateRealCoverPreview} onApplyCover={applyRealAICover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onSetCoverFile={chooseLibraryCover} onGenerateCover={findAndApplyLibraryCover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
       {activeScreen === 'studio' && (
         <StudioScreen
