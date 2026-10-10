@@ -83,6 +83,23 @@ assert.equal(unmatched.status,404);assert.equal(unmatched.code,'COVER_NOT_FOUND'
 const unlicensed=await searchAndFetchCover({title:'I romani',subject:'Storia'},mockFetcher({book:false,license:'CC BY-SA 4.0'}));
 assert.equal(unlicensed.status,404,'restricted license must not be used as fallback');
 await assert.rejects(fetchSafeImage({url:'https://example.com/evil.jpg'},mockFetcher()),/not allowed/);
+// Real Open Library b/id covers return HTTPS 302 toward Archive.org.
+// Handle them without allowing arbitrary external/SSRF redirects.
+const redirects=[];
+const openCover=await fetchSafeImage({url:'https://covers.openlibrary.org/b/id/10590366-L.jpg?default=false'},
+ async(url)=>{
+   redirects.push(new URL(url).hostname);
+   if(url.startsWith('https://covers.openlibrary.org/'))return{
+     status:302,ok:false,headers:{get:k=>k==='location'
+       ?'https://archive.org/download/l_covers_0010/l_covers_0010_59.zip/0010590366-L.jpg':null}
+   };
+   if(url.startsWith('https://archive.org/'))return imgResp;
+   throw Error('Unexpected redirect '+url);
+ });
+assert.ok(openCover.encoded.length>1500);
+assert.deepEqual(redirects,['covers.openlibrary.org','archive.org']);
+await assert.rejects(fetchSafeImage({url:'https://covers.openlibrary.org/b/id/5-L.jpg'},
+ async()=>({status:302,ok:false,headers:{get:k=>k==='location'?'https://example.com/private.jpg':null}})),/Unsafe image redirect/);
 const badMethod=await worker.fetch(new Request('https://example.test/api/book-cover/search'));
 assert.equal(badMethod.status,405);
 const options=await worker.fetch(new Request('https://example.test/api/book-cover/search',{
