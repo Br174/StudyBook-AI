@@ -30,7 +30,7 @@ jobs:
             signal:controller,
             body:JSON.stringify({
               contents:[{role:'user',parts:[{text:'Generate a clean vertical cover artwork of ancient Roman architecture, without words.'}]}],
-              generationConfig:{responseModalities:['IMAGE'],responseFormat:{image:{aspectRatio:'3:4',imageSize:'1K'}}}
+              generationConfig:{responseModalities:['IMAGE'],imageConfig:{aspectRatio:'3:4',imageSize:'1K'}}
             }),
           });
           const data=await r.json().catch(()=>({}));
