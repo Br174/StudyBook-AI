@@ -256,6 +256,45 @@ jobs:
           VITE_NATIVE_API_BASE: https://studybook-ai.brunoverlezza.workers.dev
         run: npm run build
 
+      # LAB21 ONLY: deploy an isolated backend. Never touch the live studybook-ai
+      # worker, whose existing text summarization endpoints remain unchanged.
+      # The existing server-side Gemini secret is reused WITHOUT embedding it
+      # in the Android build. One image request occurs only on a user's tap.
+      - name: Deploy isolated LAB21 real-image service
+        if: github.ref == 'refs/heads/lab/studybook-core-android-01-update-21'
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo "::error::Cloudflare token is not configured"; exit 1; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || { echo "::error::Cloudflare account is not configured"; exit 1; }
+          IMAGE_KEY="${AI_API_KEY:-${GEMINI_API_KEY:-}}"
+          test -n "$IMAGE_KEY" || { echo "::error::Gemini image provider key is not configured"; exit 1; }
+          umask 077
+          printf 'AI_API_KEY=%s\n' "$IMAGE_KEY" > .lab21-image-worker.secrets
+          trap 'rm -f .lab21-image-worker.secrets' EXIT
+          npx wrangler deploy --name studybook-ai-covers-lab21 --secrets-file .lab21-image-worker.secrets
+          COVER_URL="https://studybook-ai-covers-lab21.brunoverlezza.workers.dev"
+          STATUS=$(curl --max-time 20 --silent --output /tmp/lab21-cover-route.json --write-out '%{http_code}' "$COVER_URL/api/cover-ai/generate")
+          if [ "$STATUS" != "405" ]; then
+            echo "::error::LAB21 isolated cover backend route is not responding (status $STATUS)"
+            cat /tmp/lab21-cover-route.json
+            exit 1
+          fi
+          echo "VITE_COVER_AI_BASE=$COVER_URL" >> "$GITHUB_ENV"
+          echo "LAB21 isolated real-image route operational: $COVER_URL"
+
+      - name: Rebuild LAB21 Android assets with verified cover service URL
+        if: github.ref == 'refs/heads/lab/studybook-core-android-01-update-21'
+        env:
+          VITE_NATIVE_API_BASE: https://studybook-ai.brunoverlezza.workers.dev
+        run: npm run build
+
       - name: Generate Android project
         run: |
           rm -rf android
