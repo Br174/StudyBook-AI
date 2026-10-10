@@ -1,6 +1,7 @@
 const DB_NAME = 'studybook-ai-scanner';
-const DB_VERSION = 2;
-const ARCHIVE_STORE = 'archive'; // LAB11: fotografie persistenti, indipendenti dalla raccolta attiva
+const DB_VERSION = 1; // Rimane compatibile con LAB10 e con eventuale rollback
+const ARCHIVE_DB_NAME = 'studybook-ai-scanned-archive';
+const ARCHIVE_STORE = 'archive'; // fotografie persistenti in database separato
 const META_STORE = 'meta';
 const PAGE_STORE = 'pages';
 const ACTIVE_SESSION = 'active';
@@ -22,13 +23,25 @@ function openDb() {
       if (!db.objectStoreNames.contains(PAGE_STORE)) {
         db.createObjectStore(PAGE_STORE, { keyPath: 'id' });
       }
-      if (!db.objectStoreNames.contains(ARCHIVE_STORE)) {
-        const archive = db.createObjectStore(ARCHIVE_STORE, { keyPath: 'id' });
-        archive.createIndex('createdAt', 'createdAt');
-      }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error || new Error('Impossibile aprire l’archivio scanner.'));
+  });
+}
+
+function openArchiveDb() {
+  return new Promise((resolve,reject) => {
+    if (!('indexedDB' in globalThis)) { reject(new Error('Archivio locale non disponibile.')); return; }
+    const req = indexedDB.open(ARCHIVE_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(ARCHIVE_STORE)) {
+        const store = db.createObjectStore(ARCHIVE_STORE, { keyPath:'id' });
+        store.createIndex('createdAt','createdAt');
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('Impossibile aprire Scannerizzati.'));
   });
 }
 
@@ -234,30 +247,32 @@ export function archiveScannerPageRecord(page, collectionName = 'Appunti fotogra
   };
 }
 
-export async function saveCapturedScannerPage(page, collectionName = 'Appunti fotografati', { archive = true } = {}) {
-  const record = scannerPageToRecord(page);
+async function saveScannerArchiveCopy(page, collectionName) {
+  const record = archiveScannerPageRecord(page, collectionName);
   if (!record.id || !record.blob) return false;
   let db;
   try {
-    db = await openDb();
-    const stores = archive ? [PAGE_STORE, ARCHIVE_STORE] : [PAGE_STORE];
-    const tx = db.transaction(stores, 'readwrite');
-    tx.objectStore(PAGE_STORE).put(record);
-    if (archive) tx.objectStore(ARCHIVE_STORE).put(archiveScannerPageRecord(page, collectionName));
+    db = await openArchiveDb();
+    const tx = db.transaction(ARCHIVE_STORE,'readwrite');
+    tx.objectStore(ARCHIVE_STORE).put(record);
     await transactionDone(tx);
     return true;
-  } catch {
-    return false;
-  } finally {
-    db?.close();
-  }
+  } catch { return false; }
+  finally { db?.close(); }
+}
+
+export async function saveCapturedScannerPage(page, collectionName = 'Appunti fotografati', {archive = true} = {}) {
+  // La fotografia viene conservata PRIMA nella raccolta permanente.
+  // Se fallisce il salvataggio temporaneo, l'immagine resta recuperabile.
+  if (archive && !(await saveScannerArchiveCopy(page, collectionName))) return false;
+  return saveScannerPage(page);
 }
 
 export async function updateArchivedScannerText(page, collectionName = 'Appunti fotografati') {
   if (!page?.id) return false;
   let db;
   try {
-    db = await openDb();
+    db = await openArchiveDb();
     const key = String(page.archiveId || page.id);
     const tx = db.transaction(ARCHIVE_STORE, 'readwrite');
     const store = tx.objectStore(ARCHIVE_STORE);
@@ -284,7 +299,7 @@ export async function archiveScannerSessionPages(pages = [], collectionName = 'A
   if (!candidates.length) return true;
   let db;
   try {
-    db = await openDb();
+    db = await openArchiveDb();
     // Non sovrascrive una fotografia eliminata intenzionalmente nel frattempo.
     // Le sessioni pre-LAB11, senza origin archiviata, vengono migrate.
     const tx = db.transaction(ARCHIVE_STORE, 'readwrite');
@@ -311,7 +326,7 @@ export async function archiveScannerSessionPages(pages = [], collectionName = 'A
 export async function listArchivedScannerPages() {
   let db;
   try {
-    db = await openDb();
+    db = await openArchiveDb();
     const tx = db.transaction(ARCHIVE_STORE, 'readonly');
     const entries = await requestResult(tx.objectStore(ARCHIVE_STORE).getAll());
     await transactionDone(tx);
@@ -326,7 +341,7 @@ export async function getArchivedScannerPages(ids = []) {
   if (!ordered.length) return [];
   let db;
   try {
-    db = await openDb();
+    db = await openArchiveDb();
     const tx = db.transaction(ARCHIVE_STORE,'readonly');
     const requests = ordered.map(id => requestResult(tx.objectStore(ARCHIVE_STORE).get(id)));
     const records = await Promise.all(requests);
@@ -341,7 +356,7 @@ export async function deleteArchivedScannerPages(ids = []) {
   if (!keys.length) return true;
   let db;
   try {
-    db = await openDb();
+    db = await openArchiveDb();
     const tx = db.transaction(ARCHIVE_STORE,'readwrite');
     for (const key of keys) tx.objectStore(ARCHIVE_STORE).delete(key);
     await transactionDone(tx);
