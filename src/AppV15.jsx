@@ -15,7 +15,7 @@ import {
   updateLibraryMetadata,
 } from './lib/library.js';
 import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
-import { isScannerBook, requestAiCoverTheme, renderAICover, imageBlobToThumbnail, extractOriginalCover } from './lib/libraryCoverEngine.js';
+import { isScannerBook, coverContext, pickLocalTheme, requestAiCoverTheme, renderAICover, imageBlobToThumbnail, extractOriginalCover } from './lib/libraryCoverEngine.js';
 import { BottomNav, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
 import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
@@ -159,6 +159,9 @@ export default function AppV14() {
   const [libraryInitialView, setLibraryInitialView] = useState('all');
   const coverQueueRef = useRef(new Set());
   const coverWorkerRef = useRef(false);
+  // LAB20: one optional online concept request at a time; local covers never wait.
+  const coverRemoteTailRef = useRef(Promise.resolve());
+  const coverAiUnavailableRef = useRef(false);
   const [originalRecord, setOriginalRecord] = useState(null);
   const [originalReading, setOriginalReading] = useState(false);
 
@@ -358,31 +361,55 @@ export default function AppV14() {
       }catch(error) { console.warn('LAB19 original-cover extraction skipped:',error.message); }
     }
     record=await getLibraryBook(id);
-    if(!record || (automatic&&(record.coverCustom||record.coverOriginal||record.coverAI)))return false;
-    const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),10500);
-    try{
-      const theme=await requestAiCoverTheme(record,{signal:controller.signal});
-      const current=await getLibraryBook(id);
-      if(!current || (automatic&&(current.coverCustom||current.coverOriginal||current.coverAI)))return false;
-      const variant=(Number(current.coverVariant)||0)+(forceAI?1:0);
-      const image=renderAICover({title:current.fileName,theme,variant});
-      await updateLibraryMetadata(id,{
-        coverAI:image,coverCustom:forceAI?image:(current.coverCustom||null),
-        coverStatus:'ready',coverOrigin:forceAI?'ai-manual':'ai',coverVariant:variant,
-      });
-      await refreshLibrary();
-      return true;
-    }catch(error){
-      if(!forceAI){
-        const current=await getLibraryBook(id);
-        if(current&&!current.coverOriginal&&!current.coverCustom)
-          await updateLibraryMetadata(id,{coverStatus:'failed',coverOrigin:'none'});
-        await refreshLibrary();
-      }
-      if(!automatic)throw new Error('Copertina AI non disponibile: controlla la connessione o riprova.');
-      return false;
-    }finally {clearTimeout(timeout);}
+    if(!record || (automatic && (record.coverCustom || record.coverOriginal || record.coverAI)))return false;
+
+    // LAB20: cover generation is guaranteed locally, even without internet.
+    // The online AI's job is refining THEME; it does not gate the UI or block the user.
+    const variant=(Number(record.coverVariant)||0)+(forceAI?1:0);
+    const localTheme=pickLocalTheme(coverContext(record));
+    const localCover=renderAICover({title:record.fileName,theme:localTheme,variant});
+    const fresh=await getLibraryBook(id);
+    if(!fresh || (automatic && (fresh.coverCustom || fresh.coverOriginal || fresh.coverAI)))return false;
+    await updateLibraryMetadata(id,{
+      coverAI:localCover,
+      coverCustom:forceAI?localCover:(fresh.coverCustom||null),
+      coverStatus:'ready',
+      coverOrigin:forceAI?'local-manual':'local',
+      coverVariant:variant,
+    });
+    await refreshLibrary();
+
+    // One optional, bounded online request can upgrade the cover without
+    // replacing any later user-selected photo, cover edit, or original scan.
+    if(!coverAiUnavailableRef.current || forceAI) {
+      const originalRecord=fresh;
+      const improve=async()=>{
+        const controller=new AbortController();
+        const timeout=setTimeout(()=>controller.abort(),6500);
+        try {
+          const theme=await requestAiCoverTheme(originalRecord,{signal:controller.signal});
+          const latest=await getLibraryBook(id);
+          if(!latest || latest.coverVariant!==variant || latest.coverAI!==localCover ||
+             (forceAI && latest.coverCustom!==localCover) ||
+             (!forceAI && (latest.coverCustom || latest.coverOriginal)))return;
+          const updated=renderAICover({title:latest.fileName,theme,variant});
+          await updateLibraryMetadata(id,{
+            coverAI:updated,
+            ...(forceAI?{coverCustom:updated}:{}),
+            coverOrigin:forceAI?'ai-manual':'ai',
+            coverStatus:'ready',
+          });
+          await refreshLibrary();
+        } catch(error) {
+          // No false failure state: the cover is already visible and saved.
+          coverAiUnavailableRef.current=true;
+          console.warn('LAB20 online cover concept unavailable; local design retained:',error.message);
+        } finally {clearTimeout(timeout);}
+      };
+      coverRemoteTailRef.current=coverRemoteTailRef.current.catch(()=>{}).then(improve);
+    }
+    if(forceAI) setStatus('Copertina illustrata pronta · il tema AI si aggiorna se il servizio è disponibile');
+    return true;
   }
   async function chooseLibraryCover(id,file) {
     if(!id||!file||!['image/jpeg','image/png','image/webp'].includes(file.type))throw new Error('Scegli una foto JPG, PNG o WebP.');
