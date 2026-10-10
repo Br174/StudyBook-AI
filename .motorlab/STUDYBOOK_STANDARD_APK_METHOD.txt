@@ -1,0 +1,13 @@
+STUDYBOOK STANDARD APK METHOD V1
+PROJECT=StudyBook-AI
+STATUS=USER_REQUESTED_PERSISTENT_BUILD_PREFERENCE
+APPROVAL_DATE=2026-10-10
+RULE=Quando l'utente dice "procedi" dopo approvazione MotorLab di una modifica StudyBook AI, usa direttamente il metodo standard già collaudato per produrre APK e ZIP. Non proporre procedure manuali alternative e non dichiarare impossibilità senza aver verificato prima l'accesso GitHub.
+METHOD=GitHub connettore -> branch LAB aggiornamento da ultimo HEAD verificato -> patch con gate compatibilità e invarianti -> test UAB e Android -> firma certificato famiglia LAB originale -> verifica appId/versionCode/certificato -> artefatto APK e ZIP -> link verificati -> ledger centrale MotorLab.
+STABLE_APP_ID=it.studybook.ai.lab
+CERT_POLICY=Preservare certificato LAB originale e versionCode monotono per aggiornamenti senza disinstallazione.
+SAFETY=Conservare LAB precedente e checkpoint sorgente di sicurezza; non promuovere automaticamente a MADRE/CANDIDATA.
+READINESS=Non promettere APK completata prima dell'esito success del relativo workflow.
+MOTORLAB=Usare CORE e Fantastici 20 in affiancamento al motore nativo StudyBook AI.
+PRECHANGE=Le nuove modifiche rispettano il pre-change report e richiedono approvazione successiva al piano; non usare questa preferenza per saltare il gate.
+PERSISTENCE=Questa istruzione e' conservata nel repository del progetto e va consultata alle riaperture insieme a MOTORLAB_PROJECT_HOOK.txt.
