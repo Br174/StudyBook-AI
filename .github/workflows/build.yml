@@ -92,6 +92,8 @@ jobs:
         run: node scripts/test-lab08-library-overview.mjs
       - name: Test LAB09 approved compact design and SVG icons
         run: node scripts/test-lab09-approved-ui.mjs
+      - name: Test LAB10 universal interactive glossary
+        run: node scripts/test-lab10-universal-glossary.mjs
       - name: Test Android native contract
         run: node scripts/test-native-contract.mjs
       - name: Test long-paragraph engine
