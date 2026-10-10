@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { ACCESSIBILITY_PRESETS } from '../lib/accessibility.js';
 import { StudyIcon } from './StudyUiIcons.jsx';
 import RenameTitleDialog from './RenameTitleDialog.jsx';
+import ScannerArchive from './ScannerArchive.jsx';
 import '../appShellV16.css';
 
 function stripExtension(value = '') {
@@ -97,10 +98,10 @@ export function BottomNav({ active, onChange }) {
 }
 
 export function HomeScreen({
-  status, importing, generating, libraryItems, onImport, onScanner, onScannerArchive, onOpenBook, onContinueBook, documentData,
+  status, importing, generating, libraryItems, onImport, onScanner, onScannerArchive, onOpenOriginals, onOpenBook, onContinueBook, documentData,
   fileName, onCreateBook, progressPercent, scanContent = null,
 }) {
-  const recent = libraryItems.slice(0, 3);
+  const recent = libraryItems.filter(item => item.metadata?.hasProcessed).slice(0, 3);
   const latest = recent[0];
   return (
     <section className="sb-screen sb-home-screen">
@@ -118,7 +119,7 @@ export function HomeScreen({
           <button type="button" onClick={onScanner} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="scanner" size={25} /></span><strong>Scanner</strong></button>
           <button type="button" onClick={onImport} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="book" size={25} /></span><strong>PDF / eBook</strong></button>
           <button type="button" onClick={onScannerArchive} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="photo" size={25} /></span><strong>Scannerizzati</strong></button>
-          <button type="button" onClick={onImport} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="document" size={25} /></span><strong>Documento</strong></button>
+          <button type="button" onClick={onOpenOriginals} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="document" size={25} /></span><strong>Versione originale</strong></button>
         </div>
       </article>
 
@@ -156,9 +157,9 @@ export function HomeScreen({
   );
 }
 
-export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook }) {
+export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, initialView = 'all', scannerProps = {}, onRefreshScans }) {
   const [area, setArea] = useState('subjects');
-  const [view, setView] = useState('processed');
+  const [view, setView] = useState(initialView);
   const [subject, setSubject] = useState('Tutte');
   const [sort, setSort] = useState('recent');
   const [deleteCandidate, setDeleteCandidate] = useState(null);
@@ -167,13 +168,13 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook })
   const collections = useMemo(() => [...new Set(items.flatMap((item) => item.collections || []))], [items]);
 
   const filtered = useMemo(() => {
-    let output = [...items];
+    let output = items.filter(item => view === 'all' || (view === 'processed' ? item.metadata?.hasProcessed : item.metadata?.hasOriginal));
     if (area === 'favorites') output = output.filter((item) => item.favorite);
     if (area === 'subjects' && subject !== 'Tutte') output = output.filter((item) => (item.subject || 'Altro') === subject);
     if (sort === 'az') output.sort((a, b) => stripExtension(a.fileName).localeCompare(stripExtension(b.fileName), 'it'));
     else output.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
     return output;
-  }, [items, area, subject, sort]);
+  }, [items, area, subject, sort, view]);
 
   return (
     <section className="sb-screen sb-library-screen">
@@ -182,11 +183,17 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook })
         <div className="sb-library-tools"><button type="button" aria-label="Cerca">⌕</button></div>
       </header>
 
-      <div className="sb-segmented">
-        <button className={view === 'processed' ? 'active' : ''} onClick={() => setView('processed')}>Elaborati</button>
-        <button className={view === 'original' ? 'active' : ''} onClick={() => setView('original')}>Originali</button>
+      <div className="sb-segmented sb-library-categories" aria-label="Categorie della Libreria">
+        {[
+          ['scans', 'Scannerizzati'], ['processed', 'Modificati'], ['original', 'Originali'], ['all', 'Tutti'],
+        ].map(([key, label]) => (
+          <button key={key} type="button" className={view === key ? 'active' : ''}
+            aria-pressed={view === key} onClick={() => { setView(key); if (key === 'scans') void onRefreshScans?.(); }}>
+            {label}
+          </button>
+        ))}
       </div>
-
+      {view === 'scans' ? <ScannerArchive {...scannerProps} onBack={() => setView('all')} backLabel="← Torna alla Libreria" /> : <>
       <div className="sb-library-modes">
         {[
           ['all','Tutti'],['subjects','Materie'],['collections','Raccolte'],['favorites','Preferiti'],['recent','Recenti'],
@@ -215,9 +222,10 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook })
 
       {filtered.length ? (
         <div className="sb-library-grid">
-          {filtered.map((item) => <BookCover key={item.id} item={item} view={view} onOpen={onOpenBook} onDeleteRequest={setDeleteCandidate} onRenameRequest={setRenameCandidate} />)}
+          {filtered.map((item) => <BookCover key={item.id} item={item} view={view === 'all' ? (item.metadata?.hasProcessed ? 'processed' : 'original') : view} onOpen={onOpenBook} onDeleteRequest={setDeleteCandidate} onRenameRequest={setRenameCandidate} />)}
         </div>
       ) : <div className="sb-empty-library">Nessun libro in questa sezione.</div>}
+      </>}
 
       {renameCandidate && <RenameTitleDialog key={renameCandidate.id} label="Rinomina libro di studio" current={stripExtension(renameCandidate.fileName)} onClose={()=>setRenameCandidate(null)} onSave={name=>onRenameBook(renameCandidate.id,name)} />}
       {deleteCandidate && (
@@ -372,6 +380,69 @@ export function SettingsScreen({ settings, onSettingsChange, profiles, activePro
         <h2>Cloud e backup</h2>
         <div className="sb-cloud-row"><div><strong>Google Drive</strong><span>Originali ed elaborati, con accesso Google</span></div><button type="button" disabled>Accedi con Google</button></div>
         <p className="sb-note">Il collegamento reale verrà attivato nel guscio Android; nessuna password Google verrà mai salvata dentro StudyBook.</p>
+      </article>
+    </section>
+  );
+}
+
+
+/* LAB13 — I byte originali restano nell'archivio; qui si legge soltanto il testo
+   importato, senza riassunti o interventi del motore di studio. */
+export function OriginalBookScreen({ record, reading, onRead, onCloseRead, onExport, onOpenNative }) {
+  const [chapterIndex, setChapterIndex] = useState(0);
+  if (!record) return <section className="sb-screen"><p>Nessun originale selezionato.</p></section>;
+  const chapters = record.sourceData?.chapters || [];
+  const chapter = chapters[Math.min(chapterIndex, Math.max(0, chapters.length - 1))];
+  const originalName = record.original?.name || record.originalFile?.name || record.fileName;
+  const readable = chapters.length > 0;
+  return (
+    <section className="sb-screen sb-original-screen" aria-label="Versione originale">
+      <header className="sb-library-head">
+        <div><small>DOCUMENTO INALTERATO</small><h1>Versione originale</h1></div>
+      </header>
+      <article className="sb-process-card sb-original-summary">
+        <div><small>FILE ORIGINALE CONSERVATO</small><h2>{stripExtension(originalName)}</h2>
+          <p>{originalName} · {record.original?.size ? (record.original.size / 1024 / 1024).toFixed(1) + ' MB' : 'Formato originale'}</p>
+          <p>L'esportazione del file originale restituisce i byte importati, senza modifiche.</p>
+        </div>
+        <div className="sb-original-actions">
+          <button type="button" onClick={onRead}>{reading ? 'Chiudi lettura' : 'Leggi sul telefono'}</button>
+          <button type="button" className="sb-original-secondary" onClick={() => onExport('original')}>Esporta originale</button>
+        </div>
+      </article>
+      {reading && (
+        <article className="sb-original-reading">
+          {readable ? <>
+            <div className="sb-original-chapter-control">
+              <label htmlFor="original-chapter">Capitolo originale</label>
+              <select id="original-chapter" value={Math.min(chapterIndex, chapters.length - 1)} onChange={event => setChapterIndex(Number(event.target.value))}>
+                {chapters.map((item, index) => <option key={index} value={index}>{item.title || 'Capitolo ' + (index + 1)}</option>)}
+              </select>
+            </div>
+            <h2>{chapter?.title || 'Testo originale'}</h2>
+            {(chapter?.paragraphs || []).map((paragraph, index) => (
+              <p key={index}>{typeof paragraph === 'string' ? paragraph : String(paragraph?.original || paragraph?.text || '')}</p>
+            ))}
+            <div className="sb-original-chapter-nav">
+              <button disabled={chapterIndex === 0} onClick={() => setChapterIndex(index => Math.max(0, index - 1))}>← Precedente</button>
+              <button disabled={chapterIndex >= chapters.length - 1} onClick={() => setChapterIndex(index => Math.min(chapters.length - 1, index + 1))}>Successivo →</button>
+            </div>
+            <p className="sb-original-notice">Lettura del testo estratto, senza rielaborazione. Per conservare anche l'impaginazione originale apri il file nel suo lettore.</p>
+          </> : <p>Per questo formato non è disponibile il testo interno. Puoi aprire il file integro con il lettore del telefono.</p>}
+          <button type="button" className="sb-original-secondary" onClick={onOpenNative}>Apri il file nel suo lettore</button>
+          <button type="button" className="sb-original-secondary" onClick={onCloseRead}>Chiudi lettura</button>
+        </article>
+      )}
+      <article className="sb-original-export-card">
+        <h2>Esporta la versione originale</h2>
+        <p>Il file nel suo formato mantiene contenuto e impaginazione. Le conversioni generano una copia dal testo originale, senza cambiare il file conservato.</p>
+        <div className="sb-original-formats">
+          {['original','pdf','epub','docx','txt','html'].map(format => (
+            <button type="button" key={format} disabled={format !== 'original' && !readable} onClick={() => onExport(format)}>
+              {format === 'original' ? 'Formato originale' : format.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </article>
     </section>
   );
