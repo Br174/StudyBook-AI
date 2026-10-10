@@ -308,7 +308,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
                   setCoverNotice(message);setActionCandidate(null);
                 }catch(error){setCoverMessage(error.message||'Ricerca copertina non riuscita.');setCoverPhase('error');}
                 finally{setCoverProcessing('');}
-              }}>▧ {coverProcessing?'Ricerca in corso…':'Trova copertina automaticamente'}</button>
+              }}>▧ {coverProcessing?'Ricerca in corso…':'Aggiungi locandina'}</button>
               {(actionCandidate.coverOriginal||actionCandidate.coverCustom||actionCandidate.coverAI) && (
                 <button type="button" disabled={Boolean(coverProcessing)} onClick={async()=>{
                   setCoverProcessing(actionCandidate.id);
