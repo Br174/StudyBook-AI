@@ -284,3 +284,128 @@
   .study-reading-variant { width: calc(100% - 16px); }
   .study-mode .study-continuous-main { max-width: 100%; }
 }
+
+
+/* LAB10 — Lettura universale senza colonna laterale: tutte le materie e i formati. */
+.study-mode .study-continuous-sheet {
+  display: block;
+  grid-template-columns: minmax(0,1fr);
+  width: min(1120px,100%);
+}
+.study-mode .study-continuous-main {
+  width: 100%;
+  max-width: var(--reader-max-width, 760px);
+  padding: 22px clamp(17px,4vw,36px) 32px;
+  margin-inline: auto;
+}
+.study-mode .study-chapter-glossary { display: none; }
+.study-mode .sb-lab10-hint {
+  margin: 12px 0 0;
+  color: #67748a;
+  font-size: .81rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.study-mode .sb-lab10-glossary-term {
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: rgba(22,119,234,.55);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .14em;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.study-mode .sb-lab10-glossary-term:focus-visible {
+  outline: 2px solid #1677ea;
+  outline-offset: 2px;
+  background: #edf6ff;
+}
+.study-mode .sb-lab10-glossary-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: rgba(17,27,46,.25);
+  cursor: default;
+}
+.study-mode .sb-lab10-glossary-sheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0; top: auto;
+  z-index: 20;
+  max-height: min(74dvh,680px);
+  overflow-y: auto;
+  padding: 14px 20px max(24px,env(safe-area-inset-bottom));
+  background: #fff;
+  border-radius: 25px 25px 0 0;
+  box-shadow: 0 -20px 52px rgba(24,35,60,.22);
+  animation: sb-lab10-sheet-up .2s ease-out;
+}
+@keyframes sb-lab10-sheet-up {
+  from { transform: translateY(35px); opacity: .75; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.study-mode .sb-lab10-glossary-sheet .study-assistant-head strong {
+  display: block;
+  -webkit-line-clamp: unset;
+  font-size: clamp(1.13rem,3.6vw,1.43rem);
+  line-height: 1.26;
+}
+.study-mode .sb-lab10-unverified p,
+.study-mode .sb-lab10-source-warning {
+  color: #596981;
+  font-size: .86rem;
+  line-height: 1.55;
+}
+.study-mode .sb-lab10-unverified {
+  display: grid;
+  justify-items: start;
+  gap: 9px;
+  padding: 6px 0 12px;
+}
+.study-mode .sb-lab10-unverified p { margin: 0; }
+.study-mode .sb-lab10-unverified button {
+  padding: 11px 17px;
+  min-height: 44px;
+  color: #fff;
+  background: #1677ea;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 800;
+}
+.study-mode .sb-lab10-more-actions {
+  margin: 12px 0 8px;
+  padding: 11px;
+  border: 1px solid #e3eaf5;
+  border-radius: 13px;
+  background: #f8fafd;
+}
+.study-mode .sb-lab10-more-actions > summary {
+  cursor: pointer;
+  color: #326596;
+  font-weight: 750;
+  font-size: .83rem;
+}
+.study-mode .sb-lab10-more-actions[open] > summary { margin-bottom: 11px; }
+.study-mode .sb-lab10-glossary-sheet .study-answer {
+  margin: 11px 0 0;
+  padding: 13px 12px;
+  background: #f5f9ff;
+  border: 1px solid #e2edfc;
+  border-radius: 14px;
+}
+@media(max-width:720px) {
+  .study-mode .study-mode-pages { padding: 8px; }
+  .study-mode .study-continuous-sheet { grid-template-columns: minmax(0,1fr); }
+  .study-mode .study-continuous-main { padding: 19px 16px 29px; max-width: 100%; }
+  .study-mode .sb-lab10-glossary-sheet { padding-inline: 16px; }
+}
+@media(max-width:430px) {
+  .study-mode .study-continuous-sheet { grid-template-columns: minmax(0,1fr); }
+  .study-mode .study-continuous-main { padding-inline: 15px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .study-mode .sb-lab10-glossary-sheet { animation: none; }
+}
