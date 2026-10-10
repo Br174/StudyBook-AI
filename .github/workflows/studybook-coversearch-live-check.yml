@@ -1,0 +1,42 @@
+name: LAB22 live cover search acceptance
+
+on:
+  push:
+    branches:
+      - lab/studybook-coversearch-live-check-01
+    paths:
+      - '.github/workflows/studybook-coversearch-live-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Query real keyless cover search for catalog and themed photo
+        run: |
+          node --input-type=module <<'NODE'
+          const url='https://studybook-ai-coversearch-lab22.brunoverlezza.workers.dev/api/book-cover/search';
+          const cases=[
+            {title:'The Great Gatsby',subject:'Letteratura',context:'F. Scott Fitzgerald classic American novel'},
+            {title:'Un quaderno inesistente di archeologia romana 2099',subject:'Storia romana',
+             context:'Il Colosseo, architettura romana, Foro romano, impero e Repubblica'},
+            {title:'Biologia: scienze cellulari inesistenti 2099',subject:'Biologia',
+             context:'Microscopio, cellule e citologia'}
+          ];
+          for(const [index,body] of cases.entries()){
+            let res;try{
+              res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify(body),signal:AbortSignal.timeout(45000)});
+              const data=await res.json().catch(()=>({}));
+              const imageOk=data?.type==='web-cover'&&typeof data.imageData==='string'&&data.imageData.length>1000;
+              const output={case:index+1,http:res.status,kind:data.kind||'none',
+                source:data.source||'none',imageOk,code:data.code||'',
+                error:String(data.error||'').slice(0,90)};
+              console.log('LAB22_LIVE',JSON.stringify(output));
+              if(index===0&&!imageOk)process.exitCode=1;
+            }catch(e){console.log('LAB22_LIVE',JSON.stringify({case:index+1,error:String(e).slice(0,120)}));if(index===0)process.exitCode=1;}
+          }
+          NODE
