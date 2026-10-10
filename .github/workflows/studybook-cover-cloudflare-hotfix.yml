@@ -31,15 +31,21 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           WRANGLER_SEND_METRICS: 'false'
         shell: bash
         run: |
           set -euo pipefail
           test -n "${CLOUDFLARE_API_TOKEN:-}" || exit 1
           test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || exit 1
-          # Important: no --secrets-file, no Gemini key passed to this run.
-          # Retain the secret AI_API_KEY already stored in the Cloudflare Worker.
-          npx wrangler deploy --config wrangler.lab21-cover.jsonc
+          # Wrangler's deploy must explicitly retain the bound secret on this worker.
+          # Reuse the SAME existing Gemini key from the project's secure GH Actions
+          # secret; this never enters the APK or repository source code.
+          test -n "${GEMINI_API_KEY:-}" || { echo "::error::Existing Gemini key not configured"; exit 1; }
+          umask 077
+          printf 'AI_API_KEY=%s\n' "$GEMINI_API_KEY" > .cloudflare-gemini-secret.tmp
+          trap 'rm -f .cloudflare-gemini-secret.tmp' EXIT
+          npx wrangler deploy --config wrangler.lab21-cover.jsonc --secrets-file .cloudflare-gemini-secret.tmp
       - name: Verify isolated cover service without leaking secrets or generated image
         shell: bash
         run: |
