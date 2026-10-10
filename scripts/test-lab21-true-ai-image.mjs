@@ -15,7 +15,7 @@ assert.ok(app.includes('generateTrueBookImage(record,{variant,onStage})'),'LAB21
 assert.ok(app.includes('async function applyRealAICover(id,preview)'),'LAB21 persisted image model path retained for compatibility');
 assert.ok(app.includes("coverOrigin:'ai-image'"),'book metadata indicates real AI images');
 assert.ok(app.includes('if(automatic)return false;'),'automatic fake SVGs disabled');
-assert.ok(ui.includes('Trova copertina automaticamente')&&ui.includes('Cerco copertina originale e foto pertinente…'),'LAB22 auto-search user flow');
+assert.ok(ui.includes('Aggiungi copertina')&&ui.includes('Cerco copertina originale e foto pertinente…'),'LAB22 auto-search user flow');
 assert.ok(ui.includes('Copertina del catalogo salvata automaticamente.')&&ui.includes('Fotografia tematica salvata come copertina.'),'LAB22 distinct saved result types');
 assert.ok(client.includes("canvas.toDataURL('image/jpeg'")&&client.includes("ctx.drawImage(img"),'real image decoding and local correct-title overlay');
 assert.ok(!client.includes('AI_API_KEY'),'no secret inside APK');
