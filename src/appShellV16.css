@@ -485,3 +485,14 @@
 .sb-original-chapter-nav button { padding:12px; border:1px solid var(--sb-line); border-radius:12px; color:var(--sb-blue); background:white; }
 .sb-original-chapter-nav button:disabled { opacity:.38; }
 @media(max-width:420px) { .sb-original-formats { grid-template-columns:repeat(2,minmax(0,1fr)); } .sb-original-actions { grid-template-columns:1fr; } }
+
+/* LAB13 • Vista Tutti: scansioni visibili senza anteprime pesanti; caricamento a gruppi. */
+.sb-library-scans-compact { display:grid; gap:8px; margin:24px 0; }
+.sb-library-scans-compact h2 { font-size:1.15rem; margin:0 0 5px; }
+.sb-library-scans-compact h2 small { color:var(--sb-muted); font-size:.7rem; }
+.sb-library-scans-compact button { display:flex; align-items:center; gap:10px; padding:12px; border:1px solid var(--sb-line); border-radius:13px; background:white; color:var(--sb-text); text-align:left; }
+.sb-library-scans-compact button > span { color:var(--sb-blue); }
+.sb-library-scans-compact button > strong { flex:1; overflow-wrap:anywhere; }
+.sb-library-scans-compact button > small { color:var(--sb-blue); white-space:nowrap; }
+.sb-original-reading { background:var(--reader-background,#fff); max-width:var(--reader-max-width,760px); }
+.sb-original-reading > p:not(.sb-original-notice) { font-size:calc(1rem * var(--reader-font-scale,1)); line-height:var(--reader-line-height,1.72); letter-spacing:var(--reader-letter-spacing,0); word-spacing:var(--reader-word-spacing,0); margin-bottom:var(--reader-paragraph-spacing,1rem); }
