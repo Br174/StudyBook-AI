@@ -57,33 +57,43 @@ export default function ScannerArchive({ entries = [], busy = false, onRestore, 
         <button type="button" disabled={!entries.length || busy} onClick={() => { setSelectMode(value=>!value); setSelected([]); }}>{selectMode ? 'Annulla selezione' : 'Seleziona più pagine'}</button>
       </div>
       {!entries.length && <div className="sb-archive-empty"><StudyIcon name="photo" size={39}/><strong>Nessuna fotografia scannerizzata</strong><p>Usa Scanner per fotografare le pagine. Le nuove fotografie rimarranno disponibili qui anche dopo aver creato un libro.</p></div>}
-      {groups.map(group => (
-        <section className="sb-archive-group" key={group.label}>
-          <div className="sb-archive-group-heading">
-            <h2>{group.label} <small>{group.photos.length} pagine</small></h2>
-            <button type="button" disabled={busy} title="Rinomina raccolta" aria-label={'Rinomina raccolta ' + group.label} onClick={()=>setRenameTarget({type:'collection',name:group.label,ids:group.photos.map(p=>p.id),suggestion:suggestDocumentTitle(group.photos)?.title || ''})}>✎ Rinomina</button>
-          </div>
-          <div className="sb-archive-grid">
-            {group.photos.map((page, index) => (
-              <article className="sb-archive-photo" key={page.id}>
-                <button type="button" className="sb-archive-photo-open" disabled={busy} onClick={() => selectMode ? toggle(page.id) : restore([page.id])} aria-label={selectMode ? 'Seleziona fotografia ' + (index + 1) : 'Rielabora fotografia ' + (index + 1)}>
-                  <img src={thumbs[page.id] || ''} alt={`Scansione ${index + 1}`} loading="lazy" decoding="async" />
-                  {selectMode && <span className={selected.includes(page.id) ? 'sb-archive-check picked' : 'sb-archive-check'}>{selected.includes(page.id) ? '✓' : '+'}</span>}
-                </button>
-                <div className="sb-archive-photo-caption">
-                  <strong>{page.pageTitle || `Pagina ${index + 1}`}</strong>
-                  <span>{page.text?.trim() ? 'OCR salvato' : 'OCR da eseguire'}</span>
-                  {page.createdAt && <span>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(page.createdAt))}</span>}
-                  {!selectMode && <>
-                    <button type="button" className="sb-archive-rename" disabled={busy} onClick={()=>setRenameTarget({type:'photo',id:page.id,name:page.pageTitle || `Pagina ${index+1}`,suggestion:page.pageTitleManual ? '' : (suggestPageTitle(page.text)?.title || page.pageTitle || '')})} aria-label="Rinomina fotografia">✎ Rinomina</button>
-                    <button type="button" disabled={busy} onClick={() => remove([page.id])} aria-label="Elimina fotografia">Elimina</button>
-                  </>}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      ))}
+      {/* LAB20: UN SOLO flusso di fotografie. Le raccolte sono informazioni
+          e comandi, non riquadri che spezzano la griglia in righe diverse. */}
+      {groups.length > 0 && (
+        <div className="sb-archive-collection-tools" aria-label="Rinomina le raccolte scannerizzate">
+          {groups.map(group => (
+            <button key={group.label} type="button" disabled={busy}
+              aria-label={'Rinomina raccolta '+group.label}
+              onClick={()=>setRenameTarget({type:'collection',name:group.label,ids:group.photos.map(p=>p.id),suggestion:suggestDocumentTitle(group.photos)?.title || ''})}>
+              ✎ {group.label} <small>{group.photos.length}</small>
+            </button>
+          ))}
+        </div>
+      )}
+      {entries.length > 0 && <div className="sb-archive-grid" aria-label="Tutte le fotografie scannerizzate, tre per riga">
+        {entries.map((page, index) => (
+          <article className="sb-archive-photo" key={page.id}>
+            <button type="button" className="sb-archive-photo-open" disabled={busy}
+              onClick={() => selectMode ? toggle(page.id) : restore([page.id])}
+              aria-label={selectMode ? 'Seleziona fotografia '+(index+1) : 'Rielabora fotografia '+(index+1)}>
+              <img src={thumbs[page.id] || ''} alt={page.pageTitle || 'Foto originale scanner '+(index+1)} loading="lazy" decoding="async" />
+              {selectMode && <span className={selected.includes(page.id) ? 'sb-archive-check picked' : 'sb-archive-check'}>{selected.includes(page.id) ? '✓' : '+'}</span>}
+            </button>
+            <div className="sb-archive-photo-caption">
+              <strong>{page.pageTitle || `Pagina ${index + 1}`}</strong>
+              <span className="sb-archive-photo-collection" title={page.collection || 'Appunti fotografati'}>{page.collection || 'Appunti fotografati'}</span>
+              <span>{page.text?.trim() ? 'OCR salvato' : 'OCR da eseguire'}</span>
+              {page.createdAt && <span>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(page.createdAt))}</span>}
+              {!selectMode && <>
+                <button type="button" className="sb-archive-rename" disabled={busy}
+                  onClick={()=>setRenameTarget({type:'photo',id:page.id,name:page.pageTitle || `Pagina ${index+1}`,suggestion:page.pageTitleManual ? '' : (suggestPageTitle(page.text)?.title || page.pageTitle || '')})}
+                  aria-label="Rinomina fotografia">✎ Rinomina</button>
+                <button type="button" disabled={busy} onClick={() => remove([page.id])} aria-label="Elimina fotografia">Elimina</button>
+              </>}
+            </div>
+          </article>
+        ))}
+      </div>}
       {renameTarget && <RenameTitleDialog
         key={renameTarget.id || renameTarget.name}
         label={renameTarget.type === 'collection' ? 'Rinomina raccolta scannerizzata' : 'Rinomina fotografia'}
