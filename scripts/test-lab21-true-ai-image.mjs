@@ -11,12 +11,12 @@ const [app,ui,worker,workerConfig,buildAndroid,client,api,archive] = await Promi
 const settings=JSON.parse(workerConfig);
 assert.equal(settings.vars.AI_IMAGE_MODEL,'gemini-3.1-flash-image');
 assert.ok(worker.includes("['/api/cover-ai/generate', coverAiHandler]"),'genuine backend registered on Worker');
-assert.ok(app.includes('onGenerateCover={generateRealCoverPreview}'),'real provider client wired, not local SVG');
-assert.ok(app.includes('onApplyCover={applyRealAICover}'),'accept/cancel preview wires book update');
+assert.ok(app.includes('generateTrueBookImage(record,{variant,onStage})'),'LAB21 legacy image-model client kept available in source');
+assert.ok(app.includes('async function applyRealAICover(id,preview)'),'LAB21 persisted image model path retained for compatibility');
 assert.ok(app.includes("coverOrigin:'ai-image'"),'book metadata indicates real AI images');
 assert.ok(app.includes('if(automatic)return false;'),'automatic fake SVGs disabled');
-assert.ok(ui.includes('Generazione immagine AI…')&&ui.includes('Usa questa copertina'),'visible progress/accept');
-assert.ok(ui.includes('Annulla anteprima')&&ui.includes('Rigenera con vera AI immagini'),'cancel/regenerate');
+assert.ok(ui.includes('Trova copertina automaticamente')&&ui.includes('Cerco copertina originale e foto pertinente…'),'LAB22 auto-search user flow');
+assert.ok(ui.includes('Copertina del catalogo salvata automaticamente.')&&ui.includes('Fotografia tematica salvata come copertina.'),'LAB22 distinct saved result types');
 assert.ok(client.includes("canvas.toDataURL('image/jpeg'")&&client.includes("ctx.drawImage(img"),'real image decoding and local correct-title overlay');
 assert.ok(!client.includes('AI_API_KEY'),'no secret inside APK');
 assert.ok(!api.includes('Bearer ${apiKey}'),'no accidental reliance on client auth header');
