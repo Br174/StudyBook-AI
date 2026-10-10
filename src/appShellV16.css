@@ -496,3 +496,12 @@
 .sb-library-scans-compact button > small { color:var(--sb-blue); white-space:nowrap; }
 .sb-original-reading { background:var(--reader-background,#fff); max-width:var(--reader-max-width,760px); }
 .sb-original-reading > p:not(.sb-original-notice) { font-size:calc(1rem * var(--reader-font-scale,1)); line-height:var(--reader-line-height,1.72); letter-spacing:var(--reader-letter-spacing,0); word-spacing:var(--reader-word-spacing,0); margin-bottom:var(--reader-paragraph-spacing,1rem); }
+
+
+/* LAB14 — Scelta esplicita dello studio dell'originale, stesso stile approvato. */
+.sb-original-study-consent { display:grid; gap:12px; }
+.sb-original-study-consent p { margin:0; color:var(--sb-muted); font-size:.9rem; line-height:1.55; }
+.sb-original-study-decision { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:5px; }
+.sb-original-study-decision button { min-height:48px; border:0; border-radius:13px; padding:11px; color:#fff; background:var(--sb-blue); font-weight:800; }
+.sb-original-study-decision button:disabled { opacity:.45; }
+@media(max-width:420px) { .sb-original-study-decision { grid-template-columns:1fr; } }
