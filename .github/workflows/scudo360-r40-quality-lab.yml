@@ -5,6 +5,7 @@ on:
       - motorlab/active-studybook-control
 permissions:
   contents: read
+  actions: read
 jobs:
   r40-quality:
     runs-on: ubuntu-latest
@@ -20,6 +21,20 @@ jobs:
           npm run build
       - name: Native r39 evidence with the existing owner, once
         run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-r40-native.json
+      - name: Retrieve immutable exact R39 baseline JUnit report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download 40887692956 -n scudo360-studybook-40887692956 -D /tmp/motorlab-r39-source-proof
+          test -s /tmp/motorlab-r39-source-proof/scudo360-report.json
+          cp /tmp/motorlab-r39-source-proof/scudo360-report.json .motorlab/scudo360-r39-baseline.json
+          node - <<'NODE'
+          const r=require('./.motorlab/scudo360-r39-baseline.json');
+          if(r.commit!=='3e4569bd865b7a69f0e6b4dc831661ad3ac63c9b' || r.passed!==true)throw Error('SCUDO_R39_HISTORICAL_BASELINE_MISMATCH');
+          console.log('SCUDO_R39_BASELINE_VERIFIED',r.commit);
+          NODE
       - name: Read-only r40 request and class audit
         run: node .motorlab/regression/scudo360-quality-r40.mjs .motorlab/scudo360-contracts.json .motorlab/scudo360-r40-native.json .motorlab/scudo360-r40-plan.json .motorlab/scudo360-r40-quality.json
       - name: Preserve native and quality reports
