@@ -1,0 +1,21 @@
+{
+  "commit": "3e4569bd865b7a69f0e6b4dc831661ad3ac63c9b",
+  "passed": true,
+  "contracts": [
+    {
+      "id": "studybook.cloudflare-worker-requests-and-recovery",
+      "status": "passed",
+      "classEvidence": [
+        {
+          "name": "studybook.StudyBookCloudflare",
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "source": "archived-executed-r39-junit-snapshot",
+    "runId": 40887692956,
+    "artifactId": 12902524309
+  }
+}

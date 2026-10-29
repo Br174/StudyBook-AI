@@ -127,6 +127,10 @@ jobs:
 
       - name: Test Cloudflare runtime and assets
         run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json promotion .motorlab/scudo360-report.json
+      - name: Scudo360 Quality r40 verified before/after before artifacts
+        env:
+          SCUDO360_R40_PROMOTION: '1'
+        run: node .motorlab/regression/scudo360-quality-r40.mjs .motorlab/scudo360-contracts.json .motorlab/scudo360-report.json .motorlab/scudo360-r40-plan.json .motorlab/scudo360-r40-quality.json
       - name: Keep exact Cloudflare test evidence
         if: always()
         uses: actions/upload-artifact@v4
