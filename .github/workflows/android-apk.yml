@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
       actions: read
     steps:
       - name: Checkout
@@ -537,3 +537,20 @@ jobs:
           path: artifacts/
           retention-days: 90
           if-no-files-found: error
+
+      - name: Advance verified StudyBook source only after signed Scudo APK
+        if: success() && github.event_name == 'push' && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/motorlab-active-guard.mjs
+          test "$STUDYBOOK_SIGNING_MODE" = update
+          test "$STUDYBOOK_APPLICATION_ID" = it.studybook.ai.lab
+          test -s "artifacts/${STUDYBOOK_ARTIFACT_BASENAME}.apk"
+          if ! gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/heads/motorlab/active-studybook-ai" -f "sha=$GITHUB_SHA" -F "force=false" --jq '.object.sha'; then
+            git push origin "HEAD:refs/heads/motorlab/active-studybook-ai"
+          fi
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/motorlab/active-studybook-ai" --jq '.object.sha')" = "$GITHUB_SHA"
+          echo "[MOTORLAB_STUDYBOOK_ANDROID_ACTIVE] $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
