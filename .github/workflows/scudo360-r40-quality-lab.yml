@@ -1,8 +1,8 @@
 name: MotorLab Scudo360 r40 StudyBook native evidence pilot
 on:
-  push:
+  pull_request:
     branches:
-      - motorlab/scudo360-r40-quality-studybook-lab-20261029
+      - motorlab/active-studybook-control
 permissions:
   contents: read
 jobs:
