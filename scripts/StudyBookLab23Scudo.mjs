@@ -8,6 +8,6 @@ const escape=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>',
 const path='.motorlab/scudo360-test-results';
 mkdirSync(path,{recursive:true});
 const detail=safe?'':'<failure message="Lab23 verified cover uniqueness test failed">'+escape(output.slice(-1600))+'</failure>';
-writeFileSync(path+'/TEST-studybook.StudyBookLab23Cover.xml','<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="studybook.StudyBookLab23Cover" tests="1" failures="'+(safe?0:1)+'" errors="0" skipped="0"><testcase classname="studybook.StudyBookLab23Cover" name="Lab23_OriginalAndDistinctCoverContracts">'+detail+'</testcase></testsuite>\n');
+writeFileSync(path+'/TEST-studybook.StudyBookLab23Scudo.xml','<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="studybook.StudyBookLab23Scudo" tests="1" failures="'+(safe?0:1)+'" errors="0" skipped="0"><testcase classname="studybook.StudyBookLab23Scudo" name="Lab23_OriginalAndDistinctCoverContracts">'+detail+'</testcase></testsuite>\n');
 console.log('SCUDO_STUDYBOOK_LAB23_COVER',JSON.stringify({passed:safe,exit:run.status}));
 if(!safe)process.exitCode=1;

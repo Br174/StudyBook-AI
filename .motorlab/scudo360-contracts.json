@@ -24,7 +24,7 @@
         "lab23-existing-cover-regression"
       ],
       "junitClasses": [
-        "studybook.StudyBookLab23Cover"
+        "studybook.StudyBookLab23Scudo"
       ],
       "requiredAt": [
         "lab",
