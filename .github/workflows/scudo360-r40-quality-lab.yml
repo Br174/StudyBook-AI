@@ -14,6 +14,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Prepare existing Cloudflare native test prerequisites
+        run: |
+          npm install --prefer-offline --no-audit --no-fund
+          npm run build
       - name: Native r39 evidence with the existing owner, once
         run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-r40-native.json
       - name: Read-only r40 request and class audit
