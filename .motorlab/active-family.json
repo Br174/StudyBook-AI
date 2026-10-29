@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "repo": "Br174/StudyBook-AI",
+  "active_ref": "motorlab/active-studybook-ai",
+  "original_verified_sha": "0de38d462360e028b8c535edfe73031c1c30ddc5",
+  "verified_run": 38096279519,
+  "mode": "android-signed",
+  "application_id": "it.studybook.ai.lab",
+  "cert_sha256": "D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC",
+  "scudo_manifest": ".motorlab/scudo360-contracts.json",
+  "scudo_runner": ".motorlab/regression/scudo360-gate.mjs",
+  "native_workflow": ".github/workflows/android-apk.yml",
+  "scudo_command": "node .motorlab/regression/scudo360-gate.mjs"
+}

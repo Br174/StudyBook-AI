@@ -16,6 +16,7 @@ on:
       - lab/studybook-core-android-01-update-10
       - lab/studybook-core-android-01-update-11
       - lab/studybook-core-android-01-update-23
+      - 'lab/studybook-core-android-01-update-*'
       - lab/studybook-core-android-01-update-22
       - lab/studybook-core-android-01-update-21
       - lab/studybook-core-android-01-update-20
@@ -59,6 +60,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      - name: Verify active StudyBook Android signing family and Scudo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/motorlab-active-guard.mjs --self-test
+          node scripts/motorlab-active-guard.mjs
+      - name: Scudo360 mandatory LAB23 covers and duplicate regression
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-report.json
+      - name: Preserve StudyBook Android Scudo proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scudo360-studybook-android-${{ github.run_id }}
+          path: |
+            .motorlab/scudo360-report.json
+            .motorlab/scudo360-test-results/*.xml
+          if-no-files-found: warn
 
       - name: Setup Java 21
         uses: actions/setup-java@v5
@@ -106,6 +125,17 @@ jobs:
               echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab.recovery03" >> "$GITHUB_ENV"
               echo "STUDYBOOK_APP_NAME=StudyBook AI LAB 03 Ripristino" >> "$GITHUB_ENV"
               echo "STUDYBOOK_SIGNING_MODE=recovery" >> "$GITHUB_ENV"
+              ;;
+            lab/studybook-core-android-01-update-*)
+              LAB_NUM="${GITHUB_REF_NAME#lab/studybook-core-android-01-update-}"
+              LAB_NUM="${LAB_NUM%%-*}"
+              [[ "$LAB_NUM" =~ ^[0-9]{2}$ ]] || { echo "::error::Invalid LAB revision"; exit 72; }
+              LAB_DEC=$((10#$LAB_NUM))
+              test "$LAB_DEC" -ge 24
+              echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-${LAB_NUM}-AGGIORNAMENTO" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APPLICATION_ID=it.studybook.ai.lab" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_APP_NAME=StudyBook AI LAB" >> "$GITHUB_ENV"
+              echo "STUDYBOOK_SIGNING_MODE=update" >> "$GITHUB_ENV"
               ;;
             lab/studybook-core-android-01-update-23)
               echo "STUDYBOOK_ARTIFACT_BASENAME=StudyBook-AI-LAB-23-AGGIORNAMENTO" >> "$GITHUB_ENV"

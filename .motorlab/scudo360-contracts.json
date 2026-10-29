@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "project": "studybook-android-lab23",
+  "suites": [
+    {
+      "id": "lab23-existing-cover-regression",
+      "command": [
+        "node",
+        "scripts/StudyBookLab23Scudo.mjs"
+      ],
+      "paths": [
+        "scripts/StudyBookLab23Scudo.mjs",
+        "scripts/test-lab23-cover-uniqueness.mjs"
+      ],
+      "junitDir": ".motorlab/scudo360-test-results",
+      "timeoutMs": 240000
+    }
+  ],
+  "contracts": [
+    {
+      "id": "studybook.android.cover-identity-and-distinct-published-cover",
+      "priority": "P1",
+      "suites": [
+        "lab23-existing-cover-regression"
+      ],
+      "junitClasses": [
+        "studybook.StudyBookLab23Cover"
+      ],
+      "requiredAt": [
+        "lab",
+        "promotion"
+      ]
+    }
+  ]
+}
