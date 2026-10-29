@@ -86,6 +86,7 @@ jobs:
         run: |
           npx wrangler deploy --dry-run
           node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json promotion .motorlab/scudo360-report.json
+          SCUDO360_R40_PROMOTION=1 node .motorlab/regression/scudo360-quality-r40.mjs .motorlab/scudo360-contracts.json .motorlab/scudo360-report.json .motorlab/scudo360-r40-plan.json .motorlab/scudo360-r40-quality.json
 
       - name: Preserve Scudo360 production pre-deploy evidence
         if: always()
