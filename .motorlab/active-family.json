@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "repo": "Br174/StudyBook-AI",
+  "active_ref": "motorlab/active-studybook-control",
+  "original_verified_sha": "3e4569bd865b7a69f0e6b4dc831661ad3ac63c9b",
+  "mode": "control-only",
+  "scudo_manifest": ".motorlab/scudo360-contracts.json",
+  "scudo_runner": ".motorlab/regression/scudo360-gate.mjs",
+  "native_workflow": ".github/workflows/cloudflare-production.yml",
+  "scudo_command": "node .motorlab/regression/scudo360-gate.mjs"
+}
