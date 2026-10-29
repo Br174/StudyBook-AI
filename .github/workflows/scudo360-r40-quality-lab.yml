@@ -1,0 +1,29 @@
+name: MotorLab Scudo360 r40 StudyBook native evidence pilot
+on:
+  push:
+    branches:
+      - motorlab/scudo360-r40-quality-studybook-lab-20261029
+permissions:
+  contents: read
+jobs:
+  r40-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Native r39 evidence with the existing owner, once
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-r40-native.json
+      - name: Read-only r40 request and class audit
+        run: node .motorlab/regression/scudo360-quality-r40.mjs .motorlab/scudo360-contracts.json .motorlab/scudo360-r40-native.json .motorlab/scudo360-r40-plan.json .motorlab/scudo360-r40-quality.json
+      - name: Preserve native and quality reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: studybook-r40-native-evidence
+          path: |
+            .motorlab/scudo360-r40-native.json
+            .motorlab/scudo360-r40-quality.json
+          if-no-files-found: warn
