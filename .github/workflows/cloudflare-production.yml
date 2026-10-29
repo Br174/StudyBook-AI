@@ -13,6 +13,8 @@ on:
       - '.github/workflows/build.yml'
       - '.github/workflows/cloudflare-production.yml'
       - 'scripts/test-cloudflare-preview-workflow.mjs'
+      - 'scripts/StudyBookCloudflare.mjs'
+      - '.motorlab/**'
 
 permissions:
   contents: read

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "project": "studybook",
+  "suites": [
+    {
+      "id": "cloudflare-worker-tests",
+      "command": [
+        "node",
+        "scripts/StudyBookCloudflare.mjs"
+      ],
+      "paths": [
+        "scripts/StudyBookCloudflare.mjs",
+        "scripts/test-cloudflare-worker.mjs"
+      ],
+      "junitDir": ".motorlab/scudo360-test-results",
+      "timeoutMs": 300000
+    }
+  ],
+  "contracts": [
+    {
+      "id": "studybook.cloudflare-worker-requests-and-recovery",
+      "priority": "P1",
+      "suites": [
+        "cloudflare-worker-tests"
+      ],
+      "junitClasses": [
+        "studybook.StudyBookCloudflare"
+      ],
+      "requiredAt": [
+        "lab",
+        "promotion"
+      ]
+    }
+  ]
+}
