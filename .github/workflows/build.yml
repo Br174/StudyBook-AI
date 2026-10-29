@@ -107,6 +107,24 @@ jobs:
         env:
           WRANGLER_SEND_METRICS: 'false'
 
+      - name: Scudo360 production workflow anti-bypass check
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const file=readFileSync('.github/workflows/cloudflare-production.yml','utf8');
+          const gate=file.indexOf('node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json promotion');
+          const deploy=file.indexOf('- name: Deploy Cloudflare production');
+          const proof=file.indexOf('- name: Preserve Scudo360 production pre-deploy evidence');
+          if(gate<0 || deploy<0 || proof<0 || !(gate<proof && proof<deploy)) {
+            throw new Error('SCUDO360_PRODUCTION_DEPLOY_BYPASS: mandatory gate/evidence must precede Cloudflare deployment');
+          }
+          if(file.includes('npm run test:cloudflare')) {
+            throw new Error('SCUDO360_DUPLICATE_PRODUCTION_TEST: reusable native test must run once');
+          }
+          console.log('SCUDO360_PRODUCTION_ORDER_VERIFIED');
+          NODE
+
       - name: Test Cloudflare runtime and assets
         run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json promotion .motorlab/scudo360-report.json
       - name: Keep exact Cloudflare test evidence
