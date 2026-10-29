@@ -1,0 +1,15 @@
+import {spawnSync} from 'node:child_process';
+import {mkdirSync,writeFileSync} from 'node:fs';
+import {join} from 'node:path';
+const r=spawnSync(process.execPath,['--test','scripts/test-cloudflare-worker.mjs'],{encoding:'utf8',timeout:240000,maxBuffer:8000000});
+const output=(r.stdout||'')+'\n'+(r.stderr||'');
+process.stdout.write(output.slice(-12000));
+const number=key=>{const match=output.match(new RegExp('^# '+key+' (\\d+)\\s*$','m'));return match?Number(match[1]):null;};
+const total=number('tests'),passes=number('pass'),fail=number('fail'),skip=number('skipped');
+const safe=r.status===0&&!r.error&&Number.isSafeInteger(total)&&total>0&&passes===total&&fail===0&&skip===0;
+const failure=safe?'':'<failure message="Worker tests did not pass">'+output.slice(-1600).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+'</failure>';
+const dir='.motorlab/scudo360-test-results';
+mkdirSync(dir,{recursive:true});
+writeFileSync(join(dir,'TEST-studybook.StudyBookCloudflare.xml'),'<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="studybook.StudyBookCloudflare" tests="'+(total||1)+'" failures="'+(safe?0:1)+'" errors="0" skipped="'+(skip||0)+'"><testcase classname="studybook.StudyBookCloudflare" name="Cloudflare_Worker_Native_Node_Test_Suite">'+failure+'</testcase></testsuite>\n');
+console.log('SCUDO_STUDYBOOK_WORKER',JSON.stringify({tests:total,passes,fail,skip,passed:safe}));
+if(!safe)process.exitCode=1;
