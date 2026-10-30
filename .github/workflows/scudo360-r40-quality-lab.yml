@@ -1,0 +1,55 @@
+name: MotorLab Scudo360 r40 StudyBook native evidence pilot
+on:
+  pull_request:
+    branches:
+      - motorlab/active-studybook-control
+permissions:
+  contents: read
+  actions: read
+jobs:
+  r40-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare existing Cloudflare native test prerequisites
+        run: |
+          npm install --prefer-offline --no-audit --no-fund
+          npm run build
+      - name: Native r39 evidence with the existing owner, once
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-r40-native.json
+      - name: Verify permanent exact historical JUnit baseline and workflow wiring
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const read=p=>JSON.parse(readFileSync(p,'utf8'));
+          const plan=read('.motorlab/scudo360-r40-plan.json');
+          const baseline=read(plan.baselineReportPath);
+          if(baseline.commit!==plan.baselineCommit||baseline.passed!==true||
+             !baseline.provenance?.runId||!baseline.provenance?.artifactId)
+            throw Error('SCUDO_R40_BASELINE_PROOF_MISSING_OR_MISMATCHED');
+          for(const file of [".github/workflows/build.yml",".github/workflows/cloudflare-production.yml"]) {
+            const y=readFileSync(file,'utf8');
+            const start=y.indexOf('scudo360-gate.mjs');
+            const quality=y.indexOf('scudo360-quality-r40.mjs',start+1);
+            if(start<0||quality<start||!y.slice(start,quality).includes('scudo360-report.json'))
+              throw Error('SCUDO_R40_NATIVE_WORKFLOW_BYPASS:'+file);
+          }
+          console.log('SCUDO_R40_NATIVE_WORKFLOWS_HISTORICAL_PROOF_AND_WIRING_VERIFIED');
+          NODE
+      - name: Read-only r40 request and class audit
+        env:
+          SCUDO360_R40_PROMOTION: '1'
+        run: node .motorlab/regression/scudo360-quality-r40.mjs .motorlab/scudo360-contracts.json .motorlab/scudo360-r40-native.json .motorlab/scudo360-r40-plan.json .motorlab/scudo360-r40-quality.json
+      - name: Preserve native and quality reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: studybook-r40-native-evidence
+          path: |
+            .motorlab/scudo360-r40-native.json
+            .motorlab/scudo360-r40-quality.json
+          if-no-files-found: warn
