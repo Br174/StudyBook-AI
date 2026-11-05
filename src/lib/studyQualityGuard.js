@@ -10,7 +10,7 @@ const FORMULA = /(?:^|\s)[\p{L}][\w²³]*(?:\s*[=≈≠≤≥]\s*)\S/u;
 const FINITE_CLAIM = /\b(?:è|sono|si|ha|hanno|può|possono|deve|devono|prevede|richiede|stabilisce|costituisce|comporta|determina|disciplina|indica|afferma|consiste|deriva|risulta|esiste|esistono|si applica|si definisce|si distingue)\b/i;
 // Safe lexical compactions are cumulative and preserve every legal qualifier.
 const EDITS_10 = [
-  [/\bè importante (?:sottolineare|evidenziare|ricordare) che\s*/gi, ''],
+  [/(?<![\p{L}])è importante (?:sottolineare|evidenziare|ricordare) che\s*/giu, ''],
   [/\boccorre innanzitutto osservare che\s*/gi, ''],
   [/\bsi deve tenere presente che\s*/gi, ''],
   [/\bin considerazione del fatto che\b/gi, 'poiché'],
@@ -24,7 +24,7 @@ const EDITS_20 = [
   [/\bnel momento in cui\b/gi,'quando'],
   [/\bper il fatto che\b/gi,'perché'],
   [/\bper mezzo di\b/gi,'con'],
-  [/\bè opportuno evidenziare che\s*/gi,''],
+  [/(?<![\p{L}])è opportuno evidenziare che\s*/giu,''],
   [/\bsi può osservare come\s*/gi,''],
   [/\bsi deve precisare che\s*/gi,''],
 ];
