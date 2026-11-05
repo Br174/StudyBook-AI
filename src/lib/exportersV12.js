@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { deliverBlob } from './fileDelivery.js';
 import { jsPDF } from 'jspdf';
+import { countLetters } from './studyQualityGuard.js';
 import { buildEditorialDocument, editorialVariantLabel } from './editorialModel.js';
 
 function safeName(name = 'studybook') {
@@ -74,6 +75,7 @@ function printableHtml(book, fileName, rawOptions = false) {
         <section class="flow-block">
           ${block.sectionTitle ? `<h3>${escapeHtml(block.sectionTitle)}</h3>` : ''}
           <p>${escapeHtml(block.text)}</p>
+          <div class="flow-letter-footer">Originale: ${countLetters(block.originalText)} · Rielaborato: ${countLetters(block.text)} · Risparmiate: ${countLetters(block.originalText)-countLetters(block.text)}</div>
         </section>`).join('');
       return `
         <section class="chapter">
@@ -130,6 +132,7 @@ function printableHtml(book, fileName, rawOptions = false) {
   .flow-block { margin:0 0 1.05em; orphans:3; widows:3; }
   .flow-block h3 { margin:1.05em 0 .35em; color:#475569; font-size:11px; line-height:1.3; break-after:avoid; page-break-after:avoid; }
   .flow-block p { white-space: pre-line;  margin:0; font-size:${bodyPt.toFixed(2)}pt; text-align:left; }
+  .flow-letter-footer { margin: 3px 0 8px; font-size: 7.2px; color:#64748b; break-inside:avoid; }
   .terminology { border-left:1.5px solid #dbeafe; padding-left:5mm; min-height:210mm; }
   .terminology-title { margin-bottom:10px; color:#1677ea; font-size:8.5px; font-weight:900; letter-spacing:.11em; }
   .term-entry { margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #eef2f7; break-inside:avoid; }
@@ -197,6 +200,16 @@ export async function exportPdf(book, fileName, rawOptions = false) {
   const bodySize = 10.9 * settings.fontScale;
   const lineHeight = 6.05 * (settings.lineHeight / 1.58) * Math.max(.94, settings.fontScale);
   let y = 24;
+  // The original-letter count is distributed across the physical PDF pages on
+  // which a long paragraph appears. Printed letters are measured line by line.
+  const pageLetterStats = new Map();
+  function addPageLetters(currentLine, sourceEquivalent) {
+    const pageNumber = pdf.getCurrentPageInfo().pageNumber;
+    if (!pageLetterStats.has(pageNumber)) pageLetterStats.set(pageNumber,{original:0,actual:0});
+    const record = pageLetterStats.get(pageNumber);
+    record.actual += countLetters(currentLine);
+    record.original += sourceEquivalent;
+  }
 
   function drawReadingFrame() {
     pdf.setDrawColor(219, 234, 254);
@@ -239,6 +252,8 @@ export async function exportPdf(book, fileName, rawOptions = false) {
 
   function writeBlock(block) {
     const lines = pdf.splitTextToSize(block.text, mainWidth);
+    const totalPrintedLetters = Math.max(1, lines.reduce((n, line) => n + countLetters(line), 0));
+    const totalOriginalLetters = countLetters(block.originalText || block.text);
     const firstChunk = Math.min(lines.length, 3) * lineHeight;
     ensureSpace((block.sectionTitle ? 8 : 0) + firstChunk + 5);
 
@@ -261,6 +276,7 @@ export async function exportPdf(book, fileName, rawOptions = false) {
       pdf.setFontSize(bodySize);
       pdf.setTextColor(31, 41, 55);
       pdf.text(line, margin, y);
+      addPageLetters(line, totalOriginalLetters * countLetters(line) / totalPrintedLetters);
       y += lineHeight;
     }
     y += Math.max(3.8, lineHeight * .55);
@@ -346,7 +362,14 @@ export async function exportPdf(book, fileName, rawOptions = false) {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8.2);
     pdf.setTextColor(148, 163, 184);
-    pdf.text('StudyBook AI', margin, 291.5);
+    const letterRecord = pageLetterStats.get(pageNumber);
+    if (letterRecord) {
+      const origin = Math.round(letterRecord.original);
+      const edited = letterRecord.actual;
+      pdf.text('Originale: '+origin+'   Rielaborato: '+edited+'   Risparmiate: '+(origin-edited), margin, 291.5);
+    } else {
+      pdf.text('StudyBook AI', margin, 291.5);
+    }
     pdf.text(String(pageNumber - 1), pageWidth - margin, 291.5, { align: 'right' });
   }
 
