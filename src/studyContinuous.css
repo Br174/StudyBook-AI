@@ -437,3 +437,22 @@
   .study-quality-statistics { padding: 10px; margin-top: 22px; }
   .study-quality-table { font-size: .72rem; }
 }
+
+/* LAB27: one quiet line immediately below each study paragraph. */
+.study-mode .study-paragraph-letter-count {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 4px 12px;
+  margin-top: 6px;
+  padding: 4px 0 5px;
+  border-top: 1px solid rgba(100,116,139,.17);
+  color: #64748b;
+  font-size: .68rem;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+.study-mode .study-paragraph-letter-count span { white-space: nowrap; }
+@media (max-width:390px) {
+  .study-mode .study-paragraph-letter-count { font-size:.63rem; gap: 3px 8px; }
+}
