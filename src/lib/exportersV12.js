@@ -68,6 +68,8 @@ function printableHtml(book, fileName, rawOptions = false) {
   const doc = buildEditorialDocument(book, options);
   const title = escapeHtml(displayName(fileName));
   const index = (book?.chapters || []).map((chapter, index) => `<li>${index + 1}. ${escapeHtml(chapter.title)}</li>`).join('');
+  const wholeOriginalLetters = (book?.chapters || []).flatMap(c => c.paragraphs || []).reduce((sum,p)=>sum+countLetters(p.original || ''),0);
+  const selectedTextLetters = (doc.variants[0]?.chapters || []).flatMap(c => c.blocks || []).reduce((sum,bl)=>sum+countLetters(bl.text),0);
 
   const variants = doc.variants.map((variant, variantIndex) => {
     const chapters = variant.chapters.map((chapter) => {
@@ -149,6 +151,7 @@ function printableHtml(book, fileName, rawOptions = false) {
   <h1>${title}</h1>
   <p>Libro di studio continuo, ricostruito nell’ordine della fonte.</p>
   <div class="edition">${escapeHtml(editorialVariantLabel(options.variant))}</div>
+  <p class="letter-totals">Originale: ${wholeOriginalLetters} · Rielaborato: ${selectedTextLetters} · Risparmiate: ${wholeOriginalLetters-selectedTextLetters} lettere</p>
 </section>
 <section class="index"><h2>Indice</h2><ol>${index}</ol></section>
 ${variants}
@@ -301,6 +304,12 @@ export async function exportPdf(book, fileName, rawOptions = false) {
   pdf.setFontSize(12.5);
   pdf.setTextColor(100, 116, 139);
   pdf.text(editorialVariantLabel(options.variant), margin, coverY + 9);
+  const originalBookLetters = (book?.chapters || []).flatMap(c=>c.paragraphs || []).reduce((sum,p)=>sum+countLetters(p.original || ''),0);
+  const displayedBookLetters = (editorial.variants[0]?.chapters || []).flatMap(c=>c.blocks || []).reduce((sum,b)=>sum+countLetters(b.text),0);
+  pdf.setFontSize(9.3);
+  pdf.text('Originale: '+originalBookLetters+'   Rielaborato: '+displayedBookLetters+
+    '   Risparmiate: '+(originalBookLetters-displayedBookLetters)+' lettere',
+    margin, coverY + 18);
 
   // Indice
   pdf.addPage();
