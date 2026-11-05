@@ -3,6 +3,8 @@ import { askStudyAssistant, STUDY_ACTIONS } from '../lib/studyAssistant.js';
 import { buildConceptMap, buildFlashcards, buildOralQuestions, buildQuiz } from '../lib/studyTools.js';
 import { readerCssVariables } from '../lib/accessibility.js';
 import { editorialParagraphText } from '../lib/editorialModel.js';
+import { buildReductionStatistics } from '../lib/precisionCore.js';
+import { countText } from '../lib/studyQualityGuard.js';
 import { filterGlossaryEntries } from '../lib/glossaryQuality.js';
 import { buildUniversalGlossary, splitUniversalText } from '../lib/universalGlossary.js';
 import { speakStudyText, stopStudySpeech, installItalianSpeechVoice } from '../lib/studySpeech.js';
@@ -116,6 +118,12 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
   const oralQuestions = useMemo(() => buildOralQuestions(studySource, studyScope === 'book' ? 36 : 24), [studySource, studyScope]);
   const conceptMap = useMemo(() => buildConceptMap(studySource, studyScope === 'book' ? 60 : 24), [studySource, studyScope]);
   const glossary = useMemo(() => chapterGlossary(chapter || {}), [chapter]);
+  const reductionStats = useMemo(() => isReader && chapter
+    ? buildReductionStatistics(book, chapterIndex) : [], [isReader, book, chapterIndex]);
+  const visibleReadingStats = useMemo(() => isReader && chapter ? countText(
+    (chapter.paragraphs || []).map((paragraph) => editorialParagraphText(paragraph, { variant: readingVariant, dsaMode })).join('\n')
+  ) : null, [isReader, chapter, readingVariant, dsaMode]);
+  const numberIt = (value) => Number(value || 0).toLocaleString('it-IT');
   useEffect(() => () => { void stopStudySpeech(); }, []);
   useEffect(() => { void stopStudySpeech(); setTtsSpeaking(false); setTtsError(''); }, [chapterIndex]);
   function readAloud(text) {
@@ -349,9 +357,36 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
                   </section>
                 );
               })}
+              <section className="study-quality-statistics" aria-label="Conteggio effettivo del testo">
+                <h3>Conteggio del testo</h3>
+                <p>I numeri sono calcolati dalle versioni realmente generate, non dalle percentuali richieste.</p>
+                {visibleReadingStats && <div className="study-quality-visible">
+                  <strong>Testo mostrato ({readingVariant === 'simple' ? 'In parole semplici' : 'Testo di studio'}):</strong>
+                  <span>{numberIt(visibleReadingStats.letters)} lettere · {numberIt(visibleReadingStats.words)} parole · {numberIt(visibleReadingStats.sentences)} frasi</span>
+                </div>}
+                <div className="study-quality-table-wrap">
+                  <table className="study-quality-table">
+                    <thead><tr><th>Versione</th><th>Lettere</th><th>Parole</th><th>Frasi</th><th>Rid. lettere</th></tr></thead>
+                    <tbody>{reductionStats.map((row) => (
+                      <tr key={String(row.level)} className={book.precisionEdition?.level === row.level ? 'is-current' : ''}>
+                        <th>{row.level === 'summary' ? 'Riassunto' : row.level === 0 ? 'Originale' : row.level + '%'}</th>
+                        <td>{numberIt(row.actual.letters)}</td>
+                        <td>{numberIt(row.actual.words)}</td>
+                        <td>{numberIt(row.actual.sentences)}</td>
+                        <td>{row.lettersReduced.toLocaleString('it-IT')}%</td>
+                      </tr>
+                    ))}</tbody>
+                  </table>
+                </div>
+                {reductionStats.length > 0 && (
+                  <div className="study-quality-book-total">
+                    <strong>Intero libro, originale:</strong> {numberIt(reductionStats[0].wholeBook.original.letters)} lettere · {numberIt(reductionStats[0].wholeBook.original.words)} parole.
+                    <strong> Intero libro, versione selezionata:</strong> {numberIt((reductionStats.find((row) => row.level === book.precisionEdition?.level) || reductionStats[0]).wholeBook.actual.letters)} lettere · {numberIt((reductionStats.find((row) => row.level === book.precisionEdition?.level) || reductionStats[0]).wholeBook.actual.words)} parole.
+                  </div>
+                )}
+                {chapter.precisionContinuity?.issues?.length > 0 && <p className="study-quality-warning">Verificare la completezza del capitolo: sono state rilevate possibili anomalie.</p>}
+              </section>
             </div>
-
-
           </article>
         </main>
       )}
