@@ -79,7 +79,7 @@ jobs:
             .motorlab/scudo360-test-results/*.xml
           if-no-files-found: warn
 
-      - name: Quality Guard LAB26 mandatory content regression
+      - name: Quality Guard LAB28 content and safe reprocessing regression
         run: |
           node scripts/test-study-tools.mjs
           node scripts/test-precision-core.mjs
