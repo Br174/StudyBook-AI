@@ -1,7 +1,7 @@
 // StudyBook Precision Core LAB26: cohesive meaning units, global length target,
 // source traceability and non-destructive quality gates.
 import {
-  countWords, countText, buildMeaningUnits, checkReducedParagraph,
+  countWords, countText, countLetters, buildMeaningUnits, checkReducedParagraph,
   auditChapterContinuity, hasLexicalSupport,
 } from './studyQualityGuard.js';
 import { explainInSimpleWords } from './simpleLanguage.js';
@@ -30,16 +30,18 @@ function sourceText(paragraph) {
 function buildRequests(book, level) {
   const items = [], chapters = Array.isArray(book?.chapters) ? book.chapters : [];
   let sourceWords = 0;
+  let sourceLetters = 0;
   chapters.forEach((chapter, chapterIndex) => (chapter.paragraphs || []).forEach((paragraph, paragraphIndex) => {
     const source = sourceText(paragraph);
     sourceWords += countWords(source);
+    sourceLetters += countLetters(source);
     items.push({
       chapterIndex, paragraphIndex, source,
       units: buildMeaningUnits(source, level),
       selected: new Set(), fallback: false,
     });
   }));
-  return { items, sourceWords };
+  return { items, sourceWords, sourceLetters };
 }
 function reserveItem(item, unit) {
   if (!unit || item.selected.has(unit.index)) return 0;
@@ -98,13 +100,14 @@ export function buildPrecisionEdition(book, reduction = 10) {
   if (!book) return null;
   const level = normalizeReduction(reduction);
   const originalChapters = Array.isArray(book.chapters) ? book.chapters : [];
-  const { items, sourceWords } = buildRequests(book, level);
+  const { items, sourceWords, sourceLetters } = buildRequests(book, level);
   const targetPercent = level === 'summary' ? null : level;
   const wordBudget = Math.max(1, Math.round(sourceWords * (level === 'summary' ? 0.30 : 1 - level / 100)));
   computeSelection(items, wordBudget, level);
 
   const lookup = new Map(items.map((item) => [item.chapterIndex + ':' + item.paragraphIndex, item]));
   let outputWords = 0;
+  let outputLetters = 0;
   let fallbackCount = 0;
   const issues = [];
   const chapters = originalChapters.map((chapter, chapterIndex) => {
@@ -120,6 +123,7 @@ export function buildPrecisionEdition(book, reduction = 10) {
         issues.push({ chapterIndex, paragraphIndex, problems: audit.issues });
       }
       outputWords += countWords(finalText);
+      outputLetters += countLetters(finalText);
       // Accessible reading is a linguistic transformation of the CURRENT edition.
       // Never reuse an older independent summary or reselect facts.
       const simpleText = explainInSimpleWords(finalText);
@@ -145,12 +149,17 @@ export function buildPrecisionEdition(book, reduction = 10) {
     return { ...result, precisionContinuity: continuity };
   });
   const achievedPercent = sourceWords ? Math.round((1 - outputWords / sourceWords) * 1000) / 10 : 0;
+  const achievedLettersPercent = sourceLetters
+    ? Math.round((1 - outputLetters / sourceLetters) * 1000) / 10 : 0;
+  const targetShortfall = targetPercent === null ? 0 : Math.max(0, Math.round((targetPercent-achievedPercent)*10)/10);
   const metadata = {
     level, label: REDUCTION_LABELS[level], targetPercent, achievedPercent,
+    achievedLettersPercent, originalLetters:sourceLetters, resultingLetters:outputLetters,
     originalWords: sourceWords, resultingWords: outputWords,
     targetReached: targetPercent === null || achievedPercent + 0.5 >= targetPercent,
     qualityGuard: {
-      status: issues.length ? 'needs-review' : 'rule-checked',
+      status: issues.length || targetShortfall > 3 ? 'needs-review' : 'rule-checked',
+      targetShortfall,
       issues: issues.slice(0, 160), issueCount: issues.length,
       originalFallbackParagraphs: fallbackCount,
       semanticCertification: false,
