@@ -795,7 +795,9 @@ export default function AppV14() {
       setSelectedChapter(0);
       const recovered = parsed.ocrApplied?.length || 0;
       const unresolved = parsed.needsOcr?.length || 0;
+      const structuralWarnings = parsed.precisionAudit?.warningCount || 0;
       if (unresolved) setStatus(`Documento analizzato · OCR recuperato su ${recovered} pagine · ${unresolved} da verificare`);
+      else if (structuralWarnings) setStatus(`Documento analizzato · ${structuralWarnings} possibili anomalie da verificare`);
       else if (recovered) setStatus(`Documento analizzato · OCR completato su ${recovered} pagine`);
       else setStatus('Documento analizzato · struttura testuale pronta');
     } catch (err) {
