@@ -37,3 +37,5 @@ for(const level of REDUCTION_STEPS){
 for(let i=1;i<all.length-1;i++) if(all[i].outputLetters>all[i-1].outputLetters)
  console.log('REGRESSION: stronger level produces longer content',all[i-1].level,all[i].level);
 console.log('DIAGNOSTIC COMPLETE');
+
+// LAB28 diagnostic executed with the branch-pinned CI workflow.
