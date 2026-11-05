@@ -143,6 +143,25 @@ export function buildMeaningUnits(text, level = 10) {
     };
   });
 }
+/** Conservative OCR/segmentation warnings. Do not invent missing words.
+ * This is a signal to compare the saved original against scanned pages,
+ * not a proof that the source author wrote an incorrect sentence.
+ */
+export function auditNarrativeSource(source) {
+  const text = ws(source);
+  const problems = [];
+  if (!text) return {ok:false,problems:['empty-source']};
+  if (/^[a-zàáâäèéêëìíîïòóôöùúûü]/u.test(text)) problems.push('starts-mid-sentence');
+  if (/(?:^|[.!?]\s+)[a-zàáâäèéêëìíîïòóôöùúûü][\p{L}'’]{3,}/u.test(text))
+    problems.push('unexpected-lowercase-after-stop');
+  if (/\b([\p{L}]{5,})[.!?]\s+\1\b/iu.test(text) ||
+      /\b([\p{L}]{5,})\s+\1\b/iu.test(text))
+    problems.push('repeated-word');
+  if (/[\p{L}]{3,}\s*[,;:]\s*$|(?:\b(?:di|che|del|della|delle|con|per|e|o|la|un|una))\s*$/iu.test(text))
+    problems.push('source-trailing-fragment');
+  return {ok:problems.length===0,problems};
+}
+
 export function checkReducedParagraph(original, text, { selectedUnits = [] } = {}) {
   const issues = [];
   if (ws(original) && !ws(text)) issues.push('missing-paragraph');
@@ -152,6 +171,15 @@ export function checkReducedParagraph(original, text, { selectedUnits = [] } = {
     for (const issue of checkSentence(sentence).issues) issues.push(issue);
   }
   if (selectedUnits.some((unit) => !ws(original).includes(ws(unit.source)))) issues.push('untraceable-source');
+  // Source sentences selected by the compression engine must be a single
+  // contiguous excerpt. Skipping a middle step produces disconnected prose.
+  if (selectedUnits.length) {
+    const ordered = [...selectedUnits].sort((x,y) => x.index-y.index);
+    if (ordered[0].index !== 0 ||
+        ordered.some((unit,i) => i > 0 && unit.index !== ordered[i-1].index+1)) {
+      issues.push('non-contiguous-narrative');
+    }
+  }
   const selectedIndexes = new Set(selectedUnits.map((unit) => unit.index));
   if (selectedUnits.some((unit) => unit.dependent && !selectedIndexes.has(unit.index - 1))) issues.push('missing-antecedent');
   // If a conditional or exception was present, retain the entire source
