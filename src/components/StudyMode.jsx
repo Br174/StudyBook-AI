@@ -118,6 +118,15 @@ export default function StudyMode({ book, sourceBook = book, bookTitle, initialM
   const conceptMap = useMemo(() => buildConceptMap(studySource, studyScope === 'book' ? 60 : 24), [studySource, studyScope]);
   const glossary = useMemo(() => chapterGlossary(chapter || {}), [chapter]);
   const numberIt = (value) => Number(value || 0).toLocaleString('it-IT');
+  const chapterLetterStats = useMemo(() => {
+    const paragraphs = chapter?.paragraphs || [];
+    return {
+      original: paragraphs.reduce((sum,p) => sum+countLetters(p.original || ''),0),
+      current: paragraphs.reduce((sum,p) =>
+        sum+countLetters(editorialParagraphText(p,{variant:readingVariant,dsaMode})),0),
+      sourceWarnings: paragraphs.filter((p) => p.precisionAudit?.sourceNeedsReview).length,
+    };
+  }, [chapter,readingVariant,dsaMode]);
   useEffect(() => () => { void stopStudySpeech(); }, []);
   useEffect(() => { void stopStudySpeech(); setTtsSpeaking(false); setTtsError(''); }, [chapterIndex]);
   function readAloud(text) {
@@ -327,35 +336,48 @@ export default function StudyMode({ book, sourceBook = book, bookTitle, initialM
                 <p className="sb-lab10-hint">Tocca i termini in grassetto per scoprirne il significato, oppure seleziona qualsiasi parola.</p>
               </header>
 
-              {chapter.paragraphs.map((paragraph, index) => {
-                const text = paragraphReadingText(paragraph);
-                const localGlossary = cleanGlossary(paragraph.glossary || []);
-                const sectionTitle = normalizedSection(paragraph.sourceSection);
-                const previousSection = index > 0 ? normalizedSection(chapter.paragraphs[index - 1]?.sourceSection) : '';
+              {(() => {
+                // Group source chunks by their REAL section marker. The document
+                // parser may split one long paragraph into several internal
+                // units; those units must not become visible book page breaks.
+                const sections = [];
                 const chapterTitle = normalizedSection(chapter.title).toLocaleLowerCase('it-IT');
-                const showSectionTitle = Boolean(
-                  sectionTitle
-                  && sectionTitle !== previousSection
-                  && sectionTitle.toLocaleLowerCase('it-IT') !== chapterTitle,
-                );
-
-                return (
-                  <section className="study-flow-paragraph" key={`${chapterIndex}-${index}`}>
-                    {showSectionTitle && <h3 className="study-flow-section-title">{sectionTitle}</h3>}
-                    <InteractiveText
-                      text={text}
-                      glossary={localGlossary}
-                      chapterTerms={glossary}
-                      onPick={(selection, glossaryEntry) => openTarget(selection, paragraph, glossaryEntry)}
-                    />
-                    <div className="study-paragraph-letter-count" aria-label="Conteggio delle lettere di questo paragrafo">
-                      <span>Originale: {numberIt(countLetters(paragraph.original || ''))}</span>
-                      <span>Rielaborato: {numberIt(countLetters(text))}</span>
-                      <span>Risparmiate: {numberIt(countLetters(paragraph.original || '') - countLetters(text))}</span>
+                (chapter.paragraphs || []).forEach((paragraph,index) => {
+                  const sectionTitle = normalizedSection(paragraph.sourceSection);
+                  const previous = sections[sections.length - 1];
+                  if (!previous || previous.sectionTitle !== sectionTitle)
+                    sections.push({sectionTitle,parts:[]});
+                  sections[sections.length - 1].parts.push({paragraph,index});
+                });
+                return sections.map((section,sectionIndex) => (
+                  <section className="study-source-section" key={chapterIndex+'-'+sectionIndex}>
+                    {section.sectionTitle && section.sectionTitle.toLocaleLowerCase('it-IT') !== chapterTitle &&
+                      <h3 className="study-flow-section-title">{section.sectionTitle}</h3>}
+                    <div className="study-flow-narrative">
+                      {section.parts.map(({paragraph,index}) => (
+                        <div className="study-flow-fragment" key={chapterIndex+'-'+index}>
+                          <InteractiveText
+                            text={paragraphReadingText(paragraph)}
+                            glossary={cleanGlossary(paragraph.glossary || [])}
+                            chapterTerms={glossary}
+                            onPick={(selection, glossaryEntry) => openTarget(selection, paragraph, glossaryEntry)}
+                          />{' '}
+                        </div>
+                      ))}
                     </div>
                   </section>
-                );
-              })}
+                ));
+              })()}
+              <footer className="study-chapter-letter-count" aria-label="Conteggio lettere del capitolo">
+                <span>Originale: {numberIt(chapterLetterStats.original)}</span>
+                <span>Rielaborato: {numberIt(chapterLetterStats.current)}</span>
+                <span>Risparmiate: {numberIt(chapterLetterStats.original - chapterLetterStats.current)}</span>
+                {chapterLetterStats.sourceWarnings > 0 && (
+                  <p className="study-source-review-warning">
+                    Alcuni passaggi risultano frammentati già nella lettura del documento. Verificare le pagine originali: nessuna correzione è stata inventata.
+                  </p>
+                )}
+              </footer>
             </div>
           </article>
         </main>
