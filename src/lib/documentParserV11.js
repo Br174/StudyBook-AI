@@ -1,4 +1,5 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import { auditDocumentStructure } from './precisionDocumentAudit.js';
 import {
   detectChapters as detectV10Chapters,
   detectChaptersFromPages as detectV10ChaptersFromPages,
@@ -274,8 +275,8 @@ export async function readSourceFile(file, options = {}) {
     },
   });
 
-  if (!pdfFile || !autoOcr) return base;
+  if (!pdfFile || !autoOcr) return { ...base, precisionAudit: auditDocumentStructure(base) };
   const parsed = await applyResumablePdfOcr(file, base, { onProgress });
   onProgress?.({ phase: 'complete', done: parsed.pages?.length || 0, total: parsed.pages?.length || 0 });
-  return parsed;
+  return { ...parsed, precisionAudit: auditDocumentStructure(parsed) };
 }
