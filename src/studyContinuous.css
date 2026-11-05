@@ -409,3 +409,31 @@
 @media(prefers-reduced-motion:reduce) {
   .study-mode .sb-lab10-glossary-sheet { animation: none; }
 }
+
+
+/* LAB26 Quality Guard: compact, accessible source-vs-edition counters. */
+.study-quality-statistics {
+  margin-top: 28px;
+  padding: 15px;
+  border: 1px solid #dbe5f0;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #17253a;
+}
+.study-quality-statistics h3 { margin: 0 0 5px; font-size: 1rem; }
+.study-quality-statistics > p { margin: 0 0 12px; font-size: .82rem; line-height: 1.4; color: #52627a; }
+.study-quality-visible { display: grid; gap: 5px; padding: 10px 0 12px; font-size: .86rem; }
+.study-quality-visible strong { font-weight: 750; }
+.study-quality-table-wrap { width: 100%; overflow-x: auto; }
+.study-quality-table { width: 100%; min-width: 320px; border-collapse: collapse; font-size: .78rem; font-variant-numeric: tabular-nums; }
+.study-quality-table th, .study-quality-table td { padding: 7px 4px; border-bottom: 1px solid #dce4ed; white-space: nowrap; }
+.study-quality-table thead th { font-size: .72rem; color: #52627a; font-weight: 700; }
+.study-quality-table th:first-child { text-align: left; }
+.study-quality-table th:not(:first-child), .study-quality-table td { text-align: right; }
+.study-quality-table .is-current { background: #e6f1ff; font-weight: 750; color: #135fba; }
+.study-quality-book-total { margin-top: 12px; font-size: .77rem; line-height: 1.65; color: #40526d; }
+.study-quality-warning { margin-top: 10px !important; color: #a04d12 !important; font-weight: 700; }
+@media (max-width: 620px) {
+  .study-quality-statistics { padding: 10px; margin-top: 22px; }
+  .study-quality-table { font-size: .72rem; }
+}
