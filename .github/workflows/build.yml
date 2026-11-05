@@ -140,6 +140,8 @@ jobs:
         run: node scripts/diagnose-reduction-lab28.mjs
       - name: Test LAB28 reprocess stored books safely
         run: node scripts/test-library-reprocessing-lab28.mjs
+      - name: Test LAB29 progressive percentage curve and qualifier preservation
+        run: node scripts/test-lab29-progressive-reductions.mjs
       - name: Test persistent study-help cache
         run: node scripts/test-study-help-cache-model.mjs
       - name: Test PWA shell
