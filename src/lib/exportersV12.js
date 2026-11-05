@@ -129,7 +129,7 @@ function printableHtml(book, fileName, rawOptions = false) {
   .chapter-text { min-width:0; }
   .flow-block { margin:0 0 1.05em; orphans:3; widows:3; }
   .flow-block h3 { margin:1.05em 0 .35em; color:#475569; font-size:11px; line-height:1.3; break-after:avoid; page-break-after:avoid; }
-  .flow-block p { margin:0; font-size:${bodyPt.toFixed(2)}pt; text-align:left; }
+  .flow-block p { white-space: pre-line;  margin:0; font-size:${bodyPt.toFixed(2)}pt; text-align:left; }
   .terminology { border-left:1.5px solid #dbeafe; padding-left:5mm; min-height:210mm; }
   .terminology-title { margin-bottom:10px; color:#1677ea; font-size:8.5px; font-weight:900; letter-spacing:.11em; }
   .term-entry { margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #eef2f7; break-inside:avoid; }
