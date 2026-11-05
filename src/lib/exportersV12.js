@@ -62,6 +62,25 @@ function glossaryHtml(entries = []) {
     </div>`).join('');
 }
 
+// Artificial OCR chunks share the same actual book section. Print them as
+// one continuous block, preserving source ordering and real section headings.
+export function coalesceReadingBlocks(blocks = []) {
+  const result = [];
+  for (const item of blocks) {
+    const block = { ...item };
+    const previous = result[result.length - 1];
+    if (previous && !block.sectionTitle) {
+      previous.text += ' ' + String(block.text || '');
+      previous.originalText += ' ' + String(block.originalText || '');
+      previous.glossary = [...(previous.glossary || []),...(block.glossary || [])];
+      previous.sourcePageEnd = block.sourcePageEnd ?? previous.sourcePageEnd;
+    } else {
+      result.push(block);
+    }
+  }
+  return result;
+}
+
 function printableHtml(book, fileName, rawOptions = false) {
   const options = normalizeOptions(rawOptions);
   const settings = printSettings(options);
@@ -73,11 +92,11 @@ function printableHtml(book, fileName, rawOptions = false) {
 
   const variants = doc.variants.map((variant, variantIndex) => {
     const chapters = variant.chapters.map((chapter) => {
-      const blocks = chapter.blocks.map((block) => `
+      const blocks = coalesceReadingBlocks(chapter.blocks).map((block) => `
         <section class="flow-block">
           ${block.sectionTitle ? `<h3>${escapeHtml(block.sectionTitle)}</h3>` : ''}
           <p>${escapeHtml(block.text)}</p>
-          <div class="flow-letter-footer">Originale: ${countLetters(block.originalText)} · Rielaborato: ${countLetters(block.text)} · Risparmiate: ${countLetters(block.originalText)-countLetters(block.text)}</div>
+
         </section>`).join('');
       return `
         <section class="chapter">
@@ -86,7 +105,9 @@ function printableHtml(book, fileName, rawOptions = false) {
             <h2>${escapeHtml(chapter.title)}</h2>
           </header>
           <div class="chapter-layout">
-            <div class="chapter-text">${blocks}</div>
+            <div class="chapter-text">${blocks}
+              <div class="flow-letter-footer">Originale: ${chapter.blocks.reduce((sum,part)=>sum+countLetters(part.originalText),0)} · Rielaborato: ${chapter.blocks.reduce((sum,part)=>sum+countLetters(part.text),0)} · Risparmiate: ${chapter.blocks.reduce((sum,part)=>sum+countLetters(part.originalText)-countLetters(part.text),0)}</div>
+            </div>
             <aside class="terminology">
               <div class="terminology-title">TERMINOLOGIA</div>
               ${glossaryHtml(chapter.glossary)}
@@ -363,7 +384,7 @@ export async function exportPdf(book, fileName, rawOptions = false) {
       const titleLines = pdf.splitTextToSize(chapter.title, mainWidth);
       pdf.text(titleLines, margin, y);
       y += titleLines.length * 6.6 + 7;
-      for (const block of chapter.blocks) writeBlock(block);
+      for (const block of coalesceReadingBlocks(chapter.blocks)) writeBlock(block);
     }
   }
 
