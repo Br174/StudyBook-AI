@@ -127,3 +127,48 @@ export function auditChapterContinuity(sourceChapter = {}, reducedChapter = {}) 
     issues.push('reduced-chapter-ending-suspicious');
   return { ok: !issues.length, issues };
 }
+
+/** Compare the source chapters to the rebuilt study book before persistence.
+ * Missing/mismatched source text is a HARD warning, not a synonym for a normal reduction.
+ */
+export function auditBookSourceCoverage(sourceDocument = {}, rebuilt = {}) {
+  const sourceChapters = sourceDocument.chapters || [];
+  const actualChapters = rebuilt.chapters || [];
+  const issues = [];
+  let sourceParagraphs = 0, outputParagraphs = 0, originalLetters = 0, keptLetters = 0;
+  sourceChapters.forEach((chapter, chapterIndex) => {
+    const actual = actualChapters[chapterIndex];
+    if (!actual) {
+      issues.push({ type: 'chapter-missing', chapterIndex });
+      return;
+    }
+    const original = chapter.paragraphs || [];
+    const output = actual.paragraphs || [];
+    sourceParagraphs += original.length;
+    outputParagraphs += output.length;
+    if (original.length !== output.length) issues.push({ type: 'paragraph-count', chapterIndex, source: original.length, built: output.length });
+    original.forEach((value, paragraphIndex) => {
+      const base = typeof value === 'string' ? value : (value?.original || value?.text || '');
+      const current = output[paragraphIndex]?.original || '';
+      originalLetters += countLetters(base);
+      keptLetters += countLetters(current);
+      if (ws(base) !== ws(current)) issues.push({ type: 'paragraph-source-diff', chapterIndex, paragraphIndex });
+    });
+    const sourceEnd = original.at(-1);
+    const sourceLast = typeof sourceEnd === 'string' ? sourceEnd : sourceEnd?.original || '';
+    if (sourceLast && checkSentence(splitCompleteSentences(sourceLast).at(-1) || '').issues.length)
+      issues.push({ type: 'source-ending', chapterIndex });
+  });
+  if (sourceChapters.length !== actualChapters.length)
+    issues.push({ type: 'chapter-count', source: sourceChapters.length, built: actualChapters.length });
+  return {
+    passed: !issues.length,
+    status: !issues.length ? 'structurally-matched' : 'needs-source-review',
+    sourceChapters: sourceChapters.length, rebuiltChapters: actualChapters.length,
+    sourceParagraphs, rebuiltParagraphs: outputParagraphs,
+    originalLetters, preservedOriginalLetters: keptLetters,
+    issues: issues.slice(0, 150), issueCount: issues.length,
+    // This confirms original reconstruction, not external legal truth.
+    semanticCertification: false,
+  };
+}
