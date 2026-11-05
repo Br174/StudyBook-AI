@@ -142,6 +142,8 @@ jobs:
         run: node scripts/test-library-reprocessing-lab28.mjs
       - name: Test LAB29 progressive percentage curve and qualifier preservation
         run: node scripts/test-lab29-progressive-reductions.mjs
+      - name: Test LAB30 continuous page narration and OCR integrity
+        run: node scripts/test-lab30-continuous-narrative.mjs
       - name: Test persistent study-help cache
         run: node scripts/test-study-help-cache-model.mjs
       - name: Test PWA shell
