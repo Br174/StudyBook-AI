@@ -39,7 +39,7 @@ function glossaryEntries(chapter = {}) {
 
 function paragraphPoints(paragraph = {}, limit = 5) {
   const original = cleanText(paragraph.original || '');
-  const values = (original ? splitSentences(original) : [...(paragraph.remember || []), ...(paragraph.keyPoints || [])]).map(cleanText).filter((value) => value.length >= 18);
+  const values = (original ? splitSentences(original).filter((item) => factQuestion(item)) : [...(paragraph.remember || []), ...(paragraph.keyPoints || [])]).map(cleanText).filter((value) => value.length >= 18);
 
   const seen = new Set();
   const output = [];
