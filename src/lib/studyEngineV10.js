@@ -32,15 +32,18 @@ function dsaFromStudy(value) {
 function auditParagraph(paragraph) {
   const firstAudit = auditFidelity(paragraph.original, paragraph.summary);
   const repair = repairStudyText(paragraph.original, paragraph.summary, firstAudit);
-  const finalAudit = auditFidelity(paragraph.original, repair.text);
+  const afterRepair = auditFidelity(paragraph.original, repair.text);
+  const sourceFallback = !afterRepair.passed;
+  const safeText = sourceFallback ? paragraph.original : repair.text;
+  const finalAudit = auditFidelity(paragraph.original, safeText);
   const recovered = repair.recovered.length;
 
   return {
     ...paragraph,
-    summary: repair.text,
-    dsaSummary: recovered
-      ? dsaFromStudy(repair.text)
-      : (paragraph.dsaSummary || dsaFromStudy(repair.text)),
+    summary: safeText,
+    dsaSummary: recovered || sourceFallback
+      ? dsaFromStudy(safeText)
+      : (paragraph.dsaSummary || dsaFromStudy(safeText)),
     fidelityRecovered: Number(paragraph.fidelityRecovered || 0) + recovered,
     fidelityGate: {
       passed: finalAudit.passed,
@@ -51,6 +54,8 @@ function auditParagraph(paragraph) {
       missingHighValue: finalAudit.missingHighValue.length,
       missingProtected: finalAudit.missingProtected.length,
       recovered,
+      sourceFallback,
+      qualifierMismatches: finalAudit.qualifierMismatches?.length || 0,
     },
   };
 }
@@ -69,7 +74,10 @@ export async function buildStudyBook(documentData, options = {}) {
   const chapters = (baseBook?.chapters || []).map((chapter, chapterIndex) => {
     const audited = (chapter.paragraphs || []).map((paragraph) => auditParagraph(paragraph));
     const coherent = removeExactCrossParagraphRedundancy(audited).map((paragraph) => {
-      const finalAudit = auditFidelity(paragraph.original, paragraph.summary);
+      const postDedupAudit = auditFidelity(paragraph.original, paragraph.summary);
+      const reverted = !postDedupAudit.passed;
+      const safeParagraph = reverted ? { ...paragraph, summary: paragraph.original, dsaSummary: dsaFromStudy(paragraph.original) } : paragraph;
+      const finalAudit = reverted ? auditFidelity(paragraph.original, paragraph.original) : postDedupAudit;
       const gate = { ...paragraph.fidelityGate,
         passed: finalAudit.passed,
         coveragePercent: finalAudit.coveragePercent,
@@ -85,7 +93,7 @@ export async function buildStudyBook(documentData, options = {}) {
       compressionSourceChars += finalAudit.sourceChars;
       compressionOutputChars += finalAudit.outputChars;
       if (!gate.passed) failedParagraphs += 1;
-      return { ...paragraph, fidelityGate: gate };
+      return { ...safeParagraph, fidelityGate: { ...gate, sourceFallback: gate.sourceFallback || reverted } };
     });
 
     options.onProgress?.(
