@@ -456,3 +456,51 @@
 @media (max-width:390px) {
   .study-mode .study-paragraph-letter-count { font-size:.63rem; gap: 3px 8px; }
 }
+
+
+/* LAB30: a paragraph chunk used internally by OCR must never be an apparent
+   page break in reading mode. Only known chapter/section headings interrupt
+   the stream; the reading context remains selectable and glossary-aware. */
+.study-mode .study-source-section { margin: 0 0 .8em; }
+.study-mode .study-flow-narrative {
+  display: block;
+  text-align: left;
+  line-height: var(--reader-line-height,1.78);
+}
+.study-mode .study-flow-fragment,
+.study-mode .study-flow-fragment .study-interactive-text {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  white-space: normal !important;
+}
+.study-mode .study-flow-fragment .study-interactive-text {
+  font-size: calc(1.05rem * var(--reader-font-scale,1));
+  line-height: var(--reader-line-height,1.78);
+  letter-spacing: var(--reader-letter-spacing,0em);
+  word-spacing: var(--reader-word-spacing,0em);
+}
+.study-mode .study-chapter-letter-count {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 13px;
+  margin-top: 1.45rem;
+  padding-top: .65rem;
+  border-top: 1px solid rgba(100,116,139,.16);
+  font-size: .72rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+.study-mode .study-chapter-letter-count > span { white-space: nowrap; }
+.study-mode .study-chapter-letter-count .study-source-review-warning {
+  flex-basis: 100%;
+  margin: .45rem 0 0;
+  font-size: .7rem;
+  line-height: 1.5;
+  color: #92400e;
+}
+@media(max-width:390px) {
+  .study-mode .study-chapter-letter-count { font-size:.66rem; gap:3px 8px; }
+}
