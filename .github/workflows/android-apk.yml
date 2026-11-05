@@ -79,13 +79,14 @@ jobs:
             .motorlab/scudo360-test-results/*.xml
           if-no-files-found: warn
 
-      - name: Quality Guard LAB28 content and safe reprocessing regression
+      - name: Quality Guard LAB29 progressive reductions, source protection and library regression
         run: |
           node scripts/test-study-tools.mjs
           node scripts/test-precision-core.mjs
           node scripts/test-quality-guard-lab26.mjs
           node scripts/test-lab27-simple-metrics.mjs
           node scripts/test-library-reprocessing-lab28.mjs
+          node scripts/test-lab29-progressive-reductions.mjs
 
       - name: Setup Java 21
         uses: actions/setup-java@v5
