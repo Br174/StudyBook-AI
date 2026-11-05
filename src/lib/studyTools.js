@@ -11,7 +11,7 @@ function splitSentences(value) {
 }
 
 function paragraphText(paragraph = {}) {
-  return cleanText(paragraph.summary || paragraph.dsaSummary || paragraph.original || '');
+  return cleanText(paragraph.original || paragraph.summary || paragraph.dsaSummary || '');
 }
 
 function pushUnique(target, seen, item, key = '') {
@@ -29,17 +29,17 @@ function glossaryEntries(chapter = {}) {
       const term = cleanText(entry?.term);
       const definition = cleanText(entry?.definition);
       if (!term || !definition) continue;
-      pushUnique(entries, seen, { term, definition, paragraphIndex }, term);
+      const original = cleanText(paragraph.original || '');
+      if (original && !original.toLowerCase().includes(term.toLowerCase())) continue;
+      pushUnique(entries, seen, { term, definition, paragraphIndex, sourceChapterIndex: paragraph.sourceChapterIndex ?? 0 }, term);
     }
   }
   return entries;
 }
 
 function paragraphPoints(paragraph = {}, limit = 5) {
-  const values = [
-    ...(paragraph.remember || []),
-    ...(paragraph.keyPoints || []),
-  ].map(cleanText).filter((value) => value.length >= 18);
+  const original = cleanText(paragraph.original || '');
+  const values = (original ? splitSentences(original) : [...(paragraph.remember || []), ...(paragraph.keyPoints || [])]).map(cleanText).filter((value) => value.length >= 18);
 
   const seen = new Set();
   const output = [];
@@ -58,6 +58,33 @@ function paragraphLabel(paragraph = {}, paragraphIndex = 0) {
   return section ? `la sezione “${section}”` : `il passaggio ${paragraphIndex + 1}`;
 }
 
+
+function factQuestion(point, oral = false) {
+  const text = cleanText(point);
+  const article = text.match(/^(art(?:icolo)?\.?\s*\d+(?:-?(?:bis|ter))?)[\s,:.]+/i);
+  if (article) return 'Che cosa prevede ' + article[1] + ' secondo il testo?';
+  const match = text.match(/^(.{4,85}?)\s+(è|sono|si definisce|consiste in|indica|prevede|stabilisce|richiede|comporta|determina|costituisce|disciplina|orienta|deriva da|si applica)\b/i);
+  if (!match) return null;
+  const subject = cleanText(match[1]);
+  if (subject.split(/\s+/).length > 12 || /^(?:questa?|ciò|esso|essa|in|nel|nella)\b/i.test(subject) || /(?:indice|bibliografia|studybook ai)/i.test(subject)) return null;
+  if (/richiede/i.test(match[2])) return 'Quali requisiti richiede «' + subject + '» secondo il testo?';
+  if (/prevede|stabilisce|disciplina/i.test(match[2])) return 'Che cosa stabilisce il testo riguardo a «' + subject + '»?';
+  if (/comporta|determina|deriva da/i.test(match[2])) return 'Quali conseguenze o relazioni indica il testo per «' + subject + '»?';
+  return (oral ? 'Spiega che cosa afferma il testo riguardo a «' : 'Come viene descritto «') + subject + '»' + (oral ? '.' : ' nel testo?');
+}
+function balancedSelect(items, limit) {
+  const groups = new Map(), output = [];
+  for (const item of items) {
+    const id = item.sourceChapterIndex ?? 0;
+    if (!groups.has(id)) groups.set(id, []);
+    groups.get(id).push(item);
+  }
+  while (output.length < limit && [...groups.values()].some((group) => group.length)) {
+    for (const group of groups.values()) if (group.length && output.length < limit) output.push(group.shift());
+  }
+  return output;
+}
+
 export function buildFlashcards(chapter = {}, limit = 36) {
   const cards = [];
   const seen = new Set();
@@ -67,27 +94,28 @@ export function buildFlashcards(chapter = {}, limit = 36) {
       front: `Che cosa significa “${entry.term}”?`,
       back: entry.definition,
       paragraphIndex: entry.paragraphIndex,
+      sourceChapterIndex: entry.sourceChapterIndex,
       kind: 'term',
     }, `term::${entry.term}::${entry.definition}`);
-    if (cards.length >= limit) return cards;
+    if (cards.length >= limit * 5) break;
   }
 
   for (const [paragraphIndex, paragraph] of (chapter.paragraphs || []).entries()) {
     const points = paragraphPoints(paragraph, 3);
-    points.forEach((point, pointIndex) => {
+    points.forEach((point) => {
+      const front = factQuestion(point);
+      if (!front) return;
       pushUnique(cards, seen, {
-        front: pointIndex === 0
-          ? `Qual è il concetto principale di ${paragraphLabel(paragraph, paragraphIndex)}?`
-          : `Quale altro elemento importante va ricordato di ${paragraphLabel(paragraph, paragraphIndex)}?`,
-        back: point,
-        paragraphIndex,
-        kind: 'point',
-      }, `point::${paragraphIndex}::${point}`);
+        front, back: point, paragraphIndex, kind: 'point',
+        sourceChapterIndex: paragraph.sourceChapterIndex ?? 0,
+        sourcePageStart: paragraph.sourcePageStart ?? null,
+        sourceText: cleanText(paragraph.original || ''),
+      }, 'point::' + front + '::' + point);
     });
-    if (cards.length >= limit) return cards.slice(0, limit);
+    if (cards.length >= limit * 5) break;
   }
 
-  return cards.slice(0, limit);
+  return balancedSelect(cards, limit);
 }
 
 function rotateOptions(values, offset) {
@@ -153,18 +181,21 @@ export function buildQuiz(chapter = {}, limit = 18) {
     const current = pools[index];
     const correct = current.points[0];
     const distractors = distinctOtherFacts(pools, index, correct, 3);
-    if (distractors.length < 2) continue;
+    const question = factQuestion(correct);
+    if (distractors.length < 2 || !question) continue;
     const options = rotateOptions([correct, ...distractors].slice(0, 4), index + 1);
     questions.push({
-      question: `Quale affermazione appartiene a ${paragraphLabel(current.paragraph, current.paragraphIndex)}?`,
+      question,
       options,
       correctIndex: options.indexOf(correct),
       explanation: correct,
       paragraphIndex: current.paragraphIndex,
+      sourceChapterIndex: current.paragraph.sourceChapterIndex ?? 0,
+      sourcePageStart: current.paragraph.sourcePageStart ?? null,
     });
   }
 
-  return questions.slice(0, limit);
+  return balancedSelect(questions, limit);
 }
 
 export function buildOralQuestions(chapter = {}, limit = 24) {
@@ -183,11 +214,11 @@ export function buildOralQuestions(chapter = {}, limit = 24) {
   for (const [paragraphIndex, paragraph] of (chapter.paragraphs || []).entries()) {
     const points = paragraphPoints(paragraph, 3);
     if (!points.length) continue;
-    pushUnique(questions, seen, {
-      question: `Spiega i concetti fondamentali di ${paragraphLabel(paragraph, paragraphIndex)}.`,
-      answer: points.join(' '),
-      paragraphIndex,
-    }, `paragraph::${paragraphIndex}::${points[0]}`);
+    const question = factQuestion(points[0], true);
+    if (!question) continue;
+    pushUnique(questions, seen, { question, answer: points.join(' '), paragraphIndex,
+      sourceChapterIndex: paragraph.sourceChapterIndex ?? 0, sourcePageStart: paragraph.sourcePageStart ?? null,
+    }, 'paragraph::' + paragraphIndex + '::' + points[0]);
     if (questions.length >= limit) return questions;
   }
 
@@ -215,7 +246,7 @@ export function buildConceptMap(chapter = {}, limit = 24) {
     const keywords = fallbackKeywords(paragraph, 6);
     const points = paragraphPoints(paragraph, 3);
     return {
-      title: cleanText(paragraph.sourceSection) || `Passaggio ${paragraphIndex + 1}`,
+      title: ((paragraphPoints(paragraph, 1)[0] || '').match(/^(.{4,60}?)\s+(?:è|sono|si definisce|prevede|richiede|disciplina)\b/i)?.[1]) || fallbackKeywords(paragraph, 1)[0] || cleanText(paragraph.sourceSection) || `Passaggio ${paragraphIndex + 1}`,
       paragraphIndex,
       keywords,
       points,
