@@ -57,7 +57,7 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRename
         onContextMenu={(event) => event.preventDefault()}
         onClick={openBook}
         disabled={!available}
-        aria-label={`${title}. Pressione prolungata per eliminare`}
+        aria-label={`${title}. Pressione prolungata per azioni sul libro`}
       >
         <div className={coverUrl ? 'sb-cover sb-library-compact-cover has-image' : 'sb-cover sb-library-compact-cover'} data-subject={subject}>
           {coverUrl ? <img className="sb-library-cover-image" src={coverUrl} alt={'Copertina di ' + title} loading="lazy" decoding="async" /> : <>
@@ -173,7 +173,7 @@ function ScanPhotoPreview({ blob, title }) {
   return url ? <img src={url} alt={title} loading="lazy" decoding="async" /> : <StudyIcon name="photo" size={21}/>;
 }
 
-export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
+export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onReprocessBook, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
   const [area, setArea] = useState('subjects');
   const [view, setView] = useState(initialView);
   const [subject, setSubject] = useState('Tutte');
@@ -181,6 +181,9 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
   const [deleteCandidate, setDeleteCandidate] = useState(null);
   const [renameCandidate, setRenameCandidate] = useState(null);
   const [actionCandidate, setActionCandidate] = useState(null);
+  const [reprocessCandidate, setReprocessCandidate] = useState(null);
+  const [reprocessingBook, setReprocessingBook] = useState(false);
+  const [reprocessError, setReprocessError] = useState('');
   const [coverProcessing, setCoverProcessing] = useState('');
   const [coverMessage, setCoverMessage] = useState('');
   const [coverNotice, setCoverNotice] = useState('');
@@ -316,6 +319,11 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
                   finally{setCoverProcessing('');}
                 }}>↺ Ripristina copertina originale</button>
               )}
+              {actionCandidate.metadata?.hasProcessed && onReprocessBook && (
+                <button type="button" disabled={Boolean(coverProcessing)} onClick={()=>{
+                  setReprocessCandidate(actionCandidate); setActionCandidate(null); setReprocessError('');
+                }}>↻ Rielabora libro</button>
+              )}
               <button type="button" className="sb-library-action-danger" disabled={Boolean(coverProcessing)} onClick={()=>{setDeleteCandidate({...actionCandidate,deleteView:view});setActionCandidate(null);}}>× Elimina libro</button>
               <button type="button" className="sb-library-action-cancel" disabled={Boolean(coverProcessing)} onClick={()=>setActionCandidate(null)}>Chiudi</button>
             </div>
@@ -324,6 +332,30 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
         </div>
       )}
       {renameCandidate && <RenameTitleDialog key={renameCandidate.id} label="Rinomina libro di studio" current={stripExtension(renameCandidate.fileName)} onClose={()=>setRenameCandidate(null)} onSave={name=>onRenameBook(renameCandidate.id,name)} />}
+      {reprocessCandidate && (
+        <div className="sb-confirm-overlay" role="dialog" aria-modal="true" aria-label="Conferma rielaborazione">
+          <div className="sb-confirm-dialog">
+            <h2>Rielaborare il libro?</h2>
+            <p><strong>{stripExtension(reprocessCandidate.fileName)}</strong> sarà elaborato da capo partendo dal testo originale già acquisito, senza una nuova importazione.</p>
+            <p>La versione precedente rimane disponibile se l'elaborazione non riesce. File originale, copertina e nome non vengono cancellati.</p>
+            {reprocessingBook && <p role="status">Rielaborazione e controlli in corso…</p>}
+            {reprocessError && <p className="sb-true-cover-error" role="alert">{reprocessError}</p>}
+            <div className="sb-confirm-actions">
+              <button type="button" disabled={reprocessingBook} onClick={() => setReprocessCandidate(null)}>Annulla</button>
+              <button type="button" disabled={reprocessingBook} onClick={async () => {
+                setReprocessingBook(true); setReprocessError('');
+                try {
+                  const success = await onReprocessBook?.(reprocessCandidate.id);
+                  if (success) setReprocessCandidate(null);
+                  else setReprocessError('Rielaborazione non completata. Il libro precedente resta salvato.');
+                } catch(error) {
+                  setReprocessError(error.message || 'Rielaborazione non riuscita. Il libro precedente resta salvato.');
+                } finally { setReprocessingBook(false); }
+              }}>{reprocessingBook ? 'Rielaborazione…' : 'Sì, rielabora'}</button>
+            </div>
+          </div>
+        </div>
+      )}
       {deleteCandidate && (
         <div className="sb-confirm-overlay" role="dialog" aria-modal="true" aria-label="Conferma eliminazione">
           <div className="sb-confirm-dialog">
