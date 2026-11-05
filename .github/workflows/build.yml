@@ -134,8 +134,8 @@ jobs:
         run: node scripts/test-study-tools.mjs
       - name: Test Precision Core reductions and original-source traceability
         run: node scripts/test-precision-core.mjs
-      - name: Test LAB26 content quality and chapter completeness
-        run: node scripts/test-quality-guard-lab26.mjs
+      - name: Test LAB27 accessible reading and tiny letter counters
+        run: node scripts/test-lab27-simple-metrics.mjs
       - name: Test persistent study-help cache
         run: node scripts/test-study-help-cache-model.mjs
       - name: Test PWA shell
