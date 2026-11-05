@@ -385,6 +385,8 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
                   </div>
                 )}
                 {chapter.precisionContinuity?.issues?.length > 0 && <p className="study-quality-warning">Verificare la completezza del capitolo: sono state rilevate possibili anomalie.</p>}
+                {book.quality?.sourceIntegrity?.passed === false && <p className="study-quality-warning">Il controllo tra libro acquisito e libro ricostruito richiede una verifica delle parti segnalate.</p>}
+                {book.precisionEdition?.qualityGuard?.issueCount > 0 && <p className="study-quality-warning">Alcuni paragrafi sono stati conservati nell'originale perché la riduzione non superava i controlli.</p>}
               </section>
             </div>
           </article>
