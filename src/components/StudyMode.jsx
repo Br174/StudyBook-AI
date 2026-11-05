@@ -61,7 +61,7 @@ function InteractiveText({ text, glossary, chapterTerms, onPick }) {
   }
 
   return (
-    <p ref={ref} className="study-interactive-text"
+    <p ref={ref} className="study-interactive-text" style={{ whiteSpace: 'pre-line' }}
        onMouseUp={useSelection} onTouchEnd={() => window.setTimeout(useSelection, 0)}>
       {segments.map(({ text: segment, entry }, index) => entry ? (
         <button type="button" className="study-legal-term sb-lab10-glossary-term"
