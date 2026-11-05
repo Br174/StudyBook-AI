@@ -353,7 +353,7 @@ function ScannedBookPhoto({ blob }) {
   return url ? <img className="sb-scanned-book-cover-photo" src={url} alt="Fotografia reale della pagina scannerizzata" /> : null;
 }
 
-export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, generating = false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility, scannedPhoto = null }) {
+export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, generating = false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility, scannedPhoto = null, reduction = 10, onReductionChange, reductionMeta = null }) {
   const [exportVariant, setExportVariant] = useState('study');
   const [exportOpen, setExportOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -413,6 +413,31 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             : <button type="button" onClick={onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>}
           <button type="button" className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>Scarica libro</strong></button>
         </div>
+        {!isOriginalOnly && studyBook && (
+          <div className="sb-precision-control" style={{ padding: '14px 16px', marginTop: 10, border: '1px solid #dce6f1', borderRadius: 14 }}>
+            <label htmlFor="sb-precision-slider" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontWeight: 700 }}>
+              <span>Riduzione testo</span>
+              <span>{reduction === 'summary' ? 'Riassunto' : reduction + '%'}</span>
+            </label>
+            <input
+              id="sb-precision-slider" type="range" min="0" max="6" step="1"
+              value={Math.max(0, [0, 10, 20, 30, 40, 50, 'summary'].indexOf(reduction))}
+              onChange={(event) => onReductionChange?.([0, 10, 20, 30, 40, 50, 'summary'][Number(event.target.value)])}
+              aria-label="Regola la riduzione del contenuto"
+              style={{ width: '100%', margin: '13px 0 5px' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748b' }}>
+              <span>Originale</span><span>10 · 20 · 30 · 40 · 50%</span><span>Riassunto</span>
+            </div>
+            {reductionMeta && (
+              <p style={{ fontSize: 12, margin: '9px 0 0', color: '#64748b' }}>
+                Riduzione effettiva: {reductionMeta.achievedPercent}%.
+                {reductionMeta.targetReached ? ' ' : ' Alcune parti integrali sono state preservate: obiettivo non raggiunto completamente. '}
+                Il file originale resta invariato; telefono e stampa usano questa versione.
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       {isOriginalOnly && originalReading && originalRecord && (
