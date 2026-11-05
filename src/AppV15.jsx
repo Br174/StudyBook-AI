@@ -131,6 +131,7 @@ export default function AppV14() {
   const [summaryEditor, setSummaryEditor] = useState(null);
   const [refiningKey, setRefiningKey] = useState('');
   const [studyModeOpen, setStudyModeOpen] = useState(false);
+  const [libraryId, setLibraryId] = useState('');
   const precisionBook = useMemo(() => buildPrecisionEdition(studyBook, reduction), [studyBook, reduction]);
   function changeReduction(nextValue) {
     const next = normalizeReduction(nextValue);
@@ -172,7 +173,6 @@ export default function AppV14() {
   const [archiveBusy, setArchiveBusy] = useState(false);
 
   const [libraryItems, setLibraryItems] = useState([]);
-  const [libraryId, setLibraryId] = useState('');
   const [libraryBusy, setLibraryBusy] = useState(false);
   const [libraryInitialView, setLibraryInitialView] = useState('all');
   const coverQueueRef = useRef(new Set());
