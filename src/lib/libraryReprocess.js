@@ -1,7 +1,6 @@
 // Rebuild only the derived study edition from the stored source, in one safe commit.
 // All original bytes, scan assets, covers, names and library organization survive.
 import { getLibraryBook, saveLibraryBook } from './library.js';
-import { buildStudyBook } from './studyEngineV10.js';
 import { auditBookSourceCoverage } from './studyQualityGuard.js';
 
 export function hasReprocessSource(record) {
@@ -12,7 +11,7 @@ export function hasReprocessSource(record) {
 export async function reprocessStoredBook(id, {
   loadBook = getLibraryBook,
   saveBook = saveLibraryBook,
-  build = buildStudyBook,
+  build = null,
   audit = auditBookSourceCoverage,
   onProgress,
 } = {}) {
@@ -25,7 +24,10 @@ export async function reprocessStoredBook(id, {
   }
 
   // The source, not the former output, is the sole input to the new generation.
-  const generated = await build(record.sourceData, {
+  // Load the heavy engine only when actually running; isolated regression tests
+  // can inject their own builder without loading Android/Capacitor packages.
+  const builder = build || (await import('./studyEngineV10.js')).buildStudyBook;
+  const generated = await builder(record.sourceData, {
     level: record.studyBook.level || 'studio',
     preferAi: true,
     forceFresh: true,
