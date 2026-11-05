@@ -3,7 +3,7 @@
 const FIXED_ABBREVIATIONS = /\b(art|artt|co|comma|n|nr|dott|prof|pag|pagg|lett|cfr|ecc)\.(?=\s*(?:\d|[A-ZÀ-Ö]))/gi;
 const RESTORE_DOT = /∯/g;
 const CONJUNCTION_END = /\b(?:che|di|da|del|della|delle|dei|degli|il|lo|la|i|gli|le|un|una|per|con|su|in|a|tra|fra|quando|mentre|poiché|perché|se|ma|oppure|e|o|quale|quali|come|non|salvo|qualora|quindi|secondo|ovvero|invece)\s*[,;:]?$/i;
-const CONTEXT_START = /^(?:quest[oaie]|ciò|esso|essa|essi|esse|tale|tali|infatti|pertanto|inoltre|tuttavia|perciò|dunque|invece|in questo caso|di conseguenza|a tal riguardo|in tal senso)\b/i;
+const CONTEXT_START = /^(?:quest[oaie]|ciò|esso|essa|essi|esse|tale|tali|infatti|pertanto|inoltre|tuttavia|perciò|dunque|invece|in questo caso|in questo contesto|in tale contesto|di conseguenza|a tal riguardo|in tal senso|d'altra parte|per contro|viceversa)\b/i;
 const SOURCE_GAP = /(?:\uFFFD|\.{3,}|…|\[\s*(?:omissis|testo mancante)\s*\])/i;
 const PROTECTED = /\b(?:art(?:icolo)?\.?\s*\d+|comma\s+\d+|legge\s+n?\.?\s*\d+|decreto|regolamento|sentenza|non|salvo|eccetto|tranne|purché|solo se|a condizione|obblig|divieto|termine|entro\s+\d+)\b/i;
 const FORMULA = /(?:^|\s)[\p{L}][\w²³]*(?:\s*[=≈≠≤≥]\s*)\S/u;
@@ -102,6 +102,8 @@ export function checkReducedParagraph(original, text, { selectedUnits = [] } = {
     for (const issue of checkSentence(sentence).issues) issues.push(issue);
   }
   if (selectedUnits.some((unit) => !ws(original).includes(ws(unit.source)))) issues.push('untraceable-source');
+  const selectedIndexes = new Set(selectedUnits.map((unit) => unit.index));
+  if (selectedUnits.some((unit) => unit.dependent && !selectedIndexes.has(unit.index - 1))) issues.push('missing-antecedent');
   const protectedSource = splitCompleteSentences(original)
     .filter((sentence) => /^(?:art(?:icolo)?\.?\s*\d+|legge\s+n?\.?\s*\d+)/i.test(sentence) || FORMULA.test(sentence));
   for (const item of protectedSource) if (!ws(text).includes(ws(item))) issues.push('protected-text-lost');
