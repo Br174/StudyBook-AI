@@ -152,11 +152,11 @@ export function buildPrecisionEdition(book, reduction = 10) {
   }
 
   let resultingWords = 0;
+  const paragraphLookup = new Map(paragraphs.map((p) => [p.chapterIndex + ':' + p.paragraphIndex, p]));
   const chapters = chaptersIn.map((chapter, chapterIndex) => ({
     ...chapter,
     paragraphs: (chapter.paragraphs || []).map((paragraph, paragraphIndex) => {
-      const p = paragraphs.find((candidate) =>
-        candidate.chapterIndex === chapterIndex && candidate.paragraphIndex === paragraphIndex);
+      const p = paragraphLookup.get(chapterIndex + ':' + paragraphIndex);
       const selected = (p?.units || []).filter((unit) => p.selected.has(unit.index));
       const text = level === 0 ? p.source
         : selected.map((unit) => unit.value).join(level === 50 ? '\n• ' : ' ');
