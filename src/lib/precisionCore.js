@@ -2,7 +2,7 @@
 // source traceability and non-destructive quality gates.
 import {
   countWords, countText, buildMeaningUnits, checkReducedParagraph,
-  auditChapterContinuity,
+  auditChapterContinuity, hasLexicalSupport,
 } from './studyQualityGuard.js';
 
 export const REDUCTION_STEPS = [0, 10, 20, 30, 40, 50, 'summary'];
@@ -120,7 +120,7 @@ export function buildPrecisionEdition(book, reduction = 10) {
       }
       outputWords += countWords(finalText);
       const simple = String(paragraph.simpleSummary || '');
-      const simpleSafe = simple && checkReducedParagraph(item.source, simple).ok;
+      const simpleSafe = simple && checkReducedParagraph(item.source, simple).ok && hasLexicalSupport(item.source, simple);
       return {
         ...paragraph,
         original: paragraph.original || item.source,
