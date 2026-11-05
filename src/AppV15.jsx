@@ -24,6 +24,7 @@ import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
+import { reprocessStoredBook } from './lib/libraryReprocess.js';
 import { deliverBlob } from './lib/fileDelivery.js';
 import {
   clearScannerSessionStore,
@@ -753,6 +754,51 @@ export default function AppV14() {
       setError(err.message || 'Impossibile eliminare il libro.');
       return false;
     } finally {
+      setLibraryBusy(false);
+    }
+  }
+
+  async function reprocessLibraryItem(id) {
+    if (libraryBusy || generating || importing || scanProcessing) return false;
+    setLibraryBusy(true);
+    setGenerating(true);
+    setError('');
+    setStatus('Rielaborazione dal testo originale · preparo il libro…');
+    setProgress({done:0,total:0});
+    try {
+      const record = await reprocessStoredBook(id, {
+        onProgress(done, total, phase, meta) {
+          setProgress({done,total});
+          if (phase === 'resume') setStatus('Rielaborazione da capo · verifico i blocchi originali…');
+          else if (phase === 'ai' || phase === 'misto') setStatus('Rielaborazione · '+done+'/'+total+' paragrafi · controllo qualità');
+          else if (phase === 'locale') setStatus('Rielaborazione locale · '+done+'/'+total+' paragrafi');
+        },
+      });
+      // All context is installed only after the atomic book save succeeded.
+      setOriginalRecord(null);
+      setOriginalReading(false);
+      setLibraryId(record.id);
+      setFileName(record.fileName);
+      setDocumentData(record.sourceData);
+      setSourceFile(record.originalFile || null);
+      setStudyBook(record.studyBook);
+      setDsaMode(record.dsaMode !== false);
+      setLevel(record.studyBook?.level || 'studio');
+      setSelectedChapter(0);
+      setSourceEditor(null);
+      setSummaryEditor(null);
+      setStudyModeOpen(false);
+      setStatus('Rielaborazione completata · originale e copertina conservati');
+      await refreshLibrary(record.profileId || activeProfileId);
+      navigateTo('studio');
+      return true;
+    } catch (err) {
+      const message = err?.message || 'Rielaborazione non riuscita: libro precedente conservato.';
+      setError(message);
+      setStatus('Rielaborazione non completata · libro precedente conservato');
+      return false;
+    } finally {
+      setGenerating(false);
       setLibraryBusy(false);
     }
   }
@@ -1548,7 +1594,7 @@ export default function AppV14() {
 
       {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} onRenameCollection={renameScannerArchiveCollection} onRenamePhoto={renameScannerArchivePhoto} />}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onSetCoverFile={chooseLibraryCover} onGenerateCover={findAndApplyLibraryCover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onReprocessBook={reprocessLibraryItem} onSetCoverFile={chooseLibraryCover} onGenerateCover={findAndApplyLibraryCover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
       {activeScreen === 'studio' && (
         <StudioScreen
