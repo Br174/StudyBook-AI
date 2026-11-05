@@ -8,7 +8,8 @@ const SOURCE_GAP = /(?:\uFFFD|\.{3,}|…|\[\s*(?:omissis|testo mancante)\s*\])/i
 const PROTECTED = /\b(?:art(?:icolo)?\.?\s*\d+|comma\s+\d+|legge\s+n?\.?\s*\d+|decreto|regolamento|sentenza|non|salvo|eccetto|tranne|purché|solo se|a condizione|obblig|divieto|termine|entro\s+\d+)\b/i;
 const FORMULA = /(?:^|\s)[\p{L}][\w²³]*(?:\s*[=≈≠≤≥]\s*)\S/u;
 const FINITE_CLAIM = /\b(?:è|sono|si|ha|hanno|può|possono|deve|devono|prevede|richiede|stabilisce|costituisce|comporta|determina|disciplina|indica|afferma|consiste|deriva|risulta|esiste|esistono|si applica|si definisce|si distingue)\b/i;
-const FILLERS = [
+// Safe lexical compactions are cumulative and preserve every legal qualifier.
+const EDITS_10 = [
   [/\bè importante (?:sottolineare|evidenziare|ricordare) che\s*/gi, ''],
   [/\boccorre innanzitutto osservare che\s*/gi, ''],
   [/\bsi deve tenere presente che\s*/gi, ''],
@@ -16,13 +17,40 @@ const FILLERS = [
   [/\bal fine di\b/gi, 'per'],
   [/\bper quanto riguarda\b/gi, 'su'],
   [/\bin altre parole[,:\s]*/gi, ''],
+  [/\bsotto il profilo di\b/gi, 'per'],
 ];
+const EDITS_20 = [
+  [/\bnel caso in cui\b/gi,'se'],
+  [/\bnel momento in cui\b/gi,'quando'],
+  [/\bper il fatto che\b/gi,'perché'],
+  [/\bper mezzo di\b/gi,'con'],
+  [/\bè opportuno evidenziare che\s*/gi,''],
+  [/\bsi può osservare come\s*/gi,''],
+  [/\bsi deve precisare che\s*/gi,''],
+];
+const EDITS_30 = [
+  [/\bnell'ipotesi in cui\b/gi,'se'],
+  [/\bqualora\b/gi,'se'],
+  [/\bpertanto\b/gi,'quindi'],
+  [/\bconseguentemente\b/gi,'quindi'],
+  [/\bin relazione a\b/gi,'su'],
+];
+const EDITS_40 = [
+  [/\bsi caratterizza per la presenza di\b/gi,'presenta'],
+  [/\bè denominato\b/gi,'è chiamato'],
+  [/\bè denominata\b/gi,'è chiamata'],
+];
+const QUALIFIERS = /\b(?:non|senza|salvo|eccetto|tranne|purché|soltanto|solo|necessari[oaie]|obbligatori[oaie]|vietat[oaie])\b/gi;
+function qualifierTokens(text) {
+  return [...String(text || '').toLocaleLowerCase('it-IT').matchAll(QUALIFIERS)].map((m)=>m[0]).sort().join('|');
+}
 const ws = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 export function countLetters(text) {
   return (String(text || '').match(/\p{L}/gu) || []).length;
 }
 export function countWords(text) {
-  return (ws(text).match(/\S+/g) || []).length;
+  // Ignore standalone layout bullets and punctuation (•, —) in counts.
+  return (String(text || '').match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu) || []).length;
 }
 export function countSentences(text) {
   return splitCompleteSentences(text).length;
@@ -61,15 +89,35 @@ export function checkSentence(text) {
   if (source.length >= 35 && !/[.!?;:»”"')\]]$/.test(source)) issues.push('unterminated');
   return { valid: issues.length === 0, issues };
 }
-function removeIntroductoryFiller(text) {
-  let result = ws(text);
-  for (const [pattern, replacement] of FILLERS) result = result.replace(pattern, replacement);
-  return ws(result).replace(/^[,;:\s]+/, '');
+/** Shorten sentences with vetted edits; never cut after commas or break a negation.
+ * When no safe compression exists, report the unmet target instead of
+ * manufacturing a shorter meaning. This engine is rule-based, not semantic AI.
+ */
+function compactSentence(source, level) {
+  if (level === 0) return source;
+  let result = ws(source);
+  const n = level === 'summary' ? 70 : Number(level);
+  const groups = [EDITS_10, ...(n >= 20 ? [EDITS_20] : []),
+    ...(n >= 30 ? [EDITS_30] : []), ...(n >= 40 ? [EDITS_40] : [])];
+  for (const group of groups) for (const [pattern, substitute] of group) {
+    // Accented words at the beginning are not matched reliably by ASCII \\b;
+    // edits without a safe Unicode boundary are omitted rather than guessed.
+    result = result.replace(pattern, substitute);
+  }
+  result = ws(result).replace(/^[,;:\s]+/, '');
+  if (n >= 50 && !qualifierTokens(source)) {
+    const match = result.match(/^(?:(?:La|Il|Lo|L'|L’|Un|Una)\s+)?([\p{L}][\p{L}'’\s-]{3,44})\s+(?:è\s+(?:un|una|uno)\s+|si definisce\s+)([^.!?]{14,220}[.!?])$/iu);
+    if (match && !/\b(?:che|quando|perché|se|mentre|afferma|secondo|per cui)\b/i.test(match[1]))
+      result = match[1].trim() + ': ' + match[2].trim();
+  }
+  if (qualifierTokens(source) !== qualifierTokens(result)) return source;
+  if (!checkSentence(result).valid) return source;
+  return result;
 }
 function meaningScore(text, index) {
   let score = 1 / (1 + index * .05);
   if (FINITE_CLAIM.test(text)) score += 4;
-  if (PROTECTED.test(text)) score += 6;
+  if (PROTECTED.test(text)) score += 3;
   if (FORMULA.test(text)) score += 8;
   if (/\d/.test(text)) score += 2;
   if (/^(?:in questo capitolo|vedremo|in conclusione si parlerà)/i.test(text)) score -= 5;
@@ -80,14 +128,15 @@ export function buildMeaningUnits(text, level = 10) {
   const sentences = splitCompleteSentences(text);
   return sentences.map((source, index) => {
     const immutable = /^(?:art(?:icolo)?\.?\s*\d+|legge\s+n?\.?\s*\d+)/i.test(source) || FORMULA.test(source);
-    const wording = immutable || level === 0 ? source : removeIntroductoryFiller(source);
+    const wording = immutable || level === 0 ? source : compactSentence(source, level);
     const sourceCheck = checkSentence(source);
     const rewrittenCheck = checkSentence(wording);
     // If a rewrite makes an already-complete sentence invalid, restore it verbatim.
     const value = sourceCheck.valid && !rewrittenCheck.valid ? source : wording;
     return {
       index, source, value, immutable, score: meaningScore(source, index),
-      mandatory: immutable || (level !== 'summary' && PROTECTED.test(source)),
+      // Negation/exception => important, not an immutable whole sentence.
+      mandatory: immutable,
       dependent: CONTEXT_START.test(source),
       problematic: !checkSentence(value).valid,
     };
