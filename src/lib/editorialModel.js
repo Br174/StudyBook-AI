@@ -5,6 +5,10 @@ export const EDITORIAL_MODEL_VERSION = 2;
 function clean(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
+function cleanStudyText(value) {
+  // Schematic reductions use real line breaks. Preserve them in the reader and exported book.
+  return String(value || '').replace(/[ \t]+/g, ' ').replace(/\n[ \t]*/g, '\n').trim();
+}
 
 export function editorialVariantLabel(variant = 'study') {
   if (variant === 'simple') return 'In parole semplici';
@@ -15,12 +19,12 @@ export function editorialVariantLabel(variant = 'study') {
 export function editorialParagraphText(paragraph, { variant = 'study', dsaMode = false } = {}) {
   if (!paragraph) return '';
   if (variant === 'simple') {
-    return clean(paragraph.simpleSummary || paragraph.summary || paragraph.dsaSummary || paragraph.original);
+    return cleanStudyText(paragraph.simpleSummary || paragraph.summary || paragraph.dsaSummary || paragraph.original);
   }
   const value = dsaMode
     ? (paragraph.dsaSummary || paragraph.summary)
     : (paragraph.summary || paragraph.dsaSummary);
-  return clean(value || paragraph.original);
+  return cleanStudyText(value || paragraph.original);
 }
 
 export function editorialGlossary(paragraphs = []) {
