@@ -3,10 +3,10 @@ function cleanText(value) {
 }
 
 function splitSentences(value) {
-  const text = cleanText(value);
+  const text = cleanText(value).replace(/\b(art|co|n)\.(?=\s*\d)/gi, '$1§');
   if (!text) return [];
   return (text.match(/[^.!?]+(?:[.!?]+|$)/g) || [text])
-    .map(cleanText)
+    .map((sentence) => cleanText(sentence.replace(/§/g, '.')))
     .filter((sentence) => sentence.length >= 18);
 }
 
@@ -31,6 +31,11 @@ function glossaryEntries(chapter = {}) {
       if (!term || !definition) continue;
       const original = cleanText(paragraph.original || '');
       if (original && !original.toLowerCase().includes(term.toLowerCase())) continue;
+      if (original) {
+        const sourceWords = new Set(original.toLowerCase().split(/[^a-zà-ÿ0-9]+/).filter((w) => w.length >= 4));
+        const definitionWords = [...new Set(definition.toLowerCase().split(/[^a-zà-ÿ0-9]+/).filter((w) => w.length >= 4))];
+        if (definitionWords.length >= 2 && definitionWords.filter((w) => sourceWords.has(w)).length < 2) continue;
+      }
       pushUnique(entries, seen, { term, definition, paragraphIndex, sourceChapterIndex: paragraph.sourceChapterIndex ?? 0 }, term);
     }
   }
@@ -208,7 +213,7 @@ export function buildOralQuestions(chapter = {}, limit = 24) {
       answer: entry.definition,
       paragraphIndex: entry.paragraphIndex,
     }, `term::${entry.term}`);
-    if (questions.length >= limit) return questions;
+    if (questions.length >= limit * 5) break;
   }
 
   for (const [paragraphIndex, paragraph] of (chapter.paragraphs || []).entries()) {
@@ -219,10 +224,10 @@ export function buildOralQuestions(chapter = {}, limit = 24) {
     pushUnique(questions, seen, { question, answer: points.join(' '), paragraphIndex,
       sourceChapterIndex: paragraph.sourceChapterIndex ?? 0, sourcePageStart: paragraph.sourcePageStart ?? null,
     }, 'paragraph::' + paragraphIndex + '::' + points[0]);
-    if (questions.length >= limit) return questions;
+    if (questions.length >= limit * 5) break;
   }
 
-  return questions;
+  return balancedSelect(questions, limit);
 }
 
 function fallbackKeywords(paragraph = {}, limit = 6) {
@@ -242,14 +247,16 @@ function fallbackKeywords(paragraph = {}, limit = 6) {
 }
 
 export function buildConceptMap(chapter = {}, limit = 24) {
-  return (chapter.paragraphs || []).slice(0, limit).map((paragraph, paragraphIndex) => {
+  return balancedSelect((chapter.paragraphs || []).map((paragraph, paragraphIndex) => {
     const keywords = fallbackKeywords(paragraph, 6);
     const points = paragraphPoints(paragraph, 3);
     return {
       title: ((paragraphPoints(paragraph, 1)[0] || '').match(/^(.{4,60}?)\s+(?:è|sono|si definisce|prevede|richiede|disciplina)\b/i)?.[1]) || fallbackKeywords(paragraph, 1)[0] || cleanText(paragraph.sourceSection) || `Passaggio ${paragraphIndex + 1}`,
       paragraphIndex,
+      sourceChapterIndex: paragraph.sourceChapterIndex ?? 0,
+      sourcePageStart: paragraph.sourcePageStart ?? null,
       keywords,
       points,
     };
-  }).filter((node) => node.keywords.length || node.points.length);
+  }).filter((node) => node.keywords.length || node.points.length), limit);
 }
