@@ -19,10 +19,10 @@ export function normalizeReduction(value) {
   const number = Number(value);
   return [0, 10, 20, 30, 40, 50].includes(number) ? number : 10;
 }
-function joinUnits(units, level) {
-  const text = units.map((unit) => unit.value);
-  if (level === 50) return text.join('\n• ');
-  return text.join(' ');
+function joinUnits(units) {
+  // The 50% edition remains prose. An automatically inserted bullet on every
+  // sentence is not the original book's paragraph structure.
+  return units.map((unit) => unit.value).join(' ');
 }
 function sourceText(paragraph) {
   return String(paragraph?.original || paragraph?.summary || '');
@@ -63,36 +63,37 @@ function selectWithDependencies(item, unit) {
 function computeSelection(items, budget, level) {
   if (level === 0) return;
   let used = 0;
-  // Essential laws, formulas and legal qualifiers remain complete.
-  for (const item of items) for (const unit of item.units) {
-    if (!unit.mandatory) continue;
-    const required = selectWithDependencies(item, unit);
-    if (!required) continue;
-    for (const selected of required) used += reserveItem(item, selected);
-  }
-  // Do not create empty paragraphs or strip the only statement of a chapter.
+
+  // Narration-first selection: each paragraph is a single CONTIGUOUS
+  // chronological passage from its beginning, never arbitrary scored
+  // sentences spliced together. A late mandatory exception retains every
+  // preceding statement needed to read it in its proper original context.
   for (const item of items) {
-    if (item.selected.size || !item.units.length) continue;
-    const available = item.units.filter((unit) => !unit.problematic && (!unit.dependent || unit.index > 0));
-    const best = [...(available.length ? available : item.units)].sort((a, b) => b.score - a.score)[0];
-    const required = selectWithDependencies(item, best);
-    if (!required) {
-      used += reserveItem(item, item.units[0]); // The original is flagged if unsafe.
-    } else for (const selected of required) used += reserveItem(item, selected);
+    if (!item.units.length) continue;
+    const lastProtected = item.units.reduce((last, unit) => unit.mandatory ? unit.index : last, -1);
+    const lastRequired = Math.max(0, lastProtected);
+    for (let i = 0; i <= lastRequired; i++) used += reserveItem(item, item.units[i]);
   }
 
-  const candidates = items.flatMap((item) => item.units
-    .filter((unit) => !item.selected.has(unit.index) && !unit.problematic)
-    .map((unit) => ({ item, unit })));
-  candidates.sort((a, b) => b.unit.score - a.unit.score ||
-    a.item.chapterIndex - b.item.chapterIndex || a.unit.index - b.unit.index);
-  for (const { item, unit } of candidates) {
-    const necessary = selectWithDependencies(item, unit);
-    if (!necessary) continue;
-    const cost = necessary.reduce((sum, selected) => sum + countLetters(selected.value), 0);
-    if (used + cost <= budget) {
-      for (const selected of necessary) used += reserveItem(item, selected);
-    }
+  // Add only the NEXT source sentence of each paragraph. This maintains
+  // original word order and prohibits gaps between selected sentences.
+  // If the budget is impossible because protected passages are too long,
+  // the truthful achieved reduction is reported rather than cutting them.
+  for (;;) {
+    const candidates = items.flatMap(item => {
+      const nextIndex = item.selected.size;
+      const next = item.units[nextIndex];
+      if (!next || next.problematic) return [];
+      return [{item, unit:next, cost:countLetters(next.value)}];
+    });
+    candidates.sort((left,right) =>
+      right.unit.score - left.unit.score ||
+      left.item.chapterIndex - right.item.chapterIndex ||
+      left.item.paragraphIndex - right.item.paragraphIndex
+    );
+    const chosen = candidates.find(candidate => used + candidate.cost <= budget);
+    if (!chosen) break;
+    used += reserveItem(chosen.item, chosen.unit);
   }
 }
 
