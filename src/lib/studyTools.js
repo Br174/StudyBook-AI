@@ -186,7 +186,7 @@ export function buildConceptMap(chapter = {}, limit = 24) {
       ...(paragraph.glossary || []).map((entry) => clean(entry?.term)),
     ].filter((word) => word && clean(paragraph.original).toLowerCase().includes(word.toLowerCase()));
     if (!facts.length && !keywordSources.length) return null;
-    const keywords = unique(keywordSources.map((v) => ({value:v})), 6, (v) => v.value).map((v) => v.value);
+    const keywords = unique(keywordSources.map((v) => ({ value: clean(v).replace(/^(?:il|lo|la|le|i|gli|l['’]|un|una)\s*/i, '').toLocaleLowerCase('it-IT') })), 6, (v) => v.value).map((v) => v.value);
     const points = facts.map((f) => f.answer).slice(0, 3);
     return {
       title: keywords[0] || facts[0].subject, keywords, points, paragraphIndex,
