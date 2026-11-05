@@ -2,7 +2,7 @@
 // source traceability and non-destructive quality gates.
 import {
   countWords, countText, countLetters, buildMeaningUnits, checkReducedParagraph,
-  auditChapterContinuity, hasLexicalSupport,
+  auditChapterContinuity, auditNarrativeSource, hasLexicalSupport,
 } from './studyQualityGuard.js';
 import { explainInSimpleWords } from './simpleLanguage.js';
 
@@ -119,11 +119,15 @@ export function buildPrecisionEdition(book, reduction = 10) {
       const units = item.units.filter((unit) => item.selected.has(unit.index));
       const candidate = level === 0 ? item.source : joinUnits(units, level);
       const audit = checkReducedParagraph(item.source, candidate, { selectedUnits: units });
-      const fallback = !audit.ok;
+      const sourceAudit = auditNarrativeSource(item.source);
+      // If OCR/text segmentation is already broken, avoid silently presenting a
+      // newly shortened fragment as verified academic prose.
+      const fallback = !audit.ok || !sourceAudit.ok;
+      const auditReasons = [...audit.issues,...sourceAudit.problems.map(problem=>'source-'+problem)];
       const finalText = fallback ? item.source : candidate;
       if (fallback) {
         fallbackCount += 1;
-        issues.push({ chapterIndex, paragraphIndex, problems: audit.issues });
+        issues.push({ chapterIndex, paragraphIndex, problems: auditReasons });
       }
       outputWords += countWords(finalText);
       outputLetters += countLetters(finalText);
@@ -137,9 +141,10 @@ export function buildPrecisionEdition(book, reduction = 10) {
         dsaSummary: finalText,
         simpleSummary: simpleText,
         precisionAudit: {
-          coherent: audit.ok,
+          coherent: audit.ok && sourceAudit.ok,
           fallbackOriginal: fallback,
-          reasons: audit.issues,
+          sourceNeedsReview: !sourceAudit.ok,
+          reasons: auditReasons,
           sourceWords: countWords(item.source),
           outputWords: countWords(finalText),
           selectedUnits: units.length,
