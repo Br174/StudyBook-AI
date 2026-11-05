@@ -108,6 +108,30 @@ function protectedCovered(item, target) {
   return haystack.includes(needle);
 }
 
+
+// Qualifiers are scoped to their factual assertion, not merely counted globally.
+// "A non è B; C è D" and "A è B; C non è D" are NOT equivalent.
+function qualifierSet(value) {
+  return new Set((normalizeFidelityText(value).toLocaleLowerCase('it-IT')
+    .match(/\b(?:non|salvo|eccetto|tranne|purché|purche|solo se|a condizione che|esclusivamente|di regola)\b/g) || []));
+}
+function qualifierMismatches(source, target) {
+  const outputs = splitSemanticUnits(target);
+  return splitSemanticUnits(source).flatMap((unit) => {
+    const sourceQualifiers = qualifierSet(unit);
+    const sourceWords = [...new Set(contentWords(unit))];
+    if (!sourceWords.length) return [];
+    const best = outputs.map((text) => ({
+      text, overlap: sourceWords.filter((word) => new Set(contentWords(text)).has(word)).length / sourceWords.length,
+    })).sort((a, b) => b.overlap - a.overlap)[0];
+    if (!best || best.overlap < .45) return [];
+    const outputQualifiers = qualifierSet(best.text);
+    const equal = sourceQualifiers.size === outputQualifiers.size &&
+      [...sourceQualifiers].every((token) => outputQualifiers.has(token));
+    return equal ? [] : [{ source: unit, generated: best.text }];
+  });
+}
+
 export function auditFidelity(source, studyText) {
   const original = normalizeFidelityText(source);
   const generated = normalizeFidelityText(studyText);
@@ -116,6 +140,7 @@ export function auditFidelity(source, studyText) {
   const missingConcepts = inventory.filter((unit) => !unitCovered(unit.text, generated));
   const missingHighValue = missingConcepts.filter((unit) => unit.protected);
   const missingProtected = protectedItems.filter((item) => !protectedCovered(item, generated));
+  const bindingErrors = qualifierMismatches(original, generated);
 
   const covered = inventory.length - missingConcepts.length;
   const coveragePercent = inventory.length ? Math.round((covered / inventory.length) * 1000) / 10 : 100;
@@ -127,6 +152,7 @@ export function auditFidelity(source, studyText) {
 
   const passed = missingProtected.length === 0
     && missingHighValue.length === 0
+    && bindingErrors.length === 0
     && coveragePercent >= 82;
 
   return {
@@ -140,6 +166,7 @@ export function auditFidelity(source, studyText) {
     missingConcepts,
     missingHighValue,
     missingProtected,
+    qualifierMismatches: bindingErrors,
   };
 }
 
