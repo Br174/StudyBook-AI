@@ -36,6 +36,29 @@ for(const level of REDUCTION_STEPS){
 }
 for(let i=1;i<all.length-1;i++) if(all[i].outputLetters>all[i-1].outputLetters)
  console.log('REGRESSION: stronger level produces longer content',all[i-1].level,all[i].level);
+
+const samples = [
+  ["every-negative-protected",Array.from({length:8},(_,i) =>
+    'La disposizione non attribuisce automaticamente il diritto quando manca il requisito essenziale numero '+(i+1)+'.').join(' ')],
+  ["single-unbroken-sentence",
+    'Il diritto moderno sviluppa una spiegazione articolata del rapporto fra la condotta e il criterio di imputazione e considera la struttura dell’ordinamento e il modello di distribuzione delle competenze e il rilievo delle conseguenze secondo differenti impostazioni interpretative che orientano la valutazione delle situazioni concrete e l’analisi dei singoli casi fino alla scelta della disciplina applicabile.'],
+  ["broken-source",
+    'Il diritto è la regola e il fondamento del sistema. La disciplina si applica secondo le condizioni... La norma non stabilisce un criterio differente.'],
+  ["source-with-qualifiers",
+    'La norma generale si applica alla situazione. Salvo i casi speciali, la regola non modifica gli effetti stabiliti. La competenza è definita dal provvedimento. Il termine è calcolato secondo il sistema previsto.'],
+];
+for (const [name,sourceText] of samples) {
+ const fixture={chapters:[{title:'Caso difficile',paragraphs:[{original:sourceText}]}]};
+ const results=REDUCTION_STEPS.map(level=>{
+   const edition=buildPrecisionEdition(fixture,level);
+   const paragraph=edition.chapters[0].paragraphs[0];
+   return {level,chars:countLetters(paragraph.summary),reductionWords:edition.precisionEdition.achievedPercent,
+       fallback:paragraph.precisionAudit.fallbackOriginal,
+       audit:paragraph.precisionAudit.reasons};
+ });
+ console.log('EDGE '+name+' '+JSON.stringify(results));
+}
+
 console.log('DIAGNOSTIC COMPLETE');
 
 // LAB28 diagnostic executed with the branch-pinned CI workflow.
