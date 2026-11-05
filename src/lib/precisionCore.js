@@ -47,11 +47,13 @@ function reserveItem(item, unit) {
 }
 function selectWithDependencies(item, unit) {
   const needed = [unit];
-  // Never display a dangling pronoun or contrast without its direct antecedent.
-  if (unit.dependent) {
-    const previous = item.units[unit.index - 1];
-    if (previous) needed.unshift(previous);
-    else return null;
+  // Follow the complete antecedent chain, rather than including a single orphaned connector.
+  let current = unit;
+  while (current.dependent) {
+    const previous = item.units[current.index - 1];
+    if (!previous) return null;
+    needed.unshift(previous);
+    current = previous;
   }
   return needed.filter((part) => !item.selected.has(part.index));
 }
