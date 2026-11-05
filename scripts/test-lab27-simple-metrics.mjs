@@ -49,9 +49,9 @@ assert.ok(s.includes('fattispecie (situazione descritta dalla norma)'), 'Spiegar
 assert.ok(countLetters('Caffè 123') === 5, 'Conta soltanto le lettere, con accenti');
 const reader = readFileSync(new URL('../src/components/StudyMode.jsx',import.meta.url),'utf8');
 assert.ok(!reader.includes('study-quality-table'), 'Nessuna tabella gigantesca');
-assert.ok(reader.includes('study-paragraph-letter-count'), 'Una sola linea dopo ogni paragrafo');
+assert.ok(reader.includes('study-chapter-letter-count') && !reader.includes('study-paragraph-letter-count'), 'La statistica resta una sola volta a fine capitolo, senza spezzare la narrazione');
 assert.ok(reader.includes('Originale:') && reader.includes('Rielaborato:') && reader.includes('Risparmiate:'));
 const pdf = readFileSync(new URL('../src/lib/exportersV12.js',import.meta.url),'utf8');
 assert.ok(pdf.includes('pageLetterStats') && pdf.includes('addPageLetters'), 'PDF con conta per foglio fisico');
 assert.ok(pdf.includes('Originale:') && pdf.includes('Rielaborato:') && pdf.includes('Risparmiate:'));
-console.log('LAB27: parole semplici senza nuova sintesi; tre contatori per paragrafo; footer PDF verificati');
+console.log('LAB27/30: parole semplici senza nuova sintesi; tre contatori a fine capitolo; footer PDF verificati');
