@@ -377,7 +377,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       </section>
     );
   }
-  const fidelity = studyBook?.quality?.fidelityGate;
+  const fidelity = studyBook?.quality?.sourceFidelityGate || studyBook?.quality?.fidelityGate;
   const sourceChapters = sourceData?.chapters || [];
   const canPrepare = sourceChapters.some(chapter => chapter.paragraphs?.length);
   return (
