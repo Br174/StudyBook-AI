@@ -1603,7 +1603,7 @@ export default function AppV14() {
 
       {studyModeOpen && precisionBook && (
         <StudyMode
-          book={precisionBook} bookTitle={fileName} initialMode={studyEntryMode}
+          book={precisionBook} sourceBook={studyBook} bookTitle={fileName} initialMode={studyEntryMode}
           chapterIndex={selectedChapter} onChapterChange={setSelectedChapter}
           dsaMode={dsaMode} accessibility={accessibility} onClose={() => setStudyModeOpen(false)}
         />
