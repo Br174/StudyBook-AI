@@ -174,3 +174,18 @@ export function auditBookSourceCoverage(sourceDocument = {}, rebuilt = {}) {
     semanticCertification: false,
   };
 }
+
+/** Guard for optional AI-generated "In parole semplici" text.
+ * A strong lexical mismatch requires reverting to the extractive study edition.
+ * Synonyms remain an unresolved limitation, not proof of falsehood.
+ */
+export function hasLexicalSupport(source, proposed) {
+  const keyWords = (v) => ws(v).toLocaleLowerCase('it-IT')
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((t) => t.length >= 5);
+  const a = new Set(keyWords(source));
+  const b = [...new Set(keyWords(proposed))];
+  if (!b.length) return false;
+  const supported = b.filter((word) => a.has(word)).length;
+  return supported / b.length >= 0.75;
+}
