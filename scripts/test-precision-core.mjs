@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { REDUCTION_STEPS, buildPrecisionEdition, countWords } from '../src/lib/precisionCore.js';
 import { buildFlashcards, buildQuiz, buildOralQuestions } from '../src/lib/studyTools.js';
+import { auditFidelity } from '../src/lib/fidelityEngine.js';
+import { auditDocumentStructure } from '../src/lib/precisionDocumentAudit.js';
 
 const discursive = [
   'È importante sottolineare che il diritto soggettivo è una posizione giuridica riconosciuta dalla legge.',
@@ -47,4 +49,16 @@ assert.ok(flashcards.every((f) => f.kind === 'term' || book.chapters[0].paragrap
 const empty = { paragraphs: [{ original: 'Questo testo serve solo come introduzione. Non contiene definizioni.', summary: 'Sintesi.', glossary: [] }] };
 assert.equal(buildQuiz(empty).length, 0, 'Nessun quiz inventato per contenuti inadeguati');
 assert.equal(buildOralQuestions(empty).length, 0, 'Nessuna interrogazione generica');
+const oppositeSource = 'Il debitore non può esercitare il diritto. Il creditore può esercitare il diritto.';
+const oppositeWrong = 'Il debitore può esercitare il diritto. Il creditore non può esercitare il diritto.';
+const oppositeAudit = auditFidelity(oppositeSource, oppositeWrong);
+assert.equal(oppositeAudit.passed, false, 'Negazione spostata tra le frasi = errore semantico');
+assert.ok(oppositeAudit.qualifierMismatches.length >= 1);
+const structural = auditDocumentStructure({
+  pages: [{ pageNumber: 1, text: 'Capitolo introduttivo' }, { pageNumber: 3, text: '�testo danneggiato' }],
+  chapters: [{ title: 'Capitolo 1', paragraphs: ['Testo.'] }],
+});
+assert.ok(structural.warningCount >= 2, 'Segnalare salti di pagina e OCR sospetto');
+assert.equal(structural.certifiedCorrect, false, 'Nessun falso certificato di correttezza');
+
 console.log('Precision Core: OK', { reduction: editions[5].precisionEdition, questions: flashcards.length });
