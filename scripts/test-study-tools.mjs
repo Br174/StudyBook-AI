@@ -6,6 +6,7 @@ const chapter = {
   paragraphs: [
     {
       sourceSection: 'Definizioni',
+      original: 'La norma è una regola che disciplina un comportamento. La sanzione è la conseguenza prevista per una violazione.',
       glossary: [
         { term: 'Norma', definition: 'Regola che disciplina un comportamento.' },
         { term: 'Sanzione', definition: 'Conseguenza prevista per una violazione.' },
@@ -16,6 +17,7 @@ const chapter = {
     },
     {
       sourceSection: 'Principi',
+      original: 'Il principio costituisce un criterio generale che orienta più regole. I principi sono criteri che guidano l’interpretazione.',
       glossary: [
         { term: 'Principio', definition: 'Criterio generale che orienta più regole.' },
       ],
@@ -25,6 +27,7 @@ const chapter = {
     },
     {
       sourceSection: 'Eccezioni',
+      original: 'L’eccezione è un caso che deroga alla regola generale. La deroga si applica alle condizioni previste.',
       glossary: [
         { term: 'Eccezione', definition: 'Caso che deroga alla regola generale.' },
       ],
@@ -34,6 +37,7 @@ const chapter = {
     },
     {
       sourceSection: 'Applicazione',
+      original: 'L’applicazione è il collegamento fra una regola e il caso concreto. Il procedimento richiede la verifica delle condizioni previste.',
       glossary: [],
       keyPoints: ['L’applicazione collega regola e caso concreto.'],
       remember: ['Verificare sempre condizioni e conseguenze.'],
@@ -54,10 +58,15 @@ assert.equal(map.length, 4, 'La mappa deve rappresentare i paragrafi utili.');
 
 for (const question of quiz) {
   assert.ok(question.correctIndex >= 0 && question.correctIndex < question.options.length);
-  assert.equal(question.options[question.correctIndex], question.explanation);
+  if (question.options.length === 2 && question.options.includes('Vero')) {
+    assert.ok(['Vero', 'Falso'].includes(question.options[question.correctIndex]));
+    assert.ok(question.explanation.length >= 20);
+  } else assert.equal(question.options[question.correctIndex], question.explanation);
 }
 
-assert.match(flashcards[0].front, /significa/i);
+assert.ok(flashcards.every((card) => /\?$/.test(card.front)), 'Ogni flashcard deve avere una vera domanda.');
+assert.ok(flashcards.every((card) => !/concetto principale|Come viene descritto/i.test(card.front)));
+assert.ok(flashcards.every((card) => chapter.paragraphs.some((paragraph) => paragraph.original.includes(card.back)) || card.kind === 'glossary'));
 assert.ok(map.some((node) => node.keywords.includes('principio')));
 
 console.log(`Study tools: OK · flashcards=${flashcards.length} · quiz=${quiz.length} · oral=${oral.length} · map=${map.length}`);
