@@ -55,7 +55,7 @@ function buildFact(sentence, paragraph, paragraphIndex, sentenceIndex) {
       else question = 'Che cosa si intende per «' + subject + '» secondo il libro?';
     }
   }
-  if (predicate.length < 14 || /(?:e|che|di|a|per|non|con|il|la|in|salvo|mentre)$/i.test(predicate)) return null;
+  if (predicate.length < 14 || /\b(?:e|che|di|a|per|non|con|il|la|in|salvo|mentre)$/i.test(predicate)) return null;
   return {
     question, answer: sentence, subject, predicate, kind,
     paragraphIndex, sentenceIndex,
