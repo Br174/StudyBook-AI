@@ -1,191 +1,187 @@
-// StudyBook Precision Core V1. Source-first, zero external services.
-// No text is fabricated: each output clause is extracted from the original.
+// StudyBook Precision Core LAB26: cohesive meaning units, global length target,
+// source traceability and non-destructive quality gates.
+import {
+  countWords, countText, buildMeaningUnits, checkReducedParagraph,
+  auditChapterContinuity,
+} from './studyQualityGuard.js';
+
 export const REDUCTION_STEPS = [0, 10, 20, 30, 40, 50, 'summary'];
 export const REDUCTION_LABELS = {
   0: 'Originale', 10: 'Pulizia leggera', 20: 'Testo diretto',
-  30: 'Studio sintetico', 40: 'Studio essenziale',
-  50: 'Studio schematico', summary: 'Riassunto',
+  30: 'Studio sintetico', 40: 'Studio essenziale', 50: 'Studio schematico',
+  summary: 'Riassunto',
 };
+export { countWords };
 
 export function normalizeReduction(value) {
   if (value === 'summary') return value;
   const number = Number(value);
   return [0, 10, 20, 30, 40, 50].includes(number) ? number : 10;
 }
-
-const IMPORTANT = /\b(?:definizion|si definisce|consiste|prevede|richiede|obblig|diritto|divieto|salvo|eccett|non |solo se|qualora|a condizione|presuppost|requisit|conseguenz|determina|comporta|causa|effetto|termine|scadenza|teorema|formula|articolo|comma|legge|decreto|sentenza)\b/i;
-const PROTECTED_REFERENCE = /\b(?:art(?:icolo)?\.?\s*\d+|comma\s*\d+|legge\s+n?\.?\s*\d+|decreto\s+\d+|\d+\s*(?:giorni|mesi|anni)|\d+(?:[.,]\d+)?%)\b/i;
-const QUALIFIER = /\b(?:non|salvo|eccetto|tranne|purché|purche|a condizione che|solo se|esclusivamente)\b/i;
-const FILLER = [
-  [/\b(?:è importante (?:sottolineare|evidenziare|ricordare) che)\s*/gi, ''],
-  [/\b(?:occorre innanzitutto osservare che)\s*/gi, ''],
-  [/\b(?:si deve tenere presente che)\s*/gi, ''],
-  [/\b(?:in considerazione del fatto che)\b/gi, 'poiché'],
-  [/\b(?:al fine di)\b/gi, 'per'],
-  [/\b(?:per quanto riguarda)\b/gi, 'su'],
-  [/\b(?:in altre parole)\b/gi, ''],
-  [/\b(?:a questo punto è possibile)\b/gi, 'si può'],
-];
-
-export function countWords(value) {
-  return (String(value || '').match(/[^\s•]+/g) || []).length;
+function joinUnits(units, level) {
+  const text = units.map((unit) => unit.value);
+  if (level === 50) return text.join('\n• ');
+  return text.join(' ');
 }
-function clean(value) {
-  return String(value || '').replace(/\u00ad/g, '').replace(/\s+/g, ' ').trim();
+function sourceText(paragraph) {
+  return String(paragraph?.original || paragraph?.summary || '');
 }
-function splitUnits(text) {
-  // Preserve a statute quoted as a paragraph and every stand-alone formula.
-  const raw = String(text || '');
-  if (!raw.trim()) return [];
-  const lines = raw.split(/\n+/).map(clean).filter(Boolean);
-  return lines.flatMap((line) => {
-    if (/^(?:art(?:icolo)?\.?\s*\d+|legge\s+n?\.?\s*\d+)\b/i.test(line)
-        || /(?:^|\s)[A-Za-zΑ-ω][\w²³]*\s*[=≈≠≤≥]\s*\S/.test(line)) {
-      return [{ text: line, immutable: true }];
-    }
-    // Do not split numbers or abbreviations such as art. 3, comma 2.
-    const protectedLine = line.replace(/\b(art|co|n)\.(?=\s*\d)/gi, '$1§');
-    return (protectedLine.match(/[^.!?;]+(?:[.!?;]+|$)/g) || [protectedLine])
-      .map((part) => clean(part.replace(/§/g, '.')))
-      .filter(Boolean)
-      .map((text) => ({ text, immutable: false }));
-  });
+function buildRequests(book, level) {
+  const items = [], chapters = Array.isArray(book?.chapters) ? book.chapters : [];
+  let sourceWords = 0;
+  chapters.forEach((chapter, chapterIndex) => (chapter.paragraphs || []).forEach((paragraph, paragraphIndex) => {
+    const source = sourceText(paragraph);
+    sourceWords += countWords(source);
+    items.push({
+      chapterIndex, paragraphIndex, source,
+      units: buildMeaningUnits(source, level),
+      selected: new Set(), fallback: false,
+    });
+  }));
+  return { items, sourceWords };
 }
-function simplifyFiller(text) {
-  let output = clean(text);
-  for (const [pattern, replacement] of FILLER) output = output.replace(pattern, replacement);
-  return clean(output).replace(/^[,;:\s]+/, '');
+function reserveItem(item, unit) {
+  if (!unit || item.selected.has(unit.index)) return 0;
+  item.selected.add(unit.index);
+  return countWords(unit.value);
 }
-function importance(text, index) {
-  let score = 1 / (1 + index * .09);
-  if (IMPORTANT.test(text)) score += 5;
-  if (PROTECTED_REFERENCE.test(text)) score += 5;
-  if (QUALIFIER.test(text)) score += 4;
-  if (/[0-9]/.test(text)) score += 1;
-  if (/(?:\bè\b|\bsono\b|si definisce|consiste in)/i.test(text)) score += 2;
-  return score;
-}
-function compactUnit(unit, depth) {
-  if (unit.immutable) return unit.text;
-  let result = simplifyFiller(unit.text);
-  if (depth < 30) return result;
-  // At stronger reductions remove only explicitly introductory clauses;
-  // never truncate formulas, negations, qualifiers or normative quotations.
-  result = result.replace(/^(?:in questo (?:quadro|contesto)|a tale riguardo|sotto questo profilo)[,\s]+/i, '');
-  result = result.replace(/\b(?:come già (?:detto|evidenziato)|come abbiamo visto)\b[,\s]*/gi, '');
-  return clean(result);
-}
-function prepareParagraph(original, level) {
-  const source = String(original || '').trim();
-  if (!source) return [];
-  const units = splitUnits(source);
-  const expanded = [];
-  for (const unit of units) {
-    // Split long explanations into usable schematic clauses at strong reduction.
-    // A complete normative quotation or a formula is never split.
-    if (!unit.immutable && (level === 'summary' || level >= 40)
-        && countWords(unit.text) > 38 && unit.text.includes(',')) {
-      const clauses = unit.text.split(/,\s+/).map(clean).filter(Boolean);
-      if (clauses.length >= 2 && clauses.every((part) => countWords(part) >= 5)) {
-        expanded.push(...clauses.map((text) => ({ text, immutable: false })));
-        continue;
-      }
-    }
-    expanded.push(unit);
+function selectWithDependencies(item, unit) {
+  const needed = [unit];
+  // Never display a dangling pronoun or contrast without its direct antecedent.
+  if (unit.dependent) {
+    const previous = item.units[unit.index - 1];
+    if (previous) needed.unshift(previous);
+    else return null;
   }
-  return expanded.map((unit, index) => ({
-    ...unit, index,
-    value: compactUnit(unit, level === 'summary' ? 50 : level),
-    priority: importance(unit.text, index),
-    // A condition or negation must remain in the study versions.
-    mandatory: unit.immutable || (level !== 'summary' && QUALIFIER.test(unit.text)),
-  })).filter((unit) => unit.value);
+  return needed.filter((part) => !item.selected.has(part.index));
 }
+function computeSelection(items, budget, level) {
+  if (level === 0) return;
+  let used = 0;
+  // Essential laws, formulas and legal qualifiers remain complete.
+  for (const item of items) for (const unit of item.units) {
+    if (!unit.mandatory) continue;
+    const required = selectWithDependencies(item, unit);
+    if (!required) continue;
+    for (const selected of required) used += reserveItem(item, selected);
+  }
+  // Do not create empty paragraphs or strip the only statement of a chapter.
+  for (const item of items) {
+    if (item.selected.size || !item.units.length) continue;
+    const available = item.units.filter((unit) => !unit.problematic && (!unit.dependent || unit.index > 0));
+    const best = [...(available.length ? available : item.units)].sort((a, b) => b.score - a.score)[0];
+    const required = selectWithDependencies(item, best);
+    if (!required) {
+      used += reserveItem(item, item.units[0]); // The original is flagged if unsafe.
+    } else for (const selected of required) used += reserveItem(item, selected);
+  }
 
+  const candidates = items.flatMap((item) => item.units
+    .filter((unit) => !item.selected.has(unit.index) && !unit.problematic)
+    .map((unit) => ({ item, unit })));
+  candidates.sort((a, b) => b.unit.score - a.unit.score ||
+    a.item.chapterIndex - b.item.chapterIndex || a.unit.index - b.unit.index);
+  for (const { item, unit } of candidates) {
+    const necessary = selectWithDependencies(item, unit);
+    if (!necessary) continue;
+    const cost = necessary.reduce((sum, selected) => sum + countWords(selected.value), 0);
+    if (used + cost <= budget) {
+      for (const selected of necessary) used += reserveItem(item, selected);
+    }
+  }
+}
 
 export function buildPrecisionEdition(book, reduction = 10) {
   if (!book) return null;
   const level = normalizeReduction(reduction);
-  const chaptersIn = Array.isArray(book.chapters) ? book.chapters : [];
-  const paragraphs = [];
-  let originalWords = 0, protectedUnits = 0;
-  chaptersIn.forEach((chapter, chapterIndex) => {
-    (chapter.paragraphs || []).forEach((paragraph, paragraphIndex) => {
-      const source = String(paragraph.original || paragraph.summary || '');
-      originalWords += countWords(source);
-      const units = prepareParagraph(source, level);
-      protectedUnits += units.filter((unit) => unit.immutable).length;
-      paragraphs.push({ chapterIndex, paragraphIndex, source, units, selected: new Set() });
-    });
-  });
+  const originalChapters = Array.isArray(book.chapters) ? book.chapters : [];
+  const { items, sourceWords } = buildRequests(book, level);
+  const targetPercent = level === 'summary' ? null : level;
+  const wordBudget = Math.max(1, Math.round(sourceWords * (level === 'summary' ? 0.30 : 1 - level / 100)));
+  computeSelection(items, wordBudget, level);
 
-  const ratio = level === 'summary' ? .30 : 1 - level / 100;
-  const wordBudget = Math.max(1, Math.round(originalWords * ratio));
-  let used = 0;
-  if (level !== 0) {
-    // Stage 1: original law/formula segments, conditions and negations.
-    for (const p of paragraphs) {
-      for (const unit of p.units) if (unit.mandatory) {
-        p.selected.add(unit.index);
-        used += countWords(unit.value);
+  const lookup = new Map(items.map((item) => [item.chapterIndex + ':' + item.paragraphIndex, item]));
+  let outputWords = 0;
+  let fallbackCount = 0;
+  const issues = [];
+  const chapters = originalChapters.map((chapter, chapterIndex) => {
+    const paragraphs = (chapter.paragraphs || []).map((paragraph, paragraphIndex) => {
+      const item = lookup.get(chapterIndex + ':' + paragraphIndex);
+      const units = item.units.filter((unit) => item.selected.has(unit.index));
+      const candidate = level === 0 ? item.source : joinUnits(units, level);
+      const audit = checkReducedParagraph(item.source, candidate, { selectedUnits: units });
+      const fallback = !audit.ok;
+      const finalText = fallback ? item.source : candidate;
+      if (fallback) {
+        fallbackCount += 1;
+        issues.push({ chapterIndex, paragraphIndex, problems: audit.issues });
       }
-      // Stage 2: every paragraph keeps its most informative statement.
-      if (!p.selected.size && p.units.length) {
-        const best = [...p.units].sort((x, y) => y.priority - x.priority)[0];
-        p.selected.add(best.index);
-        used += countWords(best.value);
-      }
-    }
-    // Stage 3: spend remaining *global* book budget on the most useful facts.
-    const remaining = paragraphs.flatMap((p) => p.units
-      .filter((unit) => !p.selected.has(unit.index))
-      .map((unit) => ({ p, unit })));
-    remaining.sort((x, y) => y.unit.priority - x.unit.priority ||
-      x.p.chapterIndex - y.p.chapterIndex || x.unit.index - y.unit.index);
-    for (const { p, unit } of remaining) {
-      const cost = countWords(unit.value);
-      if (used + cost <= wordBudget) {
-        p.selected.add(unit.index);
-        used += cost;
-      }
-    }
-  }
-
-  let resultingWords = 0;
-  const paragraphLookup = new Map(paragraphs.map((p) => [p.chapterIndex + ':' + p.paragraphIndex, p]));
-  const chapters = chaptersIn.map((chapter, chapterIndex) => ({
-    ...chapter,
-    paragraphs: (chapter.paragraphs || []).map((paragraph, paragraphIndex) => {
-      const p = paragraphLookup.get(chapterIndex + ':' + paragraphIndex);
-      const selected = (p?.units || []).filter((unit) => p.selected.has(unit.index));
-      const text = level === 0 ? p.source
-        : selected.map((unit) => unit.value).join(level === 50 ? '\n• ' : ' ');
-      resultingWords += countWords(text);
+      outputWords += countWords(finalText);
+      const simple = String(paragraph.simpleSummary || '');
+      const simpleSafe = simple && checkReducedParagraph(item.source, simple).ok;
       return {
         ...paragraph,
-        original: paragraph.original || p.source,
-        summary: text,
-        dsaSummary: text,
-        simpleSummary: level === 'summary' ? text : (paragraph.simpleSummary || text),
+        original: paragraph.original || item.source,
+        summary: finalText,
+        dsaSummary: finalText,
+        simpleSummary: level === 'summary' ? finalText : (simpleSafe ? simple : finalText),
+        precisionAudit: {
+          coherent: audit.ok,
+          fallbackOriginal: fallback,
+          reasons: audit.issues,
+          sourceWords: countWords(item.source),
+          outputWords: countWords(finalText),
+          selectedUnits: units.length,
+        },
       };
-    }),
-  }));
-  const achievedPercent = originalWords ? Math.round((1 - resultingWords / originalWords) * 1000) / 10 : 0;
-  const targetPercent = level === 'summary' ? null : level;
+    });
+    const result = { ...chapter, paragraphs };
+    const continuity = auditChapterContinuity(chapter, result);
+    if (!continuity.ok) issues.push({ chapterIndex, problems: continuity.issues });
+    return { ...result, precisionContinuity: continuity };
+  });
+  const achievedPercent = sourceWords ? Math.round((1 - outputWords / sourceWords) * 1000) / 10 : 0;
   const metadata = {
     level, label: REDUCTION_LABELS[level], targetPercent, achievedPercent,
-    originalWords, resultingWords, protectedUnits,
-    targetReached: targetPercent === null || achievedPercent + .5 >= targetPercent,
-    origin: 'original-source',
+    originalWords: sourceWords, resultingWords: outputWords,
+    targetReached: targetPercent === null || achievedPercent + 0.5 >= targetPercent,
+    qualityGuard: {
+      status: issues.length ? 'needs-review' : 'rule-checked',
+      issues: issues.slice(0, 160), issueCount: issues.length,
+      originalFallbackParagraphs: fallbackCount,
+      semanticCertification: false,
+    },
   };
   return {
     ...book, chapters, precisionEdition: metadata,
     quality: {
       ...(book.quality || {}),
-      sourceFidelityGate: book.quality?.fidelityGate || null,
-      // The original pre-reduction fidelity metric must NOT be shown
-      // as if it audited a deliberately abbreviated edition.
-      fidelityGate: level === 0 ? (book.quality?.fidelityGate || null) : null,
+      sourceFidelityGate: book.quality?.sourceFidelityGate || book.quality?.fidelityGate || null,
+      fidelityGate: level === 0 ? (book.quality?.sourceFidelityGate || book.quality?.fidelityGate || null) : null,
     },
   };
+}
+
+/** Precompute honest counts from the SAME engine that renders/prints the book.
+ *  Do not silently substitute numerical targets for measured outputs.
+ */
+export function buildReductionStatistics(book, chapterIndex = null) {
+  if (!book) return [];
+  return REDUCTION_STEPS.map((level) => {
+    const edition = buildPrecisionEdition(book, level);
+    const chapters = chapterIndex === null ? edition.chapters :
+      (edition.chapters[chapterIndex] ? [edition.chapters[chapterIndex]] : []);
+    const original = chapters.flatMap((chapter) => chapter.paragraphs || []).map((p) => p.original || '').join('\n');
+    const output = chapters.flatMap((chapter) => chapter.paragraphs || []).map((p) => p.summary || '').join('\n');
+    const originalStats = countText(original);
+    const actual = countText(output);
+    const wordsReduced = originalStats.words ? Math.round((1 - actual.words / originalStats.words) * 1000) / 10 : 0;
+    const lettersReduced = originalStats.letters ? Math.round((1 - actual.letters / originalStats.letters) * 1000) / 10 : 0;
+    return {
+      level, label: REDUCTION_LABELS[level],
+      original: originalStats, actual, wordsReduced, lettersReduced,
+      qualityStatus: edition.precisionEdition?.qualityGuard?.status || 'unknown',
+      targetReached: level === 'summary' || wordsReduced + 0.5 >= level,
+    };
+  });
 }
