@@ -23,6 +23,7 @@ import { BottomNav, LibraryScreen, SettingsScreen, StudioScreen } from './compon
 import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
+import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { deliverBlob } from './lib/fileDelivery.js';
 import {
   clearScannerSessionStore,
@@ -823,7 +824,7 @@ export default function AppV14() {
     setStatus(fromScanner ? 'MotorLab Runtime · scansione completa · preparo il libro…' : 'MotorLab Runtime · preparo il libro di studio…');
 
     try {
-      const result = await buildStudyBook(sourceData, {
+      const generated = await buildStudyBook(sourceData, {
         level,
         preferAi: true,
         onProgress(done, total, phase, meta) {
@@ -833,6 +834,8 @@ export default function AppV14() {
           else if (phase === 'locale') setStatus(`MotorLab Runtime · elaborazione locale · ${done}/${total} paragrafi`);
         },
       });
+      const sourceIntegrity = auditBookSourceCoverage(sourceData, generated);
+      const result = { ...generated, quality: { ...(generated.quality || {}), sourceIntegrity } };
       setStudyBook(result);
       // LAB12: il titolo finale considera l'intero documento elaborato; non sostituisce mai il nome manuale.
       const suggestedFinal = fromScanner && !scanTitleManualRef.current
@@ -865,7 +868,9 @@ export default function AppV14() {
       const engineLabel = result.engine === 'ai' ? 'AI' : result.engine === 'misto' ? 'AI + sicurezza locale' : 'modalità locale';
       const runtime = result.quality?.motorLabRuntime;
       const speedLabel = runtime ? ` · MotorLab Runtime · ${runtime.maxConcurrencyUsed || 1} corridori${runtime.cachedChunks ? ` · ${runtime.cachedChunks} blocchi riusati` : ''}` : '';
-      setStatus(`Libro pronto · ${engineLabel}${speedLabel}${saved ? ' · salvato in Libreria' : ''}`);
+      setStatus(sourceIntegrity.passed
+        ? `Libro pronto · ${engineLabel}${speedLabel}${saved ? ' · salvato in Libreria' : ''}`
+        : `Libro da verificare · ${sourceIntegrity.issueCount} possibili anomalie di completezza · originale conservato`);
       navigateTo('studio');
       return result;
     } catch (err) {
