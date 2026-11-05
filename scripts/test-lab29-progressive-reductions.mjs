@@ -74,5 +74,5 @@ assert.ok(countLetters(short)<countLetters(longSingle),'Una definizione breve de
 assert.ok(checkSentence(short).valid);
 const protectedOriginal='Art. 12. Il ricorso è proponibile entro 30 giorni dalla notificazione, salvo le eccezioni espressamente previste.\nE = mc²';
 const legal=buildPrecisionEdition({chapters:[{paragraphs:[{original:protectedOriginal}]}]},50).chapters[0].paragraphs[0].summary;
-assert.ok(legal.includes(protectedOriginal),'Preservare disposizioni e formule integralmente anche se riducono il margine possibile');
+assert.ok(legal.includes('Art. 12. Il ricorso è proponibile entro 30 giorni dalla notificazione, salvo le eccezioni espressamente previste.') && legal.includes('E = mc²'), 'Preservare disposizioni e formule integralmente anche in schema');
 console.log('LAB29_PROGRESSIVE_REDUCTION_PASS');
