@@ -80,7 +80,7 @@ function EmptyTool({ children }) {
   return <div className="study-tool-empty">{children}</div>;
 }
 
-export default function StudyMode({ book, bookTitle, initialMode = 'reader', chapterIndex, onChapterChange, dsaMode, accessibility, onClose }) {
+export default function StudyMode({ book, sourceBook = book, bookTitle, initialMode = 'reader', chapterIndex, onChapterChange, dsaMode, accessibility, onClose }) {
   const [target, setTarget] = useState(null);
   const [answer, setAnswer] = useState(null);
   const [assistantBusy, setAssistantBusy] = useState(false);
@@ -119,7 +119,7 @@ export default function StudyMode({ book, bookTitle, initialMode = 'reader', cha
   const conceptMap = useMemo(() => buildConceptMap(studySource, studyScope === 'book' ? 60 : 24), [studySource, studyScope]);
   const glossary = useMemo(() => chapterGlossary(chapter || {}), [chapter]);
   const reductionStats = useMemo(() => isReader && chapter
-    ? buildReductionStatistics(book, chapterIndex) : [], [isReader, book, chapterIndex]);
+    ? buildReductionStatistics(sourceBook, chapterIndex) : [], [isReader, sourceBook, chapterIndex]);
   const visibleReadingStats = useMemo(() => isReader && chapter ? countText(
     (chapter.paragraphs || []).map((paragraph) => editorialParagraphText(paragraph, { variant: readingVariant, dsaMode })).join('\n')
   ) : null, [isReader, chapter, readingVariant, dsaMode]);
