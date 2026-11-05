@@ -7,6 +7,7 @@ const CONTEXT_START = /^(?:quest[oaie]|ciò|esso|essa|essi|esse|tale|tali|infatt
 const SOURCE_GAP = /(?:\uFFFD|\.{3,}|…|\[\s*(?:omissis|testo mancante)\s*\])/i;
 const PROTECTED = /\b(?:art(?:icolo)?\.?\s*\d+|comma\s+\d+|legge\s+n?\.?\s*\d+|decreto|regolamento|sentenza|non|salvo|eccetto|tranne|purché|solo se|a condizione|obblig|divieto|termine|entro\s+\d+)\b/i;
 const FORMULA = /(?:^|\s)[\p{L}][\w²³]*(?:\s*[=≈≠≤≥]\s*)\S/u;
+const CRITICAL_CONDITION = /\b(?:salvo|eccetto|tranne|purché|qualora|solo\s+se|a\s+condizione\s+che|entro\s+\d+)\b/i;
 const FINITE_CLAIM = /\b(?:è|sono|si|ha|hanno|può|possono|deve|devono|prevede|richiede|stabilisce|costituisce|comporta|determina|disciplina|indica|afferma|consiste|deriva|risulta|esiste|esistono|si applica|si definisce|si distingue)\b/i;
 // Safe lexical compactions are cumulative and preserve every legal qualifier.
 const EDITS_10 = [
@@ -136,7 +137,7 @@ export function buildMeaningUnits(text, level = 10) {
     return {
       index, source, value, immutable, score: meaningScore(source, index),
       // Negation/exception => important, not an immutable whole sentence.
-      mandatory: immutable,
+      mandatory: immutable || CRITICAL_CONDITION.test(source),
       dependent: CONTEXT_START.test(source),
       problematic: !checkSentence(value).valid,
     };
@@ -153,6 +154,17 @@ export function checkReducedParagraph(original, text, { selectedUnits = [] } = {
   if (selectedUnits.some((unit) => !ws(original).includes(ws(unit.source)))) issues.push('untraceable-source');
   const selectedIndexes = new Set(selectedUnits.map((unit) => unit.index));
   if (selectedUnits.some((unit) => unit.dependent && !selectedIndexes.has(unit.index - 1))) issues.push('missing-antecedent');
+  // If a conditional or exception was present, retain the entire source
+  // assertion in the selected concept set; lexical shortening is still allowed.
+  if (selectedUnits.length) {
+    const all = buildMeaningUnits(original, 0);
+    for (const unit of all.filter((part) => CRITICAL_CONDITION.test(part.source))) {
+      if (!selectedUnits.some((part) => part.source === unit.source)) {
+        issues.push('protected-condition-lost');
+        break;
+      }
+    }
+  }
   const protectedSource = splitCompleteSentences(original)
     .filter((sentence) => /^(?:art(?:icolo)?\.?\s*\d+|legge\s+n?\.?\s*\d+)/i.test(sentence) || FORMULA.test(sentence));
   for (const item of protectedSource) if (!ws(text).includes(ws(item))) issues.push('protected-text-lost');
