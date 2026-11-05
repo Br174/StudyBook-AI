@@ -138,6 +138,8 @@ jobs:
         run: node scripts/test-lab27-simple-metrics.mjs
       - name: Diagnose LAB28 reduction percentages
         run: node scripts/diagnose-reduction-lab28.mjs
+      - name: Test LAB28 reprocess stored books safely
+        run: node scripts/test-library-reprocessing-lab28.mjs
       - name: Test persistent study-help cache
         run: node scripts/test-study-help-cache-model.mjs
       - name: Test PWA shell
