@@ -46,7 +46,7 @@ function buildRequests(book, level) {
 function reserveItem(item, unit) {
   if (!unit || item.selected.has(unit.index)) return 0;
   item.selected.add(unit.index);
-  return countWords(unit.value);
+  return countLetters(unit.value);
 }
 function selectWithDependencies(item, unit) {
   const needed = [unit];
@@ -89,7 +89,7 @@ function computeSelection(items, budget, level) {
   for (const { item, unit } of candidates) {
     const necessary = selectWithDependencies(item, unit);
     if (!necessary) continue;
-    const cost = necessary.reduce((sum, selected) => sum + countWords(selected.value), 0);
+    const cost = necessary.reduce((sum, selected) => sum + countLetters(selected.value), 0);
     if (used + cost <= budget) {
       for (const selected of necessary) used += reserveItem(item, selected);
     }
@@ -102,8 +102,10 @@ export function buildPrecisionEdition(book, reduction = 10) {
   const originalChapters = Array.isArray(book.chapters) ? book.chapters : [];
   const { items, sourceWords, sourceLetters } = buildRequests(book, level);
   const targetPercent = level === 'summary' ? null : level;
-  const wordBudget = Math.max(1, Math.round(sourceWords * (level === 'summary' ? 0.30 : 1 - level / 100)));
-  computeSelection(items, wordBudget, level);
+  // The user's reduction control and per-paragraph statistics are in LETTERS.
+  // Select sentences to a real letter budget, not an unrelated word target.
+  const letterBudget = Math.max(1, Math.round(sourceLetters * (level === 'summary' ? 0.30 : 1 - level / 100)));
+  computeSelection(items, letterBudget, level);
 
   const lookup = new Map(items.map((item) => [item.chapterIndex + ':' + item.paragraphIndex, item]));
   let outputWords = 0;
@@ -151,12 +153,12 @@ export function buildPrecisionEdition(book, reduction = 10) {
   const achievedPercent = sourceWords ? Math.round((1 - outputWords / sourceWords) * 1000) / 10 : 0;
   const achievedLettersPercent = sourceLetters
     ? Math.round((1 - outputLetters / sourceLetters) * 1000) / 10 : 0;
-  const targetShortfall = targetPercent === null ? 0 : Math.max(0, Math.round((targetPercent-achievedPercent)*10)/10);
+  const targetShortfall = targetPercent === null ? 0 : Math.max(0, Math.round((targetPercent-achievedLettersPercent)*10)/10);
   const metadata = {
     level, label: REDUCTION_LABELS[level], targetPercent, achievedPercent,
     achievedLettersPercent, originalLetters:sourceLetters, resultingLetters:outputLetters,
     originalWords: sourceWords, resultingWords: outputWords,
-    targetReached: targetPercent === null || achievedPercent + 0.5 >= targetPercent,
+    targetReached: targetPercent === null || achievedLettersPercent + 0.5 >= targetPercent,
     qualityGuard: {
       status: issues.length || targetShortfall > 3 ? 'needs-review' : 'rule-checked',
       targetShortfall,
