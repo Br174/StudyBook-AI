@@ -22,6 +22,7 @@ import {coverAssetIdentity,usedCoverAssets,findDuplicateWebCovers} from './lib/c
 import { BottomNav, LibraryScreen, SettingsScreen, StudioScreen } from './components/AppScreens.jsx';
 import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
+import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { deliverBlob } from './lib/fileDelivery.js';
 import {
   clearScannerSessionStore,
@@ -121,6 +122,7 @@ export default function AppV14() {
   const [error, setError] = useState('');
   const [selectedChapter, setSelectedChapter] = useState(0);
   const [level, setLevel] = useState('studio');
+  const [reduction, setReduction] = useState(10);
   const [dsaMode, setDsaMode] = useState(true);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [generating, setGenerating] = useState(false);
@@ -129,6 +131,19 @@ export default function AppV14() {
   const [summaryEditor, setSummaryEditor] = useState(null);
   const [refiningKey, setRefiningKey] = useState('');
   const [studyModeOpen, setStudyModeOpen] = useState(false);
+  const precisionBook = useMemo(() => buildPrecisionEdition(studyBook, reduction), [studyBook, reduction]);
+  function changeReduction(nextValue) {
+    const next = normalizeReduction(nextValue);
+    setReduction(next);
+    if (libraryId) {
+      try { localStorage.setItem(`studybook:precision:${libraryId}`, String(next)); } catch { /* optional preference */ }
+    }
+  }
+  useEffect(() => {
+    if (!libraryId) return;
+    try { setReduction(normalizeReduction(localStorage.getItem(`studybook:precision:${libraryId}`) ?? 10)); }
+    catch { setReduction(10); }
+  }, [libraryId]);
   const [studyEntryMode, setStudyEntryMode] = useState('reader');
   const [activeScreen, setActiveScreen] = useState('home');
   const [sourceFile, setSourceFile] = useState(null);
@@ -1308,22 +1323,22 @@ export default function AppV14() {
   }
 
   function exportCurrentBook(format, variant = 'study') {
-    if (!studyBook) return;
+    if (!precisionBook) return;
     const options = { dsaMode, variant, accessibility };
-    if (format === 'pdf') return exportPdf(studyBook, fileName, options);
-    if (format === 'docx') return exportDocx(studyBook, fileName, options);
-    if (format === 'html') return exportHtml(studyBook, fileName, options);
-    if (format === 'epub') return exportEpub(studyBook, fileName, options);
-    if (format === 'odt') return exportOdt(studyBook, fileName, options);
-    if (format === 'rtf') return exportRtf(studyBook, fileName, options);
-    if (format === 'md') return exportMarkdown(studyBook, fileName, options);
-    if (format === 'print') return printStudyBook(studyBook, fileName, options);
-    if (format === 'json') return exportJson(studyBook, fileName);
+    if (format === 'pdf') return exportPdf(precisionBook, fileName, options);
+    if (format === 'docx') return exportDocx(precisionBook, fileName, options);
+    if (format === 'html') return exportHtml(precisionBook, fileName, options);
+    if (format === 'epub') return exportEpub(precisionBook, fileName, options);
+    if (format === 'odt') return exportOdt(precisionBook, fileName, options);
+    if (format === 'rtf') return exportRtf(precisionBook, fileName, options);
+    if (format === 'md') return exportMarkdown(precisionBook, fileName, options);
+    if (format === 'print') return printStudyBook(precisionBook, fileName, options);
+    if (format === 'json') return exportJson(precisionBook, fileName);
     if (format === 'txt') {
       if (variant === 'simple') {
         const simpleBook = {
-          ...studyBook,
-          chapters: (studyBook.chapters || []).map((chapter) => ({
+          ...precisionBook,
+          chapters: (precisionBook.chapters || []).map((chapter) => ({
             ...chapter,
             paragraphs: (chapter.paragraphs || []).map((paragraph) => ({
               ...paragraph,
@@ -1334,7 +1349,7 @@ export default function AppV14() {
         };
         return exportTxt(simpleBook, fileName, false);
       }
-      return exportTxt(studyBook, fileName, dsaMode);
+      return exportTxt(precisionBook, fileName, dsaMode);
     }
     return undefined;
   }
@@ -1530,7 +1545,8 @@ export default function AppV14() {
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
       {activeScreen === 'studio' && (
         <StudioScreen
-          studyBook={studyBook} fileName={fileName} onRenameBook={renameCurrentBook}
+          studyBook={precisionBook} fileName={fileName} onRenameBook={renameCurrentBook}
+          reduction={reduction} onReductionChange={changeReduction} reductionMeta={precisionBook?.precisionEdition}
           isOriginalOnly={!studyBook && Boolean(originalRecord?.id === libraryId && sourceFile)}
           sourceData={documentData} generating={generating} onPrepareOriginal={prepareOriginalForStudy}
           originalRecord={originalRecord?.id === libraryId ? originalRecord : null}
@@ -1578,9 +1594,9 @@ export default function AppV14() {
         </div>
       )}
 
-      {studyModeOpen && studyBook && (
+      {studyModeOpen && precisionBook && (
         <StudyMode
-          book={studyBook} bookTitle={fileName} initialMode={studyEntryMode}
+          book={precisionBook} bookTitle={fileName} initialMode={studyEntryMode}
           chapterIndex={selectedChapter} onChapterChange={setSelectedChapter}
           dsaMode={dsaMode} accessibility={accessibility} onClose={() => setStudyModeOpen(false)}
         />
