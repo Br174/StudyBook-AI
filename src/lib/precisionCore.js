@@ -4,6 +4,7 @@ import {
   countWords, countText, buildMeaningUnits, checkReducedParagraph,
   auditChapterContinuity, hasLexicalSupport,
 } from './studyQualityGuard.js';
+import { explainInSimpleWords } from './simpleLanguage.js';
 
 export const REDUCTION_STEPS = [0, 10, 20, 30, 40, 50, 'summary'];
 export const REDUCTION_LABELS = {
@@ -119,14 +120,15 @@ export function buildPrecisionEdition(book, reduction = 10) {
         issues.push({ chapterIndex, paragraphIndex, problems: audit.issues });
       }
       outputWords += countWords(finalText);
-      const simple = String(paragraph.simpleSummary || '');
-      const simpleSafe = simple && checkReducedParagraph(item.source, simple).ok && hasLexicalSupport(item.source, simple);
+      // Accessible reading is a linguistic transformation of the CURRENT edition.
+      // Never reuse an older independent summary or reselect facts.
+      const simpleText = explainInSimpleWords(finalText);
       return {
         ...paragraph,
         original: paragraph.original || item.source,
         summary: finalText,
         dsaSummary: finalText,
-        simpleSummary: level === 'summary' ? finalText : (simpleSafe ? simple : finalText),
+        simpleSummary: simpleText,
         precisionAudit: {
           coherent: audit.ok,
           fallbackOriginal: fallback,
