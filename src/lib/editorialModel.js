@@ -59,6 +59,7 @@ export function buildEditorialDocument(book, options = {}) {
             paragraphIndex,
             sectionTitle,
             text,
+            originalText: String(paragraph?.original || ''),
             glossary: editorialGlossary([paragraph]),
             sourcePageStart: paragraph?.sourcePageStart ?? null,
             sourcePageEnd: paragraph?.sourcePageEnd ?? null,
