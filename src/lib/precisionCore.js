@@ -164,35 +164,54 @@ export function buildPrecisionEdition(book, reduction = 10) {
   };
 }
 
-/** Precompute honest counts from the SAME engine that renders/prints the book.
- *  Do not silently substitute numerical targets for measured outputs.
+/** Measured stats are cached by the ORIGINAL immutable book, not by slider position.
+ *  Only tiny counters are retained: seven full edition objects are discarded.
  */
-export function buildReductionStatistics(book, chapterIndex = null) {
-  if (!book) return [];
-  return REDUCTION_STEPS.map((level) => {
+const statisticsCache = new WeakMap();
+function createStatisticsCache(book) {
+  const profileRows = [];
+  for(const level of REDUCTION_STEPS) {
     const edition = buildPrecisionEdition(book, level);
-    const chapters = chapterIndex === null ? edition.chapters :
-      (edition.chapters[chapterIndex] ? [edition.chapters[chapterIndex]] : []);
-    const original = chapters.flatMap((chapter) => chapter.paragraphs || []).map((p) => p.original || '').join('\n');
-    const output = chapters.flatMap((chapter) => chapter.paragraphs || []).map((p) => p.summary || '').join('\n');
-    const originalStats = countText(original);
-    const actual = countText(output);
-    const wordsReduced = originalStats.words ? Math.round((1 - actual.words / originalStats.words) * 1000) / 10 : 0;
-    const lettersReduced = originalStats.letters ? Math.round((1 - actual.letters / originalStats.letters) * 1000) / 10 : 0;
-    const wholeOriginal = edition.chapters.flatMap((chapter) => chapter.paragraphs || []).map((p) => p.original || '').join('\n');
-    const wholeActual = edition.chapters.flatMap((chapter) => chapter.paragraphs || []).map((p) => p.summary || '').join('\n');
-    const totalOriginal = countText(wholeOriginal);
-    const totalActual = countText(wholeActual);
+    const byChapter = edition.chapters.map((chapter) => {
+      const original = (chapter.paragraphs || []).map((p) => p.original || '').join('\n');
+      const actual = (chapter.paragraphs || []).map((p) => p.summary || '').join('\n');
+      return { original: countText(original), actual: countText(actual) };
+    });
+    const sum = (field, part) => byChapter.reduce((total, ch) => total + ch[part][field], 0);
+    const wholeBook = {
+      original: {letters:sum('letters','original'), words:sum('words','original'), sentences:sum('sentences','original')},
+      actual: {letters:sum('letters','actual'), words:sum('words','actual'), sentences:sum('sentences','actual')},
+    };
+    profileRows.push({level, label:REDUCTION_LABELS[level], byChapter, wholeBook,
+      qualityStatus:edition.precisionEdition?.qualityGuard?.status || 'unknown'});
+  }
+  return profileRows;
+}
+function reductionRate(original, actual) {
+  return original ? Math.round((1 - actual / original) * 1000) / 10 : 0;
+}
+export function buildReductionStatistics(book, chapterIndex = null) {
+  if (!book || typeof book !== 'object') return [];
+  let cached = statisticsCache.get(book);
+  if (!cached) {
+    cached = createStatisticsCache(book);
+    statisticsCache.set(book, cached);
+  }
+  return cached.map((profile) => {
+    const section = chapterIndex === null ? profile.wholeBook :
+      profile.byChapter[chapterIndex] || {original:countText(''),actual:countText('')};
+    const {original, actual} = section;
+    const wordsReduced = reductionRate(original.words, actual.words);
+    const lettersReduced = reductionRate(original.letters, actual.letters);
+    const wholeBook = {
+      ...profile.wholeBook,
+      wordsReduced: reductionRate(profile.wholeBook.original.words, profile.wholeBook.actual.words),
+      lettersReduced: reductionRate(profile.wholeBook.original.letters, profile.wholeBook.actual.letters),
+    };
     return {
-      level, label: REDUCTION_LABELS[level],
-      original: originalStats, actual, wordsReduced, lettersReduced,
-      wholeBook: {
-        original: totalOriginal, actual: totalActual,
-        wordsReduced: totalOriginal.words ? Math.round((1 - totalActual.words / totalOriginal.words) * 1000) / 10 : 0,
-        lettersReduced: totalOriginal.letters ? Math.round((1 - totalActual.letters / totalOriginal.letters) * 1000) / 10 : 0,
-      },
-      qualityStatus: edition.precisionEdition?.qualityGuard?.status || 'unknown',
-      targetReached: level === 'summary' || wordsReduced + 0.5 >= level,
+      level:profile.level,label:profile.label,original,actual,wordsReduced,lettersReduced,
+      wholeBook,qualityStatus:profile.qualityStatus,
+      targetReached: profile.level === 'summary' || wordsReduced + .5 >= profile.level,
     };
   });
 }
