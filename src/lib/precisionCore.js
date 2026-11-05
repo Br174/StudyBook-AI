@@ -177,9 +177,18 @@ export function buildReductionStatistics(book, chapterIndex = null) {
     const actual = countText(output);
     const wordsReduced = originalStats.words ? Math.round((1 - actual.words / originalStats.words) * 1000) / 10 : 0;
     const lettersReduced = originalStats.letters ? Math.round((1 - actual.letters / originalStats.letters) * 1000) / 10 : 0;
+    const wholeOriginal = edition.chapters.flatMap((chapter) => chapter.paragraphs || []).map((p) => p.original || '').join('\n');
+    const wholeActual = edition.chapters.flatMap((chapter) => chapter.paragraphs || []).map((p) => p.summary || '').join('\n');
+    const totalOriginal = countText(wholeOriginal);
+    const totalActual = countText(wholeActual);
     return {
       level, label: REDUCTION_LABELS[level],
       original: originalStats, actual, wordsReduced, lettersReduced,
+      wholeBook: {
+        original: totalOriginal, actual: totalActual,
+        wordsReduced: totalOriginal.words ? Math.round((1 - totalActual.words / totalOriginal.words) * 1000) / 10 : 0,
+        lettersReduced: totalOriginal.letters ? Math.round((1 - totalActual.letters / totalOriginal.letters) * 1000) / 10 : 0,
+      },
       qualityStatus: edition.precisionEdition?.qualityGuard?.status || 'unknown',
       targetReached: level === 'summary' || wordsReduced + 0.5 >= level,
     };
