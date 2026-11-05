@@ -3,6 +3,7 @@ import { REDUCTION_STEPS, buildPrecisionEdition, countWords } from '../src/lib/p
 import { buildFlashcards, buildQuiz, buildOralQuestions } from '../src/lib/studyTools.js';
 import { auditFidelity } from '../src/lib/fidelityEngine.js';
 import { auditDocumentStructure } from '../src/lib/precisionDocumentAudit.js';
+import { readFileSync } from 'node:fs';
 
 const discursive = [
   'È importante sottolineare che il diritto soggettivo è una posizione giuridica riconosciuta dalla legge.',
@@ -61,4 +62,6 @@ const structural = auditDocumentStructure({
 assert.ok(structural.warningCount >= 2, 'Segnalare salti di pagina e OCR sospetto');
 assert.equal(structural.certifiedCorrect, false, 'Nessun falso certificato di correttezza');
 
+const appSource = readFileSync(new URL('../src/AppV15.jsx', import.meta.url), 'utf8');
+assert.ok(appSource.indexOf("const [libraryId, setLibraryId]") < appSource.indexOf('const precisionBook = useMemo'), 'La preferenza non deve provocare un accesso prima della dichiarazione di libraryId');
 console.log('Precision Core: OK', { reduction: editions[5].precisionEdition, questions: flashcards.length });
