@@ -493,9 +493,9 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       ) : <article className="sb-quality-card">
         <h2>Controllo del libro</h2>
         <div><span>Capitoli</span><strong>{studyBook.chapters?.length || 0}</strong><StudyIcon name="book" size={19} /></div>
-        <div><span>Unità concettuali</span><strong>{fidelity?.conceptUnits || '—'}</strong><StudyIcon name="units" size={19} /></div>
-        <div><span>Copertura media</span><strong>{Number.isFinite(fidelity?.averageCoveragePercent) ? `${fidelity.averageCoveragePercent}%` : '—'}</strong><StudyIcon name="coverage" size={19} /></div>
-        <div><span>Compressione</span><strong>{Number.isFinite(fidelity?.compressionPercent) ? `${fidelity.compressionPercent}%` : '—'}</strong><StudyIcon name="compression" size={19} /></div>
+        <div><span>Unità concettuali (testo base)</span><strong>{fidelity?.conceptUnits || '—'}</strong><StudyIcon name="units" size={19} /></div>
+        <div><span>Copertura media (testo base)</span><strong>{Number.isFinite(fidelity?.averageCoveragePercent) ? `${fidelity.averageCoveragePercent}%` : '—'}</strong><StudyIcon name="coverage" size={19} /></div>
+        <div><span>Riduzione selezionata</span><strong>{Number.isFinite(reductionMeta?.achievedPercent) ? reductionMeta.achievedPercent + '%' : '—'}</strong><StudyIcon name="compression" size={19} /></div>
       </article>}
     </section>
   );
