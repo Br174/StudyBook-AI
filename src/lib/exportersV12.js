@@ -208,7 +208,7 @@ export async function exportPdf(book, fileName, rawOptions = false) {
   const pageLetterStats = new Map();
   function addPageLetters(currentLine, sourceEquivalent) {
     const pageNumber = pdf.getCurrentPageInfo().pageNumber;
-    if (!pageLetterStats.has(pageNumber)) pageLetterStats.set(pageNumber,{original:0,actual:0});
+    if (!pageLetterStats.has(pageNumber)) pageLetterStats.set(pageNumber,{original:0,actual:0,approximate:false});
     const record = pageLetterStats.get(pageNumber);
     record.actual += countLetters(currentLine);
     record.original += sourceEquivalent;
@@ -273,6 +273,7 @@ export async function exportPdf(book, fileName, rawOptions = false) {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(bodySize);
     pdf.setTextColor(31, 41, 55);
+    const blockPages = new Set();
     for (const line of lines) {
       ensureSpace(lineHeight + 2);
       pdf.setFont('helvetica', 'normal');
@@ -280,7 +281,11 @@ export async function exportPdf(book, fileName, rawOptions = false) {
       pdf.setTextColor(31, 41, 55);
       pdf.text(line, margin, y);
       addPageLetters(line, totalOriginalLetters * countLetters(line) / totalPrintedLetters);
+      blockPages.add(pdf.getCurrentPageInfo().pageNumber);
       y += lineHeight;
+    }
+    if (blockPages.size > 1) for (const page of blockPages) {
+      pageLetterStats.get(page).approximate = true;
     }
     y += Math.max(3.8, lineHeight * .55);
   }
@@ -375,7 +380,8 @@ export async function exportPdf(book, fileName, rawOptions = false) {
     if (letterRecord) {
       const origin = Math.round(letterRecord.original);
       const edited = letterRecord.actual;
-      pdf.text('Originale: '+origin+'   Rielaborato: '+edited+'   Risparmiate: '+(origin-edited), margin, 291.5);
+      const label = letterRecord.approximate ? 'Originale ca.: ' : 'Originale: ';
+      pdf.text(label+origin+'   Rielaborato: '+edited+'   Risparmiate: '+(origin-edited), margin, 291.5);
     } else {
       pdf.text('StudyBook AI', margin, 291.5);
     }
