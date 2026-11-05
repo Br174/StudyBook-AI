@@ -364,6 +364,7 @@ export async function buildStudyBook(documentData, {
   onProgress,
   onCheckpoint,
   maxConcurrency,
+  forceFresh = false,
 } = {}) {
   const runtimeStartedAt = Date.now();
   const flat = [];
@@ -412,7 +413,8 @@ export async function buildStudyBook(documentData, {
   purgeOldResumeStates().catch(() => {});
   purgeOldRuntimeUnitResults().catch(() => {});
   const signature = buildResumeSignature(documentData, level);
-  const saved = await loadResumeState(signature);
+  // Explicit library reprocessing ignores previous checkpoint output.
+  const saved = forceFresh ? null : await loadResumeState(signature);
   const finalResults = Array(flat.length).fill(null);
   let checkpointResumedParagraphs = 0;
 
@@ -443,7 +445,8 @@ export async function buildStudyBook(documentData, {
   });
 
   const completedParents = new Set(finalResults.map((item, index) => item ? index : null).filter((value) => value !== null));
-  const cached = await loadRuntimeUnitResults(units.map((unit) => unit.cacheKey));
+  // A fresh pass must also bypass the per-unit MotorLab cache.
+  const cached = forceFresh ? new Map() : await loadRuntimeUnitResults(units.map((unit) => unit.cacheKey));
   let cachedChunks = 0;
 
   for (const unit of units) {
