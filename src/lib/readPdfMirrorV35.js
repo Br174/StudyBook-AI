@@ -32,8 +32,10 @@ export async function readPdfMirrorV35(file,options={}){
       else {
         const page=await pdf.getPage(i);
         try {const scan=await scanPdfPageFigures(page,i);
+          const vp=page.getViewport({scale:1});
           row={pageNumber:i,anchors:scan.anchors,review:scan.review,
-            rasterCount:scan.rasterCount,vectorCount:scan.vectorCount};
+            rasterCount:scan.rasterCount,vectorCount:scan.vectorCount,
+            pageWidthPt:vp.width,pageHeightPt:vp.height};
           if(!await saveMirrorVisualPage(signature,i,row))
             failures++;
         }catch(error){
@@ -53,6 +55,7 @@ export async function readPdfMirrorV35(file,options={}){
     const chapters=detectChaptersFromPages(parsed.pages||[]);
     const canonicalBookMap=buildCanonicalBookMap({
       pages:parsed.pages,chapters,outline:original.outline,pageLabels:original.pageLabels,
+      pageDimensions:rows.map(row=>({widthPt:row.pageWidthPt,heightPt:row.pageHeightPt})),
       originalFingerprint:fingerprint,pdfPageCount:pageCount,visualAnchors:anchors,
     });
     const review=[...new Set([
