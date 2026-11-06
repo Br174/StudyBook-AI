@@ -121,7 +121,7 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
   onProgress?.({phase:'turbo-file-hash',done:1,total:1,bytes:data.byteLength});
   const pdf = await pdfjsLib.getDocument({ data }).promise;
   const pageCount = pdf.numPages;
-  const signature = 'i360:' + INTEGRITY_ENGINE_VERSION + ':' + fingerprint + ':' + (autoOcr ? 'ocr' : 'native');
+  const signature = 'i360:mirror-v35:' + INTEGRITY_ENGINE_VERSION + ':' + fingerprint + ':' + (autoOcr ? 'ocr' : 'native');
   const blocks = makeLogicalBlocks(pageCount, 10);
   const retrySet = new Set((retryPages || []).filter(page =>
     Number.isInteger(page) && page >= 1 && page <= pageCount));
@@ -145,6 +145,7 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
         pages[row.pageNumber - 1] = {
           pageNumber: row.pageNumber, text: row.text, rawText: row.rawText || row.text,
           status: 'verified', source: row.source || 'resume', imageCount: row.imageCount || 0,
+          inkCount:row.inkCount||0,visualAnchors:row.visualAnchors||[],visualReview:row.visualReview||[],
           issue: '',
         };
         restored += 1;
