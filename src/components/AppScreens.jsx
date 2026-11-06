@@ -173,7 +173,7 @@ function ScanPhotoPreview({ blob, title }) {
   return url ? <img src={url} alt={title} loading="lazy" decoding="async" /> : <StudyIcon name="photo" size={21}/>;
 }
 
-export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onReprocessBook, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
+export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onReprocessBook, onRecoverOriginal, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
   const [area, setArea] = useState('subjects');
   const [view, setView] = useState(initialView);
   const [subject, setSubject] = useState('Tutte');
@@ -182,6 +182,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
   const [renameCandidate, setRenameCandidate] = useState(null);
   const [actionCandidate, setActionCandidate] = useState(null);
   const [reprocessCandidate, setReprocessCandidate] = useState(null);
+  const [reprocessMode, setReprocessMode] = useState('text');
   const [reprocessingBook, setReprocessingBook] = useState(false);
   const [reprocessError, setReprocessError] = useState('');
   const [coverProcessing, setCoverProcessing] = useState('');
@@ -321,8 +322,14 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
               )}
               {actionCandidate.metadata?.hasProcessed && onReprocessBook && (
                 <button type="button" disabled={Boolean(coverProcessing)} onClick={()=>{
-                  setReprocessCandidate(actionCandidate); setActionCandidate(null); setReprocessError('');
+                  setReprocessCandidate(actionCandidate); setReprocessMode('text'); setActionCandidate(null); setReprocessError('');
                 }}>↻ Rielabora libro</button>
+              )}
+              {actionCandidate.metadata?.hasOriginal && onRecoverOriginal && (
+                <button type="button" disabled={Boolean(coverProcessing)} onClick={()=>{
+                  setReprocessCandidate(actionCandidate); setReprocessMode('pdf');
+                  setActionCandidate(null); setReprocessError('');
+                }}>↻ Riesamina dal PDF originale</button>
               )}
               <button type="button" className="sb-library-action-danger" disabled={Boolean(coverProcessing)} onClick={()=>{setDeleteCandidate({...actionCandidate,deleteView:view});setActionCandidate(null);}}>× Elimina libro</button>
               <button type="button" className="sb-library-action-cancel" disabled={Boolean(coverProcessing)} onClick={()=>setActionCandidate(null)}>Chiudi</button>
@@ -335,9 +342,11 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
       {reprocessCandidate && (
         <div className="sb-confirm-overlay" role="dialog" aria-modal="true" aria-label="Conferma rielaborazione">
           <div className="sb-confirm-dialog">
-            <h2>Rielaborare il libro?</h2>
-            <p><strong>{stripExtension(reprocessCandidate.fileName)}</strong> sarà elaborato da capo partendo dal testo originale già acquisito, senza una nuova importazione.</p>
-            <p>La versione precedente rimane disponibile se l'elaborazione non riesce. File originale, copertina e nome non vengono cancellati.</p>
+            <h2>{reprocessMode === 'pdf' ? 'Riesaminare il PDF originale?' : 'Rielaborare il libro?'}</h2>
+            <p><strong>{stripExtension(reprocessCandidate.fileName)}</strong> {reprocessMode==='pdf'
+              ? 'sarà controllato dal PDF originale conservato. Le pagine affidabili verranno riutilizzate e le pagine problematiche rilette.'
+              : 'sarà rielaborato dal testo originale già acquisito, senza una nuova importazione.'}</p>
+            <p>Se l’operazione si interrompe, i progressi già salvati restano recuperabili. Il PDF originale, la copertina e la versione precedente non vengono cancellati.</p>
             {reprocessingBook && <p role="status">Rielaborazione e controlli in corso…</p>}
             {reprocessError && <p className="sb-true-cover-error" role="alert">{reprocessError}</p>}
             <div className="sb-confirm-actions">
@@ -345,13 +354,15 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
               <button type="button" disabled={reprocessingBook} onClick={async () => {
                 setReprocessingBook(true); setReprocessError('');
                 try {
-                  const success = await onReprocessBook?.(reprocessCandidate.id);
+                  const success = reprocessMode==='pdf'
+                    ? await onRecoverOriginal?.(reprocessCandidate.id)
+                    : await onReprocessBook?.(reprocessCandidate.id);
                   if (success) setReprocessCandidate(null);
                   else setReprocessError('Rielaborazione non completata. Il libro precedente resta salvato.');
                 } catch(error) {
                   setReprocessError(error.message || 'Rielaborazione non riuscita. Il libro precedente resta salvato.');
                 } finally { setReprocessingBook(false); }
-              }}>{reprocessingBook ? 'Rielaborazione…' : 'Sì, rielabora'}</button>
+              }}>{reprocessingBook ? 'Elaborazione…' : (reprocessMode==='pdf' ? 'Sì, riesamina PDF' : 'Sì, rielabora')}</button>
             </div>
           </div>
         </div>
@@ -481,11 +492,11 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         <article className="sb-export-card sb-original-study-consent" aria-label="Scelta di elaborazione">
           <div className="sb-export-head"><div><small>SCELTA LIBERA</small><h2>Preparare il testo di studio?</h2></div></div>
           <p>Puoi continuare a leggere o esportare il file originale senza modificarlo. Se scegli di preparare il testo di studio, StudyBook creerà una versione separata nella categoria Modificati.</p>
-          {!canPrepare && <p>Il testo di questo originale non è ancora disponibile per l'elaborazione. Importa nuovamente il documento per completarne il riconoscimento.</p>}
+          {!canPrepare && <p>Il testo di questo originale non è stato acquisito completamente. Puoi riprendere dal PDF già conservato, senza importarlo nuovamente.</p>}
           <div className="sb-original-study-decision">
             <button type="button" className="sb-original-secondary" onClick={() => setPrepareOpen(false)}>Non adesso</button>
-            <button type="button" disabled={!canPrepare || generating} onClick={() => { setPrepareOpen(false); onPrepareOriginal?.(); }}>
-              {generating ? 'Elaborazione…' : 'Prepara testo di studio'}
+            <button type="button" disabled={generating || (!canPrepare && !originalRecord?.originalFile)} onClick={() => { setPrepareOpen(false); onPrepareOriginal?.(); }}>
+              {generating ? 'Elaborazione…' : (canPrepare ? 'Prepara testo di studio' : 'Riprendi acquisizione PDF')}
             </button>
           </div>
         </article>
