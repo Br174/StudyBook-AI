@@ -69,7 +69,7 @@ export async function exportMirrorPdfV35(book,fileName,options={}){
         pdf.setFont('helvetica',block.kind==='image-ref'?'bold':'normal');
         pdf.setFontSize(block.kind==='image-ref'?9.8:10.7);
         pdf.setTextColor(block.kind==='image-ref'?25:32,block.kind==='image-ref'?95:42,block.kind==='image-ref'?177:63);
-        for(const line of String(block.text||'').split('\n')){
+        for(const line of (Array.isArray(block.layoutLines)?block.layoutLines:String(block.text||'').split('\n'))){
           pdf.text(line,margin,y);y+=5.2;
         }
         y+=2;

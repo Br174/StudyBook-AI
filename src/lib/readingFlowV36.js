@@ -1,22 +1,16 @@
-// LAB36: a PDF's single line breaks are layout, not prose paragraphs.
-// Do not preserve soft wraps in the study reader or printable PDF.
-// Only a blank line or an actual separate paragraph object creates a new paragraph.
-export function normalizeStudyParagraphFlow(value=''){
-  return String(value||'')
-    .replace(/\r\n?/g,'\n')
-    .replace(/\u00ad/g,'')
-    .replace(/([\p{L}])-\s*\n\s*([\p{Ll}])/gu,'$1$2')
-    .replace(/[ \t]*\n[ \t]*(?!\n)/g,' ')
-    .replace(/[ \t]{2,}/g,' ')
-    .replace(/\s+/g,' ')
-    .trim();
+// LAB36: single PDF line breaks are typography, blank lines are paragraphs.
+export function normalizeStudyParagraphFlow(value='') {
+  return String(value ?? '').replace(/\r\n?/g,'\n').replace(/\u00ad/g,'')
+    .split(/[ \t]*\n[ \t]*\n+/g).map(p=>p
+      .replace(/([\p{L}])-[ \t]*\n[ \t]*([\p{Ll}])/gu,'$1$2')
+      .replace(/[ \t]*\n[ \t]*/g,' ')
+      .replace(/[ \t]{2,}/g,' ')
+      .trim()).filter(Boolean).join('\n\n');
 }
-export function toUnbrokenDisplayText(value=''){
-  return normalizeStudyParagraphFlow(value);
-}
-export function countRenderedWords(value=''){
+export const toUnbrokenDisplayText=normalizeStudyParagraphFlow;
+export function countRenderedWords(value='') {
   return (normalizeStudyParagraphFlow(value).match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu)||[]).length;
 }
-export function countRenderedLetters(value=''){
+export function countRenderedLetters(value='') {
   return (normalizeStudyParagraphFlow(value).match(/\p{L}/gu)||[]).length;
 }

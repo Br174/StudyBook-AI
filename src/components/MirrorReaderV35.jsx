@@ -8,7 +8,7 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
   const [pictureUrl,setPictureUrl]=useState('');
   const [pictureError,setPictureError]=useState('');
   const [pictureBusy,setPictureBusy]=useState(false);
-  const output=useMemo(()=>composeMirrorPages(book?.canonicalBookMap,book,{variant,maxLines:40}),[book]);
+  const output=useMemo(()=>composeMirrorPages(book?.canonicalBookMap,book,{variant,maxLines:40}),[book,variant]);
   const pages=output.pages||[];
   useEffect(()=>{
     const target=book?.chapters?.[chapterIndex]?.pageStart||1;

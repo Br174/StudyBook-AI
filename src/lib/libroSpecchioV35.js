@@ -2,6 +2,7 @@
 // Source page identifiers are immutable. Reductions NEVER edit the source map.
 // Derived "bis/ter" leaves are text overflow; "/N" leaves are figures.
 // Visual coordinates are source evidence, not semantic OCR certification.
+import { normalizeStudyParagraphFlow } from './readingFlowV36.js';
 export const MIRROR_VERSION = 35;
 const clean = value => String(value ?? '').replace(/\s+/gu,' ').trim();
 const countLetters = value => (String(value || '').match(/\p{L}/gu)||[]).length;
@@ -178,7 +179,7 @@ export function composeMirrorPages(sourceMap,book,{
       if(sourcePageEnd!==owner) audit.problems.push('cross-page-paragraph-needs-review:'+i+':'+j);
       row.entries.push({kind:'paragraph',chapterIndex:i,chapterTitle:chapter.title,
         sectionTitle:p.sourceSection||null,paragraphIndex:j,
-        original:String(p.original||''),text:paragraphText(p,variant),
+        original:String(p.original||''),text:normalizeStudyParagraphFlow(paragraphText(p,variant)),
       });
     }
   }
@@ -251,9 +252,10 @@ export function composeMirrorPages(sourceMap,book,{
       while(offset<targetLines.length){
         if(remaining<=0)newSheet();
         const take=Math.max(minimum,Math.min(remaining,targetLines.length-offset));
-        const part=targetLines.slice(offset,offset+take).join('\n');
+        const layoutLines=targetLines.slice(offset,offset+take);
+        const part=normalizeStudyParagraphFlow(layoutLines.join('\n'));
         const first=offset===0;
-        sheet.blocks.push({kind:e.kind,text:part,
+        sheet.blocks.push({kind:e.kind,text:part,layoutLines,
           chapterIndex:e.chapterIndex,paragraphIndex:e.paragraphIndex,
           sourcePage:source.physicalPage,
           sectionTitle:e.sectionTitle,

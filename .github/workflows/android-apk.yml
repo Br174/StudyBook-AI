@@ -115,22 +115,26 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: LAB31-35 mandatory integrity, source page mirror, figures and crash recovery
-        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-32-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-33-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-34-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-35-')
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-32-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-33-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-34-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-35-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
         run: |
           node scripts/test-lab31-integrity360-turbo.mjs
           node scripts/test-lab31-digital-pdf.mjs
-          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-32-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-33-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-34-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-35-* ]]; then
+          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-32-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-33-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-34-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-35-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-36-* ]]; then
             node scripts/test-lab32-real-compression.mjs
           fi
-          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-33-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-34-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-35-* ]]; then
+          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-33-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-34-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-35-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-36-* ]]; then
             node scripts/test-lab33-chapter-fidelity.mjs
           fi
-          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-34-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-35-* ]]; then
+          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-34-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-35-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-36-* ]]; then
             node scripts/test-lab34-source-crash-resume.mjs
           fi
-          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-35-* ]]; then
+          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-35-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-36-* ]]; then
             node scripts/test-lab35-libro-specchio.mjs
           fi
+
+      - name: LAB36 verified display and PDF flow
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
+        run: node scripts/test-lab36-reading-flow.mjs
 
       - name: Resolve monotonic Android version
         shell: bash
