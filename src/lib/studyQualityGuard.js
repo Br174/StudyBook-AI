@@ -170,7 +170,7 @@ export function auditNarrativeSource(source) {
   const problems = [];
   if (!text) return {ok:false,problems:['empty-source']};
   if (/^[a-zàáâäèéêëìíîïòóôöùúûü]/u.test(text)) problems.push('starts-mid-sentence');
-  if (/(?:^|[.!?]\s+)[a-zàáâäèéêëìíîïòóôöùúûü][\p{L}'’]{3,}/u.test(text))
+  if (/[.!?]\s+[a-zàáâäèéêëìíîïòóôöùúûü][\p{L}'’]{3,}/u.test(text))
     problems.push('unexpected-lowercase-after-stop');
   if (/\b([\p{L}]{5,})[.!?]\s+\1\b/iu.test(text) ||
       /\b([\p{L}]{5,})\s+\1\b/iu.test(text))
