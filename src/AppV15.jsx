@@ -58,6 +58,9 @@ function importStatus(update) {
   if (!update) return 'Analisi del documento…';
   if (update.phase === 'turbo-file-read') return 'PDF originale conservato · preparo la lettura e verifico lo spazio…';
   if (update.phase === 'turbo-file-hash') return update.done ? 'Impronta SHA-256 dell’originale verificata' : 'Verifico l’identità del PDF originale…';
+  if (update.phase === 'mirror-figure-map') return `Libro Specchio · catalogo immagini e grafici ${update.done}/${update.total} pagine · ${update.restored||0} riprese`;
+  if (update.phase === 'mirror-index-verify') return `Libro Specchio · indice ${update.chapters||0} capitoli · ${update.figures||0} riferimenti visivi · ${update.review||0} verifiche`;
+  if (update.phase === 'mirror-outline-review') return 'Libro Specchio · confronto con l’indice originale richiesto';
   if (update.phase === 'turbo-inventory') return `Integrity 360 · inventario di ${update.total} pagine · ${update.blocks} blocchi logici`;
   if (update.phase === 'turbo-resume') return `Integrity 360 · ${update.resumed || 0} pagine recuperate dalla memoria`;
   if (update.phase === 'turbo-merge') return 'Integrity 360 · ricomposizione del Libro Maestro…';
