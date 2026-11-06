@@ -9,22 +9,26 @@ import { withPdfMirrorRenderer } from './visualMirrorV35.js';
 const filename=name=>String(name||'StudyBook').replace(/\.[^.]+$/,'')
   .replace(/[^a-z0-9-_]+/gi,'_')||'StudyBook';
 const fmt=n=>Number(n||0).toLocaleString('it-IT');
-const margin=17,contentWidth=210-2*margin;
+const margin=17;
+const mm=pt=>Number(pt||0)*25.4/72;
+const paper=page=>({width:Math.max(95,mm(page?.widthPt||595.28)),height:Math.max(135,mm(page?.heightPt||841.89))});
 export async function exportMirrorPdfV35(book,fileName,options={}){
   const source=book?.canonicalBookMap;
   if(!source?.pages?.length)throw Error('Mappa pagine originali assente.');
-  const pdf=new jsPDF({unit:'mm',format:'a4',compress:true});
+  const initial=paper(source.pages[0]);
+  const pdf=new jsPDF({unit:'mm',format:[initial.width,initial.height],compress:true});
   pdf.setFont('helvetica','normal');pdf.setFontSize(10.7);
-  const wrapLines=text=>{
+  const wrapLines=(text,sourcePage)=>{
     const lines=[];
     for(const part of String(text||'').split('\n')){
-      const split=pdf.splitTextToSize(part,contentWidth);
+      const split=pdf.splitTextToSize(part,paper(sourcePage).width-2*margin);
       if(split?.length)lines.push(...split);else lines.push('');
     }
     return lines;
   };
   const layout=composeMirrorPages(source,book,{
-    variant:options.variant==='simple'?'simple':'study',maxLines:40,wrapLines,
+    variant:options.variant==='simple'?'simple':'study',
+    maxLines:page=>Math.max(10,Math.floor((paper(page).height-76)/6)),wrapLines,
   });
   if(!layout.pages.length)throw Error('Nessuna pagina rielaborata disponibile.');
   if(!layout.audit.valid && layout.audit.problems.some(p=>
