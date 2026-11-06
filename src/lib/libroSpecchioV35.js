@@ -233,7 +233,7 @@ export function composeMirrorPages(sourceMap,book,{
         heading.push({kind:'section-title',text:e.sectionTitle});
         lastSection=e.sectionTitle;
       }
-      if(heading.length+1>remaining)newSheet();
+      if(heading.length*2+1>remaining)newSheet();
       for(const h of heading){sheet.blocks.push(h);remaining-=2;}
       const targetLines=wrapLines(e.text)||[];
       const originalLineCount=(wrapLines(e.original)||[]).length;
