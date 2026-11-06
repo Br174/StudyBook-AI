@@ -88,19 +88,20 @@ export async function exportMirrorPdfV35(book,fileName,options={}){
     pdf.text('Pagina '+sheet.label,width-margin,height-7,{align:'right'});
   }
   async function printImageSheet(sheet,render){
+    const {width,height}=paper(sheet);
     if(!sheet.anchor)throw Error('Riferimento visivo assente per la pagina '+sheet.label);
     const dataUrl=await render(sheet.anchor,{maxPixels:2700000});
     if(!dataUrl)throw Error('Impossibile leggere immagine originale '+sheet.label);
     pdf.setFont('helvetica','bold');pdf.setFontSize(14);pdf.setTextColor(31,41,55);
     pdf.text('Immagine '+sheet.imageNumber+' · Pagina '+sheet.sourcePage,margin,21);
     const props=pdf.getImageProperties(dataUrl);
-    const maxW=176,maxH=234;
+    const maxW=width-2*margin,maxH=height-63;
     const ratio=Math.min(maxW/props.width,maxH/props.height);
     const w=props.width*ratio,h=props.height*ratio;
     pdf.addImage(dataUrl,'PNG',margin+(maxW-w)/2,30,w,h);
     pdf.setFont('helvetica','normal');pdf.setFontSize(8);
     pdf.setTextColor(81,99,124);
-    pdf.text('Figura originale '+sheet.label+' · riferimento della pagina '+sheet.sourcePage,margin,285);
+    pdf.text('Figura originale '+sheet.label+' · riferimento della pagina '+sheet.sourcePage,margin,height-12);
   }
   async function printAll(render){
     for(let i=0;i<all.length;i++){
