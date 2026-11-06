@@ -34,7 +34,7 @@ async function askGemini(source,context,repairIssues=[]){
   const data=await response.json().catch(()=>null);
   if(!response.ok){
     const error=new Error(data?.error||'Servizio Gemini temporaneamente non disponibile');
-    error.code=data?.code||'AI_SERVICE_ERROR';throw error;
+    error.code=response.status===429?'AI_QUOTA_LIMIT':(data?.code||'AI_SERVICE_ERROR');throw error;
   }
   if(data?.engine!=='ai'||data?.sourceVersion!=='original'||!data.editions)
     throw Object.assign(new Error('Edizioni Gemini non valide'),{code:'INVALID_EDITION_RESPONSE'});
