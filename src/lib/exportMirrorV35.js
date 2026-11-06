@@ -9,6 +9,7 @@ import { withPdfMirrorRenderer } from './visualMirrorV35.js';
 const filename=name=>String(name||'StudyBook').replace(/\.[^.]+$/,'')
   .replace(/[^a-z0-9-_]+/gi,'_')||'StudyBook';
 const fmt=n=>Number(n||0).toLocaleString('it-IT');
+// Source sheet dimensions are retained independently from the typed text.
 const margin=17;
 const mm=pt=>Number(pt||0)*25.4/72;
 const paper=page=>({width:Math.max(95,mm(page?.widthPt||595.28)),height:Math.max(135,mm(page?.heightPt||841.89))});
