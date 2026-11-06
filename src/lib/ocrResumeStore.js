@@ -138,3 +138,47 @@ export function applyOcrCache(inputPages = [], records = [], candidateNumbers = 
 
   return { pages, resumedPages };
 }
+
+// Integrity 360 uses this SAME IndexedDB page store, not a competing cache.
+// The key is content-addressed (SHA-256 original file + engine + options).
+export async function loadIntegrity360Pages(signature) {
+  if (!signature) return [];
+  let db;
+  try {
+    db = await openDb();
+    const tx = db.transaction(STORE, 'readonly');
+    const rows = await requestResult(tx.objectStore(STORE).index('signature').getAll(signature));
+    return (rows || []).filter(row => row.engine === 'integrity360'
+      && Number.isInteger(row.pageNumber) && row.pageNumber > 0
+      && row.status === 'verified' && typeof row.text === 'string');
+  } catch { return []; }
+  finally { db?.close(); }
+}
+
+export async function saveIntegrity360Page(signature, page) {
+  if (!signature || !Number.isInteger(page?.pageNumber) || page.pageNumber < 1
+      || page.status !== 'verified' || typeof page.text !== 'string') return false;
+  let db;
+  try {
+    db = await openDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put({
+        key: `${signature}:${page.pageNumber}`,
+        signature,
+        engine: 'integrity360',
+        pageNumber: page.pageNumber,
+        text: page.text,
+        rawText: typeof page.rawText === 'string' ? page.rawText : page.text,
+        source: page.source,
+        status: page.status,
+        updatedAt: new Date().toISOString(),
+      });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error('Checkpoint Integrity 360 non salvato.'));
+      tx.onabort = () => reject(tx.error || new Error('Checkpoint Integrity 360 annullato.'));
+    });
+    return true;
+  } catch { return false; }
+  finally { db?.close(); }
+}
