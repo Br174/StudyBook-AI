@@ -173,7 +173,7 @@ function ScanPhotoPreview({ blob, title }) {
   return url ? <img src={url} alt={title} loading="lazy" decoding="async" /> : <StudyIcon name="photo" size={21}/>;
 }
 
-export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onReprocessBook, onRecoverOriginal, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
+export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onReprocessBook, onRecoverOriginal, processingStatus = '', processingProgress = {done:0,total:0}, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
   const [area, setArea] = useState('subjects');
   const [view, setView] = useState(initialView);
   const [subject, setSubject] = useState('Tutte');
@@ -347,7 +347,20 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
               ? 'sarà controllato dal PDF originale conservato. Le pagine affidabili verranno riutilizzate e le pagine problematiche rilette.'
               : 'sarà rielaborato dal testo originale già acquisito, senza una nuova importazione.'}</p>
             <p>Se l’operazione si interrompe, i progressi già salvati restano recuperabili. Il PDF originale, la copertina e la versione precedente non vengono cancellati.</p>
-            {reprocessingBook && <p role="status">Rielaborazione e controlli in corso…</p>}
+            {reprocessingBook && (
+              <div role="status" className="sb-lab34-progress" aria-live="polite">
+                <strong>{processingStatus || 'Preparo il documento e verifico i checkpoint salvati…'}</strong>
+                {processingProgress?.total > 0 && (
+                  <div>
+                    <progress max={processingProgress.total}
+                      value={Math.min(processingProgress.total,processingProgress.done||0)}
+                      style={{width:'100%',height:10,marginTop:8}} />
+                    <span>{processingProgress.done || 0} / {processingProgress.total} blocchi o pagine della fase corrente</span>
+                  </div>
+                )}
+                <small>Progressi conservati dopo ogni blocco completato. Le fasi di controllo possono richiedere tempo senza cambiare il contatore.</small>
+              </div>
+            )}
             {reprocessError && <p className="sb-true-cover-error" role="alert">{reprocessError}</p>}
             <div className="sb-confirm-actions">
               <button type="button" disabled={reprocessingBook} onClick={() => setReprocessCandidate(null)}>Annulla</button>
