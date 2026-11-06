@@ -54,7 +54,12 @@ function countParagraphs(chapters = []) {
 
 function importStatus(update) {
   if (!update) return 'Analisi del documento…';
-  if (update.phase === 'extract') return `Lettura PDF · pagina ${update.done}/${update.total}`;
+  if (update.phase === 'turbo-inventory') return `Integrity 360 · inventario di ${update.total} pagine · ${update.blocks} blocchi logici`;
+  if (update.phase === 'turbo-resume') return `Integrity 360 · ${update.resumed || 0} pagine recuperate dalla memoria`;
+  if (update.phase === 'turbo-merge') return 'Integrity 360 · ricomposizione del Libro Maestro…';
+  if (update.phase === 'turbo-verify') return `Integrity 360 · ${update.done}/${update.total} pagine verificate · ${update.verifiedChapters || 0} capitoli`;
+  if (update.phase === 'turbo-ocr-unavailable') return 'Integrity 360 · OCR non disponibile, pagine segnalate';
+    if (update.phase === 'extract') return `Lettura Turbo · pagina ${update.done}/${update.total}`;
   if (update.phase === 'ocr-loading') return 'Avvio OCR per il testo fotografato/scansionato…';
   if (update.phase === 'ocr-page') return `OCR · ${update.done}/${update.total} pagine · pagina ${update.pageNumber}`;
   if (update.phase === 'ocr-recognize') return `OCR · riconoscimento ${Math.round((update.fraction || 0) * 100)}%`;
@@ -830,7 +835,12 @@ export default function AppV14() {
       await refreshLibrary(activeProfileId);
       const parsed = await readSourceFile(file, {
         autoOcr: true,
-        onProgress(update) { setStatus(importStatus(update)); },
+        onProgress(update) {
+          setStatus(importStatus(update));
+          if (Number.isFinite(update?.done) && Number.isFinite(update?.total) && update.total > 0) {
+            setProgress({ done: update.done, total: update.total });
+          }
+        },
       });
       setDocumentData(parsed);
       const parsedOriginal = await saveLibraryBook({
