@@ -14,6 +14,8 @@ const margin=17;
 const mm=pt=>Number(pt||0)*25.4/72;
 const paper=page=>({width:Math.max(95,mm(page?.widthPt||595.28)),height:Math.max(135,mm(page?.heightPt||841.89))});
 export async function exportMirrorPdfV35(book,fileName,options={}){
+  if(book?.editionsV36&&!book?.editionReadiness?.complete)
+    throw Error('Anteprima LAB36 incompleta: impossibile pubblicare il PDF definitivo.');
   const source=book?.canonicalBookMap;
   if(!source?.pages?.length)throw Error('Mappa pagine originali assente.');
   const initial=paper(source.pages[0]);

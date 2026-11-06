@@ -5,6 +5,7 @@ import {
   auditChapterContinuity, auditNarrativeSource, hasLexicalSupport, canSafelyBridgeAfterGap,
 } from './studyQualityGuard.js';
 import { explainInSimpleWords } from './simpleLanguage.js';
+import { buildGeminiEditionViewV36 } from './editionViewV36.js';
 import { inspectChapterBoundaries, chapterMeasuredStats, chapterLevelTarget, stripConfirmedNextHeading, auditChapterOutput } from './chapterFidelityV33.js';
 
 export const REDUCTION_STEPS = [0, 10, 20, 30, 40, 50, 'summary'];
@@ -134,6 +135,8 @@ function computeSelection(items, level) {
 export function buildPrecisionEdition(book, reduction = 10) {
   if (!book) return null;
   const level = normalizeReduction(reduction);
+  const generated = level!==0 ? buildGeminiEditionViewV36(book,level):null;
+  if(generated)return generated;
   const originalChapters = Array.isArray(book.chapters) ? book.chapters : [];
   const { items, sourceWords, sourceLetters } = buildRequests(book, level);
   const targetPercent = level === 'summary' ? null : level;

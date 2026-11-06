@@ -180,6 +180,7 @@ export function composeMirrorPages(sourceMap,book,{
       row.entries.push({kind:'paragraph',chapterIndex:i,chapterTitle:chapter.title,
         sectionTitle:p.sourceSection||null,paragraphIndex:j,
         original:String(p.original||''),text:normalizeStudyParagraphFlow(paragraphText(p,variant)),
+        editionPending:Boolean(p.editionPending),
       });
     }
   }
@@ -255,7 +256,7 @@ export function composeMirrorPages(sourceMap,book,{
         const layoutLines=targetLines.slice(offset,offset+take);
         const part=normalizeStudyParagraphFlow(layoutLines.join('\n'));
         const first=offset===0;
-        sheet.blocks.push({kind:e.kind,text:part,layoutLines,
+        sheet.blocks.push({kind:e.kind,text:part,layoutLines,editionPending:e.editionPending||false,
           chapterIndex:e.chapterIndex,paragraphIndex:e.paragraphIndex,
           sourcePage:source.physicalPage,
           sectionTitle:e.sectionTitle,
