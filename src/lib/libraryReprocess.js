@@ -4,6 +4,7 @@ import { requireIntegrityForStudy } from './integrity360Core.js';
 import { getLibraryBook, saveLibraryBook } from './library.js';
 import { auditBookSourceCoverage } from './studyQualityGuard.js';
 import { inspectChapterBoundaries } from './chapterFidelityV33.js';
+import { markResumeStatePublished } from './resumeStore.js';
 
 
 // LAB33: re-evaluate *existing stored pages* before rebuilding the study edition.
@@ -122,5 +123,9 @@ export async function reprocessStoredBook(id, {
     readingProgress: record.readingProgress,
   });
   if (!saved?.studyBook) throw new Error('Impossibile confermare il salvataggio del libro rielaborato.');
+  // This is *after* the only library commit. A crash before this line leaves
+  // the v5 checkpoint unpublished, so the next attempt can recover it.
+  const signature = generated?.resumeSignature || generated?.quality?.resumeSignature;
+  if (signature) await markResumeStatePublished(signature);
   return saved;
 }
