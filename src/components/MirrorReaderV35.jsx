@@ -1,4 +1,5 @@
 import React,{useMemo,useState,useEffect} from 'react';
+import './MirrorReaderV35.css';
 import { composeMirrorPages,mirrorPageStatistics } from '../lib/libroSpecchioV35.js';
 import { renderMirrorImage } from '../lib/visualMirrorV35.js';
 export default function MirrorReaderV35({book,originalFile,chapterIndex=0,variant='study'}){
