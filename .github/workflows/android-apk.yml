@@ -138,6 +138,10 @@ jobs:
         if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
         run: node scripts/test-lab36-edition-view.mjs
 
+      - name: LAB36 original page spans and no-progress diagnostics
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
+        run: node scripts/test-lab36-page-span-diagnostics.mjs
+
       - name: LAB36 per-edition resume after quota 429
         if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
         run: node scripts/test-lab36-single-edition.mjs

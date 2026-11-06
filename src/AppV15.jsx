@@ -1008,8 +1008,8 @@ export default function AppV14() {
           generatedDraft={...result,editionsV36:snapshot,
             engine:snapshot.complete?'ai':(snapshot.verifiedChunks>0?'misto':result.engine)};
           setStudyBook(generatedDraft);
-          setProgress({done:snapshot.verifiedCells||0,total:snapshot.totalCells||1});
-          setStatus('Libro Specchio · sei edizioni Gemini · '+(snapshot.verifiedCells||0)+'/'+(snapshot.totalCells||1)+' paragrafi verificati · checkpoint');
+          setProgress({done:snapshot.verifiedChunkVariants||0,total:snapshot.totalChunkVariants||1});
+          setStatus('Libro Specchio · Gemini · '+(snapshot.verifiedChunkVariants||0)+'/'+(snapshot.totalChunkVariants||0)+' parti IA verificate · checkpoint');
           // Save progress occasionally, never let concurrent IndexedDB writers race.
           if(lab36BookId && (snapshot.verifiedCells||0)-savedVerified>=10){
             savedVerified=snapshot.verifiedCells||0;
@@ -1105,8 +1105,8 @@ export default function AppV14() {
           draft={...current,editionsV36:update,
             engine:update.complete?'ai':(update.verifiedChunks>0?'misto':current.engine)};
           setStudyBook(draft);
-          setProgress({done:update.verifiedCells||0,total:update.totalCells||1});
-          setStatus('Ripresa Gemini · '+(update.verifiedCells||0)+'/'+(update.totalCells||1)+' paragrafi verificati');
+          setProgress({done:update.verifiedChunkVariants||0,total:update.totalChunkVariants||1});
+          setStatus('Ripresa Gemini · '+(update.verifiedChunkVariants||0)+'/'+(update.totalChunkVariants||0)+' parti IA verificate');
         },
       });
       draft={...current,editionsV36:snapshot,

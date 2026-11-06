@@ -449,6 +449,25 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
       {v36Partial && <div className="sb-mirror-warning" role="status">
         <p>ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi verificati. {studyBook.editionsV36?.verifiedVariants||0}/{studyBook.editionsV36?.totalVariants||0} varianti verificate. Le pagine incomplete restano segnalate; PDF e download saranno disponibili dopo la verifica finale.</p>
+        {Number.isFinite(studyBook.editionsV36?.totalChunkVariants) &&
+          studyBook.editionsV36.totalChunkVariants>0 && <p>
+            Parti IA verificate: {studyBook.editionsV36.verifiedChunkVariants||0}/
+            {studyBook.editionsV36.totalChunkVariants}.
+            I paragrafi lunghi compaiono come completi solo quando tutte le loro parti sono verificate.
+          </p>}
+        {studyBook.editionsV36?.diagnostics?.sourceBlocked>0 && <p>
+          {studyBook.editionsV36.diagnostics.sourceBlocked} parti del documento
+          richiedono verifica della pagina originale. Le altre parti sicure vengono elaborate.
+        </p>}
+        {studyBook.editionsV36?.status==='provider-blocked' && <p>
+          Gemini ha restituito un errore non legato all'attesa della quota
+          ({studyBook.editionsV36.diagnostics?.lastCode||'servizio non disponibile'}).
+          Elaborazione sospesa per evitare richieste inutili. I progressi sono conservati.
+        </p>}
+        {studyBook.editionsV36?.status==='source-review-needed' && <p>
+          Elaborazione sospesa: nessuna parte dispone ancora di una mappa delle pagine verificata.
+          È necessario controllare l'acquisizione originale, non aspettare Gemini.
+        </p>}
         {studyBook.editionsV36?.quota && <p>{studyBook.editionsV36.quota.automatic
           ? ('Attesa Gemini · '+(studyBook.editionsV36.quota.estimated?'orario stimato: ':'ripresa prevista: ')+
             new Date(studyBook.editionsV36.quota.retryAt).toLocaleString('it-IT'))

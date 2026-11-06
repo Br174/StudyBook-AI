@@ -46,6 +46,7 @@ async function askGemini(source,context,level,repairIssues=[],paceMs=6500){
   if(!response.ok){
     const error=new Error(data?.error||'Servizio Gemini temporaneamente non disponibile');
     error.code=data?.code||(response.status===429?'AI_QUOTA_LIMIT':'AI_SERVICE_ERROR');
+    if(/^AI_PROVIDER_\d{3}$/.test(error.code))error.code='AI_PROVIDER_REJECTED';
     if(['AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD'].includes(error.code)){
       error.quota=await registerGeminiPause(data?.quota||{
         kind:error.code==='AI_QUOTA_MANUAL_REVIEW'?'no-free-allocation':
@@ -80,21 +81,36 @@ export function splitGeminiSourceV36(value,maxChars=680){
   return chunks;
 }
 
-function sourceWarnings(book,sourcePageStart,sourcePageEnd){
-  const map=book.canonicalBookMap;
-  if(!map)return [];
-  const page=map.pages?.find(x=>x.physicalPage===sourcePageStart);
-  const issues=[];
-  if(page?.sourceStatus!=='verified')issues.push('source-page-not-verified');
-  if(Number.isInteger(sourcePageEnd)&&sourcePageEnd!==sourcePageStart)issues.push('source-paragraph-crosses-pages');
-  return issues;
+// A paragraph legitimately spanning several *verified* physical pages is
+// not a corrupt source. Only missing/unverified pages block that paragraph.
+export function sourceWarnings(book,sourcePageStart,sourcePageEnd){
+  const map=book?.canonicalBookMap;
+  if(!map?.pages?.length)return [];
+  const start=Number(sourcePageStart),end=Number(sourcePageEnd??sourcePageStart);
+  if(!Number.isInteger(start)||!Number.isInteger(end)||start<1||end<start)
+    return ['source-page-owner-unresolved'];
+  const byPage=new Map(map.pages.map(page=>[Number(page.physicalPage),page]));
+  if(end>map.pages.length || end-start>map.pages.length)
+    return ['source-page-range-outside-original'];
+  const reasons=[];
+  for(let physical=start;physical<=end;physical++){
+    const page=byPage.get(physical);
+    if(!page)reasons.push('source-page-not-mapped');
+    else if(page.sourceStatus!=='verified')reasons.push('source-page-not-verified');
+  }
+  return [...new Set(reasons)];
 }
-function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent){
+function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,diagnostics=null){
   let verifiedCells=0,totalCells=0,blockedCells=0,verifiedChunks=0,verifiedVariants=0;
+  let verifiedChunkVariants=0,totalChunkVariants=0;
   const rows=(book.chapters||[]).map((chapter,ci)=>(chapter.paragraphs||[]).map((paragraph,pi)=>{
     totalCells++;
     const jobs=chapterJobs.get(ci+':'+pi)||[];
     const texts={},verified={},issues={},achievedPercent={};
+    totalChunkVariants+=jobs.length*GEMINI_LEVELS.length;
+    for(const job of jobs)for(const id of GEMINI_LEVELS){
+      if(state.get(job.key)?.verified?.[id]===true)verifiedChunkVariants++;
+    }
     for(const id of GEMINI_LEVELS){
       const fragments=jobs.map(j=>state.get(j.key)?.verified?.[id]===true?state.get(j.key)?.editions?.[id]:null);
       const ready=jobs.length>0&&fragments.every(t=>typeof t==='string'&&t.trim());
@@ -114,6 +130,8 @@ function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent){
   const complete=Boolean(totalCells)&&blockedCells===0&&noReviewSource&&checkpointPersistent;
   return {version:VERSION,sourceFingerprint:fingerprint,rows,verifiedCells,totalCells,blockedCells,
     verifiedChunks,verifiedVariants,totalVariants:totalCells*GEMINI_LEVELS.length,
+    verifiedChunkVariants,totalChunkVariants,
+    diagnostics:diagnostics?{...diagnostics,errorsByCode:{...diagnostics.errorsByCode}}:null,
     checkpointPersistent,complete,status:complete?'complete':'partial',updatedAt:new Date().toISOString()};
 }
 export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcurrency=1,paceMs=6500}={}){
@@ -148,6 +166,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
     }
   }
   let checkpointPersistent=true;
+  const diagnostics={sourceBlocked:0,providerErrors:0,processedJobs:0,lastCode:null,errorsByCode:{}};
   for(let i=0;i<jobs.length;i+=100){
     const wanted=jobs.slice(i,i+100),cache=await loadRuntimeUnitResults(wanted.map(j=>j.key));
     for(const j of wanted){
@@ -160,7 +179,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
   const pending=jobs.filter(j=>!GEMINI_LEVELS.every(id=>state.get(j.key)?.verified?.[id]===true));
   const blocked= pending.length ? await readGeminiPause() : null;
   if(blocked){
-    const paused=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent);
+    const paused=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,diagnostics);
     paused.quota=blocked;
     paused.status=blocked.automatic?'quota-paused':'quota-review';
     paused.execution={waves:0,pendingBefore:pending.length,resumedFromCache:jobs.length-pending.length,
@@ -169,7 +188,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
     onProgress(paused,paused.verifiedVariants,paused.totalVariants);
     return paused;
   }
-  const first=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent);
+  const first=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,diagnostics);
   onProgress(first,first.verifiedVariants,first.totalVariants);
   // Keep progress UI bounded (~40 snapshots) even for an 800-page book.
   const progressEvery=Math.max(5,Math.ceil(pending.length/40));
@@ -177,7 +196,9 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
     // One request at a time; free-tier requests share quotas across keys.
     batches:pending.map(j=>[j]),initialConcurrency:1,
     maxConcurrency:1,
-    stopOnFailures:['AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD','AI_NOT_CONFIGURED'],
+    stopOnFailures:['AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD',
+      'AI_NOT_CONFIGURED','AI_PROVIDER_REJECTED','AI_SERVICE_ERROR',
+      'AI_TIMEOUT_OR_NETWORK','INVALID_EDITION_RESPONSE','INVALID_GENERATIVE_RESPONSE'],
     worker:async([job],{aiAllowed})=>{
       if(job.pageIssues.length||!job.source)return {job,aiFailure:'SOURCE_REVIEW',issues:job.pageIssues};
       if(!aiAllowed)return {job,aiFailure:'AI_PAUSED'};
@@ -217,7 +238,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
           // can never discard the preceding three verified editions.
           state.set(job.key,{...record});
           if(!await saveRuntimeUnitResults([{key:job.key,result:record}]))checkpointPersistent=false;
-          const snapshot=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent);
+          const snapshot=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,diagnostics);
           if(snapshot.verifiedVariants<=GEMINI_LEVELS.length*2||snapshot.verifiedVariants%12===0)
             onProgress(snapshot,snapshot.verifiedVariants,snapshot.totalVariants);
         }catch(error){
@@ -229,19 +250,29 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
         (semanticFailure?'SEMANTIC_REVIEW':'EDITION_INCOMPLETE')};
     },
     onWave:async({results,processedBatches,totalBatches})=>{
+      for(const result of results){
+        diagnostics.processedJobs++;
+        if(result.aiFailure){
+          const code=String(result.aiFailure).slice(0,60);
+          diagnostics.lastCode=code;
+          diagnostics.errorsByCode[code]=(diagnostics.errorsByCode[code]||0)+1;
+          if(code==='SOURCE_REVIEW')diagnostics.sourceBlocked++;
+          else diagnostics.providerErrors++;
+        }
+      }
       const entries=results.filter(x=>x.record).map(x=>({key:x.job.key,result:x.record}));
       if(entries.length){
         const saved=await saveRuntimeUnitResults(entries);
         if(!saved)checkpointPersistent=false;
         entries.forEach(e=>state.set(e.key,e.result));
       }
-      if(processedBatches%progressEvery===0||processedBatches===totalBatches){
-        const snap=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent);
+      if(results.some(item=>item.aiFailure)||processedBatches%progressEvery===0||processedBatches===totalBatches){
+        const snap=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,diagnostics);
         onProgress(snap,snap.verifiedVariants,snap.totalVariants);
       }
     },
   });
-  const final=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent);
+  const final=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,diagnostics);
   final.execution={waves:adaptive.waves,maxConcurrencyUsed:adaptive.maxConcurrencyUsed,
     pendingBefore:pending.length,resumedFromCache:jobs.length-pending.length,
     haltedOn:adaptive.haltedOn,remainingBatches:adaptive.remainingBatches};
@@ -250,6 +281,11 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
     final.status=final.quota?.automatic?'quota-paused':'quota-review';
   }
   if(adaptive.haltedOn==='AI_NOT_CONFIGURED')final.status='ai-unavailable';
+  if(['AI_PROVIDER_REJECTED','AI_SERVICE_ERROR','AI_TIMEOUT_OR_NETWORK',
+      'INVALID_EDITION_RESPONSE','INVALID_GENERATIVE_RESPONSE'].includes(adaptive.haltedOn))
+    final.status='provider-blocked';
+  if(!adaptive.haltedOn && diagnostics.sourceBlocked>0 && final.verifiedChunkVariants===0)
+    final.status='source-review-needed';
   onProgress(final,final.verifiedVariants,final.totalVariants);
   return final;
 }

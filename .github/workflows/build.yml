@@ -78,6 +78,8 @@ jobs:
         run: node scripts/test-lab36-app-integration.mjs
       - name: Test LAB36 editions reader and publication guard
         run: node scripts/test-lab36-edition-view.mjs
+      - name: Test LAB36 original page spans and visible no-progress diagnostics
+        run: node scripts/test-lab36-page-span-diagnostics.mjs
       - name: Test LAB36 per-edition resume after quota 429
         run: node scripts/test-lab36-single-edition.mjs
       - name: Test LAB36 persisted six-edition source checkpoints
