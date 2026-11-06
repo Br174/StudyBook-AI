@@ -41,13 +41,15 @@ export function diagnoseGeminiQuota({status=429,body=null,headers=null,model=nul
   const v=violations[0]||{};
   const message=String(error.message||'').slice(0,1200).toLowerCase();
   const signal=[...violations.map(x=>[x.quotaMetric,x.quotaId,x.description].join(' ')),message].join(' ').toLowerCase();
-  const billing=/prepay|spend.cap|billing|payment|funds.depleted|credit.balance/.test(signal);
-  const zero=violations.some(x=>Number(x.quotaValue)===0)||/\blimit\s*[:=]\s*0\b/.test(signal);
+  // Google's generic 429 message says 'check billing details' even for a free
+  // per-minute/day quota; only an EXPLICIT spend/cap/funds failure is billing.
+  const billing=/prepay|spend[ -]?cap|spending[ -]?cap|funds?(?:\\s+\\w+){0,2}\\s+depleted|billing.account.(?:disabled|suspended)|payment.required|credit.balance.(?:depleted|exhausted)/.test(signal);
+  const zero=violations.some(x=>x.quotaValue!==undefined&&x.quotaValue!==null&&String(x.quotaValue).trim()!==''&&Number(x.quotaValue)===0)||/\blimit\s*[:=]\s*0\b/.test(signal);
   let kind='unknown';
   if(status===503)kind='overload';
   else if(billing)kind='billing';
   else if(zero)kind='no-free-allocation';
-  else if(/per.?day|requests.?per.?day|daily|rpd|free_tier_requests\b/.test(signal))kind='daily';
+  else if(/per.?day|requests.?per.?day|daily|rpd/.test(signal))kind='daily';
   else if(/tokens?.?per.?minute|input_token_count|tpm/.test(signal))kind='tokens-minute';
   else if(/per.?minute|rpm|request.?rate/.test(signal))kind='requests-minute';
   let seconds=parseRetryAfter(headers,now);
