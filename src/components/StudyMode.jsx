@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import MirrorReaderV35 from './MirrorReaderV35.jsx';
 import { askStudyAssistant, STUDY_ACTIONS } from '../lib/studyAssistant.js';
 import { buildConceptMap, buildFlashcards, buildOralQuestions, buildQuiz } from '../lib/studyTools.js';
 import { readerCssVariables } from '../lib/accessibility.js';
@@ -79,7 +80,7 @@ function EmptyTool({ children }) {
   return <div className="study-tool-empty">{children}</div>;
 }
 
-export default function StudyMode({ book, sourceBook = book, bookTitle, initialMode = 'reader', chapterIndex, onChapterChange, dsaMode, accessibility, onClose }) {
+export default function StudyMode({ book, sourceBook = book, originalFile = null, bookTitle, initialMode = 'reader', chapterIndex, onChapterChange, dsaMode, accessibility, onClose }) {
   const [target, setTarget] = useState(null);
   const [answer, setAnswer] = useState(null);
   const [assistantBusy, setAssistantBusy] = useState(false);
@@ -333,7 +334,10 @@ export default function StudyMode({ book, sourceBook = book, bookTitle, initialM
         </>
       )}
 
-      {isReader && (
+      {isReader && book?.canonicalBookMap && (
+        <MirrorReaderV35 book={book} originalFile={originalFile} chapterIndex={chapterIndex} variant={readingVariant} />
+      )}
+      {isReader && !book?.canonicalBookMap && (
         <main className="study-mode-pages" onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
           <article className="study-continuous-sheet">
             <div className="study-continuous-main">
