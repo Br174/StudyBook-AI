@@ -12,3 +12,17 @@ if (typeof Promise.try !== 'function') {
     },
   });
 }
+
+if (typeof Uint8Array.prototype.toHex !== 'function') {
+  Object.defineProperty(Uint8Array.prototype, 'toHex', {
+    configurable: true,
+    writable: true,
+    value() {
+      let hex = '';
+      for (let index = 0; index < this.length; index += 1) {
+        hex += this[index].toString(16).padStart(2, '0');
+      }
+      return hex;
+    },
+  });
+}
