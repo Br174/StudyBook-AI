@@ -53,6 +53,24 @@ jobs:
           if(!url)throw Error('LAB36 staging endpoint missing in Wrangler output');
           writeFileSync('lab36-worker-url.txt',url+'\n');
           NODE
+      - name: Verify LAB36 route availability after new-worker publication
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const url=readFileSync('lab36-worker-url.txt','utf8').trim();
+          let last='none';
+          for(let i=0;i<20;i++){
+            try{
+              const response=await fetch(url+'/api/editions/v36',{method:'GET',signal:AbortSignal.timeout(12000)});
+              last=String(response.status);
+              if(response.status===405){console.log('LAB36_STAGING_ROUTE=READY');process.exit(0);}
+              if(response.status!==404)break;
+            }catch(error){last=String(error?.name||'network');}
+            await new Promise(resolve=>setTimeout(resolve,3000));
+          }
+          throw Error('LAB36 worker route is not ready: '+last);
+          NODE
       - name: End-to-end live proof on dedicated LAB36 Worker
         shell: bash
         run: |
@@ -78,6 +96,7 @@ jobs:
           console.log('LAB36_STABLE_WORKER_GEMINI=PASS');
           NODE
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: StudyBook-LAB36-Staging-Worker-URL
           path: lab36-worker-url.txt
