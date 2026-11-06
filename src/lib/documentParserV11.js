@@ -266,6 +266,12 @@ export function detectChapters(text = '') {
 export async function readSourceFile(file, options = {}) {
   const { onProgress, autoOcr = true } = options;
   const pdfFile = isPdf(file);
+  if (pdfFile) {
+    // LAB31: the former sequential PDF+OCR path is retired from the active route.
+    // Scanner/image/eBook parsing remains owned by the existing native parser.
+    const { readPdfIntegrity360 } = await import('./pdfIntegrityTurbo.js');
+    return readPdfIntegrity360(file, { ...options, onProgress, autoOcr });
+  }
   const base = await readV10SourceFile(file, {
     ...options,
     autoOcr: pdfFile ? false : autoOcr,
