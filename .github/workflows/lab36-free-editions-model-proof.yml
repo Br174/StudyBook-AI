@@ -47,6 +47,7 @@ jobs:
                 result.datePreserved=Object.values(editions).every(x=>/\b2026\b/.test(x));
               }else{
                 result.reason=safe(body?.error?.status)||'HTTP_ERROR';
+                result.diagnostic=String(body?.error?.message||'').replace(/[A-Za-z0-9_-]{25,}/g,'[redacted]').slice(0,240);
               }
             }catch(e){result.reason=safe(e?.name)||'UNEXPECTED_ERROR';}
             // Never include source text, generated text, credentials, or raw upstream error in logs.
