@@ -409,7 +409,7 @@ function ScannedBookPhoto({ blob }) {
   return url ? <img className="sb-scanned-book-cover-photo" src={url} alt="Fotografia reale della pagina scannerizzata" /> : null;
 }
 
-export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, generating = false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility, scannedPhoto = null, reduction = 10, onReductionChange, reductionMeta = null }) {
+export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, onResumeGemini, generating = false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility, scannedPhoto = null, reduction = 10, onReductionChange, reductionMeta = null }) {
   const [exportVariant, setExportVariant] = useState('study');
   const [exportOpen, setExportOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -447,7 +447,13 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       </header>
 
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
-      {v36Partial && <p role="status" className="sb-mirror-warning">ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi verificati. Le pagine incomplete restano segnalate; PDF e download saranno disponibili dopo la verifica finale.</p>}
+      {v36Partial && <div className="sb-mirror-warning" role="status">
+        <p>ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi verificati. Le pagine incomplete restano segnalate; PDF e download saranno disponibili dopo la verifica finale.</p>
+        {studyBook.editionsV36?.status==='quota-paused' && <p>Quota Gemini temporaneamente esaurita. Non sono stati attivati servizi a pagamento.</p>}
+        <button type="button" onClick={onResumeGemini} disabled={generating}>
+          {generating?'Elaborazione Gemini in corso…':'Riprendi le sei edizioni Gemini'}
+        </button>
+      </div>}
       <section className="sb-open-book-workspace" aria-label="Libro aperto">
         <div className="sb-open-book-overview">
           <div className={scannedPhoto ? 'sb-open-book-cover sb-scanned-book-cover' : 'sb-open-book-cover'}>

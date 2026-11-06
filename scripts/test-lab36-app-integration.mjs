@@ -6,6 +6,9 @@ const mirror=read('src/components/MirrorReaderV35.jsx'),api=read('api/editionsV3
 assert.match(app,/generateGeminiEditionsV36\(result/);
 assert.match(app,/editionsV36:\s*editions/);
 assert.match(app,/checkpointTail/);
+assert.match(app,/canonicalBookMap:\s*sourceData\?\.canonicalBookMap/);
+assert.match(app,/resumeGeminiEditions/);
+assert.match(studio,/Riprendi le sei edizioni Gemini/);
 assert.match(app,/editionReadiness\?\.partial/);
 assert.match(app,/markResumeStatePublished/);
 assert.match(studio,/ANTEPRIMA PARZIALE/);

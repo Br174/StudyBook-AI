@@ -72,6 +72,7 @@ export async function runAdaptiveBatchQueue({
   initialConcurrency = 3,
   maxConcurrency = HARD_MAX_CONCURRENCY,
   onWave,
+  stopOnFailures = [],
 } = {}) {
   if (typeof worker !== 'function') throw new Error('MotorLab Runtime richiede un worker.');
   const ceiling = clamp(Math.floor(Number(maxConcurrency) || HARD_MAX_CONCURRENCY), 1, HARD_MAX_CONCURRENCY);
@@ -83,6 +84,7 @@ export async function runAdaptiveBatchQueue({
   let aiEnabled = Boolean(preferAi);
   let aiFailures = 0;
   let correctionRelays = 0;
+  let haltedOn = null;
 
   while (cursor < batches.length) {
     const waveSize = Math.min(concurrency, batches.length - cursor);
@@ -102,6 +104,7 @@ export async function runAdaptiveBatchQueue({
     const failures = results.filter((item) => item?.aiFailure);
     const successes = results.filter((item) => item?.aiSuccess);
     const aiNotConfigured = failures.some((item) => item.aiFailure === 'AI_NOT_CONFIGURED');
+    haltedOn = failures.map(item => item.aiFailure).find(code => Array.isArray(stopOnFailures) && stopOnFailures.includes(code)) || null;
     aiFailures += failures.length;
     correctionRelays += failures.length;
 
@@ -134,6 +137,7 @@ export async function runAdaptiveBatchQueue({
         correctionRelays,
       });
     }
+    if (haltedOn) break;
   }
 
   return {
@@ -147,5 +151,7 @@ export async function runAdaptiveBatchQueue({
     aiEnabled,
     aiFailures,
     correctionRelays,
+    haltedOn,
+    remainingBatches: batches.length - cursor,
   };
 }

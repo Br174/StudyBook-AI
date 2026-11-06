@@ -960,11 +960,18 @@ export default function AppV14() {
         },
       });
       const sourceIntegrity = auditBookSourceCoverage(sourceData, generated);
-      let result = { ...generated, quality: { ...(generated.quality || {}), sourceIntegrity } };
+      let result = { ...generated,
+        canonicalBookMap: sourceData?.canonicalBookMap || generated.canonicalBookMap || null,
+        quality: { ...(generated.quality || {}), sourceIntegrity } };
       // LAB36: show only verified generated pages as a progressive preview.
       // Persist individual chunks in the existing MotorLab runtime IndexedDB store.
-      setStudyBook({ ...result, editionsV36:{status:'partial',complete:false,rows:[]} });
+      const initialDraft={...result,editionsV36:{status:'partial',complete:false,rows:[]}};
+      generatedDraft=initialDraft;
+      setStudyBook(initialDraft);
       navigateTo('studio');
+      // Persist a single Library identity before the first Gemini request.
+      const firstSave=await persistBook(initialDraft,sourceData,sourceName,libraryId);
+      const lab36BookId=firstSave?.id||libraryId;
       let savedVerified = 0;
       let checkpointTail = Promise.resolve();
       const editions = await generateGeminiEditionsV36(result,{
@@ -975,11 +982,11 @@ export default function AppV14() {
           setProgress({done:snapshot.verifiedCells||0,total:snapshot.totalCells||1});
           setStatus('Libro Specchio · sei edizioni Gemini · '+(snapshot.verifiedCells||0)+'/'+(snapshot.totalCells||1)+' paragrafi verificati · checkpoint');
           // Save progress occasionally, never let concurrent IndexedDB writers race.
-          if(libraryId && (snapshot.verifiedCells||0)-savedVerified>=10){
+          if(lab36BookId && (snapshot.verifiedCells||0)-savedVerified>=10){
             savedVerified=snapshot.verifiedCells||0;
             const copy=generatedDraft;
             checkpointTail=checkpointTail.then(()=>saveLibraryBook({
-              id:libraryId,fileName:sourceName,sourceData,studyBook:copy,
+              id:lab36BookId,fileName:sourceName,sourceData,studyBook:copy,
               dsaMode:true,profileId:activeProfileId,originalFile:sourceFile,
             })).catch(()=>null);
           }
@@ -995,7 +1002,7 @@ export default function AppV14() {
       const nameToSave = suggestedFinal?.title
         ? `${sanitizeTitle(suggestedFinal.title)}.pdf` : sourceName;
       setFileName(nameToSave);
-      const saved = await persistBook(result, sourceData, nameToSave, libraryId);
+      const saved = await persistBook(result, sourceData, nameToSave, lab36BookId);
       if (saved && result.editionsV36?.complete && (generated.resumeSignature || generated.quality?.resumeSignature))
         await markResumeStatePublished(generated.resumeSignature || generated.quality?.resumeSignature);
       setScannerResultReady(fromScanner);
@@ -1023,7 +1030,7 @@ export default function AppV14() {
       const runtime = result.quality?.motorLabRuntime;
       const speedLabel = runtime ? ` · MotorLab Runtime · ${runtime.maxConcurrencyUsed || 1} corridori${runtime.cachedChunks ? ` · ${runtime.cachedChunks} blocchi riusati` : ''}` : '';
       setStatus(!result.editionsV36?.complete
-        ? 'Anteprima parziale · '+(result.editionsV36?.verifiedCells||0)+'/'+(result.editionsV36?.totalCells||0)+' paragrafi verificati · originale conservato'
+        ? (result.editionsV36?.status==='quota-paused'?'Limite gratuito Gemini raggiunto · riprendi più tardi · ': 'Anteprima parziale · ')+(result.editionsV36?.verifiedCells||0)+'/'+(result.editionsV36?.totalCells||0)+' paragrafi verificati · originale conservato'
         : sourceIntegrity.passed
         ? `Sei edizioni pronte · Gemini verificato${speedLabel}${saved ? ' · salvate in Libreria' : ''}`
         : `Libro da verificare · ${sourceIntegrity.issueCount} possibili anomalie di completezza · originale conservato`);
@@ -1047,6 +1054,34 @@ export default function AppV14() {
 
   async function generateBook() {
     await createStudyBook(documentData, fileName);
+  }
+
+  // Resume only the missing or rejected Gemini chunks. No repeated PDF import.
+  async function resumeGeminiEditions(){
+    if(generating||!studyBook?.editionsV36||studyBook.editionsV36.complete)return;
+    const current=studyBook;
+    let draft=current;
+    setGenerating(true);setError('');
+    try{
+      const snapshot=await generateGeminiEditionsV36(current,{maxConcurrency:2,
+        onProgress(update){
+          draft={...current,editionsV36:update};
+          setStudyBook(draft);
+          setProgress({done:update.verifiedCells||0,total:update.totalCells||1});
+          setStatus('Ripresa Gemini · '+(update.verifiedCells||0)+'/'+(update.totalCells||1)+' paragrafi verificati');
+        },
+      });
+      draft={...current,editionsV36:snapshot};
+      setStudyBook(draft);
+      await persistBook(draft,documentData,fileName,libraryId);
+      setStatus(snapshot.complete?'Sei edizioni Gemini completate e salvate':
+        snapshot.status==='quota-paused'?'Limite Gemini raggiunto · progressi salvati, riprendi quando la quota torna disponibile':
+        'Anteprima parziale salvata · parti non sicure ancora da verificare');
+    }catch(error){
+      setStudyBook(draft);
+      await persistBook(draft,documentData,fileName,libraryId);
+      setError(error?.message||'Impossibile riprendere Gemini');
+    }finally{setGenerating(false);}
   }
 
   function beginSourceEdit(chapterIndex, paragraphIndex, value) {
@@ -1726,6 +1761,7 @@ export default function AppV14() {
           reduction={reduction} onReductionChange={changeReduction} reductionMeta={precisionBook?.precisionEdition}
           isOriginalOnly={!studyBook && Boolean(originalRecord?.id === libraryId && sourceFile)}
           sourceData={documentData} generating={generating} onPrepareOriginal={prepareOriginalForStudy}
+          onResumeGemini={resumeGeminiEditions}
           originalRecord={originalRecord?.id === libraryId ? originalRecord : null}
           originalReading={originalReading} onCloseOriginalReader={() => setOriginalReading(false)}
           onOpenOriginalNative={openOriginalNative} accessibility={accessibility}

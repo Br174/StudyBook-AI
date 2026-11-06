@@ -114,11 +114,13 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
         state.set(j.key,item);
     }
   }
-  const pending=jobs.filter(j=>!state.has(j.key));
+  // Incomplete checkpoints must be repaired, not treated as permanently finished.
+  const pending=jobs.filter(j=>!GEMINI_LEVELS.every(id=>state.get(j.key)?.verified?.[id]===true));
   onProgress(makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent),0,pending.length);
   const adaptive=await runAdaptiveBatchQueue({
     batches:pending.map(j=>[j]),initialConcurrency:chooseRuntimeConcurrency(maxConcurrency),
     maxConcurrency,
+    stopOnFailures:['AI_QUOTA_LIMIT','AI_NOT_CONFIGURED'],
     worker:async([job],{aiAllowed})=>{
       if(job.pageIssues.length||!job.source)return {job,aiFailure:'SOURCE_REVIEW',issues:job.pageIssues};
       if(!aiAllowed)return {job,aiFailure:'AI_PAUSED'};
@@ -129,6 +131,18 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
           const report=[...new Set(Object.values(audit.issues).flat())];
           editions=await askGemini(job.source,job.context,report);
           audit=auditGeminiLevels(job.source,editions);
+        }
+        // A failed regeneration cannot erase an already verified level.
+        const previous=state.get(job.key);
+        if(previous?.source===job.source&&previous?.version===VERSION){
+          for(const id of GEMINI_LEVELS){
+            if(previous.verified?.[id]===true && audit.verified[id]!==true){
+              audit.verified[id]=true;
+              audit.editions[id]=previous.editions[id];
+              audit.issues[id]=[];
+              audit.achievedPercent[id]=previous.achievedPercent?.[id]??null;
+            }
+          }
         }
         const record={source:job.source,version:VERSION,...audit};
         const valid=GEMINI_LEVELS.every(id=>audit.verified[id]);
@@ -150,7 +164,10 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
   });
   const final=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent);
   final.execution={waves:adaptive.waves,maxConcurrencyUsed:adaptive.maxConcurrencyUsed,
-    pendingBefore:pending.length,resumedFromCache:jobs.length-pending.length};
-  onProgress(final,pending.length,pending.length);
+    pendingBefore:pending.length,resumedFromCache:jobs.length-pending.length,
+    haltedOn:adaptive.haltedOn,remainingBatches:adaptive.remainingBatches};
+  if(adaptive.haltedOn==='AI_QUOTA_LIMIT')final.status='quota-paused';
+  if(adaptive.haltedOn==='AI_NOT_CONFIGURED')final.status='ai-unavailable';
+  onProgress(final,adaptive.processedBatches,pending.length);
   return final;
 }

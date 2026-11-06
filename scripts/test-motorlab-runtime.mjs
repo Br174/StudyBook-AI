@@ -70,6 +70,13 @@ assert.equal(metrics.correctionRelays, 1);
 assert.ok(peak >= 2 && peak <= 3);
 assert.ok(metrics.finalConcurrency <= metrics.maxConcurrencyUsed);
 
+let stopped=0;
+const quotaRun=await runAdaptiveBatchQueue({batches:[[1],[2],[3]],maxConcurrency:1,initialConcurrency:1,
+  stopOnFailures:['AI_QUOTA_LIMIT'],worker:async()=>{stopped++;return {aiFailure:'AI_QUOTA_LIMIT'};}});
+assert.equal(stopped,1);
+assert.equal(quotaRun.haltedOn,'AI_QUOTA_LIMIT');
+assert.equal(quotaRun.remainingBatches,2);
+
 const engine = await readFile('src/lib/studyEngineV09.js', 'utf8');
 const store = await readFile('src/lib/resumeStore.js', 'utf8');
 const app = await readFile('src/AppV15.jsx', 'utf8');
