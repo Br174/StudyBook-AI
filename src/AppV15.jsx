@@ -26,6 +26,7 @@ import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
+import { reacquireFromSavedPdf } from './lib/sourceRecoveryV34.js';
 import { deliverBlob } from './lib/fileDelivery.js';
 import {
   clearScannerSessionStore,
@@ -766,6 +767,47 @@ export default function AppV14() {
     } finally {
       setLibraryBusy(false);
     }
+  }
+
+
+  async function recoverSourceFromLibrary(id) {
+    if (libraryBusy || importing || generating || scanProcessing) return false;
+    setLibraryBusy(true); setImporting(true); setError('');
+    setProgress({done:0,total:1});
+    setStatus('Fonte Blindata · verifico la copia PDF originale conservata…');
+    try {
+      const {record,reviewPages}=await reacquireFromSavedPdf(id,{
+        onProgress(update) {
+          if (String(update?.phase||'').startsWith('study-')) {
+            const m=update.meta||{};
+            setProgress({done:m.chunksDone ?? update.done ?? 0,
+              total:m.chunksTotal || update.total || 1});
+            setStatus('Studio da fonte verificata · '+(m.chunksDone ?? update.done ?? 0)+'/'+(m.chunksTotal || update.total || 1)+' blocchi');
+          } else {
+            if (Number.isFinite(update?.done) && Number.isFinite(update?.total) && update.total > 0)
+              setProgress({done:update.done,total:update.total});
+            setStatus(update?.phase==='source-recovery-start'
+              ? 'Riesame del PDF conservato · cerco le sole pagine problematiche…'
+              : importStatus(update));
+          }
+        },
+      });
+      setLibraryId(record.id); setFileName(record.fileName);
+      setDocumentData(record.sourceData); setSourceFile(record.originalFile);
+      setStudyBook(record.studyBook||null);
+      setOriginalRecord(record.studyBook?null:record);
+      setSelectedChapter(0);
+      await refreshLibrary();
+      setStatus(reviewPages.length
+        ? 'Riesame completato · '+reviewPages.length+' pagine richiedono confronto con l’originale'
+        : 'Riesame completato · PDF conservato · testo ricostruito');
+      navigateTo('studio');
+      return true;
+    } catch (err) {
+      setError(err?.message || 'Recupero interrotto: versione precedente conservata.');
+      setStatus('Recupero non completato · vecchio libro e PDF originale conservati');
+      return false;
+    } finally { setImporting(false); setLibraryBusy(false); }
   }
 
   async function reprocessLibraryItem(id) {
@@ -1631,7 +1673,7 @@ export default function AppV14() {
 
       {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} onRenameCollection={renameScannerArchiveCollection} onRenamePhoto={renameScannerArchivePhoto} />}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onReprocessBook={reprocessLibraryItem} onSetCoverFile={chooseLibraryCover} onGenerateCover={findAndApplyLibraryCover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onReprocessBook={reprocessLibraryItem} onRecoverOriginal={recoverSourceFromLibrary} onSetCoverFile={chooseLibraryCover} onGenerateCover={findAndApplyLibraryCover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
       {activeScreen === 'studio' && (
         <StudioScreen
