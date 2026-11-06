@@ -40,6 +40,24 @@ const EDITS_40 = [
   [/\bsi caratterizza per la presenza di\b/gi,'presenta'],
   [/\bè denominato\b/gi,'è chiamato'],
   [/\bè denominata\b/gi,'è chiamata'],
+  [/\bin maniera tale da\b/gi,'per'],
+  [/\bper quanto concerne\b/gi,'su'],
+  [/\ballo scopo di\b/gi,'per'],
+  [/\bnell'ambito di\b/gi,'in'],
+  [/\bper effetto di\b/gi,'per'],
+];
+const EDITS_50 = [
+  [/\bsi può affermare che\s*/gi, ''],
+  [/\bè possibile osservare che\s*/gi, ''],
+  [/\bappare evidente che\s*/gi, ''],
+  [/\bè necessario evidenziare che\s*/gi, ''],
+  [/\bcon riferimento a\b/gi, 'su'],
+  [/\ba livello di\b/gi, 'in'],
+  [/\bper il motivo che\b/gi, 'perché'],
+  [/\bin questo senso\b/gi, 'così'],
+  [/\bdi conseguenza\b/gi, 'quindi'],
+  [/\bsi può rilevare che\s*/gi, ''],
+  [/\bin particolare modo\b/gi, 'specie'],
 ];
 const QUALIFIERS = /\b(?:non|senza|salvo|eccetto|tranne|purché|soltanto|solo|necessari[oaie]|obbligatori[oaie]|vietat[oaie])\b/gi;
 function qualifierTokens(text) {
@@ -99,7 +117,7 @@ function compactSentence(source, level) {
   let result = ws(source);
   const n = level === 'summary' ? 70 : Number(level);
   const groups = [EDITS_10, ...(n >= 20 ? [EDITS_20] : []),
-    ...(n >= 30 ? [EDITS_30] : []), ...(n >= 40 ? [EDITS_40] : [])];
+    ...(n >= 30 ? [EDITS_30] : []), ...(n >= 40 ? [EDITS_40] : []), ...(n >= 50 ? [EDITS_50] : [])];
   for (const group of groups) for (const [pattern, substitute] of group) {
     // Accented words at the beginning are not matched reliably by ASCII \\b;
     // edits without a safe Unicode boundary are omitted rather than guessed.
@@ -162,7 +180,14 @@ export function auditNarrativeSource(source) {
   return {ok:problems.length===0,problems};
 }
 
-export function checkReducedParagraph(original, text, { selectedUnits = [] } = {}) {
+export function canSafelyBridgeAfterGap(text) {
+  const first = ws(text);
+  if (!first || !/^[A-ZÀ-Ö«“"(\d]/u.test(first)) return false;
+  if (CONTEXT_START.test(first)) return false;
+  if (/^(?:E|Ed|Ma|Oppure|Perché|Poiché|Quando|Quindi|Dunque|Infatti|Perciò|Tuttavia|Inoltre|Pertanto|Però)\b/iu.test(first)) return false;
+  return checkSentence(first).valid;
+}
+export function checkReducedParagraph(original, text, { selectedUnits = [], allowSafeGaps = false } = {}) {
   const issues = [];
   if (ws(original) && !ws(text)) issues.push('missing-paragraph');
   const sections = splitCompleteSentences(text);
@@ -176,7 +201,8 @@ export function checkReducedParagraph(original, text, { selectedUnits = [] } = {
   if (selectedUnits.length) {
     const ordered = [...selectedUnits].sort((x,y) => x.index-y.index);
     if (ordered[0].index !== 0 ||
-        ordered.some((unit,i) => i > 0 && unit.index !== ordered[i-1].index+1)) {
+        ordered.some((unit,i) => i > 0 && unit.index !== ordered[i-1].index+1
+          && (!allowSafeGaps || !canSafelyBridgeAfterGap(unit.source)))) {
       issues.push('non-contiguous-narrative');
     }
   }
