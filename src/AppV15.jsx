@@ -1453,7 +1453,7 @@ export default function AppV14() {
 
   function exportCurrentBook(format, variant = 'study') {
     if (!precisionBook) return;
-    const options = { dsaMode, variant, accessibility };
+    const options = { dsaMode, variant, accessibility, originalFile: sourceFile };
     if (format === 'pdf') return exportPdf(precisionBook, fileName, options);
     if (format === 'docx') return exportDocx(precisionBook, fileName, options);
     if (format === 'html') return exportHtml(precisionBook, fileName, options);
