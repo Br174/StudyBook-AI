@@ -2,7 +2,7 @@
 // mutate the archived Blob, prior source or prior processed study book in place.
 import { getLibraryBook, saveLibraryBook } from './library.js';
 import { requireIntegrityForStudy } from './integrity360Core.js';
-import { compareAcquisitions } from './sourceShieldV34.js';
+import { compareAcquisitions, auditSourceAgainstOriginal } from './sourceShieldV34.js';
 import { auditBookSourceCoverage } from './studyQualityGuard.js';
 import { markResumeStatePublished } from './resumeStore.js';
 
@@ -17,7 +17,22 @@ export async function reacquireFromSavedPdf(id,{
     throw new Error('Recupero sorgente supportato per PDF: il file originale non è un PDF.');
   }
   const old=record.sourceData||null;
-  const suspicious=old?.sourceShield?.reviewPages || old?.integrity360?.sourceReviewPages || [];
+  const sourcePages=old?.pages || [];
+  const previouslyAudited=Boolean(old?.sourceShield?.sourceSha256
+    && old?.sourceShield?.pdfPageCount === sourcePages.length);
+  const legacyAudit=previouslyAudited ? null : auditSourceAgainstOriginal({
+    pages:sourcePages,
+    pdfPageCount:old?.integrity360?.pageCount || sourcePages.length,
+    fingerprint:old?.originalFingerprint || '',
+  });
+  const suspiciousFromAudit=old?.sourceShield?.reviewPages
+    || old?.integrity360?.sourceReviewPages || legacyAudit?.reviewPages || [];
+  // Older LAB imports could have cached text even when no source-level
+  // verification was ever performed. In an explicit user-triggered recheck
+  // re-extract all pages once; NEVER accept a stale "verified" cache blindly.
+  const suspicious=(!previouslyAudited || !suspiciousFromAudit.length)
+    ? Array.from({length:sourcePages.length},(_,i)=>i+1)
+    : suspiciousFromAudit;
   const retriever=read || (await import('./documentParserV11.js')).readSourceFile;
   onProgress?.({phase:'source-recovery-start',done:0,total:1,reviewPages:suspicious.length});
   const fresh=await retriever(file,{autoOcr:true,retryPages:suspicious,onProgress});
