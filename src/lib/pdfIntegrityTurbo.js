@@ -110,7 +110,7 @@ function toHex(bytes) {
   return [...new Uint8Array(bytes)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, onVerifiedChapter, retryPages = [] } = {}) {
+export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, onVerifiedChapter, retryPages = [], forceReextractAll = false } = {}) {
   const started = performance.now();
   onProgress?.({phase:'turbo-file-read', done:0,total:1,bytes:Number(file?.size||0)});
   const data = new Uint8Array(await file.arrayBuffer());
@@ -139,8 +139,8 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
   try {
     const cache = await loadIntegrity360Pages(signature);
     for (const row of cache) {
-      if (row.pageNumber <= pageCount && !retrySet.has(row.pageNumber)
-        && !pages[row.pageNumber - 1]) {
+      if (!forceReextractAll && row.pageNumber <= pageCount
+        && !retrySet.has(row.pageNumber) && !pages[row.pageNumber - 1]) {
         pages[row.pageNumber - 1] = {
           pageNumber: row.pageNumber, text: row.text, rawText: row.rawText || row.text,
           status: 'verified', source: row.source || 'resume', imageCount: row.imageCount || 0,
