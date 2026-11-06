@@ -120,11 +120,16 @@ export default function StudyMode({ book, sourceBook = book, bookTitle, initialM
   const numberIt = (value) => Number(value || 0).toLocaleString('it-IT');
   const chapterLetterStats = useMemo(() => {
     const paragraphs = chapter?.paragraphs || [];
+    const original=paragraphs.reduce((sum,p)=>sum+countLetters(p.original || ''),0);
+    const current=paragraphs.reduce((sum,p)=>
+      sum+countLetters(editorialParagraphText(p,{variant:readingVariant,dsaMode})),0);
     return {
-      original: paragraphs.reduce((sum,p) => sum+countLetters(p.original || ''),0),
-      current: paragraphs.reduce((sum,p) =>
-        sum+countLetters(editorialParagraphText(p,{variant:readingVariant,dsaMode})),0),
-      sourceWarnings: paragraphs.filter((p) => p.precisionAudit?.sourceNeedsReview).length,
+      original, current,
+      achieved:original?Math.round((1-current/original)*1000)/10:0,
+      sourceWarnings:paragraphs.filter(p=>p.precisionAudit?.sourceNeedsReview).length,
+      sourceReady:chapter?.precisionChapter?.sourceReady !== false,
+      target:chapter?.precisionChapter?.targetPercent ?? null,
+      incomplete:chapter?.precisionChapter?.outputAudit?.issues || [],
     };
   }, [chapter,readingVariant,dsaMode]);
   useEffect(() => () => { void stopStudySpeech(); }, []);
@@ -372,11 +377,18 @@ export default function StudyMode({ book, sourceBook = book, bookTitle, initialM
                 <span>Originale: {numberIt(chapterLetterStats.original)}</span>
                 <span>Rielaborato: {numberIt(chapterLetterStats.current)}</span>
                 <span>Risparmiate: {numberIt(chapterLetterStats.original - chapterLetterStats.current)}</span>
-                {chapterLetterStats.sourceWarnings > 0 && (
-                  <p className="study-source-review-warning">
-                    Alcuni passaggi risultano frammentati già nella lettura del documento. Verificare le pagine originali: nessuna correzione è stata inventata.
+                <span className="study-chapter-reduction-status">
+                  Riduzione reale di questo capitolo: {chapterLetterStats.achieved}%{chapterLetterStats.target===null ? '' : ' · Obiettivo: '+chapterLetterStats.target+'%'}
+                </span>
+                {!chapterLetterStats.sourceReady ? (
+                  <p className="study-source-review-warning" role="alert">
+                    Capitolo non pronto per lo studio: il controllo ha rilevato frasi interrotte, un confine incerto o una parte senza contesto. La versione ridotta è stata sospesa e il testo sorgente disponibile è stato mantenuto. Verificare le pagine originali e usare «Rielabora libro» se la fonte è completa. Nessuna parte mancante è stata inventata.
                   </p>
-                )}
+                ) : chapterLetterStats.sourceWarnings > 0 ? (
+                  <p className="study-source-review-warning" role="status">
+                    Fonte da verificare: alcuni frammenti o confini originali potrebbero richiedere il confronto con il PDF. La percentuale mostrata misura soltanto le lettere del capitolo, non certifica la correttezza del testo.
+                  </p>
+                ) : null}
               </footer>
             </div>
           </article>
