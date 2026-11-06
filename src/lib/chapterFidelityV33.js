@@ -1,0 +1,67 @@
+// LAB33: diagnostic-only source boundary review and conservative chapter budgets.
+// Never alter the retained original, invent OCR content, or certify semantics.
+const normalize = text => String(text || '').replace(/\s+/g, ' ').trim();
+const canonical = text => normalize(text).toLocaleLowerCase('it-IT')
+  .replace(/^(?:cap(?:itolo)?\.?\s*)?(?:\d+|[ivxlcdm]+)\s*[-–—:.)]?\s*/iu, '')
+  .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+const SOURCE_CONNECTIVE_END = /\b(?:mediante|perché|poiché|attraverso|nonché|ovvero|ossia|quindi|inoltre|rispetto|dunque|che|di|del|della|a|da|in|con|su|per|tra|fra|mediante il|mediante la)\s*$/iu;
+const SOURCE_BAD_START = /^[,;:.!?)]/u;
+const NEXT_TITLE_MARK = /(?:^|[.!?]\s+)((?:cap(?:itolo)?\s*\.?\s*\d+)\s*[:. -]\s*[^.!?]{5,100})\s*$/iu;
+
+export function inspectChapterBoundaries(chapters = []) {
+  const findings = [];
+  for (let index = 0; index < chapters.length; index += 1) {
+    const chapter = chapters[index] || {};
+    const prior = chapters[index-1] || null, next = chapters[index+1] || null;
+    const paragraphs = (chapter.paragraphs || []).map(p =>
+      normalize(typeof p === 'string' ? p : p?.original || p?.text || p?.summary));
+    const first = paragraphs.find(Boolean) || '', last = [...paragraphs].reverse().find(Boolean) || '';
+    if (!first) findings.push({ chapterIndex:index, type:'empty-chapter', severity:'block' });
+    if (SOURCE_BAD_START.test(first)) {
+      findings.push({ chapterIndex:index, type:'orphan-leading-punctuation', severity:'block',
+        page:chapter.pageStart ?? null });
+    } else if (/^[a-zà-öø-ÿ]/u.test(first)) {
+      findings.push({ chapterIndex:index, type:'possible-continuation-at-chapter-start',
+        severity:prior ? 'review' : 'review', page:chapter.pageStart ?? null });
+    }
+    if (SOURCE_CONNECTIVE_END.test(last)) {
+      findings.push({ chapterIndex:index, type:'dangling-end-of-chapter', severity:'block',
+        page:chapter.pageEnd ?? null });
+    }
+    const stray=last.match(NEXT_TITLE_MARK)?.[1] || '';
+    if (stray && next && canonical(stray) && canonical(stray) === canonical(next.title)) {
+      findings.push({chapterIndex:index,type:'next-chapter-heading-in-body',severity:'review',
+        page:chapter.pageEnd ?? null, nextChapterIndex:index+1, heading:stray});
+    }
+    if (Number.isFinite(chapter.pageStart) && Number.isFinite(prior?.pageEnd)
+      && chapter.pageStart < prior.pageStart) {
+      findings.push({chapterIndex:index,type:'chapter-order',severity:'block'});
+    }
+    if (Number.isFinite(chapter.pageEnd) && Number.isFinite(chapter.pageStart)
+      && chapter.pageEnd < chapter.pageStart) {
+      findings.push({chapterIndex:index,type:'chapter-range',severity:'block'});
+    }
+  }
+  const byChapter = chapters.map((_,chapterIndex) =>
+    findings.filter(f => f.chapterIndex === chapterIndex));
+  return { findings, byChapter,
+    blockedChapters: byChapter.filter(list => list.some(f => f.severity === 'block')).length,
+    chaptersToReview: byChapter.filter(list => list.length).length,
+    semanticCertified:false };
+}
+export function chapterLevelTarget(level, sourceLetters) {
+  const requested = level === 'summary' ? 70 : Math.max(0, Math.min(50, Number(level) || 0));
+  const original = Math.max(0, Number(sourceLetters) || 0);
+  return { requested, minRetained:Math.ceil(original * (1 - requested / 100)),
+    maxReduction:requested };
+}
+export function chapterMeasuredStats(originalLetters, outputLetters, target) {
+  const original=Math.max(0,Number(originalLetters)||0);
+  const actual=Math.max(0,Number(outputLetters)||0);
+  const achieved=original?Math.round((1-actual/original)*1000)/10:0;
+  const requested=target === 'summary'?null:Math.max(0, Number(target)||0);
+  return { originalLetters:original, resultingLetters:actual, achievedPercent:achieved,
+    targetPercent:requested, targetReached:requested===null || Math.abs(achieved-requested)<=3,
+    overReduced:requested!==null && achieved>requested+3,
+    insufficientlyReduced:requested!==null && achieved<requested-3 };
+}
