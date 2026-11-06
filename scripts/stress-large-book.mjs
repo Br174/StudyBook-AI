@@ -1,4 +1,5 @@
 import { performance } from 'node:perf_hooks';
+import 'fake-indexeddb/auto';
 import { detectChaptersFromPages } from '../src/lib/documentParserV10.js';
 import { buildStudyBook } from '../src/lib/studyEngineV10.js';
 
