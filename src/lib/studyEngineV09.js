@@ -425,8 +425,8 @@ export async function buildStudyBook(documentData, {
   // INCOMPLETE checkpoint after app crash. The new v5 signature prevents
   // LAB33/LAB32 cached data from contaminating the new source.
   const previous = await loadResumeState(signature);
-  const saved = forceFresh && previous?.complete ? null : previous;
-  const resumeInterrupted = Boolean(saved && !saved.complete);
+  const saved = forceFresh && previous?.published ? null : previous;
+  const resumeInterrupted = Boolean(saved && !saved.published);
   const finalResults = Array(flat.length).fill(null);
   let checkpointResumedParagraphs = 0;
 
@@ -456,6 +456,26 @@ export async function buildStudyBook(documentData, {
     });
   });
 
+  // Recover even partially processed multi-chunk paragraphs after a crash.
+  const resumedPieces = new Set();
+  for (const [rawIndex, pieces] of saved?.unitPieces || []) {
+    const parentIndex = Number(rawIndex);
+    if (!Number.isInteger(parentIndex) || parentIndex < 0 || parentIndex >= flat.length
+        || finalResults[parentIndex] || !Array.isArray(pieces)) continue;
+    const unique = new Map();
+    for (const piece of pieces) {
+      if (Number.isInteger(piece?.chunkIndex) && piece.chunkIndex >= 0
+          && piece.chunkIndex < (unitTotals.get(parentIndex) || 0)
+          && piece.summary && piece.dsaSummary) unique.set(piece.chunkIndex,piece);
+    }
+    const valid = [...unique.values()].sort((x,y)=>x.chunkIndex-y.chunkIndex);
+    for (const piece of valid) resumedPieces.add(parentIndex + ':' + piece.chunkIndex);
+    unitResults.set(parentIndex, valid);
+    unitDone.set(parentIndex, valid.length);
+    if (valid.length === unitTotals.get(parentIndex)) {
+      finalResults[parentIndex] = combineUnitResults(flat[parentIndex].text, valid);
+    }
+  }
   const completedParents = new Set(finalResults.map((item, index) => item ? index : null).filter((value) => value !== null));
   // A fresh pass must also bypass the per-unit MotorLab cache.
   // In fresh mode per-unit caches from older runs are not reused;
@@ -482,7 +502,7 @@ export async function buildStudyBook(documentData, {
   let firstReadyAtMs = resumedParagraphs ? 0 : null;
   // Initial durable checkpoint BEFORE the first AI batch, including the
   // finalResults that survived a prior interrupted run.
-  if (!saved || !resumeInterrupted) {
+  if (!saved) {
     const initialSaved = await saveResumeState(signature, {
       version:CHECKPOINT_VERSION, signature, level, results:finalResults,
       completed:completedParents.size, total:flat.length, complete:false,
@@ -503,7 +523,9 @@ export async function buildStudyBook(documentData, {
     },
   );
 
-  const pendingUnits = units.filter((unit) => !cached.has(unit.cacheKey));
+  const pendingUnits = units.filter((unit) =>
+    !cached.has(unit.cacheKey)
+    && !resumedPieces.has(unit.parentIndex + ':' + unit.chunkIndex));
   const batches = makeChapterBatches(pendingUnits);
   const initialConcurrency = chooseRuntimeConcurrency(maxConcurrency);
   const ceiling = Number.isFinite(Number(maxConcurrency)) && Number(maxConcurrency) > 0
@@ -545,6 +567,7 @@ export async function buildStudyBook(documentData, {
         signature,
         level,
         results: finalResults,
+        unitPieces:[...unitResults.entries()].filter(([parent]) => !finalResults[parent]),
         completed: completedParents.size,
         total: flat.length,
         aiEnabled: meta.aiEnabled,
@@ -594,6 +617,7 @@ export async function buildStudyBook(documentData, {
     completed: finalResults.length,
     total: flat.length,
     complete: true,
+    published:false,
     runtimeId: MOTORLAB_RUNTIME_VERSION,
     cachedChunks,
     savedAt: new Date().toISOString(),
@@ -615,6 +639,8 @@ export async function buildStudyBook(documentData, {
     engine,
     resumeSignature: signature,
     quality: {
+      resumeSignature: signature,
+      resumeRecoveredFromCrash: resumeInterrupted,
       paragraphs: finalResults.length,
       aiParagraphs,
       localParagraphs: finalResults.length - aiParagraphs,
