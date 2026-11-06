@@ -15,7 +15,7 @@ Il **Riassunto** è più breve del 50%, è una prima infarinatura che nomina **t
 
 ### Ordine didattico, fedeltà e protezioni
 - Sequenza dello studio: Riassunto, 50, 40, 30, 20, 10, originale.
-- Le stesse colonne portanti in TUTTE le edizioni, spiegate sempre meglio.
+- Gli stessi concetti fondamentali, cioè le stesse colonne portanti, restano in TUTTE le edizioni e vengono spiegati sempre meglio.
 - No invenzioni, nessuna perdita di negazioni, riferimenti, formule, date, condizioni centrali.
 - Se un brano brevissimo non consente questa combinazione, segnala il conflitto; non inventare un successo.
 - Fonte e capitoli originali, figure, pagine, locandine, progressi e checkpoint rimangono protetti.
