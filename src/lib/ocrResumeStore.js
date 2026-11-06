@@ -171,6 +171,8 @@ export async function saveIntegrity360Page(signature, page) {
         text: page.text,
         rawText: typeof page.rawText === 'string' ? page.rawText : page.text,
         source: page.source,
+        imageCount: Number(page.imageCount || 0),
+        inkCount: Number(page.inkCount || 0),
         status: page.status,
         updatedAt: new Date().toISOString(),
       });
