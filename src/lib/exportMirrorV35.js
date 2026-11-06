@@ -48,7 +48,7 @@ export async function exportMirrorPdfV35(book,fileName,options={}){
   function printTextSheet(sheet){
     const {width,height}=paper(sheet),contentWidth=width-2*margin;
     pdf.setFillColor(255,255,255);pdf.rect(0,0,width,height,'F');
-    pdf.setDrawColor(214,224,235);pdf.line(margin,20,210-margin,20);
+    pdf.setDrawColor(214,224,235);pdf.line(margin,20,width-margin,20);
     pdf.setFont('helvetica','normal');pdf.setFontSize(8);pdf.setTextColor(92,111,139);
     pdf.text('Libro Specchio · Pagina '+sheet.label,margin,17);
     let y=29;
@@ -76,10 +76,10 @@ export async function exportMirrorPdfV35(book,fileName,options={}){
       }
       // Never overflow into the source page N+1. A rare mismatch in printer
       // metrics is a hard failure instead of silently shifting subsequent pages.
-      if(y>268)throw Error('Impaginazione troppo lunga sulla pagina '+sheet.label+'; verificare il foglio bis.');
+      if(y>height-28)throw Error('Impaginazione troppo lunga sulla pagina '+sheet.label+'; verificare il foglio bis.');
     }
     const stats=mirrorPageStatistics(whole.get(sheet.sourcePage));
-    pdf.setDrawColor(210,223,237);pdf.line(margin,275,210-margin,275);
+    pdf.setDrawColor(210,223,237);pdf.line(margin,height-22,width-margin,height-22);
     pdf.setTextColor(81,99,124);pdf.setFont('helvetica','normal');pdf.setFontSize(7.8);
     pdf.text('Parole '+fmt(stats.originalWords)+' → '+fmt(stats.editedWords)+
       ' · Risparmiate '+fmt(stats.wordsSaved),margin,280);
