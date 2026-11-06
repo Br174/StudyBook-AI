@@ -68,6 +68,8 @@ jobs:
           node --check worker/index.js
           echo "[UAB_PROGRESS=45] Controlli statici completati"
 
+      - name: Test LAB36 persisted six-edition source checkpoints
+        run: node scripts/test-lab36-generative-store.mjs
       - name: Test LAB36 six-edition Gemini service
         run: node scripts/test-lab36-generative-backend.mjs
       - name: Test AI resilience

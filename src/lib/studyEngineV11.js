@@ -70,7 +70,7 @@ function hardSplit(text, maxLength = CHUNK_TARGET) {
   return output;
 }
 
-function splitLongParagraph(text) {
+export function splitLongParagraph(text) {
   const clean = normalize(text);
   if (!clean) return [''];
   if (clean.length <= LONG_PARAGRAPH_LIMIT) return [clean];
