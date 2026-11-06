@@ -117,7 +117,7 @@ export function mergePageBoundaryParagraphs(chapters = []) {
 }
 
 export function verifiedChapterStates(chapters = [], pages = [], totalPages = 0) {
-  const byNumber = new Map(pages.map(page => [page.pageNumber, page]));
+  const byNumber = new Map(pages.filter(page => page && Number.isInteger(page.pageNumber)).map(page => [page.pageNumber, page]));
   return chapters.map((chapter, index) => {
     const start = Number(chapter.pageStart);
     const end = Number(chapter.pageEnd);
