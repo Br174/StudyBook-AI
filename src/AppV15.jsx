@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { detectChaptersFromPages, readSourceFile } from './lib/documentParserV11.js';
 import { buildStudyBook, refineParagraphWithAi, summaryLevels } from './lib/studyEngineV10.js';
+import { markResumeStatePublished } from './lib/resumeStore.js';
 import { exportDocx, exportEpub, exportHtml, exportJson, exportMarkdown, exportOdt, exportPdf, exportRtf, exportTxt, printStudyBook } from './lib/exporters.js';
 import {
   createLibraryId,
@@ -54,6 +55,8 @@ function countParagraphs(chapters = []) {
 
 function importStatus(update) {
   if (!update) return 'Analisi del documento…';
+  if (update.phase === 'turbo-file-read') return 'PDF originale conservato · preparo la lettura e verifico lo spazio…';
+  if (update.phase === 'turbo-file-hash') return update.done ? 'Impronta SHA-256 dell’originale verificata' : 'Verifico l’identità del PDF originale…';
   if (update.phase === 'turbo-inventory') return `Integrity 360 · inventario di ${update.total} pagine · ${update.blocks} blocchi logici`;
   if (update.phase === 'turbo-resume') return `Integrity 360 · ${update.resumed || 0} pagine recuperate dalla memoria`;
   if (update.phase === 'turbo-merge') return 'Integrity 360 · ricomposizione del Libro Maestro…';
@@ -773,12 +776,21 @@ export default function AppV14() {
     setStatus('Rielaborazione dal testo originale · preparo il libro…');
     setProgress({done:0,total:0});
     try {
+      const priorRecord = await getLibraryBook(id);
+      setProgress({done:0,total:countParagraphs(priorRecord?.sourceData?.chapters || [])});
+      setStatus('Riprendo la rielaborazione: verifico i checkpoint salvati…');
       const record = await reprocessStoredBook(id, {
         onProgress(done, total, phase, meta) {
-          setProgress({done,total});
-          if (phase === 'resume') setStatus('Rielaborazione da capo · verifico i blocchi originali…');
-          else if (phase === 'ai' || phase === 'misto') setStatus('Rielaborazione · '+done+'/'+total+' paragrafi · controllo qualità');
-          else if (phase === 'locale') setStatus('Rielaborazione locale · '+done+'/'+total+' paragrafi');
+          if (phase === 'fidelity') {
+            setProgress({done:meta?.chaptersDone||0,total:meta?.chaptersTotal||1});
+            setStatus('Verifica fedeltà · capitolo '+(meta?.chaptersDone||0)+'/'+(meta?.chaptersTotal||1));
+          } else {
+            setProgress({done:meta?.chunksDone ?? done,total:meta?.chunksTotal || total});
+            if (phase === 'resume') setStatus('Progressi recuperati · '+done+'/'+total+' paragrafi · riprendo dai checkpoint');
+            else if (phase === 'preparazione') setStatus('Preparazione completata · primo blocco in elaborazione…');
+            else if (phase === 'ai' || phase === 'misto' || phase === 'locale')
+              setStatus('Rielaborazione · blocchi '+(meta?.chunksDone ?? done)+'/'+(meta?.chunksTotal || total)+' · salvataggio continuo');
+          }
         },
       });
       // All context is installed only after the atomic book save succeeded.
@@ -810,13 +822,13 @@ export default function AppV14() {
     }
   }
 
-  async function processFile(file) {
+  async function processFile(file, { resumeRecord = null } = {}) {
     if (!file) return;
     setError('');
     setStatus('Analisi del documento…');
     setFileName(file.name);
     setSourceFile(file);
-    setLibraryId('');
+    setLibraryId(resumeRecord?.id || '');
     setStudyBook(null);
     setDocumentData(null);
     setScannerResultReady(false);
@@ -828,7 +840,7 @@ export default function AppV14() {
     try {
       // LAB13: conservazione anticipata del file esatto prima di OCR/rielaborazione.
       // Un errore del parser non deve far perdere il documento originale importato.
-      const originalSaved = await saveLibraryBook({
+      const originalSaved = resumeRecord || await saveLibraryBook({
         id: createLibraryId(), fileName: file.name, profileId: activeProfileId, originalFile: file,
       });
       setLibraryId(originalSaved.id);
@@ -854,8 +866,10 @@ export default function AppV14() {
       setSelectedChapter(0);
       const recovered = parsed.ocrApplied?.length || 0;
       const unresolved = parsed.needsOcr?.length || 0;
+      const suspected = parsed.sourceShield?.reviewPages?.length || 0;
       const structuralWarnings = parsed.precisionAudit?.warningCount || 0;
       if (unresolved) setStatus(`Documento analizzato · OCR recuperato su ${recovered} pagine · ${unresolved} da verificare`);
+      else if (suspected) setStatus(`Originale conservato · ${suspected} pagine da confrontare con il PDF · nessun testo cancellato`);
       else if (structuralWarnings) setStatus(`Documento analizzato · ${structuralWarnings} possibili anomalie da verificare`);
       else if (recovered) setStatus(`Documento analizzato · OCR completato su ${recovered} pagine`);
       else setStatus('Documento analizzato · struttura testuale pronta');
@@ -886,10 +900,16 @@ export default function AppV14() {
         level,
         preferAi: true,
         onProgress(done, total, phase, meta) {
-          setProgress({ done, total });
-          if (phase === 'resume') setStatus(`MotorLab Runtime · ripresa · ${done}/${total} paragrafi già pronti${meta?.cachedChunks ? ` · ${meta.cachedChunks} blocchi riusati` : ''}`);
-          else if (phase === 'ai' || phase === 'misto') setStatus(`MotorLab Runtime · ${done}/${total} paragrafi · ${meta?.concurrency || 1} corridori`);
-          else if (phase === 'locale') setStatus(`MotorLab Runtime · elaborazione locale · ${done}/${total} paragrafi`);
+          if (phase === 'fidelity') {
+            setProgress({done:meta?.chaptersDone||0,total:meta?.chaptersTotal||1});
+            setStatus(`Controllo fedeltà · capitolo ${meta?.chaptersDone||0}/${meta?.chaptersTotal||1}`);
+          } else {
+            setProgress({done:meta?.chunksDone ?? done,total:meta?.chunksTotal || total});
+            if (phase === 'resume') setStatus(`Ripresa dal checkpoint · ${meta?.chunksDone ?? done}/${meta?.chunksTotal || total} blocchi`);
+            else if (phase === 'preparazione') setStatus('Preparazione completata · attendo il primo blocco di studio…');
+            else if (phase === 'ai' || phase === 'misto' || phase === 'locale')
+              setStatus(`Studio · ${meta?.chunksDone ?? done}/${meta?.chunksTotal || total} blocchi · salvataggio continuo`);
+          }
         },
       });
       const sourceIntegrity = auditBookSourceCoverage(sourceData, generated);
@@ -902,6 +922,8 @@ export default function AppV14() {
         ? `${sanitizeTitle(suggestedFinal.title)}.pdf` : sourceName;
       setFileName(nameToSave);
       const saved = await persistBook(result, sourceData, nameToSave, libraryId);
+      if (saved && (generated.resumeSignature || generated.quality?.resumeSignature))
+        await markResumeStatePublished(generated.resumeSignature || generated.quality?.resumeSignature);
       setScannerResultReady(fromScanner);
       if (fromScanner && saved) {
         scanPersistTimersRef.current.forEach((timer) => clearTimeout(timer));
@@ -1469,7 +1491,10 @@ export default function AppV14() {
   async function prepareOriginalForStudy() {
     if (generating || importing || libraryBusy) return;
     if (!documentData?.chapters?.some(chapter => chapter.paragraphs?.length)) {
-      setError('Testo originale non disponibile: importa di nuovo il documento per riconoscerlo.');
+      if (originalRecord?.originalFile) {
+        setStatus('Recupero l’acquisizione interrotta dal PDF conservato, senza creare duplicati…');
+        await processFile(originalRecord.originalFile,{resumeRecord:originalRecord});
+      } else setError('PDF originale non presente: importare nuovamente il documento.');
       return;
     }
     // L'elaborazione è consentita solo dopo il secondo clic esplicito di conferma.
