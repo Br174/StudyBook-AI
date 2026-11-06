@@ -67,7 +67,9 @@ function computeSelection(items, level) {
     item.selected.add(unit.index);
     return countLetters(unit.value);
   };
-  const nextUnit = item => item.units.find(unit => !item.selected.has(unit.index) && unit.index === item.selected.size);
+  const nextUnit = item => item.units.find(unit =>
+    !item.selected.has(unit.index)
+    && (unit.index===0 || item.selected.has(unit.index-1)));
   for (const chapterItems of byChapter.values()) {
     const chapterSourceLetters = chapterItems.reduce((n,item)=>n+countLetters(item.source),0);
     const minChapter = chapterLevelTarget(level,chapterSourceLetters).minRetained;
@@ -84,11 +86,18 @@ function computeSelection(items, level) {
         item.units.forEach(unit => {item.keptLetters+=keep(item,unit)});
       } else {
         if (item.units.length) item.keptLetters+=keep(item,item.units[0]);
-        // To preserve a legal exception and its antecedents, keep its
-        // continuous source prefix. Never bridge with disconnected statements.
-        const lastCritical = item.units.reduce((n,unit)=>unit.mandatory?unit.index:n,-1);
-        for (let index=1;index<=lastCritical;index++) {
-          item.keptLetters+=keep(item,item.units[index]);
+        // A protected sentence is independent only if it contains a complete
+        // assertion without dangling antecedents. Otherwise keep its exact
+        // source prefix. Never emit a condition torn from its assertion.
+        for (const unit of item.units.filter(unit=>unit.mandatory)) {
+          if (item.selected.has(unit.index)) continue;
+          if (canSafelyBridgeAfterGap(unit.source) && !unit.dependent) {
+            item.keptLetters += keep(item,unit);
+          } else {
+            for (let index=1;index<=unit.index;index++) {
+              item.keptLetters+=keep(item,item.units[index]);
+            }
+          }
         }
       }
       totalKept += item.keptLetters;
@@ -144,7 +153,7 @@ export function buildPrecisionEdition(book, reduction = 10) {
       const item = lookup.get(chapterIndex + ':' + paragraphIndex);
       const units = item.units.filter((unit) => item.selected.has(unit.index));
       const candidate = level === 0 || item.keepOriginal ? item.source : joinUnits(units, level);
-      const audit = checkReducedParagraph(item.source, candidate, { selectedUnits: units, allowSafeGaps: false });
+      const audit = checkReducedParagraph(item.source, candidate, { selectedUnits: units, allowSafeGaps: true });
       const sourceAudit = item.sourceAudit;
       // Only the already-preserved lowercase beginning may proceed with a
       // visible warning. More serious OCR defects remain hard stop conditions.
