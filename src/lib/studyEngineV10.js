@@ -1,3 +1,4 @@
+import { requireIntegrityForStudy } from './integrity360Core.js';
 import {
   buildStudyBook as buildBaseStudyBook,
   refineParagraphWithAi,
@@ -61,6 +62,7 @@ function auditParagraph(paragraph) {
 }
 
 export async function buildStudyBook(documentData, options = {}) {
+  requireIntegrityForStudy(documentData);
   const baseBook = await buildBaseStudyBook(documentData, options);
   let totalConcepts = 0;
   let totalProtected = 0;
