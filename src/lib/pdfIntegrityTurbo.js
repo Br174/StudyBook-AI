@@ -9,6 +9,7 @@ import { loadIntegrity360Pages, saveIntegrity360Page } from './ocrResumeStore.js
 import { detectChaptersFromPages } from './documentParserV10.js';
 import { auditDocumentStructure } from './precisionDocumentAudit.js';
 import { extractPdfVisualAssetsFromDocument } from './pdfVisuals.js';
+import { auditSourceAgainstOriginal } from './sourceShieldV34.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
 
@@ -55,6 +56,7 @@ function isOcrCandidate(text, imageCount, inkCount) {
 
 async function readNativePage(pdf, pageNumber) {
   const page = await pdf.getPage(pageNumber);
+  try {
   const textContent = await page.getTextContent();
   const rawText = pdfText(textContent.items);
   // Inspect graphics only on suspicious / short native pages, not on every 1,000-page PDF.
@@ -71,6 +73,7 @@ async function readNativePage(pdf, pageNumber) {
     status: requiresOcr ? 'ocr-pending' : 'verified',
     imageCount, inkCount, issue: requiresOcr ? 'page-visual-requires-ocr' : '',
   };
+  } finally { try { page.cleanup?.(); } catch { /* best effort */ } }
 }
 
 async function renderForOcr(page, pageCount) {
@@ -109,9 +112,12 @@ function toHex(bytes) {
 
 export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, onVerifiedChapter } = {}) {
   const started = performance.now();
+  onProgress?.({phase:'turbo-file-read', done:0,total:1,bytes:Number(file?.size||0)});
   const data = new Uint8Array(await file.arrayBuffer());
   // Strong identity: even equal names/sizes/mtime cannot reuse the wrong book.
+  onProgress?.({phase:'turbo-file-hash',done:0,total:1,bytes:data.byteLength});
   const fingerprint = toHex(await crypto.subtle.digest('SHA-256', data));
+  onProgress?.({phase:'turbo-file-hash',done:1,total:1,bytes:data.byteLength});
   const pdf = await pdfjsLib.getDocument({ data }).promise;
   const pageCount = pdf.numPages;
   const signature = 'i360:' + INTEGRITY_ENGINE_VERSION + ':' + fingerprint + ':' + (autoOcr ? 'ocr' : 'native');
@@ -168,9 +174,10 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
           }
         }
         let canvas = null;
+        let pdfPage = null;
         try {
           if (!ocrWorker) throw new Error('OCR non disponibile');
-          const pdfPage = await pdf.getPage(row.pageNumber);
+          pdfPage = await pdf.getPage(row.pageNumber);
           canvas = await renderForOcr(pdfPage, pageCount);
           const output = await ocrWorker.recognize(canvas);
           const recognized = clean(output?.data?.text);
@@ -193,6 +200,7 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
           row.issue = 'ocr-failed:' + String(err?.message || err).slice(0, 80);
         } finally {
           if (canvas) { canvas.width = 1; canvas.height = 1; }
+          try { pdfPage?.cleanup?.(); } catch { /* render cache best effort */ }
         }
         ocrDone += 1;
         onProgress?.({ phase: 'ocr-page', done: ocrDone, total: ocrTotal, pageNumber: row.pageNumber });
@@ -209,7 +217,8 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
     const announceVerifiedChapters = () => {
       let prefix = 0;
       while (prefix < pageCount && pages[prefix]?.status === 'verified') prefix += 1;
-      if (prefix < pageCount && prefix - lastCheckedPrefix < 25) return;
+      const interval = pageCount >= 500 ? 100 : 35;
+      if (prefix < pageCount && prefix - lastCheckedPrefix < interval) return;
       if (prefix <= lastCheckedPrefix || prefix < 2) return;
       lastCheckedPrefix = prefix;
       const known = detectChaptersFromPages(pages.slice(0, prefix));
@@ -291,6 +300,9 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
     }));
     const chapters = mergePageBoundaryParagraphs(detectChaptersFromPages(textPages));
     const integrity = auditIntegrityPages(originalPages, pageCount, blocks);
+    const sourceShield = auditSourceAgainstOriginal({
+      pages:originalPages,pdfPageCount:pageCount,fingerprint,
+    });
     const chapterStates = verifiedChapterStates(chapters, originalPages, pageCount);
     const structural = auditDocumentStructure({ pages: textPages, chapters });
     const unresolved = originalPages.filter(page => page.status !== 'verified').map(page => page.pageNumber);
@@ -301,6 +313,7 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
       chapters,
       sourceFormat: 'pdf',
       originalFingerprint: fingerprint,
+      sourceShield,
       ocrApplied: originalPages.filter(page => page.source === 'ocr').map(page => page.pageNumber),
       needsOcr: unresolved,
       removedRunningLines: [], // No destructive deletion of headings, notes or page text.
@@ -328,6 +341,8 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
         checkpointFailures, checkpointDurable: checkpointFailures === 0,
         semanticCertified: false,
         structuralWarningCount: structural.warningCount,
+        sourceReviewPageCount:sourceShield.reviewPages.length,
+        sourceReviewPages:sourceShield.reviewPages,
         structuralWarnings: structural.warnings,
         visualReferencePages: originalPages.filter(page => page.imageCount > 0).map(page => page.pageNumber),
         runtime: { elapsedMs, textLanesInitial: plannedLanes, textLanesFinal: targetLanes, ocrLanes: 1, errors },
