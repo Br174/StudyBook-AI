@@ -11,6 +11,11 @@ import { markResumeStatePublished } from './resumeStore.js';
 // Never redownload, mutate original PDF bytes or invent page text. Switch to
 // recovered chapter boundaries only when measured coverage and order improve.
 export async function recoverSavedPageStructure(sourceData) {
+  if (sourceData?.canonicalBookMap?.version === 35) {
+    // Immutability contract: a reduction can NEVER replace the source outline,
+    // section hierarchy or physical page ownership.
+    return {sourceData,recovered:false,reason:'canonical-structure-locked-v35'};
+  }
   const pages = (sourceData?.pages || []).filter(page =>
     Number.isInteger(page?.pageNumber) && String(page?.text || '').trim()
     && !['failed','ocr-pending'].includes(page.status));
