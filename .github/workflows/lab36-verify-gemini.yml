@@ -1,0 +1,61 @@
+name: LAB36 verify Cloudflare Gemini key
+on:
+  push:
+    branches:
+      - lab/studybook-core-android-01-update-36-reduction-pdf-reflow-20261106
+    paths:
+      - .github/workflows/lab36-verify-gemini.yml
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CF_SCRIPT: studybook-ai
+      WORKER_URL: https://studybook-ai.brunoverlezza.workers.dev
+    steps:
+      - name: Verify secret binding NAMES only and test a single harmless Gemini request
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const token=process.env.CF_TOKEN, account=process.env.CF_ACCOUNT;
+          let bindingCheck='CLOUDFLARE_API_ACCESS_UNAVAILABLE';
+          if(token && account){
+            try {
+              const url='https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(account)+'/workers/scripts/'+encodeURIComponent(process.env.CF_SCRIPT)+'/secrets';
+              const response=await fetch(url,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(20000)});
+              if(response.ok){
+                const payload=await response.json();
+                const names=(Array.isArray(payload.result)?payload.result:[]).map(e=>e.name);
+                const ai=names.includes('AI_API_KEY'),gemini=names.includes('GEMINI_API_KEY');
+                bindingCheck='AI_API_KEY_'+(ai?'PRESENT':'ABSENT')+';GEMINI_API_KEY_'+(gemini?'PRESENT':'ABSENT');
+              } else bindingCheck='CLOUDFLARE_API_HTTP_'+response.status;
+            }catch{bindingCheck='CLOUDFLARE_API_NETWORK_ERROR';}
+          }
+          console.log('CLOUDFLARE_SECRET_NAMES: '+bindingCheck);
+          let live='NOT_VERIFIED';
+          try{
+            const source='La fotosintesi usa luce e acqua per aiutare le piante a produrre zuccheri.';
+            const response=await fetch(process.env.WORKER_URL+'/api/summarize',{
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({paragraphs:[source],level:'studio'}),
+              signal:AbortSignal.timeout(90000)
+            });
+            if(response.ok){
+              const payload=await response.json();
+              const item=payload?.summaries?.[0];
+              live=(item?.engine==='ai'&&typeof item?.summary==='string'&&item.summary.trim())?'GENERATIVE_AI_CONFIRMED':'NON_GENERATIVE_OR_EMPTY';
+            }else live='WORKER_HTTP_'+response.status;
+          }catch{live='WORKER_NETWORK_OR_TIMEOUT';}
+          console.log('GEMINI_WORKER_LIVE: '+live);
+          if(process.env.GITHUB_STEP_SUMMARY){
+            const fs=await import('node:fs');
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## LAB36 Cloudflare Gemini\n\nSecret names: '+bindingCheck+'\n\nOne sample generation: '+live+'\n\nSecret contents were never printed.\n');
+          }
+          if(live!=='GENERATIVE_AI_CONFIRMED')process.exitCode=2;
+          NODE
