@@ -4,6 +4,28 @@ import * as pdfjsLib from 'pdfjs-dist';
 import {buildCanonicalBookMap,auditMirrorAgainstSource,composeMirrorPages,
   mirrorPageStatistics} from '../src/lib/libroSpecchioV35.js';
 import {inspectPdfVisualOperators} from '../src/lib/visualMirrorV35.js';
+import {choosePdfChapterAuthority} from '../src/lib/outlineAuthorityV35.js';
+
+const samplePages=Array.from({length:29},(_,i)=>({
+  pageNumber:i+1,status:'verified',text:
+    ((i%4===0)?('Cap.'+(Math.floor(i/4)+1)+': Libro '+(Math.floor(i/4)+1)+'\\n'):'')
+    +'Titolo '+(i+1)+' del testo originale. Contenuto del capitolo.',
+}));
+const old29=samplePages.map((p,i)=>({
+  title:(i+1)+'. Sezione '+(i+1),pageStart:i+1,pageEnd:i+1,
+  paragraphs:[p.text],paragraphMeta:[{pageStart:i+1,pageEnd:i+1}],sections:[],
+}));
+const sevenRoots=Array.from({length:7},(_,i)=>({
+  title:'Cap.'+(i+1)+': Libro '+(i+1),pageNumber:i*4+1,depth:1,
+}));
+const validatedOutline=choosePdfChapterAuthority(samplePages,old29,sevenRoots);
+assert.equal(validatedOutline.chapters.length,7);
+assert.equal(validatedOutline.authority,'pdf-outline-verified');
+assert.equal(validatedOutline.chapters.reduce((sum,c)=>sum+c.paragraphs.length,0),29);
+const unverifiedOutline=choosePdfChapterAuthority(samplePages,old29,
+  sevenRoots.map(row=>({...row,title:'Titolo inventato'})));
+assert.equal(unverifiedOutline.chapters.length,29,
+  'Never enforce unverified PDF bookmarks');
 
 const paragraphs=Array.from({length:29},(_,i)=>
   'Principio '+(i+1)+': una regola importante deve restare completa e comprensibile nel libro di studio.');
