@@ -82,10 +82,10 @@ export async function exportMirrorPdfV35(book,fileName,options={}){
     pdf.setDrawColor(210,223,237);pdf.line(margin,height-22,width-margin,height-22);
     pdf.setTextColor(81,99,124);pdf.setFont('helvetica','normal');pdf.setFontSize(7.8);
     pdf.text('Parole '+fmt(stats.originalWords)+' → '+fmt(stats.editedWords)+
-      ' · Risparmiate '+fmt(stats.wordsSaved),margin,280);
+      ' · Risparmiate '+fmt(stats.wordsSaved),margin,height-17);
     pdf.text('Lettere -'+fmt(stats.lettersSaved)+' · Righe -'+fmt(stats.linesSaved)+
-      ' · Riduzione '+stats.achievedPercent+'%',margin,285);
-    pdf.text('Pagina '+sheet.label,210-margin,290,{align:'right'});
+      ' · Riduzione '+stats.achievedPercent+'%',margin,height-12);
+    pdf.text('Pagina '+sheet.label,width-margin,height-7,{align:'right'});
   }
   async function printImageSheet(sheet,render){
     if(!sheet.anchor)throw Error('Riferimento visivo assente per la pagina '+sheet.label);
