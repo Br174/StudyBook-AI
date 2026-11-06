@@ -1,3 +1,4 @@
+import '../src/lib/promiseTryPolyfill.js';
 import assert from 'node:assert/strict';
 import 'fake-indexeddb/auto';
 import { jsPDF } from 'jspdf';
