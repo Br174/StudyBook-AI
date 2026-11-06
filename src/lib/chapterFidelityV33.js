@@ -92,7 +92,9 @@ export function auditChapterOutput(paragraphs = [], nextTitle = '') {
   if (!texts.length) issues.push('empty-generated-chapter');
   if (SOURCE_BAD_START.test(first)) issues.push('generated-orphan-start');
   if (SOURCE_CONNECTIVE_END.test(last)) issues.push('generated-dangling-end');
-  if (last.length>=40 && !/[.!?;:»”"')\]]$/u.test(last))
+  // Mathematical expressions and references need not end with a full stop.
+  const mathEnding = /(?:^|\s)[\p{L}][\p{L}\p{N}²³]*\s*[=≈≠≤≥]\s*[\p{L}\p{N}²³]+$/u.test(last);
+  if (last.length>=40 && !mathEnding && !/[.!?;:»”"')\]]$/u.test(last))
     issues.push('generated-incomplete-ending');
   const match=last.match(NEXT_TITLE_MARK)?.[1]||'';
   if (match && nextTitle && canonical(match)===canonical(nextTitle))
