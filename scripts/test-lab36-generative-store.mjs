@@ -55,7 +55,7 @@ try{
   // Multi-paragraph book: stop after first quota refusal; keep previously verified
   // content; no extra requests until the actual cooldown is over.
   await clearGeminiPause();
-  const partSources=[source+' Parte A.',source+' Parte B.',source+' Parte C.'];
+  const partSources=[source+' La prima sezione introduce un esempio completo.',source+' La seconda sezione introduce un caso completo.',source+' La terza sezione descrive un esempio completo.'];
   const large={
     chapters:[{title:'Capitolo lungo',pageStart:1,paragraphs:partSources.map(t=>({
       original:t,sourcePageStart:1,sourcePageEnd:1
