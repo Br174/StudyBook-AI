@@ -58,6 +58,8 @@ function importStatus(update) {
   if (update.phase === 'turbo-resume') return `Integrity 360 · ${update.resumed || 0} pagine recuperate dalla memoria`;
   if (update.phase === 'turbo-merge') return 'Integrity 360 · ricomposizione del Libro Maestro…';
   if (update.phase === 'turbo-verify') return `Integrity 360 · ${update.done}/${update.total} pagine verificate · ${update.verifiedChapters || 0} capitoli`;
+  if (update.phase === 'turbo-chapter-verified') return `Capitolo verificato · ${update.title || 'Senza titolo'}`;
+  if (update.phase === 'turbo-throttle') return 'Integrity 360 · regolo automaticamente la velocità per proteggere la memoria';
   if (update.phase === 'turbo-ocr-unavailable') return 'Integrity 360 · OCR non disponibile, pagine segnalate';
     if (update.phase === 'extract') return `Lettura Turbo · pagina ${update.done}/${update.total}`;
   if (update.phase === 'ocr-loading') return 'Avvio OCR per il testo fotografato/scansionato…';
