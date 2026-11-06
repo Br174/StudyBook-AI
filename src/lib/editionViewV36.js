@@ -33,7 +33,9 @@ export function buildGeminiEditionViewV36(book,reduction){
       };
     }),
   }));
-  const complete=source.complete===true && total>0&&valid===total;
+  const pillar=book?.studyPillarV38==='studybook-progressive-v38-1';
+  const complete=source.complete===true && total>0&&valid===total&&
+    (!pillar||source.version==='lab38-progressive-editions-v1');
   const achievedLettersPercent=sourceLetters&&complete
     ?Math.round((1-outputLetters/sourceLetters)*1000)/10:null;
   const targetPercent=id==='summary'?null:Number(id);
@@ -49,7 +51,11 @@ export function buildGeminiEditionViewV36(book,reduction){
       achievedLettersPercent,
       achievedWordsPercent:complete&&sourceWords?Math.round((1-outputWords/sourceWords)*1000)/10:null,
       originalLetters:sourceLetters,resultingLetters:complete?outputLetters:null,
-      targetReached:complete&&(targetPercent===null||achievedLettersPercent+0.5>=targetPercent),
+      targetReached:complete&&(targetPercent===null||(
+        // The generator has certified EACH integer chunk budget. A book with
+        // N letters can differ by at most half a letter from the ideal real value.
+        Math.abs(outputLetters-Math.round(sourceLetters*(1-targetPercent/100)))===0
+      )),
       qualityGuard:{status:complete?'ai-generated-verified':'preview-only',
         issueCount:total-valid,semanticCertification:false,
         originalFallbackParagraphs:0},

@@ -297,3 +297,22 @@ export function mirrorPageStatistics(page){
     achievedPercent:oldLetters>0?Math.round((1-newLetters/oldLetters)*1000)/10:0,
   };
 }
+
+// LAB38: use the ACTUAL visible words and the immutable original page, not
+// legacy per-sheet counters (some derived preview sheets reported 0 -> 0).
+export function actualMirrorPageStatistics(sourceMap,book,pages,physicalPage){
+  const originalPage=(sourceMap?.pages||[]).find(p=>p.physicalPage===physicalPage);
+  const originalParagraphs=(book?.chapters||[]).flatMap(ch=>(ch.paragraphs||[]).filter(p=>
+    Number(p.sourcePageStart??ch.pageStart)===Number(physicalPage)).map(p=>p.original||''));
+  const sourceText=String(originalPage?.text||'').trim()||originalParagraphs.join(' ');
+  const blocks=(pages||[]).filter(p=>p.kind==='text'&&p.sourcePage===physicalPage)
+    .flatMap(p=>p.blocks||[]).filter(b=>b.kind==='paragraph'||b.kind==='original-page');
+  const studyText=blocks.map(b=>b.text||'').join(' ');
+  const hasSource=countLetters(sourceText)>0,hasOutput=countLetters(studyText)>0;
+  if(!hasSource||!hasOutput)return {measured:false,reason:'misurazione-non-disponibile'};
+  const originalWords=countWords(sourceText),resultWords=countWords(studyText);
+  const originalLetters=countLetters(sourceText),resultLetters=countLetters(studyText);
+  return {measured:true,originalWords,resultWords,wordsSaved:originalWords-resultWords,
+    originalLetters,resultLetters,lettersSaved:originalLetters-resultLetters,
+    achievedPercent:Math.round((1-resultLetters/originalLetters)*1000)/10};
+}

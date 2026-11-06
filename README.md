@@ -113,3 +113,8 @@ Questi sono test di esercizio reale, non funzioni mancanti del codice.
 ## Repository madre
 
 Questo repository è la base ufficiale del progetto. L'esperimento Replit resta separato e potrà essere confrontato in seguito senza sovrascrivere il progetto madre.
+
+
+## Pilastro didattico permanente
+
+Le sei edizioni seguono il contratto [Studio progressivo](docs/STUDYBOOK_STUDIO_PROGRESSIVO_PILASTRO_V1.md): Riassunto → 50 → 40 → 30 → 20 → 10 → Originale. Gli stessi concetti fondamentali, con spiegazioni sempre più approfondite e riduzioni percentuali esatte misurate in lettere. Il test `scripts/test-lab38-pillar.mjs` impedisce regressioni silenziose.

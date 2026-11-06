@@ -502,18 +502,18 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         {!isOriginalOnly && studyBook && (
           <div className="sb-precision-control" style={{ padding: '14px 16px', marginTop: 10, border: '1px solid #dce6f1', borderRadius: 14 }}>
             <label htmlFor="sb-precision-slider" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontWeight: 700 }}>
-              <span>Riduzione testo</span>
+              <span>Studio progressivo</span>
               <span>{reduction === 'summary' ? 'Riassunto' : reduction + '%'}</span>
             </label>
             <input
               id="sb-precision-slider" type="range" min="0" max="6" step="1"
-              value={Math.max(0, [0, 10, 20, 30, 40, 50, 'summary'].indexOf(reduction))}
-              onChange={(event) => onReductionChange?.([0, 10, 20, 30, 40, 50, 'summary'][Number(event.target.value)])}
+              value={Math.max(0, ['summary', 50, 40, 30, 20, 10, 0].indexOf(reduction))}
+              onChange={(event) => onReductionChange?.(['summary', 50, 40, 30, 20, 10, 0][Number(event.target.value)])}
               aria-label="Regola la riduzione del contenuto"
               style={{ width: '100%', margin: '13px 0 5px' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748b' }}>
-              <span>Originale</span><span>10 · 20 · 30 · 40 · 50%</span><span>Riassunto</span>
+              <span>Riassunto</span><span>50 · 40 · 30 · 20 · 10%</span><span>Originale</span>
             </div>
             {reductionMeta && (
               <p style={{ fontSize: 12, margin: '9px 0 0', color: '#64748b' }}>

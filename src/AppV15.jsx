@@ -25,6 +25,7 @@ import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
+import {STUDY_PILLAR_VERSION} from './lib/studyPillarV38.js';
 import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
@@ -140,7 +141,7 @@ export default function AppV14() {
   const [error, setError] = useState('');
   const [selectedChapter, setSelectedChapter] = useState(0);
   const [level, setLevel] = useState('studio');
-  const [reduction, setReduction] = useState(10);
+  const [reduction, setReduction] = useState('summary');
   const [dsaMode, setDsaMode] = useState(true);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [generating, setGenerating] = useState(false);
@@ -160,8 +161,8 @@ export default function AppV14() {
   }
   useEffect(() => {
     if (!libraryId) return;
-    try { setReduction(normalizeReduction(localStorage.getItem(`studybook:precision:${libraryId}`) ?? 10)); }
-    catch { setReduction(10); }
+    try { setReduction(normalizeReduction(localStorage.getItem(`studybook:precision:${libraryId}`) ?? 'summary')); }
+    catch { setReduction('summary'); }
   }, [libraryId]);
   const [studyEntryMode, setStudyEntryMode] = useState('reader');
   const [activeScreen, setActiveScreen] = useState('home');
@@ -1012,6 +1013,9 @@ export default function AppV14() {
   // The same runner owns fresh generation and resumed generation, serially.
   // Aborted requests cannot execute a second concurrent checkpoint writer.
   async function runGeminiWithSafeRestart(book,onProgress){
+    // Existing LAB36/LAB37 checkpoints remain available for re-verification;
+    // the new pedagogical pillar is mandatory for every new or resumed run.
+    const progressiveBook={...book,studyPillarV38:STUDY_PILLAR_VERSION};
     for(;;){
       restartRequestedRef.current=false;
       const controller=new AbortController();
@@ -1019,7 +1023,7 @@ export default function AppV14() {
       geminiLastActivityRef.current=Date.now();
       let snapshot;
       try{
-        snapshot=await generateGeminiEditionsV36(book,{
+        snapshot=await generateGeminiEditionsV36(progressiveBook,{
           maxConcurrency:1,signal:controller.signal,onProgress,
           onActivity:()=>{geminiLastActivityRef.current=Date.now();},
         });
@@ -1066,6 +1070,7 @@ export default function AppV14() {
       });
       const sourceIntegrity = auditBookSourceCoverage(sourceData, generated);
       let result = { ...generated,
+        studyPillarV38:STUDY_PILLAR_VERSION,
         canonicalBookMap: sourceData?.canonicalBookMap || generated.canonicalBookMap || null,
         quality: { ...(generated.quality || {}), sourceIntegrity } };
       // LAB36: show only verified generated pages as a progressive preview.
@@ -1165,7 +1170,7 @@ export default function AppV14() {
   async function resumeGeminiEditions(record=null){
     if(generating){requestActiveGeminiRecovery();return;}
     if(resumeExecutionRef.current)return;
-    const current=record?.studyBook||studyBook;
+    const current={...(record?.studyBook||studyBook),studyPillarV38:STUDY_PILLAR_VERSION};
     const targetSource=record?.sourceData||documentData;
     const targetName=record?.fileName||fileName;
     const targetId=record?.id||libraryId;

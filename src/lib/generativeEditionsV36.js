@@ -7,19 +7,37 @@ import {normalizeStudyParagraphFlow} from './readingFlowV36.js';
 import {loadRuntimeUnitResults,saveRuntimeUnitResults} from './resumeStore.js';
 import {readGeminiPause,registerGeminiPause,clearGeminiPause} from './geminiQuotaControllerV36.js';
 import {makeRuntimeUnitKey,chooseRuntimeConcurrency,runAdaptiveBatchQueue,runtimeHash} from './motorLabRuntime.js';
+import {STUDY_PILLAR_VERSION,STUDY_PERCENTAGES,allocateExactLetterBudgets,
+  inspectProgressiveEdition} from './studyPillarV38.js';
 
 export const GEMINI_LEVELS=['10','20','30','40','50','summary'];
-const VERSION='lab36-gemini-editions-v1';
+const VERSION='lab38-progressive-editions-v1';
+// Preserve LAB36/37 content-addressed keys: old verified results can be reused
+// only if they pass the NEW immutable pedagogical contract.
+const CACHE_KEY_VERSION='lab36-gemini-editions-v1';
 const excerpt=(v,n)=>String(v||'').trim().slice(0,n);
 const originalOf=p=>String(p?.original||'');
-export function auditGeminiLevels(original,editions){
+export function auditGeminiLevels(original,editions,{pillar=false,targetByLevel={},summaryCapLetters=null}={}){
   const verification={},texts={},issues={},percent={};
   for(const id of GEMINI_LEVELS){
     const text=normalizeStudyParagraphFlow(editions?.[id]||'');
     const structure=checkReducedParagraph(original,text);
     const semantic=auditFidelity(original,text);
     const reasons=[...structure.issues];
-    if(!semantic.passed)reasons.push('semantic-coverage-or-protected-detail');
+    if(pillar){
+      const pedagogical=inspectProgressiveEdition(original,text,id,{
+        targetLetters:targetByLevel[id],summaryCapLetters});
+      reasons.push(...pedagogical.issues);
+      // Preserve scoped negations, dates, legal references, exceptions and named anchors.
+      if(semantic.missingProtected.length||semantic.qualifierMismatches.length)
+        reasons.push('protected-meaning-review');
+      // This conservative lexical gate is NOT a substitute for human semantic
+      // validation, but blocks trivially unrelated and missing-concept outputs.
+      const minCoverage=id==='summary'?50:id==='50'?60:id==='40'?64:
+        id==='30'?68:id==='20'?72:78;
+      if(semantic.coveragePercent<minCoverage)
+        reasons.push('core-concept-coverage-below-'+minCoverage);
+    }else if(!semantic.passed)reasons.push('semantic-coverage-or-protected-detail');
     verification[id]=Boolean(text)&&!reasons.length;
     texts[id]=text;
     issues[id]=reasons;
@@ -44,13 +62,13 @@ async function paceGeminiCall(paceMs,signal){
   if(signal?.aborted)throw manualRecoveryError();
   lastGeminiCallAt=Date.now();
 }
-async function askGemini(source,context,level,repairIssues=[],paceMs=6500,signal=null){
+async function askGemini(source,context,level,repairIssues=[],paceMs=6500,signal=null,policy=null,targetLetters=null,summaryCapLetters=null){
   await paceGeminiCall(paceMs,signal);
   let response;
   try{
     response=await fetch(apiEndpoint('/api/editions/v36'),{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({source,context,level,repairIssues}),signal,
+      body:JSON.stringify({source,context,level,repairIssues,policy,targetLetters,summaryCapLetters}),signal,
     });
   }catch(error){
     if(signal?.aborted)throw manualRecoveryError();
@@ -115,6 +133,7 @@ export function sourceWarnings(book,sourcePageStart,sourcePageEnd){
   return [...new Set(reasons)];
 }
 function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,diagnostics=null){
+  const pillar=book?.studyPillarV38===STUDY_PILLAR_VERSION;
   let verifiedCells=0,totalCells=0,blockedCells=0,verifiedChunks=0,verifiedVariants=0;
   let verifiedChunkVariants=0,totalChunkVariants=0;
   const rows=(book.chapters||[]).map((chapter,ci)=>(chapter.paragraphs||[]).map((paragraph,pi)=>{
@@ -129,7 +148,10 @@ function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,di
       const fragments=jobs.map(j=>state.get(j.key)?.verified?.[id]===true?state.get(j.key)?.editions?.[id]:null);
       const ready=jobs.length>0&&fragments.every(t=>typeof t==='string'&&t.trim());
       const joined=ready?normalizeStudyParagraphFlow(fragments.join(' ')):'';
-      const final=ready?auditGeminiLevels(originalOf(paragraph),{[id]:joined}):null;
+      const final=ready?auditGeminiLevels(originalOf(paragraph),{[id]:joined},{
+        pillar,targetByLevel:pillar?{[id]:jobs.reduce((n,j)=>n+(j.targets?.[id]||0),0)}:{},
+        summaryCapLetters:pillar?jobs.reduce((n,j)=>n+(j.summaryCapLetters||0),0):null,
+      }):null;
       verified[id]=ready&&final?.verified[id]===true;
       texts[id]=verified[id]?joined:null;
       achievedPercent[id]=verified[id]?final.achievedPercent[id]:null;
@@ -154,6 +176,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     book.chapters.map(c=>(c.paragraphs||[]).map(originalOf).join('|')).join('||'));
   const bookMemory=excerpt(book.chapters.map(c=>c.title).join(' | '),1000);
   const jobs=[],chapterJobs=new Map(),state=new Map();
+  const pillar=book?.studyPillarV38===STUDY_PILLAR_VERSION;
   for(let ci=0;ci<book.chapters.length;ci++){
     const ch=book.chapters[ci];
     const paragraphs=ch.paragraphs||[];
@@ -172,12 +195,25 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
         const key=makeRuntimeUnitKey({text,chapterTitle:ch.title,bookMemory,chapterMemory,
           previousText:context.previousText,nextText:context.nextText,
           sourceMeta:{sourcePageStart:paragraph.sourcePageStart,sourcePageEnd:paragraph.sourcePageEnd,
-            sourceSection:paragraph.sourceSection}},VERSION+':'+fingerprint+':'+part);
+            sourceSection:paragraph.sourceSection}},CACHE_KEY_VERSION+':'+fingerprint+':'+part);
         const job={key,source:text,context,pageIssues};
         chunkJobs.push(job);jobs.push(job);
       }
       chapterJobs.set(ci+':'+pi,chunkJobs);
     }
+  }
+  if(pillar){
+    const sources=jobs.map(j=>j.source);
+    for(const pct of STUDY_PERCENTAGES){
+      const assigned=allocateExactLetterBudgets(sources,pct);
+      assigned.forEach((letters,i)=>{
+        jobs[i].targets??={};
+        jobs[i].targets[String(pct)]=letters;
+      });
+    }
+    // 42% maximum retained letters for the first, outline-style summary.
+    const caps=allocateExactLetterBudgets(sources,58);
+    caps.forEach((cap,i)=>{jobs[i].summaryCapLetters=cap;});
   }
   let checkpointPersistent=true;
   const diagnostics={sourceBlocked:0,providerErrors:0,processedJobs:0,lastCode:null,errorsByCode:{}};
@@ -185,8 +221,21 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     const wanted=jobs.slice(i,i+100),cache=await loadRuntimeUnitResults(wanted.map(j=>j.key));
     for(const j of wanted){
       const item=cache.get(j.key);
-      if(item?.source===j.source&&item?.version===VERSION&&item?.editions&&item?.verified)
-        state.set(j.key,item);
+      if(item?.source===j.source&&item?.editions&&item?.verified){
+        const safe={...item,version:VERSION,verified:{...item.verified},
+          issues:{...(item.issues||{})},achievedPercent:{...(item.achievedPercent||{})}};
+        // Old results are not destroyed but MUST NOT be treated as approved
+        // when they do not match the exact new letter budget or core anchors.
+        if(pillar)for(const level of GEMINI_LEVELS){
+          if(!safe.verified[level])continue;
+          const result=auditGeminiLevels(j.source,{[level]:safe.editions[level]},{
+            pillar:true,targetByLevel:j.targets,summaryCapLetters:j.summaryCapLetters});
+          safe.verified[level]=result.verified[level];
+          safe.issues[level]=result.issues[level];
+          safe.achievedPercent[level]=result.achievedPercent[level];
+        }
+        state.set(j.key,safe);
+      }
     }
   }
   // Incomplete checkpoints must be repaired, not treated as permanently finished.
@@ -225,20 +274,25 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
         issues:{...(previous?.issues||{})},
         achievedPercent:{...(previous?.achievedPercent||{})}};
       let semanticFailure=false;
-      for(const id of GEMINI_LEVELS){
+      // Prioritize the student's starting point: summary first, then progressively deeper editions.
+      const generationOrder=pillar?['summary','50','40','30','20','10']:GEMINI_LEVELS;
+      for(const id of generationOrder){
         if(record.verified[id]===true)continue;
         try{
           // An edition is always generated from the original chunk, never from
           // a previously generated 10%, 20%, or 30% text.
           onActivity({phase:'request',level:id});
-          let editions=await askGemini(job.source,job.context,id,[],paceMs,signal);
+          let editions=await askGemini(job.source,job.context,id,[],paceMs,signal,
+            pillar?STUDY_PILLAR_VERSION:null,job.targets?.[id]??null,job.summaryCapLetters??null);
           onActivity({phase:'response',level:id});
-          let audit=auditGeminiLevels(job.source,editions);
+          let audit=auditGeminiLevels(job.source,editions,{pillar,targetByLevel:job.targets,summaryCapLetters:job.summaryCapLetters});
           if(!audit.verified[id]){
             onActivity({phase:'repair-request',level:id});
-            editions=await askGemini(job.source,job.context,id,audit.issues[id],paceMs,signal);
+            editions=await askGemini(job.source,job.context,id,audit.issues[id],paceMs,signal,
+              pillar?STUDY_PILLAR_VERSION:null,job.targets?.[id]??null,job.summaryCapLetters??null);
             onActivity({phase:'repair-response',level:id});
-            audit=auditGeminiLevels(job.source,editions);
+            audit=auditGeminiLevels(job.source,editions,{
+              pillar,targetByLevel:job.targets,summaryCapLetters:job.summaryCapLetters});
           }
           // A one-edition response is the normal mode. A complete legacy response
           // is accepted only after independently auditing all provided levels.

@@ -1,6 +1,6 @@
 import React,{useMemo,useState,useEffect} from 'react';
 import './MirrorReaderV35.css';
-import { composeMirrorPages,mirrorPageStatistics } from '../lib/libroSpecchioV35.js';
+import { composeMirrorPages,actualMirrorPageStatistics } from '../lib/libroSpecchioV35.js';
 import { renderMirrorImage } from '../lib/visualMirrorV35.js';
 export default function MirrorReaderV35({book,originalFile,chapterIndex=0,variant='study'}){
   const [index,setIndex]=useState(0);
@@ -17,15 +17,8 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
   },[chapterIndex,book?.canonicalBookMap]);
   const page=pages[Math.min(index,pages.length-1)];
   useEffect(()=>{setPicture(null);setPictureUrl('');setPictureError('');},[index]);
-  const pageTextRows=pages.filter(p=>p.kind==='text'&&p.sourcePage===page?.sourcePage);
-  const pageTotals=mirrorPageStatistics(pageTextRows.reduce((total,row)=>({
-    originalWords:total.originalWords+(row.originalWords||0),
-    resultWords:total.resultWords+(row.resultWords||0),
-    originalLetters:total.originalLetters+(row.originalLetters||0),
-    resultLetters:total.resultLetters+(row.resultLetters||0),
-    originalLines:total.originalLines+(row.originalLines||0),
-    resultLines:total.resultLines+(row.resultLines||0),
-  }),{}));
+  const pageTotals=actualMirrorPageStatistics(
+    book?.canonicalBookMap,book,pages,page?.sourcePage);
   async function showPicture(anchor){
     if(!anchor)return;
     setPicture(anchor);setPictureUrl('');setPictureError('');setPictureBusy(true);
@@ -73,10 +66,12 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
         </div>
         <footer className="sb-mirror-statistics">
           <strong>Pagina originale {page.sourcePage}</strong>
-          <span>Parole: {pageTotals.originalWords} → {pageTotals.editedWords} · Risparmiate: {pageTotals.wordsSaved}</span>
-          <span>Lettere risparmiate: {pageTotals.lettersSaved} · Righe: {pageTotals.linesSaved}</span>
-          <span>Riduzione effettiva: {pageTotals.achievedPercent}%</span>
-          <small>Righe calcolate nella composizione StudyBook, non certificate sul PDF originale.</small>
+          {pageTotals.measured ? <>
+            <span>Parole: {pageTotals.originalWords} → {pageTotals.resultWords} · Risparmiate: {pageTotals.wordsSaved}</span>
+            <span>Lettere: {pageTotals.originalLetters} → {pageTotals.resultLetters} · Risparmiate: {pageTotals.lettersSaved}</span>
+            <span>Riduzione effettiva: {pageTotals.achievedPercent}%</span>
+            <small>Confronto delle lettere realmente presenti nella pagina originale e nel testo visualizzato.</small>
+          </> : <span>Statistiche non disponibili: verificare la corrispondenza con la pagina originale.</span>}
         </footer>
       </>}
     </article>
