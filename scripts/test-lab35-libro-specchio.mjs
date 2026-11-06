@@ -42,7 +42,8 @@ const chapters=Array.from({length:7},(_,i)=>({
 }));
 const outline=chapters.map(c=>({title:c.title,pageNumber:c.pageStart,depth:1}));
 const map=buildCanonicalBookMap({
-  pages:sourcePages,chapters,outline,originalFingerprint:'a'.repeat(64),pdfPageCount:8,
+  pages:sourcePages,chapters,outline,pageLabels:sourcePages.map(p=>String(p.pageNumber)),
+  originalFingerprint:'a'.repeat(64),pdfPageCount:8,
 });
 assert.equal(map.chapters.length,7,'7 chapter roots stay 7, not 29');
 assert.equal(map.chapters[0].sections.length,29,'29 section headers remain sections, not chapter roots');
