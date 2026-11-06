@@ -24,6 +24,7 @@ import { BottomNav, LibraryScreen, SettingsScreen, StudioScreen } from './compon
 import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
+import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
 import { reacquireFromSavedPdf } from './lib/sourceRecoveryV34.js';
@@ -934,6 +935,7 @@ export default function AppV14() {
 
   async function createStudyBook(sourceData, sourceName, { fromScanner = false } = {}) {
     if (!sourceData || generating) return null;
+    let generatedDraft = null;
     setGenerating(true);
     setDsaMode(true);
     setError('');
@@ -958,7 +960,34 @@ export default function AppV14() {
         },
       });
       const sourceIntegrity = auditBookSourceCoverage(sourceData, generated);
-      const result = { ...generated, quality: { ...(generated.quality || {}), sourceIntegrity } };
+      let result = { ...generated, quality: { ...(generated.quality || {}), sourceIntegrity } };
+      // LAB36: show only verified generated pages as a progressive preview.
+      // Persist individual chunks in the existing MotorLab runtime IndexedDB store.
+      setStudyBook({ ...result, editionsV36:{status:'partial',complete:false,rows:[]} });
+      navigateTo('studio');
+      let savedVerified = 0;
+      let checkpointTail = Promise.resolve();
+      const editions = await generateGeminiEditionsV36(result,{
+        maxConcurrency:2,
+        onProgress(snapshot){
+          generatedDraft={...result,editionsV36:snapshot};
+          setStudyBook(generatedDraft);
+          setProgress({done:snapshot.verifiedCells||0,total:snapshot.totalCells||1});
+          setStatus('Libro Specchio · sei edizioni Gemini · '+(snapshot.verifiedCells||0)+'/'+(snapshot.totalCells||1)+' paragrafi verificati · checkpoint');
+          // Save progress occasionally, never let concurrent IndexedDB writers race.
+          if(libraryId && (snapshot.verifiedCells||0)-savedVerified>=10){
+            savedVerified=snapshot.verifiedCells||0;
+            const copy=generatedDraft;
+            checkpointTail=checkpointTail.then(()=>saveLibraryBook({
+              id:libraryId,fileName:sourceName,sourceData,studyBook:copy,
+              dsaMode:true,profileId:activeProfileId,originalFile:sourceFile,
+            })).catch(()=>null);
+          }
+        },
+      });
+      await checkpointTail;
+      result={...result,editionsV36:editions};
+      generatedDraft=result;
       setStudyBook(result);
       // LAB12: il titolo finale considera l'intero documento elaborato; non sostituisce mai il nome manuale.
       const suggestedFinal = fromScanner && !scanTitleManualRef.current
@@ -967,7 +996,7 @@ export default function AppV14() {
         ? `${sanitizeTitle(suggestedFinal.title)}.pdf` : sourceName;
       setFileName(nameToSave);
       const saved = await persistBook(result, sourceData, nameToSave, libraryId);
-      if (saved && (generated.resumeSignature || generated.quality?.resumeSignature))
+      if (saved && result.editionsV36?.complete && (generated.resumeSignature || generated.quality?.resumeSignature))
         await markResumeStatePublished(generated.resumeSignature || generated.quality?.resumeSignature);
       setScannerResultReady(fromScanner);
       if (fromScanner && saved) {
@@ -993,13 +1022,22 @@ export default function AppV14() {
       const engineLabel = result.engine === 'ai' ? 'AI' : result.engine === 'misto' ? 'AI + sicurezza locale' : 'modalità locale';
       const runtime = result.quality?.motorLabRuntime;
       const speedLabel = runtime ? ` · MotorLab Runtime · ${runtime.maxConcurrencyUsed || 1} corridori${runtime.cachedChunks ? ` · ${runtime.cachedChunks} blocchi riusati` : ''}` : '';
-      setStatus(sourceIntegrity.passed
-        ? `Libro pronto · ${engineLabel}${speedLabel}${saved ? ' · salvato in Libreria' : ''}`
+      setStatus(!result.editionsV36?.complete
+        ? 'Anteprima parziale · '+(result.editionsV36?.verifiedCells||0)+'/'+(result.editionsV36?.totalCells||0)+' paragrafi verificati · originale conservato'
+        : sourceIntegrity.passed
+        ? `Sei edizioni pronte · Gemini verificato${speedLabel}${saved ? ' · salvate in Libreria' : ''}`
         : `Libro da verificare · ${sourceIntegrity.issueCount} possibili anomalie di completezza · originale conservato`);
       navigateTo('studio');
       return result;
     } catch (err) {
       setError(err.message || 'Errore durante la creazione del libro di studio.');
+      if(generatedDraft){
+        setStudyBook(generatedDraft);
+        await persistBook(generatedDraft,sourceData,sourceName,libraryId);
+        setStatus('Anteprima parziale salvata · le edizioni non verificate rimangono bloccate');
+        navigateTo('studio');
+        return generatedDraft;
+      }
       setStatus('Errore');
       return null;
     } finally {
@@ -1456,6 +1494,10 @@ export default function AppV14() {
 
   function exportCurrentBook(format, variant = 'study') {
     if (!precisionBook) return;
+    if(precisionBook.editionReadiness?.partial){
+      setError('Questa è un’anteprima LAB36: esportazione disponibile dopo la verifica completa delle sei edizioni.');
+      return;
+    }
     const options = { dsaMode, variant, accessibility, originalFile: sourceFile };
     if (format === 'pdf') return exportPdf(precisionBook, fileName, options);
     if (format === 'docx') return exportDocx(precisionBook, fileName, options);

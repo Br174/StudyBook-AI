@@ -434,6 +434,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
     );
   }
   const fidelity = studyBook?.quality?.sourceFidelityGate || studyBook?.quality?.fidelityGate;
+  const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
   const sourceChapters = sourceData?.chapters || [];
   const canPrepare = sourceChapters.some(chapter => chapter.paragraphs?.length);
   return (
@@ -446,6 +447,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       </header>
 
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
+      {v36Partial && <p role="status" className="sb-mirror-warning">ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi verificati. Le pagine incomplete restano segnalate; PDF e download saranno disponibili dopo la verifica finale.</p>}
       <section className="sb-open-book-workspace" aria-label="Libro aperto">
         <div className="sb-open-book-overview">
           <div className={scannedPhoto ? 'sb-open-book-cover sb-scanned-book-cover' : 'sb-open-book-cover'}>
@@ -463,11 +465,11 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         </div>
         <div className="sb-book-quick-actions">
           <button type="button" onClick={onRead}><span className="sb-action-icon"><StudyIcon name="book" size={25} /></span><strong>Leggi sul telefono</strong></button>
-          <button type="button" onClick={() => isOriginalOnly ? onExport('pdf', 'original') : onExport('pdf', 'study')}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>Leggi in PDF</strong></button>
+          <button type="button" disabled={v36Partial&&!isOriginalOnly} onClick={() => isOriginalOnly ? onExport('pdf', 'original') : onExport('pdf', 'study')}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>Leggi in PDF</strong></button>
           {isOriginalOnly
             ? <button type="button" onClick={() => setPrepareOpen(true)}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>
             : <button type="button" onClick={onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>}
-          <button type="button" className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>Scarica libro</strong></button>
+          <button type="button" disabled={v36Partial&&!isOriginalOnly} className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>Scarica libro</strong></button>
         </div>
         {!isOriginalOnly && studyBook && (
           <div className="sb-precision-control" style={{ padding: '14px 16px', marginTop: 10, border: '1px solid #dce6f1', borderRadius: 14 }}>
@@ -487,10 +489,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             </div>
             {reductionMeta && (
               <p style={{ fontSize: 12, margin: '9px 0 0', color: '#64748b' }}>
-                Riduzione effettiva (lettere): {reductionMeta.achievedLettersPercent ?? reductionMeta.achievedPercent}%.
-                {reductionMeta.targetReached ? ' ' : ' Obiettivo ' + (reductionMeta.targetPercent ?? 'riassunto') + '% non raggiunto: conservate informazioni essenziali o parti da verificare. '}
+                Riduzione effettiva (lettere): {Number.isFinite(reductionMeta.achievedLettersPercent) ? reductionMeta.achievedLettersPercent + '%' : 'in elaborazione'}.
+                {v36Partial ? ' Dati progressivi, nessuna percentuale definitiva. ' : reductionMeta.targetReached ? ' ' : ' Obiettivo ' + (reductionMeta.targetPercent ?? 'riassunto') + '% non raggiunto: conservate informazioni essenziali o parti da verificare. '}
                 {reductionMeta.qualityGuard?.originalFallbackParagraphs > 0 ? ' Alcuni paragrafi richiedono controllo della fonte originale. ' : ''}
-                Il file originale resta invariato; telefono e stampa usano questa versione.
+                Il file originale resta invariato; il telefono mostra questa versione, la stampa richiede il completamento.
               </p>
             )}
           </div>
@@ -514,7 +516,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
           </div>
         </article>
       )}
-      {exportOpen && (
+      {exportOpen && !v36Partial && (
         <article className="sb-export-card">
           <div className="sb-export-head">
             <div><small>ESPORTA</small><h2>Scarica libro</h2><p className="sb-export-description">{isOriginalOnly ? 'Scegli il formato: il file importato rimane invariato.' : 'Scegli la versione del libro e il formato da scaricare o stampare.'}</p></div>

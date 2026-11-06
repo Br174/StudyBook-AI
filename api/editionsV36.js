@@ -47,14 +47,16 @@ export default async function handler(req,res){
   const source=truncate(req.body?.source,4601);
   if(!source||source.length>4600)return res.status(400).json({error:'Fonte mancante o oltre 4600 caratteri',code:'INVALID_SOURCE'});
   const context=req.body?.context||{};
+  const repairs=Array.isArray(req.body?.repairIssues)?req.body.repairIssues.slice(0,8).map(x=>truncate(x,120)):[];
   const messages=[
     {role:'system',content:prompt()},
     {role:'user',content:JSON.stringify({source,context:{
       chapterTitle:truncate(context.chapterTitle,160),sectionTitle:truncate(context.sectionTitle,160),
       bookMemory:truncate(context.bookMemory,1000),chapterMemory:truncate(context.chapterMemory,1200),
       previousText:truncate(context.previousText,400),nextText:truncate(context.nextText,400)
-    }})}
+    },repairIssues:repairs.length?repairs:undefined})}
   ];
+  if(repairs.length)messages[0].content+='\nCORREZIONE: la risposta precedente non ha superato i controlli: '+repairs.join('; ')+'. Riprova dalla fonte originale senza eliminare i dettagli protetti.';
   for(let attempt=1;attempt<=2;attempt++){
     const abort=new AbortController();
     const timer=setTimeout(()=>abort.abort(),45000);

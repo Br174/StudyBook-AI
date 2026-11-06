@@ -120,6 +120,10 @@ jobs:
             node scripts/test-lab35-libro-specchio.mjs
           fi
 
+      - name: LAB36 app integration and progressive preview
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
+        run: node scripts/test-lab36-app-integration.mjs
+
       - name: LAB36 editions reader and publication guard
         if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
         run: node scripts/test-lab36-edition-view.mjs

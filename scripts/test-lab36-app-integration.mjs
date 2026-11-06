@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const app=read('src/AppV15.jsx'),studio=read('src/components/AppScreens.jsx');
+const mirror=read('src/components/MirrorReaderV35.jsx'),api=read('api/editionsV36.js');
+assert.match(app,/generateGeminiEditionsV36\(result/);
+assert.match(app,/editionsV36:\s*editions/);
+assert.match(app,/checkpointTail/);
+assert.match(app,/editionReadiness\?\.partial/);
+assert.match(app,/markResumeStatePublished/);
+assert.match(studio,/ANTEPRIMA PARZIALE/);
+assert.match(studio,/disabled=\{v36Partial&&!isOriginalOnly\}/);
+assert.match(mirror,/editionPending/);
+assert.match(api,/repairIssues/);
+console.log('LAB36 app integration: six editions pipeline, partial previews, export gate and correction context OK');

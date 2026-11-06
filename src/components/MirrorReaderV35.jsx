@@ -38,6 +38,7 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
   }
   if(!page)return <p role="status">Struttura del libro ancora da verificare.</p>;
   return <div className="sb-mirror-reader">
+    {book?.editionReadiness?.partial && <p role="status" className="sb-mirror-warning">ANTEPRIMA PARZIALE · Solo i paragrafi verificati da Gemini sono leggibili. Il libro definitivo non è ancora pubblicato.</p>}
     <nav className="sb-mirror-page-nav">
       <button onClick={()=>setIndex(Math.max(0,index-1))} disabled={index===0}>←</button>
       <select value={index} onChange={e=>setIndex(Number(e.target.value))}>
@@ -68,7 +69,7 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
             onClick={()=>showPicture(book.canonicalBookMap?.visualAnchors?.find(a=>a.id===p.anchorId))}>
             (Immagine {p.imageNumber}) · pagina {p.sourcePage}/{p.imageNumber}
           </button>:
-          <p key={i}>{p.text}</p>)}
+          <p key={i} className={p.editionPending?'sb-mirror-warning':undefined}>{p.text}</p>)}
         </div>
         <footer className="sb-mirror-statistics">
           <strong>Pagina originale {page.sourcePage}</strong>
