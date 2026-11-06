@@ -154,6 +154,8 @@ jobs:
         run: node scripts/test-lab33-chapter-fidelity.mjs
       - name: Test LAB34 PDF source shield, crash-safe checkpoint and recovery
         run: node scripts/test-lab34-source-crash-resume.mjs
+      - name: Test LAB35 exact original chapters, fixed pages, figures and bis/ter
+        run: node scripts/test-lab35-libro-specchio.mjs
       - name: Test persistent study-help cache
         run: node scripts/test-study-help-cache-model.mjs
       - name: Test PWA shell
