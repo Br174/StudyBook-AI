@@ -170,8 +170,12 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
         const perPageMs = durationMs / Math.max(1, block.end - block.start + 1);
         if (!baselineMs && !blockErrors) baselineMs = perPageMs;
         else baselineMs = baselineMs ? baselineMs * 0.8 + perPageMs * 0.2 : perPageMs;
-        if (shouldThrottlePdfLanes({ durationMs: perPageMs, baselineMs, errorCount: blockErrors, deviceMemory })) {
+        const heap = performance.memory;
+        const heapFraction = heap?.jsHeapSizeLimit
+          ? Number(heap.usedJSHeapSize || 0) / Number(heap.jsHeapSizeLimit) : 0;
+        if (shouldThrottlePdfLanes({ durationMs: perPageMs, baselineMs, errorCount: blockErrors, deviceMemory, heapFraction })) {
           targetLanes = 1;
+          onProgress?.({ phase: 'turbo-throttle', concurrency: 1, heapFraction });
         }
       }
     };
