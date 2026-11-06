@@ -1,3 +1,4 @@
+import { requireIntegrityForStudy } from './integrity360Core.js';
 // Rebuild only the derived study edition from the stored source, in one safe commit.
 // All original bytes, scan assets, covers, names and library organization survive.
 import { getLibraryBook, saveLibraryBook } from './library.js';
@@ -22,6 +23,8 @@ export async function reprocessStoredBook(id, {
   if (!hasReprocessSource(record)) {
     throw new Error('Il testo di origine non è disponibile: importare nuovamente il documento originale.');
   }
+
+  requireIntegrityForStudy(record.sourceData);
 
   // The source, not the former output, is the sole input to the new generation.
   // Load the heavy engine only when actually running; isolated regression tests
