@@ -1,7 +1,8 @@
 const DB_NAME = 'studybook-ai-processing';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE = 'checkpoints';
 const RUNTIME_STORE = 'runtime-unit-results';
+const PARAGRAPH_STORE = 'study-paragraphs-v34';
 const RUNTIME_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const MAX_AGE_MS = 180 * 24 * 60 * 60 * 1000;
 
@@ -22,6 +23,10 @@ function openDb() {
       if (!db.objectStoreNames.contains(RUNTIME_STORE)) {
         const runtimeStore = db.createObjectStore(RUNTIME_STORE, { keyPath: 'key' });
         runtimeStore.createIndex('updatedAt', 'updatedAt');
+      }
+      if (!db.objectStoreNames.contains(PARAGRAPH_STORE)) {
+        const partStore = db.createObjectStore(PARAGRAPH_STORE, { keyPath: 'key' });
+        partStore.createIndex('runKey', 'runKey');
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -191,4 +196,67 @@ export async function markResumeStatePublished(signature) {
     ...state, published:true, unitPieces:[],
     publishedAt:new Date().toISOString(),
   });
+}
+
+export async function loadStudyParagraphs(signature, generation) {
+  if (!signature || !generation) return new Map();
+  let db;
+  try {
+    db = await openDb();
+    const runKey = signature + ':' + generation;
+    const rows = await requestResult(db.transaction(PARAGRAPH_STORE, 'readonly')
+      .objectStore(PARAGRAPH_STORE).index('runKey').getAll(runKey));
+    return new Map((rows || []).filter(row => Number.isInteger(row.index) && row.index >= 0)
+      .map(row => [row.index, {result:row.result || null, pieces:row.pieces || []}]));
+  } catch { return new Map(); }
+  finally { db?.close(); }
+}
+
+// Atomic per-wave DELTA writes: only changed paragraphs, never recopy the
+// entire university textbook in IndexedDB for each finished batch.
+export async function saveStudyParagraphs(signature, generation, changes = []) {
+  if (!signature || !generation) return false;
+  const valid = changes.filter(entry => Number.isInteger(entry?.index)
+    && entry.index >= 0 && (entry.result || entry.pieces?.length));
+  if (!valid.length) return true;
+  let db;
+  try {
+    db = await openDb();
+    const runKey = signature + ':' + generation;
+    await new Promise((resolve,reject)=>{
+      const tx = db.transaction(PARAGRAPH_STORE,'readwrite');
+      const store = tx.objectStore(PARAGRAPH_STORE);
+      for (const entry of valid) store.put({
+        key:runKey + ':' + entry.index, runKey,
+        index:entry.index, result:entry.result || null,
+        pieces:entry.result ? [] : (entry.pieces || []),
+        updatedAt:new Date().toISOString(),
+      });
+      tx.oncomplete=resolve;
+      tx.onerror=()=>reject(tx.error || new Error('Checkpoint paragrafi non salvato'));
+      tx.onabort=()=>reject(tx.error || new Error('Checkpoint paragrafi annullato'));
+    });
+    return true;
+  } catch { return false; }
+  finally { db?.close(); }
+}
+
+export async function clearStudyParagraphs(signature) {
+  if (!signature) return false;
+  let db;
+  try {
+    db=await openDb();
+    const tx=db.transaction(PARAGRAPH_STORE,'readwrite');
+    const store=tx.objectStore(PARAGRAPH_STORE);
+    const rows=await requestResult(store.getAll());
+    rows.filter(row=>String(row.runKey||'').startsWith(signature+':'))
+      .forEach(row=>store.delete(row.key));
+    await new Promise((resolve,reject)=>{
+      tx.oncomplete=resolve;
+      tx.onerror=()=>reject(tx.error || new Error('Eliminazione checkpoint non riuscita'));
+      tx.onabort=()=>reject(tx.error || new Error('Eliminazione checkpoint annullata'));
+    });
+    return true;
+  } catch { return false; }
+  finally { db?.close(); }
 }
