@@ -1,8 +1,13 @@
 import React,{useMemo,useState,useEffect} from 'react';
 import { composeMirrorPages,mirrorPageStatistics } from '../lib/libroSpecchioV35.js';
-export default function MirrorReaderV35({book,chapterIndex=0}){
+import { renderMirrorImage } from '../lib/visualMirrorV35.js';
+export default function MirrorReaderV35({book,originalFile,chapterIndex=0,variant='study'}){
   const [index,setIndex]=useState(0);
-  const output=useMemo(()=>composeMirrorPages(book?.canonicalBookMap,book),[book]);
+  const [picture,setPicture]=useState(null);
+  const [pictureUrl,setPictureUrl]=useState('');
+  const [pictureError,setPictureError]=useState('');
+  const [pictureBusy,setPictureBusy]=useState(false);
+  const output=useMemo(()=>composeMirrorPages(book?.canonicalBookMap,book,{variant,maxLines:40}),[book]);
   const pages=output.pages||[];
   useEffect(()=>{
     const target=book?.chapters?.[chapterIndex]?.pageStart||1;
@@ -10,6 +15,26 @@ export default function MirrorReaderV35({book,chapterIndex=0}){
     setIndex(Math.max(0,found));
   },[chapterIndex,book?.canonicalBookMap]);
   const page=pages[Math.min(index,pages.length-1)];
+  useEffect(()=>{setPicture(null);setPictureUrl('');setPictureError('');},[index]);
+  const pageTextRows=pages.filter(p=>p.kind==='text'&&p.sourcePage===page?.sourcePage);
+  const pageTotals=mirrorPageStatistics(pageTextRows.reduce((total,row)=>({
+    originalWords:total.originalWords+(row.originalWords||0),
+    resultWords:total.resultWords+(row.resultWords||0),
+    originalLetters:total.originalLetters+(row.originalLetters||0),
+    resultLetters:total.resultLetters+(row.resultLetters||0),
+    originalLines:total.originalLines+(row.originalLines||0),
+    resultLines:total.resultLines+(row.resultLines||0),
+  }),{}));
+  async function showPicture(anchor){
+    if(!anchor)return;
+    setPicture(anchor);setPictureUrl('');setPictureError('');setPictureBusy(true);
+    try {
+      if(!originalFile)throw Error('Il PDF originale non è disponibile su questo dispositivo.');
+      const url=await renderMirrorImage(originalFile,anchor);
+      setPictureUrl(url);
+    }catch(error){setPictureError(error?.message||'Figura non disponibile.');}
+    finally{setPictureBusy(false);}
+  }
   if(!page)return <p role="status">Struttura del libro ancora da verificare.</p>;
   return <div className="sb-mirror-reader">
     <nav className="sb-mirror-page-nav">
