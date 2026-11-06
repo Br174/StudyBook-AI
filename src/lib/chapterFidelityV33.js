@@ -65,3 +65,21 @@ export function chapterMeasuredStats(originalLetters, outputLetters, target) {
     overReduced:requested!==null && achieved>requested+3,
     insufficientlyReduced:requested!==null && achieved<requested-3 };
 }
+
+
+/** A heading printed at the end of the PREVIOUS chapter is not study prose
+ * if (and only if) its normalized identity exactly equals the next chapter
+ * heading. The original remains untouched in paragraph.original.
+ */
+export function stripConfirmedNextHeading(text, nextChapterTitle) {
+  const value=String(text||'');
+  const match=value.match(NEXT_TITLE_MARK);
+  if (!match || !nextChapterTitle) return {text:value,moved:false};
+  const next=canonical(nextChapterTitle);
+  if (!next || canonical(match[1])!==next) return {text:value,moved:false};
+  const headIndex=value.lastIndexOf(match[1]);
+  if (headIndex<0) return {text:value,moved:false};
+  const before=value.slice(0,headIndex).trimEnd();
+  if (!before || !/[.!?]$/u.test(before)) return {text:value,moved:false};
+  return {text:before,moved:true,heading:match[1],reason:'matched-next-chapter-title'};
+}
