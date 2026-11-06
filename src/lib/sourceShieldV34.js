@@ -25,7 +25,9 @@ export function inspectAcquiredPage(page, previous = null, next = null) {
   if (text && text.length < 65 && (page?.imageCount||page?.inkCount||0)>0)
     issues.push('visual-text-coverage-uncertain');
   return {pageNumber:number, issues, readyForStudy:page?.status==='verified'
-      && !issues.includes('unrecognized-glyphs') && !issues.includes('not-extracted'),
+      && !issues.includes('unrecognized-glyphs') && !issues.includes('not-extracted')
+      && !issues.includes('no-recognized-text')
+      && !issues.includes('visual-text-coverage-uncertain'),
     textLength:text.length, evidenceSource:page?.source||'unknown'};
 }
 
