@@ -35,7 +35,11 @@ export async function reacquireFromSavedPdf(id,{
     : suspiciousFromAudit;
   const retriever=read || (await import('./documentParserV11.js')).readSourceFile;
   onProgress?.({phase:'source-recovery-start',done:0,total:1,reviewPages:suspicious.length});
-  const fresh=await retriever(file,{autoOcr:true,retryPages:suspicious,onProgress});
+  const fresh=await retriever(file,{
+    autoOcr:true,retryPages:suspicious,
+    forceReextractAll:!previouslyAudited || !suspiciousFromAudit.length,
+    onProgress,
+  });
   if (!fresh?.pages?.length || !fresh?.chapters?.length)
     throw new Error('Riesame interrotto: originale e precedente versione sono conservati.');
   if (old?.originalFingerprint && old.originalFingerprint !== fresh.originalFingerprint)
