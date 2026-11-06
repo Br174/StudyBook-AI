@@ -150,7 +150,7 @@ function metrics(page,original,edited,originalLines,resultLines){
   page.resultLines+=resultLines;
 }
 function photoInsertionIndex(anchor,totalText){
-  const frac=Number(anchor?.relativeTextPosition);
+  const frac=Number(anchor?.relativeTextPosition ?? NaN);
   if(!Number.isFinite(frac))return totalText;
   return Math.max(0,Math.min(totalText,Math.round(totalText*Math.max(0,Math.min(1,frac)))));
 }
