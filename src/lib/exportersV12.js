@@ -188,6 +188,11 @@ export function exportHtml(book, fileName, options = false) {
 }
 
 export function printStudyBook(book, fileName, options = false) {
+  if (book?.canonicalBookMap?.version === 35) {
+    // Fixed pages and original figures must print from the page-mirrored PDF.
+    void exportPdf(book,fileName,options);
+    return true;
+  }
   const normalized = normalizeOptions(options);
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
@@ -206,6 +211,11 @@ export function printStudyBook(book, fileName, options = false) {
 }
 
 export async function exportPdf(book, fileName, rawOptions = false) {
+  if (book?.canonicalBookMap?.version === 35) {
+    const { exportMirrorPdfV35 } = await import('./exportMirrorV35.js');
+    return exportMirrorPdfV35(book,fileName,
+      typeof rawOptions==='object'&&rawOptions?rawOptions:{dsaMode:Boolean(rawOptions)});
+  }
   const options = normalizeOptions(rawOptions);
   const settings = printSettings(options);
   const editorial = buildEditorialDocument(book, options);
