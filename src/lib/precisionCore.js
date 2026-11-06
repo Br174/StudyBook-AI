@@ -35,9 +35,16 @@ function buildRequests(book, level) {
     const source = sourceText(paragraph);
     sourceWords += countWords(source);
     sourceLetters += countLetters(source);
+    const units = buildMeaningUnits(source, level);
+    const sourceAudit = auditNarrativeSource(source);
+    // A single lowercase beginning can be a truthful continuation of an OCR
+    // chunk. Preserve that exact first sentence and keep its warning visible;
+    // do not force every other complete sentence back to the original.
+    if (sourceAudit.problems.length === 1 && sourceAudit.problems[0] === 'starts-mid-sentence' && units[0]) {
+      units[0] = { ...units[0], value: units[0].source };
+    }
     items.push({
-      chapterIndex, paragraphIndex, source,
-      units: buildMeaningUnits(source, level),
+      chapterIndex, paragraphIndex, source, units, sourceAudit,
       selected: new Set(), fallback: false,
     });
   }));
@@ -139,15 +146,19 @@ export function buildPrecisionEdition(book, reduction = 10) {
       const units = item.units.filter((unit) => item.selected.has(unit.index));
       const candidate = level === 0 ? item.source : joinUnits(units, level);
       const audit = checkReducedParagraph(item.source, candidate, { selectedUnits: units, allowSafeGaps: true });
-      const sourceAudit = auditNarrativeSource(item.source);
-      // If OCR/text segmentation is already broken, avoid silently presenting a
-      // newly shortened fragment as verified academic prose.
-      const fallback = !audit.ok || !sourceAudit.ok;
+      const sourceAudit = item.sourceAudit;
+      // Only the already-preserved lowercase beginning may proceed with a
+      // visible warning. More serious OCR defects remain hard stop conditions.
+      const harmlessBoundary = sourceAudit.problems.length === 1
+        && sourceAudit.problems[0] === 'starts-mid-sentence'
+        && units[0]?.index === 0 && units[0].value === units[0].source;
+      const fallback = !audit.ok || (!sourceAudit.ok && !harmlessBoundary);
       const auditReasons = [...audit.issues,...sourceAudit.problems.map(problem=>'source-'+problem)];
       const finalText = fallback ? item.source : candidate;
-      if (fallback) {
-        fallbackCount += 1;
-        issues.push({ chapterIndex, paragraphIndex, problems: auditReasons });
+      if (fallback) fallbackCount += 1;
+      if (auditReasons.length) {
+        issues.push({ chapterIndex, paragraphIndex, problems: auditReasons,
+          action: fallback ? 'source-retained' : 'source-boundary-review' });
       }
       outputWords += countWords(finalText);
       outputLetters += countLetters(finalText);
