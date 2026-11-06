@@ -3,7 +3,7 @@ const DB_VERSION = 2;
 const STORE = 'checkpoints';
 const RUNTIME_STORE = 'runtime-unit-results';
 const RUNTIME_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
-const MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+const MAX_AGE_MS = 180 * 24 * 60 * 60 * 1000;
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -45,7 +45,8 @@ export async function loadResumeState(signature) {
     const record = await requestResult(tx.objectStore(STORE).get(signature));
     if (!record) return null;
     const age = Date.now() - new Date(record.updatedAt || 0).getTime();
-    if (!Number.isFinite(age) || age > MAX_AGE_MS) return null;
+    // Never silently expire a crash-recovery checkpoint in progress.
+    if (!Number.isFinite(age) || (age > MAX_AGE_MS && record.state?.published)) return null;
     return record.state || null;
   } catch {
     return null;
@@ -106,7 +107,7 @@ export async function purgeOldResumeStates() {
     const cutoff = Date.now() - MAX_AGE_MS;
     records.forEach((record) => {
       const timestamp = new Date(record.updatedAt || 0).getTime();
-      if (!timestamp || timestamp < cutoff) store.delete(record.signature);
+      if ((!timestamp || timestamp < cutoff) && record.state?.published) store.delete(record.signature);
     });
   } catch {
     // Pulizia best-effort.
@@ -180,4 +181,14 @@ export async function purgeOldRuntimeUnitResults() {
   } finally {
     db?.close();
   }
+}
+
+export async function markResumeStatePublished(signature) {
+  if (!signature) return false;
+  const state = await loadResumeState(signature);
+  if (!state?.complete || state.signature !== signature) return false;
+  return saveResumeState(signature, {
+    ...state, published:true, unitPieces:[],
+    publishedAt:new Date().toISOString(),
+  });
 }
