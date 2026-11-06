@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import {diagnoseGeminiQuota} from '../api/geminiQuotaV36.js';
 const now=Date.parse('2026-11-06T12:00:00.000Z');
 const from=([id,metric,quotaValue],retry=null,headers=null)=>{

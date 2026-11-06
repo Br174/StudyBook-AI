@@ -25,7 +25,7 @@ import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
-import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
+import { readGeminiPause, clearGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
 import { reacquireFromSavedPdf } from './lib/sourceRecoveryV34.js';
@@ -223,6 +223,31 @@ export default function AppV14() {
     [scanPages],
   );
   const progressPercent = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+
+  // Foreground-only scheduled resume. Android may suspend the app when closed;
+  // the persisted checkpoint and cooldown survive reopening without a paid job.
+  useEffect(() => {
+    const editions=studyBook?.editionsV36;
+    const pause=editions?.quota;
+    if(activeScreen!=='studio'||generating||!pause?.automatic||editions?.complete)return;
+    const due=Date.parse(pause.retryAt||'');
+    if(!Number.isFinite(due))return;
+    let fired=false;
+    const tryResume=()=>{
+      if(fired||Date.now()<due)return;
+      if(typeof document!=='undefined'&&document.visibilityState==='hidden')return;
+      fired=true;
+      void resumeGeminiEditions();
+    };
+    const wait=Math.min(2**31-1,Math.max(0,due-Date.now()));
+    const timer=setTimeout(tryResume,wait);
+    if(typeof document!=='undefined')document.addEventListener('visibilitychange',tryResume);
+    return ()=>{
+      clearTimeout(timer);
+      if(typeof document!=='undefined')document.removeEventListener('visibilitychange',tryResume);
+    };
+  },[activeScreen,generating,libraryId,studyBook?.editionsV36?.status,
+    studyBook?.editionsV36?.quota?.retryAt,studyBook?.editionsV36?.quota?.automatic]);
 
   function navigateTo(nextScreen, { replace = false } = {}) {
     if (!nextScreen || nextScreen === activeScreen) return;
@@ -1069,11 +1094,12 @@ export default function AppV14() {
     setGenerating(true);setError('');
     try{
       const pause=await readGeminiPause();
-      if(pause){
+      if(pause?.automatic){
         setStatus(quotaDisplayV36(pause));
-        setGenerating(false);
         return;
       }
+      // Explicit user retry after a model/billing configuration change, never a purchase.
+      if(pause && !pause.automatic)await clearGeminiPause();
       const snapshot=await generateGeminiEditionsV36(current,{maxConcurrency:1,
         onProgress(update){
           draft={...current,editionsV36:update,

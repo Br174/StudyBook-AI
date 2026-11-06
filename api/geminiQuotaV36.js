@@ -32,7 +32,7 @@ function nextPacificResetSeconds(now){
 }
 function safeCode(s,max=120){
   const text=String(s||'');
-  return /^[a-z0-9_.-]{1,200}$/i.test(text)?text.slice(0,max):null;
+  return /^[a-z0-9_./:-]{1,200}$/i.test(text)?text.slice(0,max):null;
 }
 export function diagnoseGeminiQuota({status=429,body=null,headers=null,model=null,now=Date.now()}={}){
   const error=body?.error||body||{};

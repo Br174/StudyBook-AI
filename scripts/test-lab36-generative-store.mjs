@@ -52,5 +52,50 @@ try{
   const fixed=await generateGeminiEditionsV36(recover,{maxConcurrency:1,paceMs:0});
   assert.equal(fixed.complete,true);
   assert.equal(retryCalls,3,'Un checkpoint incompleto deve essere ritentato');
+  // Multi-paragraph book: stop after first quota refusal; keep previously verified
+  // content; no extra requests until the actual cooldown is over.
+  await clearGeminiPause();
+  const partSources=[source+' Parte A.',source+' Parte B.',source+' Parte C.'];
+  const large={
+    chapters:[{title:'Capitolo lungo',pageStart:1,paragraphs:partSources.map(t=>({
+      original:t,sourcePageStart:1,sourcePageEnd:1
+    }))}],
+    canonicalBookMap:{originalFingerprint:'h'.repeat(64),uncertain:[],
+      pages:[{physicalPage:1,sourceStatus:'verified'}]}
+  };
+  let multiCalls=0;
+  globalThis.fetch=async(_url,opts)=>{
+    multiCalls++;
+    const text=JSON.parse(opts.body).source;
+    if(multiCalls===2)return new Response(JSON.stringify({
+      error:'Quota al minuto',code:'AI_QUOTA_LIMIT',
+      quota:{kind:'requests-minute',automatic:true,estimated:false,retryAfterSeconds:120}
+    }),{status:429,headers:{'Content-Type':'application/json'}});
+    return new Response(JSON.stringify({engine:'ai',sourceVersion:'original',
+      editions:Object.fromEntries(GEMINI_LEVELS.map(id=>[id,text]))}),
+      {status:200,headers:{'Content-Type':'application/json'}});
+  };
+  const stopped=await generateGeminiEditionsV36(large,{paceMs:0,maxConcurrency:1});
+  assert.equal(multiCalls,2);
+  assert.equal(stopped.status,'quota-paused');
+  assert.equal(stopped.rows[0][0].verified['10'],true);
+  assert.equal(stopped.rows[0][2].verified['10'],false);
+  const unchanged=await generateGeminiEditionsV36(large,{paceMs:0,maxConcurrency:1});
+  assert.equal(unchanged.execution.waves,0);
+  assert.equal(multiCalls,2);
+  await clearGeminiPause();
+  globalThis.fetch=async(_url,opts)=>{
+    multiCalls++;
+    const text=JSON.parse(opts.body).source;
+    return new Response(JSON.stringify({engine:'ai',sourceVersion:'original',
+      editions:Object.fromEntries(GEMINI_LEVELS.map(id=>[id,text]))}),
+      {status:200,headers:{'Content-Type':'application/json'}});
+  };
+  const resumed=await generateGeminiEditionsV36(large,{paceMs:0,maxConcurrency:1});
+  assert.equal(resumed.complete,true);
+  assert.equal(resumed.execution.resumedFromCache,1);
+  assert.equal(multiCalls,4,'Only two unfinished paragraphs may be sent again');
+  await clearGeminiPause();
+
   console.log('LAB36 source-first six editions, semantic rejection, live checkpoint reuse and quota partial status: OK');
 }finally{globalThis.fetch=oldFetch;}
