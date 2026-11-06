@@ -114,13 +114,16 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: LAB31/32 core integrity and real compression acceptance tests
-        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-32-')
+      - name: LAB31/32/33 core integrity, reduction and chapter fidelity acceptance tests
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-32-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-33-')
         run: |
           node scripts/test-lab31-integrity360-turbo.mjs
           node scripts/test-lab31-digital-pdf.mjs
-          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-32-* ]]; then
+          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-32-* || "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-33-* ]]; then
             node scripts/test-lab32-real-compression.mjs
+          fi
+          if [[ "$GITHUB_REF_NAME" == lab/studybook-core-android-01-update-33-* ]]; then
+            node scripts/test-lab33-chapter-fidelity.mjs
           fi
 
       - name: Resolve monotonic Android version
@@ -574,8 +577,8 @@ jobs:
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/motorlab/active-studybook-ai" --jq '.object.sha')" = "$GITHUB_SHA"
           echo "[MOTORLAB_STUDYBOOK_ANDROID_ACTIVE] $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Record verified LAB31/32 APK artifact for direct retrieval
-        if: success() && github.event_name == 'push' && (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-32-'))
+      - name: Record verified LAB31/32/33 APK artifact for direct retrieval
+        if: success() && github.event_name == 'push' && (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-32-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-33-'))
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
