@@ -110,7 +110,7 @@ function toHex(bytes) {
   return [...new Uint8Array(bytes)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, onVerifiedChapter } = {}) {
+export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, onVerifiedChapter, retryPages = [] } = {}) {
   const started = performance.now();
   onProgress?.({phase:'turbo-file-read', done:0,total:1,bytes:Number(file?.size||0)});
   const data = new Uint8Array(await file.arrayBuffer());
@@ -122,6 +122,11 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
   const pageCount = pdf.numPages;
   const signature = 'i360:' + INTEGRITY_ENGINE_VERSION + ':' + fingerprint + ':' + (autoOcr ? 'ocr' : 'native');
   const blocks = makeLogicalBlocks(pageCount, 10);
+  const retrySet = new Set((retryPages || []).filter(page =>
+    Number.isInteger(page) && page >= 1 && page <= pageCount));
+  if (retrySet.size) onProgress?.({
+    phase:'turbo-source-recheck', done:0,total:retrySet.size,
+  });
   const deviceMemory = typeof navigator !== 'undefined' ? Number(navigator.deviceMemory || 4) : 4;
   const cores = typeof navigator !== 'undefined' ? Number(navigator.hardwareConcurrency || 2) : 2;
   const plannedLanes = choosePdfLanes({ hardwareConcurrency: cores, deviceMemory, pageCount });
@@ -134,7 +139,8 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, on
   try {
     const cache = await loadIntegrity360Pages(signature);
     for (const row of cache) {
-      if (row.pageNumber <= pageCount && !pages[row.pageNumber - 1]) {
+      if (row.pageNumber <= pageCount && !retrySet.has(row.pageNumber)
+        && !pages[row.pageNumber - 1]) {
         pages[row.pageNumber - 1] = {
           pageNumber: row.pageNumber, text: row.text, rawText: row.rawText || row.text,
           status: 'verified', source: row.source || 'resume', imageCount: row.imageCount || 0,
