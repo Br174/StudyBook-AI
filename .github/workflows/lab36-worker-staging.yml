@@ -1,0 +1,85 @@
+name: StudyBook LAB36 isolated Gemini staging
+on:
+  push:
+    branches:
+      - lab/studybook-core-android-01-update-36-reduction-pdf-reflow-20261106
+    paths:
+      - .github/workflows/lab36-worker-staging.yml
+      - api/editionsV36.js
+      - worker/index.js
+  workflow_dispatch:
+concurrency:
+  group: studybook-lab36-isolated-worker
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GH_AI_KEY: ${{ secrets.AI_API_KEY }}
+      GH_GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Source and Cloudflare dry-run checks
+        run: |
+          npm install --no-audit --no-fund
+          node scripts/test-lab36-generative-backend.mjs
+          node scripts/test-lab36-generative-store.mjs
+          npm run build
+          npx wrangler deploy --dry-run
+      - name: Publish only the separate LAB36 worker and attach existing secret
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test -n "${GH_AI_KEY:-${GH_GEMINI_KEY:-}}"
+          printf '%s' "${GH_AI_KEY:-${GH_GEMINI_KEY:-}}" | npx wrangler secret put AI_API_KEY --name studybook-ai-lab36
+          npx wrangler deploy --name studybook-ai-lab36 > lab36-deploy-output.txt
+          cat lab36-deploy-output.txt
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const log=readFileSync('lab36-deploy-output.txt','utf8');
+          const candidates=[...log.matchAll(/https:\/\/[a-z0-9.-]+\.workers\.dev/gi)].map(match=>match[0]);
+          const url=candidates.find(value=>value.includes('studybook-ai-lab36.'));
+          if(!url)throw Error('LAB36 staging endpoint missing in Wrangler output');
+          writeFileSync('lab36-worker-url.txt',url+'\n');
+          NODE
+      - name: End-to-end live proof on dedicated LAB36 Worker
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,appendFileSync} from 'node:fs';
+          const url=readFileSync('lab36-worker-url.txt','utf8').trim();
+          const source='La fotosintesi utilizza luce, acqua e anidride carbonica per produrre zuccheri e ossigeno. Gli zuccheri conservano energia chimica.';
+          async function post(path,body){
+            const response=await fetch(url+path,{method:'POST',headers:{'Content-Type':'application/json'},
+              body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
+            const data=await response.json().catch(()=>null);
+            if(!response.ok)throw Error(path+' failed HTTP '+response.status+' '+(data?.code||'unknown'));
+            return data;
+          }
+          const base=await post('/api/summarize',{paragraphs:[source],level:'studio'});
+          if(base?.summaries?.[0]?.engine!=='ai')throw Error('Existing StudyBook AI endpoint unavailable on LAB worker');
+          const six=await post('/api/editions/v36',{source,context:{chapterTitle:'Biologia'}});
+          for(const level of ['10','20','30','40','50','summary']){
+            if(typeof six?.editions?.[level]!=='string'||!six.editions[level].trim())throw Error('Gemini level '+level+' missing');
+          }
+          if(six.engine!=='ai'||six.sourceVersion!=='original')throw Error('Model identity/source mismatch');
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## StudyBook LAB36 staging Worker\n\n'+url+'\n\nGemini generation: six levels PASSED. Existing summarize: PASSED. Production untouched.\n');
+          console.log('LAB36_STABLE_WORKER_GEMINI=PASS');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB36-Staging-Worker-URL
+          path: lab36-worker-url.txt
+          retention-days: 30
+          if-no-files-found: error
