@@ -46,12 +46,12 @@ try{
   const firstIncomplete=await generateGeminiEditionsV36(recover,{maxConcurrency:1,paceMs:0});
   assert.equal(firstIncomplete.complete,false);
   assert.equal(firstIncomplete.rows[0][0].verified['50'],false);
-  assert.equal(retryCalls,2);
+  assert.equal(retryCalls,3,'Cinque varianti sicure restano salvate mentre la sesta riceve una seconda verifica');
   globalThis.fetch=async()=>{retryCalls++;return new Response(JSON.stringify({engine:'ai',sourceVersion:'original',editions:good}),
       {status:200,headers:{'Content-Type':'application/json'}});};
   const fixed=await generateGeminiEditionsV36(recover,{maxConcurrency:1,paceMs:0});
   assert.equal(fixed.complete,true);
-  assert.equal(retryCalls,3,'Un checkpoint incompleto deve essere ritentato');
+  assert.equal(retryCalls,4,'Solo la variante 50 incompleta deve essere ritentata');
   // Multi-paragraph book: stop after first quota refusal; keep previously verified
   // content; no extra requests until the actual cooldown is over.
   await clearGeminiPause();

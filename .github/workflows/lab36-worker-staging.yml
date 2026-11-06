@@ -38,6 +38,7 @@ jobs:
           node scripts/test-lab36-quota-diagnosis.mjs
           node scripts/test-lab36-quota-controller.mjs
           node scripts/test-lab36-generative-store.mjs
+          node scripts/test-lab36-single-edition.mjs
           npm run build
           npx wrangler deploy --dry-run
       - name: Publish only the separate LAB36 worker and attach existing secret
