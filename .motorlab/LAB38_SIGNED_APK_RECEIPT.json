@@ -1,0 +1,15 @@
+{
+  "source_sha": "1895508cd972b439ffe54700083789dee7654bc9",
+  "branch": "lab/studybook-core-android-01-update-38-progressive-study-pillar-20261106",
+  "run_id": 42309650327,
+  "artifact_id": 13547043907,
+  "artifact_name": "StudyBook-AI-LAB-38-AGGIORNAMENTO-APK",
+  "apk_sha256": "10128586d0cd2934978f75761445bad4c04622156e3dd50c2ffd62753509662f",
+  "version_code": 2026100240,
+  "version_name": "0.3.240",
+  "application_id": "it.studybook.ai.lab",
+  "signed_cert_sha256": "D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC",
+  "status": "CI_SIGNED_SCUDO_VERIFIED_DEVICE_PENDING",
+  "pillar": "docs/STUDYBOOK_STUDIO_PROGRESSIVO_PILASTRO_V1.md",
+  "notes": "Signed source immutable; CI original receipt transient HTTP502, recorded after independent SHA256 verification."
+}
