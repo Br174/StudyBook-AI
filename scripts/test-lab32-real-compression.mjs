@@ -69,7 +69,8 @@ assert.ok(app.includes('buildPrecisionEdition(studyBook, reduction)'));
 assert.ok(app.includes('book={precisionBook}'));
 const path=readFileSync(new URL('../src/lib/precisionCore.js',import.meta.url),'utf8');
 assert.ok(path.includes('allowSafeGaps: true'));
-assert.ok(path.includes('computeSelection(items, letterBudget, level)'));
+assert.ok(path.includes('computeSelection(items, level)') && path.includes('chapterLevelTarget(level,chapterSourceLetters)'),
+  'LAB33 replaces the global letter budget with explicit per-chapter budgets');
 
 const screenshot = "dell’efficacia (essere) delle norme. delle norme. muove nell’ambito dei fatti fenomenologici. fenomenologici. diritto, cioè la condizione del diritto.";
 const dangerous=buildPrecisionEdition({chapters:[{title:'Fonte danneggiata',paragraphs:[{original:screenshot}]}]},50);
