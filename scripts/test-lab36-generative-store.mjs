@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import assert from 'node:assert/strict';
 import {auditGeminiLevels,generateGeminiEditionsV36,GEMINI_LEVELS} from '../src/lib/generativeEditionsV36.js';
+import {clearGeminiPause,readGeminiPause} from '../src/lib/geminiQuotaControllerV36.js';
 const source='Articolo 7: la regola non cambia, salvo eccezione. La condizione rimane necessaria.';
 const good=Object.fromEntries(GEMINI_LEVELS.map(id=>[id,source]));
 let audit=auditGeminiLevels(source,good);
@@ -20,30 +21,35 @@ try{
       {status:200,headers:{'Content-Type':'application/json'}});
   };
   const progress=[];
-  const first=await generateGeminiEditionsV36(book,{onProgress:(x)=>progress.push(x),maxConcurrency:1});
+  await clearGeminiPause();
+  const first=await generateGeminiEditionsV36(book,{onProgress:(x)=>progress.push(x),maxConcurrency:1,paceMs:0});
   assert.equal(first.complete,true);assert.equal(first.verifiedCells,1);assert.equal(first.rows[0][0].editions['50'],source);
   assert.ok(first.checkpointPersistent);assert.equal(calls,1);
-  const again=await generateGeminiEditionsV36(book,{maxConcurrency:1});
+  const again=await generateGeminiEditionsV36(book,{maxConcurrency:1,paceMs:0});
   assert.equal(again.execution.resumedFromCache,1);assert.equal(calls,1);
   const broken={...book,canonicalBookMap:{...book.canonicalBookMap,originalFingerprint:'f'.repeat(64)}};
   globalThis.fetch=async()=>new Response(JSON.stringify({error:'Quota Gemini'}),{status:429,headers:{'Content-Type':'application/json'}});
-  const partial=await generateGeminiEditionsV36(broken,{maxConcurrency:1});
+  const partial=await generateGeminiEditionsV36(broken,{maxConcurrency:1,paceMs:0});
   assert.equal(partial.complete,false);
   assert.equal(partial.rows[0][0].verified['10'],false);
   assert.equal(partial.status,'quota-paused');
   assert.equal(partial.execution.haltedOn,'AI_QUOTA_LIMIT');
+  const pause=await readGeminiPause();assert.equal(pause.kind,'unknown');
+  const refused=await generateGeminiEditionsV36(broken,{maxConcurrency:1,paceMs:0});
+  assert.equal(refused.execution.waves,0,'Do not call Gemini while the persistent pause is active');
+  await clearGeminiPause();
   let retryCalls=0;
   const recover={...book,canonicalBookMap:{...book.canonicalBookMap,originalFingerprint:'g'.repeat(64)}};
   globalThis.fetch=async()=>{retryCalls++;const incomplete={...good,'50':'La regola cambia.'};
     return new Response(JSON.stringify({engine:'ai',sourceVersion:'original',editions:incomplete}),
       {status:200,headers:{'Content-Type':'application/json'}});};
-  const firstIncomplete=await generateGeminiEditionsV36(recover,{maxConcurrency:1});
+  const firstIncomplete=await generateGeminiEditionsV36(recover,{maxConcurrency:1,paceMs:0});
   assert.equal(firstIncomplete.complete,false);
   assert.equal(firstIncomplete.rows[0][0].verified['50'],false);
   assert.equal(retryCalls,2);
   globalThis.fetch=async()=>{retryCalls++;return new Response(JSON.stringify({engine:'ai',sourceVersion:'original',editions:good}),
       {status:200,headers:{'Content-Type':'application/json'}});};
-  const fixed=await generateGeminiEditionsV36(recover,{maxConcurrency:1});
+  const fixed=await generateGeminiEditionsV36(recover,{maxConcurrency:1,paceMs:0});
   assert.equal(fixed.complete,true);
   assert.equal(retryCalls,3,'Un checkpoint incompleto deve essere ritentato');
   console.log('LAB36 source-first six editions, semantic rejection, live checkpoint reuse and quota partial status: OK');

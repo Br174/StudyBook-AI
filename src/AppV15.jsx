@@ -25,6 +25,7 @@ import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
+import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
 import { reacquireFromSavedPdf } from './lib/sourceRecoveryV34.js';
@@ -977,7 +978,7 @@ export default function AppV14() {
       let savedVerified = 0;
       let checkpointTail = Promise.resolve();
       const editions = await generateGeminiEditionsV36(result,{
-        maxConcurrency:2,
+        maxConcurrency:1,
         onProgress(snapshot){
           generatedDraft={...result,editionsV36:snapshot,
             engine:snapshot.complete?'ai':(snapshot.verifiedChunks>0?'misto':result.engine)};
@@ -1034,7 +1035,7 @@ export default function AppV14() {
       const runtime = result.quality?.motorLabRuntime;
       const speedLabel = runtime ? ` · MotorLab Runtime · ${runtime.maxConcurrencyUsed || 1} corridori${runtime.cachedChunks ? ` · ${runtime.cachedChunks} blocchi riusati` : ''}` : '';
       setStatus(!result.editionsV36?.complete
-        ? (result.editionsV36?.status==='quota-paused'?'Limite gratuito Gemini raggiunto · riprendi più tardi · ': 'Anteprima parziale · ')+(result.editionsV36?.verifiedCells||0)+'/'+(result.editionsV36?.totalCells||0)+' paragrafi verificati · originale conservato'
+        ? (result.editionsV36?.quota?quotaDisplayV36(result.editionsV36.quota)+' · ':'Anteprima parziale · ')+(result.editionsV36?.verifiedCells||0)+'/'+(result.editionsV36?.totalCells||0)+' paragrafi verificati · originale conservato'
         : sourceIntegrity.passed
         ? `Sei edizioni pronte · Gemini verificato${speedLabel}${saved ? ' · salvate in Libreria' : ''}`
         : `Libro da verificare · ${sourceIntegrity.issueCount} possibili anomalie di completezza · originale conservato`);
@@ -1067,7 +1068,13 @@ export default function AppV14() {
     let draft=current;
     setGenerating(true);setError('');
     try{
-      const snapshot=await generateGeminiEditionsV36(current,{maxConcurrency:2,
+      const pause=await readGeminiPause();
+      if(pause){
+        setStatus(quotaDisplayV36(pause));
+        setGenerating(false);
+        return;
+      }
+      const snapshot=await generateGeminiEditionsV36(current,{maxConcurrency:1,
         onProgress(update){
           draft={...current,editionsV36:update,
             engine:update.complete?'ai':(update.verifiedChunks>0?'misto':current.engine)};
@@ -1081,7 +1088,7 @@ export default function AppV14() {
       setStudyBook(draft);
       await persistBook(draft,documentData,fileName,libraryId);
       setStatus(snapshot.complete?'Sei edizioni Gemini completate e salvate':
-        snapshot.status==='quota-paused'?'Limite Gemini raggiunto · progressi salvati, riprendi quando la quota torna disponibile':
+        snapshot.quota?quotaDisplayV36(snapshot.quota):
         'Anteprima parziale salvata · parti non sicure ancora da verificare');
     }catch(error){
       setStudyBook(draft);

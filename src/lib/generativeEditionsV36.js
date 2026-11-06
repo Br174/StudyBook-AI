@@ -5,6 +5,7 @@ import {checkReducedParagraph,countLetters} from './studyQualityGuard.js';
 import {splitLongParagraph} from './studyEngineV11.js';
 import {normalizeStudyParagraphFlow} from './readingFlowV36.js';
 import {loadRuntimeUnitResults,saveRuntimeUnitResults} from './resumeStore.js';
+import {readGeminiPause,registerGeminiPause,clearGeminiPause} from './geminiQuotaControllerV36.js';
 import {makeRuntimeUnitKey,chooseRuntimeConcurrency,runAdaptiveBatchQueue,runtimeHash} from './motorLabRuntime.js';
 
 export const GEMINI_LEVELS=['10','20','30','40','50','summary'];
@@ -26,7 +27,17 @@ export function auditGeminiLevels(original,editions){
   }
   return {verified:verification,editions:texts,issues,achievedPercent:percent};
 }
-async function askGemini(source,context,repairIssues=[]){
+let lastGeminiCallAt=0;
+async function paceGeminiCall(paceMs){
+  const safeGap=Math.max(0,Number(paceMs)||0);
+  if(safeGap){
+    const delay=Math.max(0,lastGeminiCallAt+safeGap-Date.now());
+    if(delay)await new Promise(resolve=>setTimeout(resolve,delay));
+  }
+  lastGeminiCallAt=Date.now();
+}
+async function askGemini(source,context,repairIssues=[],paceMs=6500){
+  await paceGeminiCall(paceMs);
   const response=await fetch(apiEndpoint('/api/editions/v36'),{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({source,context,repairIssues}),
@@ -34,10 +45,19 @@ async function askGemini(source,context,repairIssues=[]){
   const data=await response.json().catch(()=>null);
   if(!response.ok){
     const error=new Error(data?.error||'Servizio Gemini temporaneamente non disponibile');
-    error.code=response.status===429?'AI_QUOTA_LIMIT':(data?.code||'AI_SERVICE_ERROR');throw error;
+    error.code=response.status===429?'AI_QUOTA_LIMIT':(data?.code||'AI_SERVICE_ERROR');
+    if(error.code==='AI_QUOTA_LIMIT'||error.code==='AI_QUOTA_MANUAL_REVIEW'||error.code==='AI_TEMPORARY_OVERLOAD'){
+      error.quota=await registerGeminiPause(data?.quota||{
+        kind:error.code==='AI_QUOTA_MANUAL_REVIEW'?'billing':
+          error.code==='AI_TEMPORARY_OVERLOAD'?'overload':'unknown',
+        retryAfterSeconds:Number(response.headers?.get?.('Retry-After'))||null
+      });
+    }
+    throw error;
   }
   if(data?.engine!=='ai'||data?.sourceVersion!=='original'||!data.editions)
     throw Object.assign(new Error('Edizioni Gemini non valide'),{code:'INVALID_EDITION_RESPONSE'});
+  await clearGeminiPause();
   return data.editions;
 }
 function sourceWarnings(book,sourcePageStart,sourcePageEnd){
@@ -74,7 +94,7 @@ function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent){
   return {version:VERSION,sourceFingerprint:fingerprint,rows,verifiedCells,totalCells,blockedCells,
     verifiedChunks,checkpointPersistent,complete,status:complete?'complete':'partial',updatedAt:new Date().toISOString()};
 }
-export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcurrency=2}={}){
+export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcurrency=1,paceMs=6500}={}){
   if(!book?.chapters?.length)throw new Error('Libro o capitoli assenti');
   const fingerprint=book.canonicalBookMap?.originalFingerprint||runtimeHash(
     book.chapters.map(c=>(c.paragraphs||[]).map(originalOf).join('|')).join('||'));
@@ -116,20 +136,32 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
   }
   // Incomplete checkpoints must be repaired, not treated as permanently finished.
   const pending=jobs.filter(j=>!GEMINI_LEVELS.every(id=>state.get(j.key)?.verified?.[id]===true));
+  const blocked= pending.length ? await readGeminiPause() : null;
+  if(blocked){
+    const paused=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent);
+    paused.quota=blocked;
+    paused.status=blocked.automatic?'quota-paused':'quota-review';
+    paused.execution={waves:0,pendingBefore:pending.length,resumedFromCache:jobs.length-pending.length,
+      haltedOn:blocked.automatic?'AI_QUOTA_LIMIT':'AI_QUOTA_MANUAL_REVIEW',
+      remainingBatches:pending.length};
+    onProgress(paused,0,pending.length);
+    return paused;
+  }
   onProgress(makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent),0,pending.length);
   const adaptive=await runAdaptiveBatchQueue({
-    batches:pending.map(j=>[j]),initialConcurrency:chooseRuntimeConcurrency(maxConcurrency),
-    maxConcurrency,
-    stopOnFailures:['AI_QUOTA_LIMIT','AI_NOT_CONFIGURED'],
+    // One request at a time; free-tier requests share quotas across keys.
+    batches:pending.map(j=>[j]),initialConcurrency:1,
+    maxConcurrency:1,
+    stopOnFailures:['AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD','AI_NOT_CONFIGURED'],
     worker:async([job],{aiAllowed})=>{
       if(job.pageIssues.length||!job.source)return {job,aiFailure:'SOURCE_REVIEW',issues:job.pageIssues};
       if(!aiAllowed)return {job,aiFailure:'AI_PAUSED'};
       try{
-        let editions=await askGemini(job.source,job.context);
+        let editions=await askGemini(job.source,job.context,[],paceMs);
         let audit=auditGeminiLevels(job.source,editions);
         if(!GEMINI_LEVELS.every(id=>audit.verified[id])){
           const report=[...new Set(Object.values(audit.issues).flat())];
-          editions=await askGemini(job.source,job.context,report);
+          editions=await askGemini(job.source,job.context,report,paceMs);
           audit=auditGeminiLevels(job.source,editions);
         }
         // A failed regeneration cannot erase an already verified level.
@@ -166,7 +198,10 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
   final.execution={waves:adaptive.waves,maxConcurrencyUsed:adaptive.maxConcurrencyUsed,
     pendingBefore:pending.length,resumedFromCache:jobs.length-pending.length,
     haltedOn:adaptive.haltedOn,remainingBatches:adaptive.remainingBatches};
-  if(adaptive.haltedOn==='AI_QUOTA_LIMIT')final.status='quota-paused';
+  if(['AI_QUOTA_LIMIT','AI_TEMPORARY_OVERLOAD','AI_QUOTA_MANUAL_REVIEW'].includes(adaptive.haltedOn)){
+    final.quota=await readGeminiPause();
+    final.status=final.quota?.automatic?'quota-paused':'quota-review';
+  }
   if(adaptive.haltedOn==='AI_NOT_CONFIGURED')final.status='ai-unavailable';
   onProgress(final,adaptive.processedBatches,pending.length);
   return final;

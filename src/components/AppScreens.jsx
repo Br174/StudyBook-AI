@@ -449,9 +449,12 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
       {v36Partial && <div className="sb-mirror-warning" role="status">
         <p>ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi verificati. Le pagine incomplete restano segnalate; PDF e download saranno disponibili dopo la verifica finale.</p>
-        {studyBook.editionsV36?.status==='quota-paused' && <p>Quota Gemini temporaneamente esaurita. Non sono stati attivati servizi a pagamento.</p>}
+        {studyBook.editionsV36?.quota && <p>{studyBook.editionsV36.quota.automatic
+          ? ('Attesa Gemini · '+(studyBook.editionsV36.quota.estimated?'orario stimato: ':'ripresa prevista: ')+
+            new Date(studyBook.editionsV36.quota.retryAt).toLocaleString('it-IT'))
+          : 'Quota o configurazione da verificare: nessun pagamento automatico.'}</p>}
         <button type="button" onClick={onResumeGemini} disabled={generating}>
-          {generating?'Elaborazione Gemini in corso…':'Riprendi le sei edizioni Gemini'}
+          {generating?'Elaborazione Gemini in corso…':studyBook.editionsV36?.quota?.automatic?'Riprendi quando la quota è disponibile':'Riprendi le sei edizioni Gemini'}
         </button>
       </div>}
       <section className="sb-open-book-workspace" aria-label="Libro aperto">

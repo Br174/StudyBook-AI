@@ -11,6 +11,8 @@ assert.match(app,/checkpointTail/);
 assert.match(app,/canonicalBookMap:\s*sourceData\?\.canonicalBookMap/);
 assert.match(app,/resumeGeminiEditions/);
 assert.match(studio,/Riprendi le sei edizioni Gemini/);
+assert.match(app,/readGeminiPause/);
+assert.match(app,/quotaDisplayV36/);
 assert.match(app,/editionReadiness\?\.partial/);
 assert.match(app,/reduction!==0\s*&&\s*precisionBook\.editionReadiness/);
 assert.match(printed,/precisionEdition\?\.level!==0/,'The original must remain printable during Gemini processing');
