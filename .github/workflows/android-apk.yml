@@ -331,9 +331,22 @@ jobs:
           fs.writeFileSync(path, JSON.stringify(config, null, 2) + '\n');
           NODE
 
+      - name: Verify isolated LAB36 Gemini route before Android bundling
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://studybook-ai-lab36.brunoverlezza.workers.dev';
+          for(const path of ['/api/summarize','/api/editions/v36']){
+            const response=await fetch(base+path,{method:'GET',signal:AbortSignal.timeout(12000)});
+            if(response.status!==405)throw Error('LAB36 isolated service unavailable at '+path+' HTTP '+response.status);
+          }
+          console.log('LAB36_NATIVE_BACKEND_ROUTE=READY (Gemini quota separately verified)');
+          NODE
+
       - name: Build web core
         env:
-          VITE_NATIVE_API_BASE: https://studybook-ai.brunoverlezza.workers.dev
+          VITE_NATIVE_API_BASE: ${{ startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-') && 'https://studybook-ai-lab36.brunoverlezza.workers.dev' || 'https://studybook-ai.brunoverlezza.workers.dev' }}
         run: npm run build
 
       - name: Scudo360 mandatory LAB23 covers and duplicate regression
