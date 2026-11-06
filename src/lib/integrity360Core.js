@@ -42,8 +42,9 @@ export function joinOrderedPageText(pages = []) {
     const priorEnding = previous.slice(-2);
     const nextBeginning = text.slice(0, 2);
     const hyphen = /[A-Za-zÀ-ÖØ-öø-ÿ]-$/.test(priorEnding);
-    const continues = hyphen || /[,;:]$/.test(previous)
-      || (!/[.!?]$/.test(previous) && /^[a-zà-öø-ÿ,;:]/.test(nextBeginning));
+    const startsHeading = /^(?:capitolo|chapter|parte|sezione|section|appendice|bibliografia|\d+(?:\.\d+)*[.)]\s)/i.test(text);
+    const continues = !startsHeading && (hyphen || !/[.!?]$/.test(previous)
+      || /^[a-zà-öø-ÿ,;:]/.test(nextBeginning));
     if (hyphen && /^[a-zà-öø-ÿ]/.test(text)) result = result.slice(0, -1) + text;
     else result += (continues ? ' ' : '\n\n') + text;
     previous = text;
@@ -102,8 +103,9 @@ export function mergePageBoundaryParagraphs(chapters = []) {
         && Number.isInteger(meta.pageStart) && meta.pageStart === previousMeta.pageEnd + 1;
       const sameSection = (previousMeta?.sectionTitle || '') === (meta.sectionTitle || '');
       const join = consecutivePages && sameSection
-        && (/[A-Za-zÀ-ÖØ-öø-ÿ]-$/.test(previous) && /^[a-zà-öø-ÿ]/.test(value)
-          || /[,;:]$/.test(previous) && /^[a-zà-öø-ÿ]/.test(value));
+        && !/[.!?]$/.test(previous)
+        && /^[A-Za-zÀ-ÖØ-öø-ÿ,(]/.test(value)
+        && !/^(?:capitolo|chapter|parte|sezione|section)\b/i.test(value);
       if (join) {
         paragraphs[paragraphs.length - 1] = /-$/.test(previous)
           ? previous.slice(0, -1) + value : previous + ' ' + value;
