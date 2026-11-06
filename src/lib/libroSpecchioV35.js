@@ -212,12 +212,14 @@ export function composeMirrorPages(sourceMap,book,{
     }
     const sourceStatus=source.sourceStatus;
     let sheet=pushText(pages,source.label,source.physicalPage,null,[],null,null,null,sourceStatus);
+    sheet.widthPt=source.widthPt;sheet.heightPt=source.heightPt;
     const sourceLineCapacity=typeof maxLines==='function'?maxLines(source):maxLines;
     let remaining=Math.max(1,sourceLineCapacity),continuation=0,lastSection='',lastChapter='';
     function newSheet(){
       continuation+=1;
       sheet=pushText(pages,continuationLabel(source.label,continuation),
         source.physicalPage,null,[],null,null,null,sourceStatus);
+      sheet.widthPt=source.widthPt;sheet.heightPt=source.heightPt;
       remaining=Math.max(1,sourceLineCapacity);lastSection='';lastChapter='';
     }
     for(const e of withReferences){
@@ -269,6 +271,7 @@ export function composeMirrorPages(sourceMap,book,{
       // Image leaves NEVER consume the text page capacity.
       pages.push({kind:'image',label:source.label+'/'+a.imageNumber,
         sourcePage:source.physicalPage,anchorId:a.id,anchor:a,
+        widthPt:source.widthPt,heightPt:source.heightPt,
         sourceStatus,blocks:[],imageNumber:a.imageNumber});
     }
   }
