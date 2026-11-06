@@ -73,6 +73,7 @@ assert.ok(app.includes('async function reprocessLibraryItem(id)'));
 assert.ok(screens.includes('Rielabora libro') && screens.includes('Conferma rielaborazione'));
 assert.ok(screens.includes('reprocessCandidate') && screens.includes('Sì, rielabora'));
 assert.ok(screens.includes('onBookActions={item => { setActionCandidate(item)'));
-assert.ok(engine.includes('forceFresh ? null : await loadResumeState(signature)'));
+assert.ok(engine.includes('forceFresh && previous?.published'),
+  'LAB34 must ignore previously published reprocess runs but resume unfinished ones');
 assert.ok(engine.includes('forceFresh ? new Map() : await loadRuntimeUnitResults('));
 console.log('LAB28: reprocessing fresh, atomic, protected original, single write, dialog and error rollback: PASS');
