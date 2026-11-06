@@ -1,0 +1,68 @@
+name: LAB36 one-shot Gemini 429 cause probe (no books, no paid tiers)
+on:
+  push:
+    branches:
+      - lab/studybook-core-android-01-update-36-reduction-pdf-reflow-20261106
+    paths:
+      - .github/workflows/lab36-gemini429-diagnosis.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      STUDYBOOK_AI_SECRET: ${{ secrets.AI_API_KEY }}
+      STUDYBOOK_GEMINI_SECRET: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - name: One small request per free-tier model, no books or secret output
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const key=process.env.STUDYBOOK_AI_SECRET||process.env.STUDYBOOK_GEMINI_SECRET;
+          if(!key)throw Error('Gemini secret absent from GitHub Actions');
+          const endpoint='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+          const models=['gemini-3.6-flash','gemini-3.5-flash-lite','gemini-3.1-flash-lite'];
+          const safeId=(v)=>/^[a-z0-9_.\/:-]{1,160}$/i.test(String(v||''))?String(v):null;
+          const report=[];
+          for(const model of models){
+            let result={model,status:'not_checked',hasOutput:false,kind:'unknown',retryDelay:null,violations:[]};
+            try{
+              const response=await fetch(endpoint,{
+                method:'POST',
+                headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},
+                body:JSON.stringify({model,temperature:0,max_tokens:128,
+                  messages:[{role:'user',content:'Rispondi solo con la parola OK.'}]}),
+                signal:AbortSignal.timeout(30000)
+              });
+              const data=await response.json().catch(()=>null);
+              result.status=response.status;
+              result.hasOutput=Boolean(data?.choices?.[0]?.message?.content?.trim());
+              if(!response.ok){
+                const e=data?.error||{};
+                result.kind=safeId(e.status)||'UNKNOWN_ERROR';
+                const d=Array.isArray(e.details)?e.details:[];
+                result.retryDelay=d.find(x=>x.retryDelay)?.retryDelay||response.headers.get('Retry-After')||null;
+                result.violations=d.flatMap(x=>Array.isArray(x.violations)?x.violations:[])
+                  .slice(0,3).map(v=>({
+                    id:safeId(v.quotaId),metric:safeId(v.quotaMetric),
+                    limit:Number.isFinite(Number(v.quotaValue))?Number(v.quotaValue):null,
+                    model:safeId(v.quotaDimensions?.model)
+                  }));
+                result.noDetails=!d.length;
+              }
+            }catch(error){result.status='network_or_timeout';result.kind=safeId(error?.name)||'NETWORK';}
+            // Never print request headers, secret values, request source or raw provider text.
+            report.push(result);
+            console.log('SAFE_DIAGNOSIS '+JSON.stringify(result));
+            if(model!==models.at(-1))await new Promise(resolve=>setTimeout(resolve,6000));
+          }
+          const fs=await import('node:fs');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            '## LAB36 one-shot Gemini quota diagnosis (three small free requests)\n\n'+
+            '| Model | HTTP | Output | Quota status | Details |\n|---|---:|---|---|---|\n'+
+            report.map(r=>'| '+r.model+' | '+r.status+' | '+(r.hasOutput?'yes':'no')+
+              ' | '+r.kind+' | '+(r.violations.map(v=>v.id||v.metric||'unspecified').join(', ')||'none')+' |').join('\n')+
+            '\n\nNo user book, key, prompt response body or billing change was made.\n');
+          NODE
