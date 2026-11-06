@@ -5,7 +5,7 @@ import {
   auditChapterContinuity, auditNarrativeSource, hasLexicalSupport, canSafelyBridgeAfterGap,
 } from './studyQualityGuard.js';
 import { explainInSimpleWords } from './simpleLanguage.js';
-import { inspectChapterBoundaries, chapterMeasuredStats, chapterLevelTarget, stripConfirmedNextHeading } from './chapterFidelityV33.js';
+import { inspectChapterBoundaries, chapterMeasuredStats, chapterLevelTarget, stripConfirmedNextHeading, auditChapterOutput } from './chapterFidelityV33.js';
 
 export const REDUCTION_STEPS = [0, 10, 20, 30, 40, 50, 'summary'];
 export const REDUCTION_LABELS = {
@@ -189,21 +189,47 @@ export function buildPrecisionEdition(book, reduction = 10) {
         },
       };
     });
+    const candidateOutputAudit = auditChapterOutput(
+      paragraphs, originalChapters[chapterIndex + 1]?.title || '');
+    const blockedSource = (sourceBoundaryAudit.byChapter[chapterIndex] || [])
+      .some(issue => issue.severity === 'block');
+    // A broken derived chapter must not masquerade as university-grade study
+    // prose. Restore the complete available source, mark it unverified and
+    // retain the original per-paragraph identity.
+    const restoreChapter = !candidateOutputAudit.ready || blockedSource;
+    if (restoreChapter) paragraphs.forEach(p => {
+      outputWords += countWords(p.original) - countWords(p.summary);
+      outputLetters += countLetters(p.original) - countLetters(p.summary);
+      p.summary = p.original;
+      p.dsaSummary = p.original;
+      p.simpleSummary = explainInSimpleWords(p.original);
+      p.precisionAudit = {
+        ...p.precisionAudit, coherent:false, sourceNeedsReview:true,
+        chapterRestored:true,
+        reasons:[...new Set([...(p.precisionAudit?.reasons||[]),
+          ...candidateOutputAudit.issues,
+          ...(blockedSource?['source-chapter-boundary-not-verified']:[])])],
+      };
+    });
     const result = { ...chapter, paragraphs };
     const originalChapterLetters = (chapter.paragraphs || []).reduce((n,p)=>n+countLetters(sourceText(p)),0);
     const actualChapterLetters = paragraphs.reduce((n,p)=>n+countLetters(p.summary),0);
     const chapterMetric = chapterMeasuredStats(originalChapterLetters,actualChapterLetters,level);
     const boundaryIssues = sourceBoundaryAudit.byChapter[chapterIndex] || [];
     result.precisionChapter = {
-      ...chapterMetric, sourceReady:!boundaryIssues.some(x=>x.severity==='block'),
+      ...chapterMetric,
+      sourceReady:!restoreChapter && !boundaryIssues.some(x=>x.severity==='block'),
       boundaryIssues,
+      outputAudit:candidateOutputAudit,
+      sourceRestored:restoreChapter,
     };
     chapterMetrics.push(result.precisionChapter);
-    if (chapterMetric.overReduced || boundaryIssues.some(x=>x.severity==='block')) {
+    if (chapterMetric.overReduced || restoreChapter || boundaryIssues.length) {
       issues.push({chapterIndex, problems:[
         ...(chapterMetric.overReduced?['chapter-over-reduced']:[]),
-        ...boundaryIssues.filter(x=>x.severity==='block').map(x=>x.type),
-      ],action:'review-chapter-source'});
+        ...boundaryIssues.map(x=>x.type),
+        ...candidateOutputAudit.issues,
+      ],action:restoreChapter?'chapter-restored-source-not-ready':'review-chapter-source'});
     }
     const continuity = auditChapterContinuity(chapter, result);
     if (!continuity.ok) issues.push({ chapterIndex, problems: continuity.issues });
