@@ -74,10 +74,12 @@ export function HomeDashboardV16({
           <strong>{generating ? titleOf(fileName) : (resumeCandidate?.fileName ? titleOf(resumeCandidate.fileName) : titleOf(fileName))}</strong>
           <small>{generating
             ? (workPhase==='preparing'?'Sto preparando la struttura. I risultati IA arriveranno dopo.'
-              :'L’elaborazione IA sta procedendo. Aprire il libro non interrompe la generazione.')
+              :'Elaborazione Gemini avviata. Aprire il libro non interrompe la generazione.')
             :resumeCandidate?.total > 0
               ? String(resumeCandidate.done || 0)+'/'+resumeCandidate.total+' parti IA conservate'
               : 'La ripresa verifica i checkpoint già salvati'}</small>
+          {!generating && resumeCandidate?.diagnostic?.description &&
+            <small role="status">{resumeCandidate.diagnostic.description}</small>}
         </div>
         <button type="button" onClick={onResumeProcessing}
           disabled={resumeBusy || (generating && workPhase==='preparing')}>

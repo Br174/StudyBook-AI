@@ -3,6 +3,7 @@ import { ACCESSIBILITY_PRESETS, readerCssVariables } from '../lib/accessibility.
 import { StudyIcon } from './StudyUiIcons.jsx';
 import RenameTitleDialog from './RenameTitleDialog.jsx';
 import ScannerArchive from './ScannerArchive.jsx';
+import {progressDiagnostic} from '../lib/geminiRecoveryV39.js';
 import '../appShellV16.css';
 
 function stripExtension(value = '') {
@@ -446,6 +447,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
     );
   }
   const fidelity = studyBook?.quality?.sourceFidelityGate || studyBook?.quality?.fidelityGate;
+  const geminiCause = studyBook?.editionsV36?progressDiagnostic(studyBook.editionsV36):null;
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
   const sourceChapters = sourceData?.chapters || [];
   const canPrepare = sourceChapters.some(chapter => chapter.paragraphs?.length);
@@ -460,6 +462,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
 
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
       {v36Partial && <div className="sb-mirror-warning" role="status">
+        {geminiCause && <p><strong>Diagnosi elaborazione:</strong> {geminiCause.description}
+          {' '}({geminiCause.base}).
+          {geminiCause.halted ? ' Codice: '+geminiCause.halted+'.' : ''}
+        </p>}
         {generating && <p>Elaborazione Gemini attiva · {status||'checkpoint in corso'}.
           Può consultare le parti già verificate senza interrompere la generazione.</p>}
         <p>ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi verificati. {studyBook.editionsV36?.verifiedVariants||0}/{studyBook.editionsV36?.totalVariants||0} varianti verificate. Le pagine incomplete restano segnalate; PDF e download saranno disponibili dopo la verifica finale.</p>
@@ -489,10 +495,15 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         <button type="button" onClick={()=>onReductionChange?.(0)}>
           Apri il testo originale mentre Gemini elabora
         </button>
-        {(!generating||geminiStalled) && <button type="button" onClick={onResumeGemini}>
-          {geminiStalled?'Recupera elaborazione bloccata':studyBook.editionsV36?.quota?.automatic
-            ?'Controlla il tempo di attesa Gemini':studyBook.editionsV36?.quota
-              ?'Verifica blocco Gemini':'Riprendi elaborazione'}
+        {(!generating||geminiStalled) && <button type="button" onClick={onResumeGemini}
+          disabled={!generating&&geminiCause?.kind==='QUOTA_ATTESA'}>
+          {geminiStalled?'Recupera elaborazione bloccata':
+            geminiCause?.kind==='QUOTA_ATTESA'?'Ripresa disponibile dopo la quota Gemini':
+            geminiCause?.kind==='QUALITA'?'Ritenta correzione Gemini dal checkpoint':
+            geminiCause?.kind==='SORGENTE_DA_VERIFICARE'?'Verifica la fonte originale':
+            geminiCause?.kind==='CONFIGURAZIONE'?'Verifica blocco Gemini':
+            geminiCause?.kind==='PROVIDER'?'Riprova connessione Gemini':
+              'Riprendi elaborazione'}
         </button>}
       </div>}
       <section className="sb-open-book-workspace" aria-label="Libro aperto">

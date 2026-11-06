@@ -27,6 +27,7 @@ import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.j
 import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
 import {STUDY_PILLAR_VERSION} from './lib/studyPillarV38.js';
 import {studyHomeAction,sameStoredDocument} from './lib/studyHomeFlowV38.js';
+import {progressDiagnostic} from './lib/geminiRecoveryV39.js';
 import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
@@ -421,7 +422,8 @@ export default function AppV14() {
         const edition=saved?.studyBook?.editionsV36;
         if(edition && edition.complete!==true){
           setResumeCandidate({id:item.id,fileName:saved.fileName,
-            done:edition.verifiedChunkVariants||0,total:edition.totalChunkVariants||0});
+            done:edition.verifiedChunkVariants||0,total:edition.totalChunkVariants||0,
+            diagnostic:progressDiagnostic(edition)});
           return;
         }
       }
@@ -1174,8 +1176,9 @@ export default function AppV14() {
       const engineLabel = result.engine === 'ai' ? 'AI' : result.engine === 'misto' ? 'AI + sicurezza locale' : 'modalità locale';
       const runtime = result.quality?.motorLabRuntime;
       const speedLabel = runtime ? ` · MotorLab Runtime · ${runtime.maxConcurrencyUsed || 1} corridori${runtime.cachedChunks ? ` · ${runtime.cachedChunks} blocchi riusati` : ''}` : '';
+      const completionInfo=progressDiagnostic(result.editionsV36);
       setStatus(!result.editionsV36?.complete
-        ? (result.editionsV36?.quota?quotaDisplayV36(result.editionsV36.quota)+' · ':'Anteprima parziale · ')+(result.editionsV36?.verifiedCells||0)+'/'+(result.editionsV36?.totalCells||0)+' paragrafi verificati · originale conservato'
+        ? completionInfo.description+' · '+completionInfo.base+' · originale conservato'
         : sourceIntegrity.passed
         ? `Sei edizioni pronte · Gemini verificato${speedLabel}${saved ? ' · salvate in Libreria' : ''}`
         : `Libro da verificare · ${sourceIntegrity.issueCount} possibili anomalie di completezza · originale conservato`);
@@ -1242,7 +1245,11 @@ export default function AppV14() {
     try{
       const pause=await readGeminiPause();
       if(pause){
-        setStatus(quotaDisplayV36(pause));
+        const paused={...current.editionsV36,quota:pause,status:pause.automatic?'quota-paused':'quota-review'};
+        draft={...current,editionsV36:paused};
+        setStudyBook(draft);
+        await persistBook(draft,targetSource,targetName,targetId);
+        setStatus(quotaDisplayV36(pause)+' · Nessuna richiesta inviata. Checkpoint conservati.');
         return;
       }
       const snapshot=await runGeminiWithSafeRestart(current,(update)=>{
@@ -1256,10 +1263,9 @@ export default function AppV14() {
         engine:snapshot.complete?'ai':(snapshot.verifiedChunks>0?'misto':current.engine)};
       setStudyBook(draft);
       await persistBook(draft,targetSource,targetName,targetId);
+      const outcome=progressDiagnostic(snapshot);
       setStatus(snapshot.complete?'Sei edizioni Gemini completate e salvate':
-        snapshot.quota?quotaDisplayV36(snapshot.quota):
-        snapshot.status==='provider-blocked'?'Provider Gemini bloccato · progressi salvati · controllare la connessione':
-        'Anteprima parziale salvata · le parti ancora da verificare restano recuperabili');
+        outcome.description+' · '+outcome.base+' · originale conservato');
     }catch(error){
       setStudyBook(draft);
       await persistBook(draft,targetSource,targetName,targetId);
@@ -1301,7 +1307,13 @@ export default function AppV14() {
       setProgress({done:record.studyBook.editionsV36.verifiedChunkVariants||0,
         total:record.studyBook.editionsV36.totalChunkVariants||1});
       navigateTo('studio');
-      await resumeGeminiEditions(record);
+      // Recupero in corso must describe ONLY the IndexedDB read. The long
+      // Gemini run owns generating/workPhase independently, so the button
+      // cannot cycle between two labels while a request is pending.
+      setResumeBusy(false);
+      void resumeGeminiEditions(record).catch(error=>{
+        setError(error?.message||'Ripresa Gemini non riuscita. I checkpoint restano conservati.');
+      });
     }finally{setResumeBusy(false);}
   }
 

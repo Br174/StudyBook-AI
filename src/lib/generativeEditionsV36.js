@@ -9,6 +9,7 @@ import {readGeminiPause,registerGeminiPause,clearGeminiPause} from './geminiQuot
 import {makeRuntimeUnitKey,chooseRuntimeConcurrency,runAdaptiveBatchQueue,runtimeHash} from './motorLabRuntime.js';
 import {STUDY_PILLAR_VERSION,STUDY_PERCENTAGES,allocateExactLetterBudgets,
   inspectProgressiveEdition} from './studyPillarV38.js';
+import {progressDiagnostic} from './geminiRecoveryV39.js';
 
 export const GEMINI_LEVELS=['10','20','30','40','50','summary'];
 const VERSION='lab38-progressive-editions-v1';
@@ -23,7 +24,12 @@ export function auditGeminiLevels(original,editions,{pillar=false,targetByLevel=
     const text=normalizeStudyParagraphFlow(editions?.[id]||'');
     const structure=checkReducedParagraph(original,text);
     const semantic=auditFidelity(original,text);
-    const reasons=[...structure.issues];
+    // A protected legal statement must keep its *meaning and reference*, not
+    // the entire original sentence verbatim. Literal-equality here made real
+    // 50% reductions logically impossible in legal study material.
+    const reasons=pillar && !semantic.missingProtected?.length
+      ?structure.issues.filter(issue=>issue!=='protected-text-lost')
+      :[...structure.issues];
     if(pillar){
       const pedagogical=inspectProgressiveEdition(original,text,id,{
         targetLetters:targetByLevel[id],summaryCapLetters});
@@ -62,13 +68,13 @@ async function paceGeminiCall(paceMs,signal){
   if(signal?.aborted)throw manualRecoveryError();
   lastGeminiCallAt=Date.now();
 }
-async function askGemini(source,context,level,repairIssues=[],paceMs=6500,signal=null,policy=null,targetLetters=null,summaryCapLetters=null){
+async function askGemini(source,context,level,repairIssues=[],paceMs=6500,signal=null,policy=null,targetLetters=null,summaryCapLetters=null,repairDraft=null){
   await paceGeminiCall(paceMs,signal);
   let response;
   try{
     response=await fetch(apiEndpoint('/api/editions/v36'),{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({source,context,level,repairIssues,policy,targetLetters,summaryCapLetters}),signal,
+      body:JSON.stringify({source,context,level,repairIssues,policy,targetLetters,summaryCapLetters,repairDraft}),signal,
     });
   }catch(error){
     if(signal?.aborted)throw manualRecoveryError();
@@ -216,7 +222,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     caps.forEach((cap,i)=>{jobs[i].summaryCapLetters=cap;});
   }
   let checkpointPersistent=true;
-  const diagnostics={sourceBlocked:0,providerErrors:0,processedJobs:0,lastCode:null,errorsByCode:{}};
+  const diagnostics={sourceBlocked:0,providerErrors:0,processedJobs:0,lastCode:null,errorsByCode:{},quality:null};
   for(let i=0;i<jobs.length;i+=100){
     const wanted=jobs.slice(i,i+100),cache=await loadRuntimeUnitResults(wanted.map(j=>j.key));
     for(const j of wanted){
@@ -260,7 +266,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     // One request at a time; free-tier requests share quotas across keys.
     batches:pending.map(j=>[j]),initialConcurrency:1,
     maxConcurrency:1,
-    stopOnFailures:['AI_MANUAL_RESTART','AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD',
+    stopOnFailures:['AI_QUALITY_REVIEW','AI_MANUAL_RESTART','AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD',
       'AI_NOT_CONFIGURED','AI_PROVIDER_REJECTED','AI_SERVICE_ERROR',
       'AI_TIMEOUT_OR_NETWORK','INVALID_EDITION_RESPONSE','INVALID_GENERATIVE_RESPONSE'],
     worker:async([job],{aiAllowed})=>{
@@ -272,7 +278,8 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
         editions:{...(previous?.editions||{})},
         verified:{...(previous?.verified||{})},
         issues:{...(previous?.issues||{})},
-        achievedPercent:{...(previous?.achievedPercent||{})}};
+        achievedPercent:{...(previous?.achievedPercent||{})},
+        drafts:{...(previous?.drafts||{})}};
       let semanticFailure=false;
       // Prioritize the student's starting point: summary first, then progressively deeper editions.
       const generationOrder=pillar?['summary','50','40','30','20','10']:GEMINI_LEVELS;
@@ -282,14 +289,16 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
           // An edition is always generated from the original chunk, never from
           // a previously generated 10%, 20%, or 30% text.
           onActivity({phase:'request',level:id});
-          let editions=await askGemini(job.source,job.context,id,[],paceMs,signal,
-            pillar?STUDY_PILLAR_VERSION:null,job.targets?.[id]??null,job.summaryCapLetters??null);
+          let editions=await askGemini(job.source,job.context,id,record.issues?.[id]||[],paceMs,signal,
+            pillar?STUDY_PILLAR_VERSION:null,job.targets?.[id]??null,job.summaryCapLetters??null,
+            record.drafts?.[id]||null);
           onActivity({phase:'response',level:id});
           let audit=auditGeminiLevels(job.source,editions,{pillar,targetByLevel:job.targets,summaryCapLetters:job.summaryCapLetters});
           if(!audit.verified[id]){
             onActivity({phase:'repair-request',level:id});
             editions=await askGemini(job.source,job.context,id,audit.issues[id],paceMs,signal,
-              pillar?STUDY_PILLAR_VERSION:null,job.targets?.[id]??null,job.summaryCapLetters??null);
+              pillar?STUDY_PILLAR_VERSION:null,job.targets?.[id]??null,job.summaryCapLetters??null,
+              editions?.[id]||record.drafts?.[id]||null);
             onActivity({phase:'repair-response',level:id});
             audit=auditGeminiLevels(job.source,editions,{
               pillar,targetByLevel:job.targets,summaryCapLetters:job.summaryCapLetters});
@@ -305,6 +314,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
               record.achievedPercent[receivedId]=audit.achievedPercent[receivedId];
             }else{
               record.issues[receivedId]=audit.issues[receivedId]||['semantic-review'];
+              record.drafts[receivedId]=audit.editions[receivedId];
               semanticFailure=true;
             }
           }
@@ -312,6 +322,21 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
           // can never discard the preceding three verified editions.
           state.set(job.key,{...record});
           if(!await saveRuntimeUnitResults([{key:job.key,result:record}]))checkpointPersistent=false;
+          // After a focused correction, stop on the FIRST unresolved edition.
+          // LAB38 previously spent up to 12 calls per chunk then showed only
+          // "Riprendi elaborazione", starting the same expensive cycle again.
+          if(!record.verified[id]){
+            const detail={level:id,
+              reasons:(record.issues[id]||[]).slice(0,4),
+              target:job.targets?.[id]??job.summaryCapLetters??null,
+              observed:record.drafts?.[id]?
+                (record.drafts[id].match(/\\p{L}/gu)||[]).length:null,
+              attempts:2};
+            diagnostics.quality=detail;
+            state.set(job.key,{...record});
+            onActivity({phase:'quality-blocked',level:id});
+            return {job,record,aiFailure:'AI_QUALITY_REVIEW',quality:detail};
+          }
           // Recomputing the entire book after every variant made large books freeze.
           savedVariantsThisRun++;
           if(savedVariantsThisRun<=2||savedVariantsThisRun%12===0){
@@ -329,6 +354,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     onWave:async({results,processedBatches,totalBatches})=>{
       for(const result of results){
         diagnostics.processedJobs++;
+        if(result.quality)diagnostics.quality=result.quality;
         if(result.aiFailure){
           const code=String(result.aiFailure).slice(0,60);
           diagnostics.lastCode=code;
@@ -357,6 +383,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     final.quota=await readGeminiPause();
     final.status=final.quota?.automatic?'quota-paused':'quota-review';
   }
+  if(adaptive.haltedOn==='AI_QUALITY_REVIEW')final.status='quality-review';
   if(adaptive.haltedOn==='AI_MANUAL_RESTART')final.status='interrupted';
   if(adaptive.haltedOn==='AI_NOT_CONFIGURED')final.status='ai-unavailable';
   if(['AI_PROVIDER_REJECTED','AI_SERVICE_ERROR','AI_TIMEOUT_OR_NETWORK',

@@ -88,6 +88,8 @@ jobs:
         run: node scripts/test-lab38-pillar.mjs
       - name: Test LAB38 correct Home resume, no duplicate processing and honest progress
         run: node scripts/test-lab38-home-flow.mjs
+      - name: Test LAB39 real stalled Gemini recovery and diagnostic
+        run: node scripts/test-lab39-causal-recovery.mjs
       - name: Test LAB36 persisted six-edition source checkpoints
         run: node scripts/test-lab36-generative-store.mjs
       - name: Test LAB36 six-edition Gemini service
