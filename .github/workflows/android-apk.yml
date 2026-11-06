@@ -67,18 +67,6 @@ jobs:
         run: |
           node scripts/motorlab-active-guard.mjs --self-test
           node scripts/motorlab-active-guard.mjs
-      - name: Scudo360 mandatory LAB23 covers and duplicate regression
-        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-report.json
-      - name: Preserve StudyBook Android Scudo proof
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: scudo360-studybook-android-${{ github.run_id }}
-          path: |
-            .motorlab/scudo360-report.json
-            .motorlab/scudo360-test-results/*.xml
-          if-no-files-found: warn
-
       - name: Quality Guard LAB29 progressive reductions, source protection and library regression
         run: |
           node scripts/test-study-tools.mjs
@@ -113,6 +101,19 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
+      - name: Scudo360 mandatory LAB23 covers and duplicate regression
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-report.json
+      - name: Preserve StudyBook Android Scudo proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scudo360-studybook-android-${{ github.run_id }}
+          path: |
+            .motorlab/scudo360-report.json
+            .motorlab/scudo360-test-results/*.xml
+          if-no-files-found: warn
+
 
       - name: LAB31-35 mandatory integrity, source page mirror, figures and crash recovery
         if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-32-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-33-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-34-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-35-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')

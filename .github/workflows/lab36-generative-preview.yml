@@ -1,0 +1,83 @@
+name: LAB36 real Gemini isolated preview
+on:
+  push:
+    branches:
+      - lab/studybook-core-android-01-update-36-reduction-pdf-reflow-20261106
+    paths:
+      - .github/workflows/lab36-generative-preview.yml
+      - api/editionsV36.js
+      - worker/index.js
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GH_AI_KEY: ${{ secrets.AI_API_KEY }}
+      GH_GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build and unit-test LAB36
+        run: |
+          npm install --no-audit --no-fund
+          node scripts/test-lab36-generative-backend.mjs
+          npm run build
+          npx wrangler deploy --dry-run
+      - name: Create LAB36 isolated preview without production deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test -n "${GH_AI_KEY:-${GH_GEMINI_KEY:-}}"
+          trap 'rm -f .lab36-preview.secrets' EXIT
+          printf 'AI_API_KEY=%s\nAI_MODEL=gemini-3.6-flash\nAI_API_URL=https://generativelanguage.googleapis.com/v1beta/openai/chat/completions\n' "${GH_AI_KEY:-${GH_GEMINI_KEY:-}}" > .lab36-preview.secrets
+          chmod 600 .lab36-preview.secrets
+          WRANGLER_OUTPUT_FILE_PATH=lab36-preview-result.jsonl npx wrangler preview ./worker/index.js \
+            --worker-name studybook-ai \
+            --name studybook-ai-lab36 \
+            --secrets-file .lab36-preview.secrets \
+            --json
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const rows=readFileSync('lab36-preview-result.jsonl','utf8').trim().split('\n').map(JSON.parse);
+          const result=rows.filter(row=>row.type==='preview').at(-1);
+          const options=[...(result?.preview_urls||[]),...(result?.previewUrls||[]),...(result?.urls||[])];
+          const url=options.find(x=>typeof x==='string'&&x.startsWith('https://'));
+          if(!url)throw new Error('Missing preview URL');
+          writeFileSync('lab36-preview-url.txt',url+'\n');
+          NODE
+      - name: Prove independent six-edition output on Gemini live preview
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,appendFileSync} from 'node:fs';
+          const url=readFileSync('lab36-preview-url.txt','utf8').trim();
+          const response=await fetch(url+'/api/editions/v36',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({source:'La fotosintesi usa luce, acqua e anidride carbonica per produrre zuccheri e ossigeno. Gli zuccheri conservano energia chimica per la pianta.',context:{chapterTitle:'Biologia'}}),
+            signal:AbortSignal.timeout(90000)
+          });
+          if(!response.ok)throw Error('Gemini preview HTTP '+response.status);
+          const result=await response.json();
+          for(const id of ['10','20','30','40','50','summary']){
+            if(typeof result.editions?.[id]!=='string'||!result.editions[id].trim())throw Error('Missing edition '+id);
+          }
+          if(result.engine!=='ai'||result.sourceVersion!=='original')throw Error('Not an authentic Gemini source-first result');
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,'LAB36: real six-edition Gemini response in isolated Cloudflare preview; no production deploy.\n');
+          console.log('LIVE_LAB36_SIX_EDITIONS=PASS');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB36-Gemini-Preview
+          path: lab36-preview-url.txt
+          retention-days: 3
+          if-no-files-found: error
