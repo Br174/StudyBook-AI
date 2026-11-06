@@ -26,6 +26,7 @@ import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
 import {STUDY_PILLAR_VERSION} from './lib/studyPillarV38.js';
+import {studyHomeAction,sameStoredDocument} from './lib/studyHomeFlowV38.js';
 import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
@@ -201,6 +202,8 @@ export default function AppV14() {
   const resumeExecutionRef = useRef(false);
   const [resumeBusy, setResumeBusy] = useState(false);
   const [resumeCandidate, setResumeCandidate] = useState(null);
+  const [workPhase,setWorkPhase] = useState('idle');
+  const [geminiStalled,setGeminiStalled] = useState(false);
   const coverQueueRef = useRef(new Set());
   const coverWorkerRef = useRef(false);
   // LAB20: one optional online concept request at a time; local covers never wait.
@@ -231,6 +234,14 @@ export default function AppV14() {
     [scanPages],
   );
   const progressPercent = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+  const currentIncomplete=Boolean(studyBook?.editionsV36&&studyBook.editionsV36.complete!==true&&documentData);
+  const homeAction=studyHomeAction({
+    generating,
+    hasSource:Boolean(documentData),
+    hasCurrentIncomplete:currentIncomplete||sameStoredDocument(resumeCandidate,libraryId,fileName),
+    hasCurrentBook:Boolean(studyBook&&documentData),
+    hasSavedIncomplete:Boolean(resumeCandidate),
+  });
 
   // Foreground-only scheduled resume. Android may suspend the app when closed;
   // the persisted checkpoint and cooldown survive reopening without a paid job.
@@ -401,7 +412,9 @@ export default function AppV14() {
     let active=true;
     (async()=>{
       const candidates=libraryItems.filter(item=>item.metadata?.hasProcessed &&
-        item.metadata?.geminiEditionIncomplete!==false);
+        item.metadata?.geminiEditionIncomplete!==false).sort((a,b)=>
+          Number(b.id===libraryId)-Number(a.id===libraryId)
+          || String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
       for(const item of candidates){
         const saved=await getLibraryBook(item.id).catch(()=>null);
         if(!active)return;
@@ -420,8 +433,10 @@ export default function AppV14() {
   useEffect(()=>{
     if(!generating)return;
     const timer=setInterval(()=>{
-      if(geminiAbortRef.current && Date.now()-geminiLastActivityRef.current>90000)
-        setStatus('Possibile blocco Gemini · premi Riprendi elaborazione per recuperare i checkpoint');
+      if(geminiAbortRef.current && Date.now()-geminiLastActivityRef.current>90000){
+        setGeminiStalled(true);
+        setStatus('Gemini senza nuovi segnali · puoi interrompere e riprendere dal checkpoint');
+      }
     },15000);
     return ()=>clearInterval(timer);
   },[generating]);
@@ -998,6 +1013,11 @@ export default function AppV14() {
   }
 
   function requestActiveGeminiRecovery(){
+    if(!geminiStalled){
+      setStatus('Elaborazione già attiva · attendi o apri lo stato del libro; nessun riavvio necessario');
+      navigateTo('studio');
+      return;
+    }
     if(restartRequestedRef.current)return;
     const controller=geminiAbortRef.current;
     if(!controller){
@@ -1021,17 +1041,23 @@ export default function AppV14() {
       const controller=new AbortController();
       geminiAbortRef.current=controller;
       geminiLastActivityRef.current=Date.now();
+      setGeminiStalled(false);
+      setWorkPhase('gemini');
       let snapshot;
       try{
         snapshot=await generateGeminiEditionsV36(progressiveBook,{
           maxConcurrency:1,signal:controller.signal,onProgress,
-          onActivity:()=>{geminiLastActivityRef.current=Date.now();},
+          onActivity:()=>{
+            geminiLastActivityRef.current=Date.now();
+            setGeminiStalled(false);
+          },
         });
       }finally{
         if(geminiAbortRef.current===controller)geminiAbortRef.current=null;
       }
       const restart=restartRequestedRef.current && snapshot?.status==='interrupted';
       setResumeBusy(false);
+      setGeminiStalled(false);
       if(!restart){
         restartRequestedRef.current=false;
         return snapshot;
@@ -1044,6 +1070,8 @@ export default function AppV14() {
     if (!sourceData || generating) return null;
     let generatedDraft = null;
     setGenerating(true);
+    setWorkPhase('preparing');
+    setGeminiStalled(false);
     setDsaMode(true);
     setError('');
     setProgress({ done: 0, total: countParagraphs(sourceData.chapters) });
@@ -1073,6 +1101,10 @@ export default function AppV14() {
         studyPillarV38:STUDY_PILLAR_VERSION,
         canonicalBookMap: sourceData?.canonicalBookMap || generated.canonicalBookMap || null,
         quality: { ...(generated.quality || {}), sourceIntegrity } };
+      // LAB38 hotfix: local preprocessing is NOT Gemini progress. Only here
+      // does the Gemini counter begin, and the book becomes openable.
+      setWorkPhase('gemini');
+      setProgress({done:0,total:0});
       // LAB36: show only verified generated pages as a progressive preview.
       // Persist individual chunks in the existing MotorLab runtime IndexedDB store.
       const initialDraft={...result,editionsV36:{status:'partial',complete:false,rows:[]}};
@@ -1081,7 +1113,11 @@ export default function AppV14() {
       navigateTo('studio');
       // Persist a single Library identity before the first Gemini request.
       const firstSave=await persistBook(initialDraft,sourceData,sourceName,libraryId);
-      const lab36BookId=firstSave?.id||libraryId;
+      if(!firstSave){
+        setStatus('Preparazione completa ma salvataggio locale non riuscito · libro originale conservato');
+        return initialDraft;
+      }
+      const lab36BookId=firstSave.id;
       let savedVerified = 0;
       let checkpointTail = Promise.resolve();
       const editions = await runGeminiWithSafeRestart(result,(snapshot)=>{
@@ -1158,17 +1194,37 @@ export default function AppV14() {
       return null;
     } finally {
       setGenerating(false);
+      setWorkPhase('idle');
+      setGeminiStalled(false);
     }
   }
 
   async function generateBook() {
-    await createStudyBook(documentData, fileName);
+    // Never preprocess the same incomplete book again on a second Home tap.
+    if(generating){
+      if(studyBook)navigateTo('studio');
+      else setStatus('La preparazione del documento è ancora in corso');
+      return;
+    }
+    if(homeAction==='resume'){
+      await resumeFromHome();
+      return;
+    }
+    if(homeAction==='open'){
+      navigateTo('studio');
+      return;
+    }
+    await createStudyBook(documentData,fileName);
   }
 
   // Direct resume, also after Android process death: always reload the stored
   // original and the sparse verified-unit checkpoints, never reimport the PDF.
   async function resumeGeminiEditions(record=null){
-    if(generating){requestActiveGeminiRecovery();return;}
+    if(generating){
+      if(geminiStalled)requestActiveGeminiRecovery();
+      else {setStatus('Gemini sta già lavorando · nessuna nuova richiesta avviata');navigateTo('studio');}
+      return;
+    }
     if(resumeExecutionRef.current)return;
     const current={...(record?.studyBook||studyBook),studyPillarV38:STUDY_PILLAR_VERSION};
     const targetSource=record?.sourceData||documentData;
@@ -1180,7 +1236,7 @@ export default function AppV14() {
     }
     resumeExecutionRef.current=true;
     let draft=current;
-    setGenerating(true);setError('');
+    setGenerating(true);setWorkPhase('gemini');setGeminiStalled(false);setError('');
     setProgress({done:current.editionsV36.verifiedChunkVariants||0,
       total:current.editionsV36.totalChunkVariants||1});
     try{
@@ -1211,12 +1267,19 @@ export default function AppV14() {
     }finally{
       resumeExecutionRef.current=false;
       setGenerating(false);
+      setWorkPhase('idle');
+      setGeminiStalled(false);
       setResumeBusy(false);
     }
   }
 
   async function resumeFromHome(){
-    if(generating){requestActiveGeminiRecovery();return;}
+    if(generating){
+      // Opening the processing page is safe; aborting an active request is not.
+      if(studyBook)navigateTo('studio');
+      else setStatus('Preparazione in corso · attendo il libro prima di aprirlo');
+      return;
+    }
     if(resumeExecutionRef.current||resumeBusy)return;
     setResumeBusy(true);
     try{
@@ -1905,7 +1968,7 @@ export default function AppV14() {
           onRecentScan={restoreScannerArchiveSelection}
           onOpenOriginal={item => openLibraryItem(item.id, { original:true, openReader:false })}
           documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
-          scanContent={scannerPanel}
+          scanContent={scannerPanel} workPhase={workPhase} homeAction={homeAction}
           resumeCandidate={resumeCandidate} resumeBusy={resumeBusy}
           onResumeProcessing={()=>void resumeFromHome()}
         />
@@ -1921,6 +1984,7 @@ export default function AppV14() {
           reduction={reduction} onReductionChange={changeReduction} reductionMeta={precisionBook?.precisionEdition}
           isOriginalOnly={!studyBook && Boolean(originalRecord?.id === libraryId && sourceFile)}
           sourceData={documentData} generating={generating} onPrepareOriginal={prepareOriginalForStudy}
+          status={status} workPhase={workPhase} geminiStalled={geminiStalled}
           onResumeGemini={()=>void resumeGeminiEditions()}
           originalRecord={originalRecord?.id === libraryId ? originalRecord : null}
           originalReading={originalReading} onCloseOriginalReader={() => setOriginalReading(false)}

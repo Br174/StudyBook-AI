@@ -7,7 +7,7 @@ export function HomeDashboardV16({
   status, libraryItems = [], archivedScans = [], importing, generating,
   onScanner, onImport, onScannerArchive, onCategory, onRecentScan,
   onOpenOriginal, onContinueBook, onViewAll, documentData, fileName,
-  scanContent, onCreateBook, progressPercent,
+  scanContent, onCreateBook, progressPercent, workPhase='idle',homeAction='create',
   resumeCandidate = null, resumeBusy = false, onResumeProcessing = () => {},
 }) {
   const strip = useRef(null);
@@ -58,17 +58,32 @@ export function HomeDashboardV16({
       </div>
     </div>
     <div className="sb-home-workspace">
-      {documentData && !generating && <div className="sb-process-card"><div><small>FONTE PRONTA</small><h3>{titleOf(fileName)}</h3><p>{documentData.chapters?.length || 0} capitoli</p></div><button onClick={onCreateBook}>Crea Testo di studio</button></div>}
-      {generating && <p role="status">Elaborazione {progressPercent}% · {status}</p>}
+      {documentData && !generating && (homeAction==='create'||homeAction==='open') &&
+        <div className="sb-process-card">
+          <div><small>{homeAction==='open'?'LIBRO PRONTO':'FONTE PRONTA'}</small><h3>{titleOf(fileName)}</h3>
+            <p>{documentData.chapters?.length || 0} capitoli</p></div>
+          <button type="button" onClick={onCreateBook}>{homeAction==='open'?'Apri libro di studio':'Crea Testo di studio'}</button>
+        </div>}
+      {generating && <p role="status">
+        {workPhase==='preparing'
+          ? 'Preparazione del documento, non ancora elaborazione IA · '+status
+          : 'Elaborazione Gemini in corso · '+status}
+      </p>}
       {(generating || resumeCandidate) && <div className="sb-resume-panel" role="region" aria-label="Ripresa elaborazione del libro">
         <div>
-          <strong>{resumeCandidate?.fileName ? titleOf(resumeCandidate.fileName) : titleOf(fileName)}</strong>
-          <small>{resumeCandidate?.total > 0
-            ? String(resumeCandidate.done || 0)+'/'+resumeCandidate.total+' parti IA conservate'
-            : 'La ripresa verifica i checkpoint già salvati'}</small>
+          <strong>{generating ? titleOf(fileName) : (resumeCandidate?.fileName ? titleOf(resumeCandidate.fileName) : titleOf(fileName))}</strong>
+          <small>{generating
+            ? (workPhase==='preparing'?'Sto preparando la struttura. I risultati IA arriveranno dopo.'
+              :'L’elaborazione IA sta procedendo. Aprire il libro non interrompe la generazione.')
+            :resumeCandidate?.total > 0
+              ? String(resumeCandidate.done || 0)+'/'+resumeCandidate.total+' parti IA conservate'
+              : 'La ripresa verifica i checkpoint già salvati'}</small>
         </div>
-        <button type="button" onClick={onResumeProcessing} disabled={resumeBusy}>
-          {resumeBusy ? 'Recupero in corso…' : 'Riprendi elaborazione'}
+        <button type="button" onClick={onResumeProcessing}
+          disabled={resumeBusy || (generating && workPhase==='preparing')}>
+          {resumeBusy?'Recupero in corso…':generating
+            ?(workPhase==='preparing'?'Preparazione in corso':'Apri libro in elaborazione')
+            :'Riprendi elaborazione'}
         </button>
       </div>}
       {scanContent}

@@ -167,6 +167,10 @@ jobs:
         if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-38-')
         run: node scripts/test-lab38-pillar.mjs
 
+      - name: LAB38 Home and checkpoint navigation hotfix regression
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-38-')
+        run: node scripts/test-lab38-home-flow.mjs
+
       - name: Resolve monotonic Android version
         shell: bash
         run: |
@@ -359,7 +363,7 @@ jobs:
           NODE
 
       - name: Deploy ONLY isolated LAB38 Gemini pedagogical Worker
-        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-38-')
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-38-') && !contains(github.ref_name, 'hotfix-')
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

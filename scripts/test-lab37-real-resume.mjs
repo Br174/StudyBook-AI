@@ -60,12 +60,13 @@ try {
   const studio=readFileSync(new URL('../src/components/AppScreens.jsx',import.meta.url),'utf8');
   assert.match(app,/async function resumeFromHome\(\)/);
   assert.match(app,/runGeminiWithSafeRestart\(current/);
-  assert.match(app,/if\(generating\)\{requestActiveGeminiRecovery\(\);return;\}/);
+  assert.match(app,/if\(generating\)\{\s*if\(geminiStalled\)requestActiveGeminiRecovery\(\)/,
+  'Active Gemini must never be interrupted by ordinary navigation');
   assert.match(app,/getLibraryBook\(resumeCandidate\.id\)/);
   assert.match(app,/restartRequestedRef\.current=true/);
   assert.match(home,/onClick=\{onResumeProcessing\}/);
   assert.match(home,/Riprendi elaborazione/);
-  assert.match(studio,/Recupera e riprendi elaborazione/);
+  assert.match(studio,/Recupera elaborazione bloccata/);
   console.log('LAB37: abort, one runner, durable book reopen, 5-only missing editions, zero duplicates, offline stop, Home/Studio controls PASS');
 } finally {
   globalThis.fetch=oldFetch;

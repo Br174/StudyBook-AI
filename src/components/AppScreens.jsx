@@ -409,11 +409,23 @@ function ScannedBookPhoto({ blob }) {
   return url ? <img className="sb-scanned-book-cover-photo" src={url} alt="Fotografia reale della pagina scannerizzata" /> : null;
 }
 
-export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, onResumeGemini, generating = false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility, scannedPhoto = null, reduction = 10, onReductionChange, reductionMeta = null }) {
+export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, onResumeGemini, generating = false, status='', workPhase='idle', geminiStalled=false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility, scannedPhoto = null, reduction = 10, onReductionChange, reductionMeta = null }) {
   const [exportVariant, setExportVariant] = useState('study');
   const [exportOpen, setExportOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [prepareOpen, setPrepareOpen] = useState(false);
+  if (!studyBook && generating) {
+    return <section className="sb-screen sb-studio-screen" aria-label="Preparazione libro">
+      <header className="sb-screen-head compact"><div><small>LIBRO IN PREPARAZIONE</small>
+        <h1>Il tuo libro di studio</h1></div></header>
+      <article className="sb-open-book-workspace sb-original-picker" role="status">
+        <h2>Sto preparando la struttura del libro</h2>
+        <p>{status||'Preparazione dei capitoli in corso'}</p>
+        <p>La preparazione dei blocchi non equivale al completamento delle edizioni Gemini.
+          Il documento originale è conservato e non viene importato nuovamente.</p>
+      </article>
+    </section>;
+  }
   if (!studyBook && !isOriginalOnly) {
     // LAB15 • Percorso diretto: se non esiste un originale selezionato,
     // la scelta rimane nella stessa schermata «Il tuo libro di studio».
@@ -448,6 +460,8 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
 
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
       {v36Partial && <div className="sb-mirror-warning" role="status">
+        {generating && <p>Elaborazione Gemini attiva · {status||'checkpoint in corso'}.
+          Può consultare le parti già verificate senza interrompere la generazione.</p>}
         <p>ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi verificati. {studyBook.editionsV36?.verifiedVariants||0}/{studyBook.editionsV36?.totalVariants||0} varianti verificate. Le pagine incomplete restano segnalate; PDF e download saranno disponibili dopo la verifica finale.</p>
         {Number.isFinite(studyBook.editionsV36?.totalChunkVariants) &&
           studyBook.editionsV36.totalChunkVariants>0 && <p>
@@ -472,9 +486,14 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
           ? ('Attesa Gemini · '+(studyBook.editionsV36.quota.estimated?'orario stimato: ':'ripresa prevista: ')+
             new Date(studyBook.editionsV36.quota.retryAt).toLocaleString('it-IT'))
           : 'Quota o configurazione da verificare: nessun pagamento automatico.'}</p>}
-        <button type="button" onClick={onResumeGemini}>
-          {generating?'Recupera e riprendi elaborazione':studyBook.editionsV36?.quota?.automatic?'Controlla il tempo di attesa Gemini':studyBook.editionsV36?.quota?'Verifica blocco Gemini':'Riprendi elaborazione'}
+        <button type="button" onClick={()=>onReductionChange?.(0)}>
+          Apri il testo originale mentre Gemini elabora
         </button>
+        {(!generating||geminiStalled) && <button type="button" onClick={onResumeGemini}>
+          {geminiStalled?'Recupera elaborazione bloccata':studyBook.editionsV36?.quota?.automatic
+            ?'Controlla il tempo di attesa Gemini':studyBook.editionsV36?.quota
+              ?'Verifica blocco Gemini':'Riprendi elaborazione'}
+        </button>}
       </div>}
       <section className="sb-open-book-workspace" aria-label="Libro aperto">
         <div className="sb-open-book-overview">
