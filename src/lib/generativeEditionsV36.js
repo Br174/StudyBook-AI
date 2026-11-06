@@ -330,7 +330,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
               reasons:(record.issues[id]||[]).slice(0,4),
               target:job.targets?.[id]??job.summaryCapLetters??null,
               observed:record.drafts?.[id]?
-                (record.drafts[id].match(/\\p{L}/gu)||[]).length:null,
+                (record.drafts[id].match(/\p{L}/gu)||[]).length:null,
               attempts:2};
             diagnostics.quality=detail;
             state.set(job.key,{...record});
