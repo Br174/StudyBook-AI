@@ -327,7 +327,12 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
           // "Riprendi elaborazione", starting the same expensive cycle again.
           if(!record.verified[id]){
             const detail={level:id,
-              reasons:(record.issues[id]||[]).slice(0,4),
+              reasons:[...(record.issues[id]||[])].sort((a,b)=>{
+                const priority=x=>x.startsWith('exact-letters-target')?0:
+                  x.startsWith('essential-anchors')?1:
+                  x.includes('protected')?2:3;
+                return priority(a)-priority(b);
+              }).slice(0,6),
               target:job.targets?.[id]??job.summaryCapLetters??null,
               observed:record.drafts?.[id]?
                 (record.drafts[id].match(/\p{L}/gu)||[]).length:null,
