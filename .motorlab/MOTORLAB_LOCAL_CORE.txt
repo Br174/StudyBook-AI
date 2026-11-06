@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.08-r34
+RELEASE=2026.10.29-r40
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -13,6 +13,17 @@ FUTURE_PROJECT_AUTO_ONBOARD=required
 VERSIONED_BOOT_BANNER=required
 DUAL_FANTASTICI20_BANNER=required
 WHOLE_SUITE_REENTRY=required
+CHAT_CONTEXT_GUARD=required
+CHAT_CONTEXT_GUARD_OWNER=UAB_PROJECT_ROUTING
+CHAT_CONTEXT_GUARD_INVOKER=EXISTING_REENTRY_GATE
+PACMAN_PUBLIC_NAME=Pacman
+PACMAN_LEGACY_ALIAS=AutoSetup
+PACMAN_EXTERNAL_WORK_AUTO_ROUTING=required_when_capability_verified
+PACMAN_FIRST_TURN_OWNER=AUTO_BOOTSTRAP
+PACMAN_REENTRY_OWNER=EXISTING_REENTRY_GATE
+PACMAN_NO_SECOND_SCHEDULER=required
+PACMAN_AUTHORIZATION_AND_SECRET_SAFETY=required
+PACMAN_MCP_LIVE_STATUS=NOT_VERIFIED
 PROJECT_CONTINUITY=required
 LABELED_VISUAL_STATUS=required
 EXTENDED_VISUAL_STATUS=required
@@ -26,7 +37,9 @@ DELIVERED_ARTIFACT_IMMUTABILITY=required
 LIVE_EVENT_CLASSIFICATION=required
 CONTROL_PLANE_CI_SUPPRESSION=required
 CHANGE_COMPATIBILITY_GUARD=required
+BEHAVIOR_MEMORY_R38=required
 CHANGE_COMPATIBILITY_PILLAR=required
+RULE_RETIREMENT_PROOF=required
 WATCHDOG=required
 RESUME_RECOVERY=required
 FOREGROUND_STALL_GUARD=required
@@ -398,3 +411,60 @@ R34 FULL SUITE CONTRACT
 - Re-entry Gate applies the full compatible suite on every supported turn, restores checkpoints and numeric progress.
 - Never claim a hook/sidecar/service ran unless observed; preserve Velocity and native project engine.
 Revision 2.29: full suite auto re-entry and two-line activation proof.
+
+R35 VERIFIED RULE REPLACEMENT
+- The existing Compatibility Guard v1.3 is the sole owner.
+- Approved same-responsibility replacement inventories and retires old active rules, code, fallback, cache and re-entry paths; tests must prove forbidden old behavior cannot recur.
+- Keep independent/safety/native rules and verified LAST_GOOD; no approval bypass.
+Revision 2.30: r35 Regola Madre delle Regole for active and future projects.
+
+R35 CONSOLIDATION: IDENTICAL approved rule -> one merged canonical active rule; CONTRADICTORY approved rule -> latest approved wins for same responsibility and all conflicting old paths retired; COMPLEMENTARY -> both preserved with distinct ownership. Core release remains r35; no second resolver. Always preserve pre-change approval and safety.
+
+R36 TARGET-AWARE CHAT CONTEXT GUARD — ONE EXISTING ROUTER
+- Effective change TARGET decides warnings, not references to MotorLab. The central MotorLab CORE is used in ALL existing/future project chats as an orchestrator without replacing native engines.
+- CURRENT_PROJECT_CHANGE: MotorLab accelerates/modifies the project of the active chat, including authorized local satellite -> NO_WARNING.
+- MOTORLAB_CORE_SELF_CHANGE from a different identifiable project chat -> recommend the MotorLab administration chat, without automatic migration or unsafe changes.
+- OTHER_PROJECT_CHANGE from an identifiable different project chat -> recommend that project's canonical chat. EXPLANATION_ONLY -> NO_WARNING.
+- Explicit user's voluntary approved transfer to a new chat -> resume under existing operation_id/checkpoint; no duplicate writer or needless warning.
+- Reuse UAB_PROJECT_ROUTING + Re-entry Gate + Change Compatibility Guard; never add a second classifier service, scheduler or database.
+- If the host cannot supply reliable current chat/project identity, do not manufacture an alert; apply policy at the next supported control point.
+- No mandatory external ChatGPT API or paid provider; native engines and release pins remain protected.
+Revision 2.31: r36 Chat Context Guard routes by the actual change target and preserves cross-chat voluntary continuation.
+
+
+R38 SATELLITE CONTINUITY — CORE LAB (2026-10-16)
+R38 canonical owner=MOTORLAB_EXECUTION_CONTINUITY_V1.txt; supported executable adapter=templates/execution/motorlab-r38-operation-entrypoint-lab.mjs; activation is conditional on host runtime loading the adapter and on safe satellite fanout. Do not label this bundle as live globally until runtime and fanout proof exists. Preserve Pacman as active AutoSetup feature.
+
+
+R38 BEHAVIOR MEMORY SATELLITE POLICY — 2026-10-22
+BEHAVIOR_RULES_OWNER=MotorLab_general_governance;project_specific_native_repo
+BEHAVIOR_RULES_DURABLE_SOURCE=GitHub_project_registry_and_CORE
+BEHAVIOR_GUARD_OWNER=MotorLab_Change_Compatibility_Guard_only
+BEHAVIOR_PREFLIGHT=templates/behavior/motorlab-behavior-preflight.mjs
+BEHAVIOR_PREFLIGHT_MISSING_TEST=PENDING_ENFORCEMENT
+BEHAVIOR_RULES_DEPLOY=at_approved_safe_release_boundary_only
+BEHAVIOR_NATIVE_ENGINES=preserved
+BEHAVIOR_NONBLOCKING_UNREGISTERED_LEGACY_PROJECTS=required
+BEHAVIOR_CLOUD_PROVIDER_WRITE=never_from_rule_contract_alone
+R38_CONTINUITY_HOST_FEATURE=NOT_ACTIVATED_BY_VERSION_NUMBER
+MOTORLAB-SATELLITE-BUNDLE-V2.32
+
+SCUDO360_R39=required_where_verified_adapter_installed
+SCUDO360_REGRESSION_OWNER=existing_Change_Compatibility_Guard
+SCUDO360_BEHAVIOR_MEMORY=existing_project_owned_registry
+SCUDO360_EVIDENCE_GATE=templates/regression/scudo360-gate.mjs
+SCUDO360_EXECUTION_REQUIREMENT=actual_JUnit_classes_per_P0_P1_contract_at_exact_commit
+SCUDO360_MISSING_ADAPTER=PENDING_ENFORCEMENT_NOT_SUCCESS
+SCUDO360_FAIL_CLOSED=missing_skipped_stale_failed_or_unmapped_tests
+SCUDO360_GLOBAL_COVERAGE_CLAIM=forbidden_without_per_project_CI_and_receipts
+SCUDO360_FAST_LAB_AND_PROMOTION=separate_evidence_levels
+SCUDO360_NO_SECOND_COORDINATOR=required
+MOTORLAB-SATELLITE-BUNDLE-V2.33
+
+SCUDO360_QUALITY_R40=required_at_verified_native_adoption
+SCUDO360_R40_REQUEST_CONTRACT_JUNIT=exact_source_sha
+SCUDO360_R40_BEFORE_AFTER=distinct_verified_receipts_or_pending
+SCUDO360_R40_ANDROID_AND_PROVIDER_ACCEPTANCE=not_inferred_from_ci
+SCUDO360_R40_NATIVE_WORKFLOW_ENFORCEMENT=pending_without_real_wiring
+SCUDO360_R40_NO_SECOND_SCHEDULER_OR_TEST_RUNNER=required
+MOTORLAB-SATELLITE-BUNDLE-V2.34

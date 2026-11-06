@@ -1,30 +1,30 @@
 {
   "schemaVersion": 1,
-  "project": "studybook-android-lab23",
+  "project": "studybook",
   "suites": [
     {
-      "id": "lab23-existing-cover-regression",
+      "id": "cloudflare-worker-tests",
       "command": [
         "node",
-        "scripts/StudyBookLab23Scudo.mjs"
+        "scripts/StudyBookCloudflare.mjs"
       ],
       "paths": [
-        "scripts/StudyBookLab23Scudo.mjs",
-        "scripts/test-lab23-cover-uniqueness.mjs"
+        "scripts/StudyBookCloudflare.mjs",
+        "scripts/test-cloudflare-worker.mjs"
       ],
       "junitDir": ".motorlab/scudo360-test-results",
-      "timeoutMs": 240000
+      "timeoutMs": 300000
     }
   ],
   "contracts": [
     {
-      "id": "studybook.android.cover-identity-and-distinct-published-cover",
+      "id": "studybook.cloudflare-worker-requests-and-recovery",
       "priority": "P1",
       "suites": [
-        "lab23-existing-cover-regression"
+        "cloudflare-worker-tests"
       ],
       "junitClasses": [
-        "studybook.StudyBookLab23Scudo"
+        "studybook.StudyBookCloudflare"
       ],
       "requiredAt": [
         "lab",
