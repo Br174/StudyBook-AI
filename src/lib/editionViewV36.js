@@ -56,5 +56,5 @@ export function buildGeminiEditionViewV36(book,reduction){
     }};
 }
 export function mayPublishGeminiEdition(book){
-  return !book?.editionsV36||book?.editionReadiness?.complete===true;
+  return !book?.editionsV36||book?.precisionEdition?.level===0||book?.editionReadiness?.complete===true;
 }

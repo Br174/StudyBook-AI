@@ -1535,7 +1535,7 @@ export default function AppV14() {
 
   function exportCurrentBook(format, variant = 'study') {
     if (!precisionBook) return;
-    if(precisionBook.editionReadiness?.partial){
+    if(reduction!==0 && precisionBook.editionReadiness?.partial){
       setError('Questa è un’anteprima LAB36: esportazione disponibile dopo la verifica completa delle sei edizioni.');
       return;
     }

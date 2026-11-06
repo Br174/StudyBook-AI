@@ -5,6 +5,9 @@ const src='Articolo 7: il termine non cambia, salvo eccezione.';
 const base={chapters:[{title:'Titolo esatto',pageStart:4,pageEnd:4,sections:[],
   paragraphs:[{original:src,sourcePageStart:4,sourcePageEnd:4}]}],
   editionsV36:{complete:false,rows:[[{verified:{10:true},editions:{10:src},issues:{20:['not-verified']}}]]}};
+const untouched=buildPrecisionEdition(base,0);
+assert.equal(untouched.precisionEdition.level,0);
+assert.equal(mayPublishGeminiEdition(untouched),true,'Original 0% always available');
 const p10=buildPrecisionEdition(base,10);
 assert.equal(p10.chapters[0].paragraphs[0].summary,src);
 assert.equal(p10.editionReadiness.complete,false);
