@@ -37,6 +37,8 @@ assert.deepEqual(chapters[0].paragraphs,['Il criterio fondamentale è rispettato
 assert.equal(chapters[0].paragraphMeta[0].pageEnd,2);
 assert.equal(verifiedChapterStates([{title:'C',pageStart:1,pageEnd:3}],pages,1000)[0].status,'verified');
 assert.equal(verifiedChapterStates([{title:'C',pageStart:499,pageEnd:501}],missing,1000)[0].status,'pending');
+const partialPages = [...pages.slice(0,25), ...Array(975).fill(null)];
+assert.equal(verifiedChapterStates([{title:'C',pageStart:1,pageEnd:20}],partialPages,1000)[0].status,'verified');
 assert.equal(requireIntegrityForStudy({integrity360:{ready:true,issues:[]}}),true);
 assert.throws(()=>requireIntegrityForStudy({integrity360:{ready:false,issues:[{severity:'block'}]}}));
 
