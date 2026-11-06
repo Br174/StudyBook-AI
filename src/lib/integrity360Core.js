@@ -18,9 +18,9 @@ export function choosePdfLanes({ hardwareConcurrency = 2, deviceMemory = 2, page
   return 2;
 }
 
-export function shouldThrottlePdfLanes({ durationMs = 0, baselineMs = 0, errorCount = 0, deviceMemory = 4 } = {}) {
-  return errorCount > 0 || Number(deviceMemory) < 3
-    || (baselineMs > 0 && durationMs > Math.max(250, baselineMs * 2.5));
+export function shouldThrottlePdfLanes({ durationMs = 0, baselineMs = 0, errorCount = 0, deviceMemory = 4, heapFraction = 0 } = {}) {
+  return errorCount > 0 || Number(deviceMemory) < 3 || heapFraction >= 0.80
+    || (baselineMs > 0 && durationMs > Math.max(250, baselineMs * 1.8));
 }
 
 export function suspectText(text = '') {
