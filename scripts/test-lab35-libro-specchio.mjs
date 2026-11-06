@@ -43,9 +43,12 @@ const chapters=Array.from({length:7},(_,i)=>({
 const outline=chapters.map(c=>({title:c.title,pageNumber:c.pageStart,depth:1}));
 const map=buildCanonicalBookMap({
   pages:sourcePages,chapters,outline,pageLabels:sourcePages.map(p=>String(p.pageNumber)),
+  pageDimensions:sourcePages.map((p,i)=>({widthPt:i%2?612:595.28,heightPt:i%2?792:841.89})),
   originalFingerprint:'a'.repeat(64),pdfPageCount:8,
 });
 assert.equal(map.chapters.length,7,'7 chapter roots stay 7, not 29');
+assert.equal(map.pages[0].heightPt,841.89);
+assert.equal(map.pages[1].widthPt,612,'Original paper dimensions are immutable');
 assert.equal(map.chapters[0].sections.length,29,'29 section headers remain sections, not chapter roots');
 assert.equal(map.structuralStatus,'source-mapped');
 const book={
@@ -61,6 +64,7 @@ const shortened=composeMirrorPages(map,book,{variant:'simple',maxLines:43});
 assert.deepEqual(standard.pages.filter(p=>p.kind==='text').map(p=>p.sourcePage),
   shortened.pages.filter(p=>p.kind==='text').map(p=>p.sourcePage));
 assert.equal(standard.pages[0].label,'1');
+assert.equal(standard.pages[1].widthPt,612,'Mirror page follows physical original paper');
 assert.equal(standard.pages.filter(p=>p.kind==='image').length,0);
 assert.equal(standard.pages.find(p=>p.sourcePage===4).label,'4');
 assert.equal(standard.pages.length,8,'Short text must leave free space, not merge pages');
