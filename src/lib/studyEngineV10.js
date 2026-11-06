@@ -122,6 +122,14 @@ export async function buildStudyBook(documentData, options = {}) {
     chapters,
     quality: {
       ...(baseBook?.quality || {}),
+      sourceProvenance: documentData?.integrity360 ? {
+        originalFingerprint: documentData.integrity360.fingerprint,
+        engine: documentData.integrity360.engine,
+        verifiedPages: documentData.integrity360.verifiedPages,
+        pageCount: documentData.integrity360.pageCount,
+        chapterStates: documentData.integrity360.chapterStates,
+        semanticCertified: false,
+      } : null,
       fidelityGate: {
         paragraphsChecked: paragraphCount,
         paragraphsPassed: paragraphCount - failedParagraphs,
