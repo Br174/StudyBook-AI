@@ -107,7 +107,7 @@ function toHex(bytes) {
   return [...new Uint8Array(bytes)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } = {}) {
+export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, onVerifiedChapter } = {}) {
   const started = performance.now();
   const data = new Uint8Array(await file.arrayBuffer());
   // Strong identity: even equal names/sizes/mtime cannot reuse the wrong book.
@@ -186,6 +186,7 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
             const saved = await saveIntegrity360Page(signature, row);
             if (saved) savedCount += 1;
             else checkpointFailures += 1;
+            announceVerifiedChapters();
           }
         } catch (err) {
           row.status = 'failed';
@@ -199,6 +200,32 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
     };
     const overlapOcr = autoOcr && deviceMemory >= 4 && cores >= 4;
     const ocrTask = overlapOcr ? runOcrConsumer() : null;
+
+
+    // A chapter is announced only after seeing the following chapter boundary.
+    // Source verification is distinct from finished didactic processing.
+    const announced = new Set();
+    let lastCheckedPrefix = 0;
+    const announceVerifiedChapters = () => {
+      let prefix = 0;
+      while (prefix < pageCount && pages[prefix]?.status === 'verified') prefix += 1;
+      if (prefix < pageCount && prefix - lastCheckedPrefix < 25) return;
+      if (prefix <= lastCheckedPrefix || prefix < 2) return;
+      lastCheckedPrefix = prefix;
+      const known = detectChaptersFromPages(pages.slice(0, prefix));
+      // The final observed chapter may continue onto as-yet unread pages.
+      const candidates = prefix === pageCount ? known : known.slice(0, -1);
+      const states = verifiedChapterStates(candidates, pages, pageCount);
+      states.forEach((state, index) => {
+        if (state.status !== 'verified') return;
+        const key = state.pageStart + ':' + state.pageEnd + ':' + state.title;
+        if (announced.has(key)) return;
+        announced.add(key);
+        onProgress?.({ phase: 'turbo-chapter-verified', done: announced.size, total: null,
+          title: state.title, pageStart: state.pageStart, pageEnd: state.pageEnd });
+        onVerifiedChapter?.({ ...state, chapter: candidates[index] });
+      });
+    };
 
     const textLane = async laneId => {
       while (nextBlock < blocks.length && laneId < targetLanes) {
@@ -215,6 +242,7 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
               const saved = await saveIntegrity360Page(signature, row);
               if (saved) savedCount += 1;
               else checkpointFailures += 1;
+              announceVerifiedChapters();
             }
           } catch (err) {
             blockErrors += 1;
@@ -246,6 +274,7 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
     if (wakeOcr) { const wake = wakeOcr; wakeOcr = null; wake(); }
     if (ocrTask) await ocrTask;
     else if (autoOcr && ocrQueue.length) await runOcrConsumer();
+    announceVerifiedChapters();
 
     const originalPages = pages.map((row, index) => row || ({
       pageNumber: index + 1, text: '', rawText: '', source: 'error',
