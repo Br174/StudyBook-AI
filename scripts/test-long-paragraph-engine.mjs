@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import 'fake-indexeddb/auto';
 import { buildStudyBook } from '../src/lib/studyEngineV11.js';
 
 const originalFetch = globalThis.fetch;
