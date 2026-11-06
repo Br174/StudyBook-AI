@@ -8,7 +8,8 @@ import {
 import { loadIntegrity360Pages, saveIntegrity360Page } from './ocrResumeStore.js';
 import { detectChaptersFromPages } from './documentParserV10.js';
 import { auditDocumentStructure } from './precisionDocumentAudit.js';
-import { extractPdfVisualAssetsFromDocument } from './pdfVisuals.js';
+import { scanPdfPageFigures, loadPdfMirrorOutline } from './visualMirrorV35.js';
+import { buildCanonicalBookMap } from './libroSpecchioV35.js';
 import { auditSourceAgainstOriginal } from './sourceShieldV34.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
