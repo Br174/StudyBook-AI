@@ -83,3 +83,19 @@ export function stripConfirmedNextHeading(text, nextChapterTitle) {
   if (!before || !/[.!?]$/u.test(before)) return {text:value,moved:false};
   return {text:before,moved:true,heading:match[1],reason:'matched-next-chapter-title'};
 }
+
+
+export function auditChapterOutput(paragraphs = [], nextTitle = '') {
+  const texts=paragraphs.map(p=>normalize(typeof p==='string'?p:p?.summary||p?.text||'')).filter(Boolean);
+  const first=texts[0]||'', last=texts.at(-1)||'';
+  const issues=[];
+  if (!texts.length) issues.push('empty-generated-chapter');
+  if (SOURCE_BAD_START.test(first)) issues.push('generated-orphan-start');
+  if (SOURCE_CONNECTIVE_END.test(last)) issues.push('generated-dangling-end');
+  if (last.length>=40 && !/[.!?;:»”"')\]]$/u.test(last))
+    issues.push('generated-incomplete-ending');
+  const match=last.match(NEXT_TITLE_MARK)?.[1]||'';
+  if (match && nextTitle && canonical(match)===canonical(nextTitle))
+    issues.push('next-heading-still-in-text');
+  return {ready:issues.length===0,issues,semanticCertified:false};
+}
