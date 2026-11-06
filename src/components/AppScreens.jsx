@@ -463,8 +463,9 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             </div>
             {reductionMeta && (
               <p style={{ fontSize: 12, margin: '9px 0 0', color: '#64748b' }}>
-                Riduzione effettiva: {reductionMeta.achievedPercent}%.
-                {reductionMeta.targetReached ? ' ' : ' Alcune parti integrali sono state preservate: obiettivo non raggiunto completamente. '}
+                Riduzione effettiva (lettere): {reductionMeta.achievedLettersPercent ?? reductionMeta.achievedPercent}%.
+                {reductionMeta.targetReached ? ' ' : ' Obiettivo ' + (reductionMeta.targetPercent ?? 'riassunto') + '% non raggiunto: conservate informazioni essenziali o parti da verificare. '}
+                {reductionMeta.qualityGuard?.originalFallbackParagraphs > 0 ? ' Alcuni paragrafi richiedono controllo della fonte originale. ' : ''}
                 Il file originale resta invariato; telefono e stampa usano questa versione.
               </p>
             )}
