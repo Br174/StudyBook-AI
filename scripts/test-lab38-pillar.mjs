@@ -12,7 +12,8 @@ import {clearGeminiPause} from '../src/lib/geminiQuotaControllerV36.js';
 assert.deepEqual(STUDY_ORDER,['summary','50','40','30','20','10','0']);
 const pillar=readFileSync(new URL('../docs/STUDYBOOK_STUDIO_PROGRESSIVO_PILASTRO_V1.md',import.meta.url),'utf8');
 assert.match(pillar,/NON cambiare senza sua approvazione esplicita/);
-assert.match(pillar,/stessi concetti/i);
+assert.match(pillar,/stessi concetti fondamentali/i);
+assert.match(pillar,/percentuali VINCOLANTI/i);
 const chunks=['La teoria normativistica descrive norme.','Kant e Bobbio studiano la giustizia.','Il diritto organizza le relazioni sociali.'];
 for(const percentage of STUDY_PERCENTAGES){
   const budgets=allocateExactLetterBudgets(chunks,percentage);
