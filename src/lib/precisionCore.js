@@ -5,6 +5,7 @@ import {
   auditChapterContinuity, auditNarrativeSource, hasLexicalSupport, canSafelyBridgeAfterGap,
 } from './studyQualityGuard.js';
 import { explainInSimpleWords } from './simpleLanguage.js';
+import { inspectChapterBoundaries, chapterMeasuredStats, chapterLevelTarget, stripConfirmedNextHeading } from './chapterFidelityV33.js';
 
 export const REDUCTION_STEPS = [0, 10, 20, 30, 40, 50, 'summary'];
 export const REDUCTION_LABELS = {
@@ -50,77 +51,74 @@ function buildRequests(book, level) {
   }));
   return { items, sourceWords, sourceLetters };
 }
-function reserveItem(item, unit) {
-  if (!unit || item.selected.has(unit.index)) return 0;
-  item.selected.add(unit.index);
-  return countLetters(unit.value);
-}
-function selectWithDependencies(item, unit) {
-  const needed = [unit];
-  // Follow the complete antecedent chain, rather than including a single orphaned connector.
-  let current = unit;
-  while (current.dependent) {
-    const previous = item.units[current.index - 1];
-    if (!previous) return null;
-    needed.unshift(previous);
-    current = previous;
-  }
-  return needed.filter((part) => !item.selected.has(part.index));
-}
-function computeSelection(items, budget, level) {
+// Source-first chapter and paragraph quotas. The former whole-book budget
+// could reduce one 1,491-letter chapter to 85 letters while compensating with
+// a much longer chapter; that outcome must never pass LAB33.
+function computeSelection(items, level) {
   if (level === 0) return;
-  let used = 0;
-
-  // Keep the beginning of each paragraph for readable context. Reserve
-  // mandatory legal conditions/formulae individually, NOT every sentence
-  // between the beginning and the last protected sentence (the LAB31 plateau).
-  const keep = (item, unit) => {
-    if (!unit || item.selected.has(unit.index)) return;
-    item.selected.add(unit.index);
-    used += countLetters(unit.value);
-  };
-  const keepWithContext = (item, unit) => {
-    if (!unit || item.selected.has(unit.index)) return;
-    const required = [unit];
-    let cursor = unit;
-    while (cursor.index > 0 && !item.selected.has(cursor.index - 1)
-      && !canSafelyBridgeAfterGap(cursor.source)) {
-      cursor = item.units[cursor.index - 1];
-      if (!cursor) break;
-      required.unshift(cursor);
-    }
-    required.forEach(part => keep(item, part));
-  };
+  const target = level === 'summary' ? 70 : level;
+  const byChapter = new Map();
   for (const item of items) {
-    if (!item.units.length) continue;
-    keep(item, item.units[0]);
-    for (const unit of item.units) if (unit.mandatory) keepWithContext(item, unit);
+    if (!byChapter.has(item.chapterIndex)) byChapter.set(item.chapterIndex, []);
+    byChapter.get(item.chapterIndex).push(item);
   }
-
-  // At each pass choose the next still-available sentence of a paragraph.
-  // Ranking across paragraphs keeps the budget global, while consecutive
-  // selection inside each paragraph retains the source's original sequence.
-  // Late mandatory sentences are allowed when the paragraph's bridge is safe.
-  for (;;) {
-    const candidates = [];
-    for (const item of items) {
-      const next = item.units.find(unit => !item.selected.has(unit.index));
-      if (!next || next.problematic) continue;
-      const precedingSelected = next.index === 0 || item.selected.has(next.index - 1);
-      if (!precedingSelected && !canSafelyBridgeAfterGap(next.source)) continue;
-      const parts = [next];
-      if (next.dependent && next.index > 0 && !precedingSelected) continue;
-      const cost = parts.reduce((sum,part) => sum + countLetters(part.value),0);
-      candidates.push({ item, unit: next, cost });
+  const keep = (item, unit) => {
+    if (!unit || item.selected.has(unit.index)) return 0;
+    item.selected.add(unit.index);
+    return countLetters(unit.value);
+  };
+  const nextUnit = item => item.units.find(unit => !item.selected.has(unit.index) && unit.index === item.selected.size);
+  for (const chapterItems of byChapter.values()) {
+    const chapterSourceLetters = chapterItems.reduce((n,item)=>n+countLetters(item.source),0);
+    const minChapter = chapterLevelTarget(level,chapterSourceLetters).minRetained;
+    let totalKept = 0;
+    for (const item of chapterItems) {
+      item.keptLetters = 0;
+      // OCR defects are not a license to discard content: keep exact source
+      // and mark for review, rather than producing text that ends mid-sentence.
+      const sourceUnsafe = item.sourceAudit.problems.some(issue =>
+        issue !== 'starts-mid-sentence');
+      const brokenEnding = item.units.some(unit => unit.problematic && unit.index === item.units.length-1);
+      if (sourceUnsafe || brokenEnding) {
+        item.keepOriginal = true;
+        item.units.forEach(unit => {item.keptLetters+=keep(item,unit)});
+      } else {
+        if (item.units.length) item.keptLetters+=keep(item,item.units[0]);
+        // To preserve a legal exception and its antecedents, keep its
+        // continuous source prefix. Never bridge with disconnected statements.
+        const lastCritical = item.units.reduce((n,unit)=>unit.mandatory?unit.index:n,-1);
+        for (let index=1;index<=lastCritical;index++) {
+          item.keptLetters+=keep(item,item.units[index]);
+        }
+      }
+      totalKept += item.keptLetters;
     }
-    candidates.sort((left,right) =>
-      right.unit.score - left.unit.score ||
-      left.item.chapterIndex - right.item.chapterIndex ||
-      left.item.paragraphIndex - right.item.paragraphIndex
-    );
-    const chosen = candidates.find(candidate => used + candidate.cost <= budget);
-    if (!chosen) break;
-    keep(chosen.item, chosen.unit);
+
+    // Each paragraph gets a fair share of its own original content, not just
+    // the first sentence. +/-2% leeway for indivisible complete sentences.
+    for (const item of chapterItems) {
+      const minRetained = Math.ceil(countLetters(item.source)*(1-Math.min(72,target+2)/100));
+      while (item.keptLetters < minRetained) {
+        const next = nextUnit(item);
+        if (!next || next.problematic) break;
+        const cost=keep(item,next);
+        item.keptLetters+=cost; totalKept+=cost;
+      }
+    }
+    // After paragraph protection, fill the chapter to its real target.
+    // Never stop while the chapter remains massively over-compressed.
+    let rounds=0;
+    while (totalKept < minChapter && rounds++<chapterItems.reduce((n,item)=>n+item.units.length,0)+1) {
+      const candidates=chapterItems.map(item=>{
+        const unit=nextUnit(item);
+        return unit && !unit.problematic ? {item,unit} : null;
+      }).filter(Boolean);
+      candidates.sort((a,b)=>b.unit.score-a.unit.score || a.item.paragraphIndex-b.item.paragraphIndex);
+      if (!candidates.length) break;
+      const chosen=candidates[0];
+      const cost=keep(chosen.item,chosen.unit);
+      chosen.item.keptLetters+=cost; totalKept+=cost;
+    }
   }
 }
 
@@ -132,20 +130,21 @@ export function buildPrecisionEdition(book, reduction = 10) {
   const targetPercent = level === 'summary' ? null : level;
   // The user's reduction control and per-paragraph statistics are in LETTERS.
   // Select sentences to a real letter budget, not an unrelated word target.
-  const letterBudget = Math.max(1, Math.round(sourceLetters * (level === 'summary' ? 0.30 : 1 - level / 100)));
-  computeSelection(items, letterBudget, level);
+  computeSelection(items, level);
+  const sourceBoundaryAudit = inspectChapterBoundaries(originalChapters);
 
   const lookup = new Map(items.map((item) => [item.chapterIndex + ':' + item.paragraphIndex, item]));
   let outputWords = 0;
   let outputLetters = 0;
   let fallbackCount = 0;
   const issues = [];
+  const chapterMetrics = [];
   const chapters = originalChapters.map((chapter, chapterIndex) => {
     const paragraphs = (chapter.paragraphs || []).map((paragraph, paragraphIndex) => {
       const item = lookup.get(chapterIndex + ':' + paragraphIndex);
       const units = item.units.filter((unit) => item.selected.has(unit.index));
-      const candidate = level === 0 ? item.source : joinUnits(units, level);
-      const audit = checkReducedParagraph(item.source, candidate, { selectedUnits: units, allowSafeGaps: true });
+      const candidate = level === 0 || item.keepOriginal ? item.source : joinUnits(units, level);
+      const audit = checkReducedParagraph(item.source, candidate, { selectedUnits: units, allowSafeGaps: false });
       const sourceAudit = item.sourceAudit;
       // Only the already-preserved lowercase beginning may proceed with a
       // visible warning. More serious OCR defects remain hard stop conditions.
@@ -153,8 +152,14 @@ export function buildPrecisionEdition(book, reduction = 10) {
         && sourceAudit.problems[0] === 'starts-mid-sentence'
         && units[0]?.index === 0 && units[0].value === units[0].source;
       const fallback = !audit.ok || (!sourceAudit.ok && !harmlessBoundary);
+      const severeBoundaryIssues = sourceBoundaryAudit.byChapter[chapterIndex] || [];
       const auditReasons = [...audit.issues,...sourceAudit.problems.map(problem=>'source-'+problem)];
-      const finalText = fallback ? item.source : candidate;
+      const rawResult = fallback ? item.source : candidate;
+      const followingTitle = originalChapters[chapterIndex + 1]?.title || '';
+      const isLastParagraph = paragraphIndex === (chapter.paragraphs || []).length - 1;
+      const repaired = isLastParagraph
+        ? stripConfirmedNextHeading(rawResult, followingTitle) : { text:rawResult, moved:false };
+      const finalText = repaired.text;
       if (fallback) fallbackCount += 1;
       if (auditReasons.length) {
         issues.push({ chapterIndex, paragraphIndex, problems: auditReasons,
@@ -174,7 +179,9 @@ export function buildPrecisionEdition(book, reduction = 10) {
         precisionAudit: {
           coherent: audit.ok && sourceAudit.ok,
           fallbackOriginal: fallback,
-          sourceNeedsReview: !sourceAudit.ok,
+          sourceNeedsReview: !sourceAudit.ok || severeBoundaryIssues.some(x=>x.severity==='block'),
+          sourceBoundaryIssues: severeBoundaryIssues.map(x=>x.type),
+          confirmedHeadingMoved: repaired.moved,
           reasons: auditReasons,
           sourceWords: countWords(item.source),
           outputWords: countWords(finalText),
@@ -183,6 +190,21 @@ export function buildPrecisionEdition(book, reduction = 10) {
       };
     });
     const result = { ...chapter, paragraphs };
+    const originalChapterLetters = (chapter.paragraphs || []).reduce((n,p)=>n+countLetters(sourceText(p)),0);
+    const actualChapterLetters = paragraphs.reduce((n,p)=>n+countLetters(p.summary),0);
+    const chapterMetric = chapterMeasuredStats(originalChapterLetters,actualChapterLetters,level);
+    const boundaryIssues = sourceBoundaryAudit.byChapter[chapterIndex] || [];
+    result.precisionChapter = {
+      ...chapterMetric, sourceReady:!boundaryIssues.some(x=>x.severity==='block'),
+      boundaryIssues,
+    };
+    chapterMetrics.push(result.precisionChapter);
+    if (chapterMetric.overReduced || boundaryIssues.some(x=>x.severity==='block')) {
+      issues.push({chapterIndex, problems:[
+        ...(chapterMetric.overReduced?['chapter-over-reduced']:[]),
+        ...boundaryIssues.filter(x=>x.severity==='block').map(x=>x.type),
+      ],action:'review-chapter-source'});
+    }
     const continuity = auditChapterContinuity(chapter, result);
     if (!continuity.ok) issues.push({ chapterIndex, problems: continuity.issues });
     return { ...result, precisionContinuity: continuity };
@@ -195,6 +217,8 @@ export function buildPrecisionEdition(book, reduction = 10) {
     level, label: REDUCTION_LABELS[level], targetPercent,
     achievedPercent: achievedLettersPercent, achievedWordsPercent,
     achievedLettersPercent, originalLetters:sourceLetters, resultingLetters:outputLetters,
+    chapterMetrics,
+    sourceBoundaryAudit,
     originalWords: sourceWords, resultingWords: outputWords,
     targetReached: targetPercent === null || achievedLettersPercent + 0.5 >= targetPercent,
     qualityGuard: {
@@ -202,6 +226,9 @@ export function buildPrecisionEdition(book, reduction = 10) {
       targetShortfall,
       issues: issues.slice(0, 160), issueCount: issues.length,
       originalFallbackParagraphs: fallbackCount,
+      chaptersWithUnmetTarget:chapterMetrics.filter(x=>!x.targetReached).length,
+      chaptersOverReduced:chapterMetrics.filter(x=>x.overReduced).length,
+      sourceBlockedChapters:sourceBoundaryAudit.blockedChapters,
       semanticCertification: false,
     },
   };
