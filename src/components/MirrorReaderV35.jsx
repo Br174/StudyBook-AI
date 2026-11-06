@@ -45,12 +45,43 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
       <button onClick={()=>setIndex(Math.min(pages.length-1,index+1))}
         disabled={index>=pages.length-1}>→</button>
     </nav>
-    <article className="sb-mirror-sheet">
-      <header>Pagina {page.label}</header>
-      {page.kind==='image'?<p>Figura originale {page.label}</p>:
-        (page.blocks||[]).map((p,i)=>p.kind==='chapter-title'?<h2 key={i}>{p.text}</h2>:
+    {(output.audit?.problems?.length>0 || book.canonicalBookMap?.structuralStatus!=='source-mapped')&&
+      <p className="sb-mirror-warning" role="status">
+        La struttura del PDF richiede verifica. Il testo e le immagini originali sono conservati.
+      </p>}
+    <article className={'sb-mirror-sheet'+(page.kind==='image'?' sb-mirror-image-sheet':'')}
+      aria-label={'Pagina '+page.label}>
+      <header className="sb-mirror-page-label">Pagina {page.label}</header>
+      {page.kind==='image'?(
+        <button className="sb-mirror-preview-button" onClick={()=>showPicture(page.anchor)}>
+          {pictureUrl&&picture?.id===page.anchor?.id?
+            <img src={pictureUrl} alt={'Immagine originale '+page.label}/>:
+            <span>Apri l’immagine {page.imageNumber} del PDF originale</span>}
+        </button>
+      ):<>
+        <div className="sb-mirror-content">
+        {(page.blocks||[]).map((p,i)=>p.kind==='chapter-title'?<h2 key={i}>{p.text}</h2>:
           p.kind==='section-title'?<h3 key={i}>{p.text}</h3>:
+          p.kind==='image-ref'?<button className="sb-mirror-image-ref" key={i}
+            onClick={()=>showPicture(book.canonicalBookMap?.visualAnchors?.find(a=>a.id===p.anchorId))}>
+            (Immagine {p.imageNumber}) · pagina {p.sourcePage}/{p.imageNumber}
+          </button>:
           <p key={i}>{p.text}</p>)}
+        </div>
+        <footer className="sb-mirror-statistics">
+          <strong>Pagina originale {page.sourcePage}</strong>
+          <span>Parole: {pageTotals.originalWords} → {pageTotals.editedWords} · Risparmiate: {pageTotals.wordsSaved}</span>
+          <span>Lettere risparmiate: {pageTotals.lettersSaved} · Righe: {pageTotals.linesSaved}</span>
+          <span>Riduzione effettiva: {pageTotals.achievedPercent}%</span>
+          <small>Righe calcolate nella composizione StudyBook, non certificate sul PDF originale.</small>
+        </footer>
+      </>}
     </article>
+    {picture&&<div className="sb-mirror-lightbox" role="dialog" aria-modal="true" aria-label="Immagine originale">
+      <button onClick={()=>{setPicture(null);setPictureUrl('');setPictureError('')}}>Chiudi ×</button>
+      {pictureBusy&&<p>Recupero la figura originale…</p>}
+      {pictureError&&<p role="alert">{pictureError}</p>}
+      {pictureUrl&&<img src={pictureUrl} alt={'Immagine '+picture.imageNumber+' della pagina '+picture.sourcePage}/>}
+    </div>}
   </div>;
 }
