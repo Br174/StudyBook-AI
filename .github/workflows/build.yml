@@ -148,6 +148,8 @@ jobs:
         run: node scripts/test-lab31-integrity360-turbo.mjs
       - name: Test LAB31 actual digital PDF and persistent resume
         run: node scripts/test-lab31-digital-pdf.mjs
+      - name: Test LAB32 real compression percentages and legal qualifiers
+        run: node scripts/test-lab32-real-compression.mjs
       - name: Test persistent study-help cache
         run: node scripts/test-study-help-cache-model.mjs
       - name: Test PWA shell
