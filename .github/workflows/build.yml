@@ -144,6 +144,8 @@ jobs:
         run: node scripts/test-lab29-progressive-reductions.mjs
       - name: Test LAB30 continuous page narration and OCR integrity
         run: node scripts/test-lab30-continuous-narrative.mjs
+      - name: Test LAB31 Integrity 360 Turbo source pipeline
+        run: node scripts/test-lab31-integrity360-turbo.mjs
       - name: Test persistent study-help cache
         run: node scripts/test-study-help-cache-model.mjs
       - name: Test PWA shell
