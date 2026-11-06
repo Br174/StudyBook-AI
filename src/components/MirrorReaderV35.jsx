@@ -51,6 +51,7 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
         La struttura del PDF richiede verifica. Il testo e le immagini originali sono conservati.
       </p>}
     <article className={'sb-mirror-sheet'+(page.kind==='image'?' sb-mirror-image-sheet':'')}
+      style={{aspectRatio:(page.widthPt||595.28)+' / '+(page.heightPt||841.89)}}
       aria-label={'Pagina '+page.label}>
       <header className="sb-mirror-page-label">Pagina {page.label}</header>
       {page.kind==='image'?(
