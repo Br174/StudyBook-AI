@@ -46,7 +46,8 @@ export async function exportMirrorPdfV35(book,fileName,options={}){
     for(const key of Object.keys(sum))sum[key]+=sheet[key]||0;
   }
   function printTextSheet(sheet){
-    pdf.setFillColor(255,255,255);pdf.rect(0,0,210,297,'F');
+    const {width,height}=paper(sheet),contentWidth=width-2*margin;
+    pdf.setFillColor(255,255,255);pdf.rect(0,0,width,height,'F');
     pdf.setDrawColor(214,224,235);pdf.line(margin,20,210-margin,20);
     pdf.setFont('helvetica','normal');pdf.setFontSize(8);pdf.setTextColor(92,111,139);
     pdf.text('Libro Specchio · Pagina '+sheet.label,margin,17);
