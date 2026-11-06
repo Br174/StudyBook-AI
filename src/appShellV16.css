@@ -1062,3 +1062,11 @@
 @media(prefers-reduced-motion:reduce){
  .sb-library-screen .sb-true-cover-spinner {animation-duration:3s;}
 }
+
+/* LAB37: resumable Gemini work visible on Home without changing the document area. */
+.sb-resume-panel { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin:12px 0; padding:14px 16px; border:1px solid #bbd6ed; border-radius:18px; background:#f2f8ff; }
+.sb-resume-panel div { display:grid; gap:4px; min-width:0; }
+.sb-resume-panel strong { font-size:.88rem; overflow-wrap:anywhere; }
+.sb-resume-panel small { font-size:.76rem; color:#55749c; }
+.sb-resume-panel button { border:0; border-radius:13px; padding:12px 15px; background:#237fca; color:white; font-weight:750; cursor:pointer; }
+.sb-resume-panel button:disabled { opacity:.6; cursor:default; }

@@ -82,6 +82,8 @@ jobs:
         run: node scripts/test-lab36-page-span-diagnostics.mjs
       - name: Test LAB36 per-edition resume after quota 429
         run: node scripts/test-lab36-single-edition.mjs
+      - name: Test LAB37 real restart, reopen and offline protection
+        run: node scripts/test-lab37-real-resume.mjs
       - name: Test LAB36 persisted six-edition source checkpoints
         run: node scripts/test-lab36-generative-store.mjs
       - name: Test LAB36 six-edition Gemini service

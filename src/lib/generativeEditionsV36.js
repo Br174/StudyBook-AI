@@ -28,20 +28,34 @@ export function auditGeminiLevels(original,editions){
   return {verified:verification,editions:texts,issues,achievedPercent:percent};
 }
 let lastGeminiCallAt=0;
-async function paceGeminiCall(paceMs){
+const manualRecoveryError=()=>Object.assign(new Error('Ripresa manuale richiesta'),{code:'AI_MANUAL_RESTART'});
+async function paceGeminiCall(paceMs,signal){
+  if(signal?.aborted)throw manualRecoveryError();
   const safeGap=Math.max(0,Number(paceMs)||0);
-  if(safeGap){
-    const delay=Math.max(0,lastGeminiCallAt+safeGap-Date.now());
-    if(delay)await new Promise(resolve=>setTimeout(resolve,delay));
+  const delay=Math.max(0,lastGeminiCallAt+safeGap-Date.now());
+  if(delay){
+    await new Promise((resolve,reject)=>{
+      const stop=()=>{clearTimeout(timer);signal?.removeEventListener('abort',stop);reject(manualRecoveryError());};
+      const timer=setTimeout(()=>{signal?.removeEventListener('abort',stop);resolve();},delay);
+      signal?.addEventListener('abort',stop,{once:true});
+      if(signal?.aborted)stop();
+    });
   }
+  if(signal?.aborted)throw manualRecoveryError();
   lastGeminiCallAt=Date.now();
 }
-async function askGemini(source,context,level,repairIssues=[],paceMs=6500){
-  await paceGeminiCall(paceMs);
-  const response=await fetch(apiEndpoint('/api/editions/v36'),{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({source,context,level,repairIssues}),
-  });
+async function askGemini(source,context,level,repairIssues=[],paceMs=6500,signal=null){
+  await paceGeminiCall(paceMs,signal);
+  let response;
+  try{
+    response=await fetch(apiEndpoint('/api/editions/v36'),{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({source,context,level,repairIssues}),signal,
+    });
+  }catch(error){
+    if(signal?.aborted)throw manualRecoveryError();
+    throw Object.assign(new Error('Connessione Gemini interrotta'),{code:'AI_TIMEOUT_OR_NETWORK',cause:error});
+  }
   const data=await response.json().catch(()=>null);
   if(!response.ok){
     const error=new Error(data?.error||'Servizio Gemini temporaneamente non disponibile');
@@ -134,7 +148,7 @@ function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,di
     diagnostics:diagnostics?{...diagnostics,errorsByCode:{...diagnostics.errorsByCode}}:null,
     checkpointPersistent,complete,status:complete?'complete':'partial',updatedAt:new Date().toISOString()};
 }
-export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcurrency=1,paceMs=6500}={}){
+export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivity=()=>{},maxConcurrency=1,paceMs=6500,signal=null}={}){
   if(!book?.chapters?.length)throw new Error('Libro o capitoli assenti');
   const fingerprint=book.canonicalBookMap?.originalFingerprint||runtimeHash(
     book.chapters.map(c=>(c.paragraphs||[]).map(originalOf).join('|')).join('||'));
@@ -192,16 +206,18 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
   onProgress(first,first.verifiedVariants,first.totalVariants);
   // Keep progress UI bounded (~40 snapshots) even for an 800-page book.
   const progressEvery=Math.max(5,Math.ceil(pending.length/40));
+  let savedVariantsThisRun=0;
   const adaptive=await runAdaptiveBatchQueue({
     // One request at a time; free-tier requests share quotas across keys.
     batches:pending.map(j=>[j]),initialConcurrency:1,
     maxConcurrency:1,
-    stopOnFailures:['AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD',
+    stopOnFailures:['AI_MANUAL_RESTART','AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD',
       'AI_NOT_CONFIGURED','AI_PROVIDER_REJECTED','AI_SERVICE_ERROR',
       'AI_TIMEOUT_OR_NETWORK','INVALID_EDITION_RESPONSE','INVALID_GENERATIVE_RESPONSE'],
     worker:async([job],{aiAllowed})=>{
       if(job.pageIssues.length||!job.source)return {job,aiFailure:'SOURCE_REVIEW',issues:job.pageIssues};
       if(!aiAllowed)return {job,aiFailure:'AI_PAUSED'};
+      if(signal?.aborted)return {job,aiFailure:'AI_MANUAL_RESTART'};
       const previous=state.get(job.key)?.source===job.source?state.get(job.key):null;
       let record={source:job.source,version:VERSION,
         editions:{...(previous?.editions||{})},
@@ -214,10 +230,14 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
         try{
           // An edition is always generated from the original chunk, never from
           // a previously generated 10%, 20%, or 30% text.
-          let editions=await askGemini(job.source,job.context,id,[],paceMs);
+          onActivity({phase:'request',level:id});
+          let editions=await askGemini(job.source,job.context,id,[],paceMs,signal);
+          onActivity({phase:'response',level:id});
           let audit=auditGeminiLevels(job.source,editions);
           if(!audit.verified[id]){
-            editions=await askGemini(job.source,job.context,id,audit.issues[id],paceMs);
+            onActivity({phase:'repair-request',level:id});
+            editions=await askGemini(job.source,job.context,id,audit.issues[id],paceMs,signal);
+            onActivity({phase:'repair-response',level:id});
             audit=auditGeminiLevels(job.source,editions);
           }
           // A one-edition response is the normal mode. A complete legacy response
@@ -238,11 +258,14 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
           // can never discard the preceding three verified editions.
           state.set(job.key,{...record});
           if(!await saveRuntimeUnitResults([{key:job.key,result:record}]))checkpointPersistent=false;
-          const snapshot=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,diagnostics);
-          if(snapshot.verifiedVariants<=GEMINI_LEVELS.length*2||snapshot.verifiedVariants%12===0)
+          // Recomputing the entire book after every variant made large books freeze.
+          savedVariantsThisRun++;
+          if(savedVariantsThisRun<=2||savedVariantsThisRun%12===0){
+            const snapshot=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,diagnostics);
             onProgress(snapshot,snapshot.verifiedVariants,snapshot.totalVariants);
+          }
         }catch(error){
-          return {job,record,aiFailure:error?.code||'AI_ERROR'};
+          return {job,record,aiFailure:signal?.aborted?'AI_MANUAL_RESTART':(error?.code||'AI_TIMEOUT_OR_NETWORK')};
         }
       }
       const valid=GEMINI_LEVELS.every(id=>record.verified[id]===true);
@@ -280,6 +303,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
     final.quota=await readGeminiPause();
     final.status=final.quota?.automatic?'quota-paused':'quota-review';
   }
+  if(adaptive.haltedOn==='AI_MANUAL_RESTART')final.status='interrupted';
   if(adaptive.haltedOn==='AI_NOT_CONFIGURED')final.status='ai-unavailable';
   if(['AI_PROVIDER_REJECTED','AI_SERVICE_ERROR','AI_TIMEOUT_OR_NETWORK',
       'INVALID_EDITION_RESPONSE','INVALID_GENERATIVE_RESPONSE'].includes(adaptive.haltedOn))

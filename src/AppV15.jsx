@@ -25,7 +25,7 @@ import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
-import { readGeminiPause, clearGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
+import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
 import { reacquireFromSavedPdf } from './lib/sourceRecoveryV34.js';
@@ -193,6 +193,13 @@ export default function AppV14() {
   const [libraryItems, setLibraryItems] = useState([]);
   const [libraryBusy, setLibraryBusy] = useState(false);
   const [libraryInitialView, setLibraryInitialView] = useState('all');
+  // LAB37: one abortable Gemini runner, one restart request, never two writers.
+  const geminiAbortRef = useRef(null);
+  const geminiLastActivityRef = useRef(Date.now());
+  const restartRequestedRef = useRef(false);
+  const resumeExecutionRef = useRef(false);
+  const [resumeBusy, setResumeBusy] = useState(false);
+  const [resumeCandidate, setResumeCandidate] = useState(null);
   const coverQueueRef = useRef(new Set());
   const coverWorkerRef = useRef(false);
   // LAB20: one optional online concept request at a time; local covers never wait.
@@ -387,6 +394,36 @@ export default function AppV14() {
   async function refreshLibrary(profileId = activeProfileId) {
     try { setLibraryItems(await listLibraryBooks({ profileId })); } catch { setLibraryItems([]); }
   }
+
+  // Recover LAB36 records too: older metadata did not contain the partial flag.
+  useEffect(()=>{
+    let active=true;
+    (async()=>{
+      const candidates=libraryItems.filter(item=>item.metadata?.hasProcessed &&
+        item.metadata?.geminiEditionIncomplete!==false);
+      for(const item of candidates){
+        const saved=await getLibraryBook(item.id).catch(()=>null);
+        if(!active)return;
+        const edition=saved?.studyBook?.editionsV36;
+        if(edition && edition.complete!==true){
+          setResumeCandidate({id:item.id,fileName:saved.fileName,
+            done:edition.verifiedChunkVariants||0,total:edition.totalChunkVariants||0});
+          return;
+        }
+      }
+      if(active)setResumeCandidate(null);
+    })();
+    return ()=>{active=false;};
+  },[libraryItems,activeProfileId]);
+
+  useEffect(()=>{
+    if(!generating)return;
+    const timer=setInterval(()=>{
+      if(geminiAbortRef.current && Date.now()-geminiLastActivityRef.current>90000)
+        setStatus('Possibile blocco Gemini · premi Riprendi elaborazione per recuperare i checkpoint');
+    },15000);
+    return ()=>clearInterval(timer);
+  },[generating]);
 
   /* LAB19 — asynchronous cover pipeline. No scanner images sent to AI, no mutation
      of original PDF/eBook bytes, and never wait for artwork before showing the book.
@@ -959,6 +996,46 @@ export default function AppV14() {
     event.target.value = '';
   }
 
+  function requestActiveGeminiRecovery(){
+    if(restartRequestedRef.current)return;
+    const controller=geminiAbortRef.current;
+    if(!controller){
+      setStatus('Preparazione ancora in corso · la ripresa diventa disponibile appena parte Gemini');
+      return;
+    }
+    restartRequestedRef.current=true;
+    setResumeBusy(true);
+    setStatus('Ripresa richiesta · interrompo la singola richiesta e recupero i checkpoint…');
+    controller.abort();
+  }
+
+  // The same runner owns fresh generation and resumed generation, serially.
+  // Aborted requests cannot execute a second concurrent checkpoint writer.
+  async function runGeminiWithSafeRestart(book,onProgress){
+    for(;;){
+      restartRequestedRef.current=false;
+      const controller=new AbortController();
+      geminiAbortRef.current=controller;
+      geminiLastActivityRef.current=Date.now();
+      let snapshot;
+      try{
+        snapshot=await generateGeminiEditionsV36(book,{
+          maxConcurrency:1,signal:controller.signal,onProgress,
+          onActivity:()=>{geminiLastActivityRef.current=Date.now();},
+        });
+      }finally{
+        if(geminiAbortRef.current===controller)geminiAbortRef.current=null;
+      }
+      const restart=restartRequestedRef.current && snapshot?.status==='interrupted';
+      setResumeBusy(false);
+      if(!restart){
+        restartRequestedRef.current=false;
+        return snapshot;
+      }
+      setStatus('Checkpoint recuperati · riprendo soltanto le parti ancora mancanti…');
+    }
+  }
+
   async function createStudyBook(sourceData, sourceName, { fromScanner = false } = {}) {
     if (!sourceData || generating) return null;
     let generatedDraft = null;
@@ -1002,9 +1079,7 @@ export default function AppV14() {
       const lab36BookId=firstSave?.id||libraryId;
       let savedVerified = 0;
       let checkpointTail = Promise.resolve();
-      const editions = await generateGeminiEditionsV36(result,{
-        maxConcurrency:1,
-        onProgress(snapshot){
+      const editions = await runGeminiWithSafeRestart(result,(snapshot)=>{
           generatedDraft={...result,editionsV36:snapshot,
             engine:snapshot.complete?'ai':(snapshot.verifiedChunks>0?'misto':result.engine)};
           setStudyBook(generatedDraft);
@@ -1019,7 +1094,6 @@ export default function AppV14() {
               dsaMode:true,profileId:activeProfileId,originalFile:sourceFile,
             })).catch(()=>null);
           }
-        },
       });
       await checkpointTail;
       result={...result,editionsV36:editions,
@@ -1086,41 +1160,81 @@ export default function AppV14() {
     await createStudyBook(documentData, fileName);
   }
 
-  // Resume only the missing or rejected Gemini chunks. No repeated PDF import.
-  async function resumeGeminiEditions(){
-    if(generating||!studyBook?.editionsV36||studyBook.editionsV36.complete)return;
-    const current=studyBook;
+  // Direct resume, also after Android process death: always reload the stored
+  // original and the sparse verified-unit checkpoints, never reimport the PDF.
+  async function resumeGeminiEditions(record=null){
+    if(generating){requestActiveGeminiRecovery();return;}
+    if(resumeExecutionRef.current)return;
+    const current=record?.studyBook||studyBook;
+    const targetSource=record?.sourceData||documentData;
+    const targetName=record?.fileName||fileName;
+    const targetId=record?.id||libraryId;
+    if(!current?.editionsV36||current.editionsV36.complete||!targetSource){
+      setStatus('Nessuna elaborazione parziale recuperabile per questo libro');
+      return;
+    }
+    resumeExecutionRef.current=true;
     let draft=current;
     setGenerating(true);setError('');
+    setProgress({done:current.editionsV36.verifiedChunkVariants||0,
+      total:current.editionsV36.totalChunkVariants||1});
     try{
       const pause=await readGeminiPause();
-      if(pause?.automatic){
+      if(pause){
         setStatus(quotaDisplayV36(pause));
         return;
       }
-      // Explicit user retry after a model/billing configuration change, never a purchase.
-      if(pause && !pause.automatic)await clearGeminiPause();
-      const snapshot=await generateGeminiEditionsV36(current,{maxConcurrency:1,
-        onProgress(update){
-          draft={...current,editionsV36:update,
-            engine:update.complete?'ai':(update.verifiedChunks>0?'misto':current.engine)};
-          setStudyBook(draft);
-          setProgress({done:update.verifiedChunkVariants||0,total:update.totalChunkVariants||1});
-          setStatus('Ripresa Gemini · '+(update.verifiedChunkVariants||0)+'/'+(update.totalChunkVariants||0)+' parti IA verificate');
-        },
+      const snapshot=await runGeminiWithSafeRestart(current,(update)=>{
+        draft={...current,editionsV36:update,
+          engine:update.complete?'ai':(update.verifiedChunks>0?'misto':current.engine)};
+        setStudyBook(draft);
+        setProgress({done:update.verifiedChunkVariants||0,total:update.totalChunkVariants||1});
+        setStatus('Ripresa Gemini · '+(update.verifiedChunkVariants||0)+'/'+(update.totalChunkVariants||0)+' parti IA verificate');
       });
       draft={...current,editionsV36:snapshot,
         engine:snapshot.complete?'ai':(snapshot.verifiedChunks>0?'misto':current.engine)};
       setStudyBook(draft);
-      await persistBook(draft,documentData,fileName,libraryId);
+      await persistBook(draft,targetSource,targetName,targetId);
       setStatus(snapshot.complete?'Sei edizioni Gemini completate e salvate':
         snapshot.quota?quotaDisplayV36(snapshot.quota):
-        'Anteprima parziale salvata · parti non sicure ancora da verificare');
+        snapshot.status==='provider-blocked'?'Provider Gemini bloccato · progressi salvati · controllare la connessione':
+        'Anteprima parziale salvata · le parti ancora da verificare restano recuperabili');
     }catch(error){
       setStudyBook(draft);
-      await persistBook(draft,documentData,fileName,libraryId);
+      await persistBook(draft,targetSource,targetName,targetId);
       setError(error?.message||'Impossibile riprendere Gemini');
-    }finally{setGenerating(false);}
+    }finally{
+      resumeExecutionRef.current=false;
+      setGenerating(false);
+      setResumeBusy(false);
+    }
+  }
+
+  async function resumeFromHome(){
+    if(generating){requestActiveGeminiRecovery();return;}
+    if(resumeExecutionRef.current||resumeBusy)return;
+    setResumeBusy(true);
+    try{
+      const currentSaved=studyBook?.editionsV36?.complete===false && libraryId
+        ? await getLibraryBook(libraryId).catch(()=>null):null;
+      const saved=currentSaved||(resumeCandidate?.id
+        ? await getLibraryBook(resumeCandidate.id).catch(()=>null):null);
+      const record=saved || (studyBook?.editionsV36?.complete===false
+        ? {id:libraryId,fileName,sourceData:documentData,studyBook}:null);
+      if(!record?.studyBook?.editionsV36||record.studyBook.editionsV36.complete){
+        setStatus('Nessun libro incompleto trovato nei checkpoint');
+        return;
+      }
+      setLibraryId(record.id);
+      setFileName(record.fileName);
+      setDocumentData(record.sourceData);
+      setSourceFile(record.originalFile||null);
+      setStudyBook(record.studyBook);
+      setProgress({done:record.studyBook.editionsV36.verifiedChunkVariants||0,
+        total:record.studyBook.editionsV36.totalChunkVariants||1});
+      navigateTo('studio');
+      await resumeGeminiEditions(record);
+    }finally{setResumeBusy(false);}
   }
 
   function beginSourceEdit(chapterIndex, paragraphIndex, value) {
@@ -1787,6 +1901,8 @@ export default function AppV14() {
           onOpenOriginal={item => openLibraryItem(item.id, { original:true, openReader:false })}
           documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
           scanContent={scannerPanel}
+          resumeCandidate={resumeCandidate} resumeBusy={resumeBusy}
+          onResumeProcessing={()=>void resumeFromHome()}
         />
       )}
 
@@ -1800,7 +1916,7 @@ export default function AppV14() {
           reduction={reduction} onReductionChange={changeReduction} reductionMeta={precisionBook?.precisionEdition}
           isOriginalOnly={!studyBook && Boolean(originalRecord?.id === libraryId && sourceFile)}
           sourceData={documentData} generating={generating} onPrepareOriginal={prepareOriginalForStudy}
-          onResumeGemini={resumeGeminiEditions}
+          onResumeGemini={()=>void resumeGeminiEditions()}
           originalRecord={originalRecord?.id === libraryId ? originalRecord : null}
           originalReading={originalReading} onCloseOriginalReader={() => setOriginalReading(false)}
           onOpenOriginalNative={openOriginalNative} accessibility={accessibility}

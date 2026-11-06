@@ -165,6 +165,9 @@ export async function saveLibraryBook({
       hasProcessed: Boolean(studyBook || previous?.studyBook),
       fidelityPassed: Boolean(studyBook?.quality?.fidelityGate?.passed),
       compressionPercent: Number(studyBook?.quality?.fidelityGate?.compressionPercent || 0),
+      geminiEditionIncomplete: Boolean(studyBook?.editionsV36 && studyBook.editionsV36.complete !== true),
+      geminiEditionVerified: Number(studyBook?.editionsV36?.verifiedChunkVariants || 0),
+      geminiEditionTotal: Number(studyBook?.editionsV36?.totalChunkVariants || 0),
     },
   };
   await withStore(BOOKS_STORE, 'readwrite', (store) => store.put(record));

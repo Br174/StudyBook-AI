@@ -8,6 +8,7 @@ export function HomeDashboardV16({
   onScanner, onImport, onScannerArchive, onCategory, onRecentScan,
   onOpenOriginal, onContinueBook, onViewAll, documentData, fileName,
   scanContent, onCreateBook, progressPercent,
+  resumeCandidate = null, resumeBusy = false, onResumeProcessing = () => {},
 }) {
   const strip = useRef(null);
   const [photoUrls, setPhotoUrls] = useState({});
@@ -59,8 +60,19 @@ export function HomeDashboardV16({
     <div className="sb-home-workspace">
       {documentData && !generating && <div className="sb-process-card"><div><small>FONTE PRONTA</small><h3>{titleOf(fileName)}</h3><p>{documentData.chapters?.length || 0} capitoli</p></div><button onClick={onCreateBook}>Crea Testo di studio</button></div>}
       {generating && <p role="status">Elaborazione {progressPercent}% · {status}</p>}
+      {(generating || resumeCandidate) && <div className="sb-resume-panel" role="region" aria-label="Ripresa elaborazione del libro">
+        <div>
+          <strong>{resumeCandidate?.fileName ? titleOf(resumeCandidate.fileName) : titleOf(fileName)}</strong>
+          <small>{resumeCandidate?.total > 0
+            ? String(resumeCandidate.done || 0)+'/'+resumeCandidate.total+' parti IA conservate'
+            : 'La ripresa verifica i checkpoint già salvati'}</small>
+        </div>
+        <button type="button" onClick={onResumeProcessing} disabled={resumeBusy}>
+          {resumeBusy ? 'Recupero in corso…' : 'Riprendi elaborazione'}
+        </button>
+      </div>}
       {scanContent}
-      {!scanContent && !documentData && !generating && <div className="sb-home-placeholder"><StudyIcon name="document" size={44}/><strong>Qui presto nuove funzionalità</strong><p>Scannerizza, elabora e organizza i tuoi appunti in un unico posto.</p></div>}
+      {!scanContent && !documentData && !generating && !resumeCandidate && <div className="sb-home-placeholder"><StudyIcon name="document" size={44}/><strong>Qui presto nuove funzionalità</strong><p>Scannerizza, elabora e organizza i tuoi appunti in un unico posto.</p></div>}
     </div>
     {!scannerActive && <section className="sb-home-recent" aria-label="Recenti">
       <header><h2>Recenti</h2><button onClick={onViewAll}>Vedi tutti ›</button></header>
