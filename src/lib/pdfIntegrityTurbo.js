@@ -10,6 +10,7 @@ import { detectChaptersFromPages } from './documentParserV10.js';
 import { auditDocumentStructure } from './precisionDocumentAudit.js';
 import { scanPdfPageFigures, loadPdfMirrorOutline } from './visualMirrorV35.js';
 import { buildCanonicalBookMap } from './libroSpecchioV35.js';
+import { extractPdfVisualAssetsFromDocument } from './pdfVisuals.js';
 import { auditSourceAgainstOriginal } from './sourceShieldV34.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
