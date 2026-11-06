@@ -77,6 +77,8 @@ export function buildCanonicalBookMap({
     uncertain.push('original-sha256-not-verified');
   if(sourcePages.some(p=>p.sourceStatus!=='verified'))
     uncertain.push('source-pages-pending');
+  if(!Array.isArray(pageLabels) || pageLabels.length!==maxPage)
+    uncertain.push('printed-page-numbering-needs-review');
   if(!fixedChapters.length)uncertain.push('chapters-not-detected');
   if(roots.length && (roots.length!==fixedChapters.length ||
      roots.some((x,i)=>!sameTitle(x.title,fixedChapters[i]?.title))))
