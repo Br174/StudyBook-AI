@@ -44,7 +44,7 @@ function classifyHeading(line, { surrounded = false } = {}) {
     return { family: 'container', depth: 0, title: value, explicit: true, score: 100 };
   }
 
-  match = value.match(/^(?:capitolo|chapter|cap\.)\s+([\divxlcdm]+)(?:\s*[-–—:.]\s*(.+))?$/i);
+  match = value.match(/^(?:(?:capitolo|chapter)\s+|cap\.\s*)([\divxlcdm]+)(?:\s*[-–—:.]\s*(.+))?$/i);
   if (match) {
     return {
       family: 'chapter', depth: 1, title: value, explicit: true, score: 120,
@@ -144,7 +144,14 @@ function splitStudyParagraphs(text) {
 
 function pageLines(page) {
   const raw = String(page?.text || '').replace(/\r/g, '');
-  return raw.split('\n');
+  // An imported book may have "previous paragraph. Cap.3: Next chapter"
+  // on one extracted PDF line. Only split a complete sentence followed by
+  // an explicitly recognized chapter heading, never arbitrary citations.
+  return raw.split('\n').flatMap(line => {
+    const match = line.match(/^(.*[.!?])\s+((?:cap\.\s*|capitolo\s+)\d+\s*[:. -]\s*[^.!?]{4,90})$/iu);
+    if (!match || classifyHeading(match[2],{surrounded:true})?.family!=='chapter') return [line];
+    return [match[1], '', match[2], ''];
+  });
 }
 
 function collectCandidates(pages) {
