@@ -152,6 +152,8 @@ jobs:
         run: node scripts/test-lab32-real-compression.mjs
       - name: Test LAB33 chapter fidelity, source boundaries and real reductions
         run: node scripts/test-lab33-chapter-fidelity.mjs
+      - name: Test LAB34 PDF source shield, crash-safe checkpoint and recovery
+        run: node scripts/test-lab34-source-crash-resume.mjs
       - name: Test persistent study-help cache
         run: node scripts/test-study-help-cache-model.mjs
       - name: Test PWA shell
