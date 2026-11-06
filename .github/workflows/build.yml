@@ -68,6 +68,8 @@ jobs:
           node --check worker/index.js
           echo "[UAB_PROGRESS=45] Controlli statici completati"
 
+      - name: Test LAB36 six-edition Gemini service
+        run: node scripts/test-lab36-generative-backend.mjs
       - name: Test AI resilience
         run: node scripts/test-ai-resilience.mjs
       - name: Test MotorLab Runtime r21

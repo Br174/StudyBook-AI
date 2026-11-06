@@ -132,6 +132,10 @@ jobs:
             node scripts/test-lab35-libro-specchio.mjs
           fi
 
+      - name: LAB36 six-edition Gemini API safety
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
+        run: node scripts/test-lab36-generative-backend.mjs
+
       - name: LAB36 verified display and PDF flow
         if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
         run: node scripts/test-lab36-reading-flow.mjs

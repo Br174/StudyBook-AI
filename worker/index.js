@@ -2,12 +2,14 @@ import summarizeHandler from '../api/summarize.js';
 import explainHandler from '../api/explain.js';
 import refineHandler from '../api/refine.js';
 import coverAiHandler from '../api/coverAi.js';
+import editionsV36Handler from '../api/editionsV36.js';
 
 const API_ROUTES = new Map([
   ['/api/summarize', summarizeHandler],
   ['/api/explain', explainHandler],
   ['/api/refine', refineHandler],
   ['/api/cover-ai/generate', coverAiHandler],
+  ['/api/editions/v36', editionsV36Handler],
 ]);
 
 const NATIVE_ORIGINS = new Set([
@@ -32,7 +34,7 @@ function requestHeaders(request) {
   return Object.fromEntries(request.headers.entries());
 }
 
-async function runLegacyApi(handler, request) {
+async function runLegacyApi(handler, request, env) {
   let body = {};
 
   if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -49,6 +51,7 @@ async function runLegacyApi(handler, request) {
     body,
     headers: requestHeaders(request),
     url: request.url,
+    env,
   };
 
   let statusCode = 200;
@@ -105,7 +108,7 @@ async function runLegacyApi(handler, request) {
 }
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const handler = API_ROUTES.get(url.pathname);
 
@@ -117,6 +120,6 @@ export default {
       return withNativeCors(new Response(null, { status: 204 }), request);
     }
 
-    return withNativeCors(await runLegacyApi(handler, request), request);
+    return withNativeCors(await runLegacyApi(handler, request, env), request);
   },
 };
