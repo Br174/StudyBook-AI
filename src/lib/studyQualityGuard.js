@@ -185,7 +185,13 @@ export function canSafelyBridgeAfterGap(text) {
   if (!first || !/^[A-ZÀ-Ö«“"(\d]/u.test(first)) return false;
   if (CONTEXT_START.test(first)) return false;
   if (/^(?:E|Ed|Ma|Oppure|Perché|Poiché|Quando|Quindi|Dunque|Infatti|Perciò|Tuttavia|Inoltre|Pertanto|Però)\b/iu.test(first)) return false;
-  return checkSentence(first).valid;
+  // Isolated clauses must express a self-standing assertion, not a heading,
+  // incomplete exception, citation or referential pronoun.
+  if (!/[.!?]$/u.test(first) || /\b(?:questo|questa|quello|quella|tale|tali|essi|esse|ciò)\b/iu.test(first))
+    return false;
+  const finite = FINITE_CLAIM.test(first)
+    || /\b(?:fissa|stabiliscono|prevede|disciplina|riconosce|determina|spiega|definisce|comporta|riguarda|richiede|consente|attribuisce)\b/iu.test(first);
+  return finite && checkSentence(first).valid;
 }
 export function checkReducedParagraph(original, text, { selectedUnits = [], allowSafeGaps = false } = {}) {
   const issues = [];
