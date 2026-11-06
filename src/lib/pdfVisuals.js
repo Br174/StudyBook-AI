@@ -58,12 +58,10 @@ async function renderSnapshot(page) {
   return dataUrl;
 }
 
-export async function extractPdfVisualAssets(file, {
+export async function extractPdfVisualAssetsFromDocument(pdf, {
   onProgress,
   maxPages = DEFAULT_MAX_VISUAL_PAGES,
 } = {}) {
-  const data = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data }).promise;
   const assets = [];
   let detected = 0;
 
@@ -109,4 +107,14 @@ export async function extractPdfVisualAssets(file, {
     detected,
     truncated: Math.max(0, detected - assets.length) + (detected > maxPages ? detected - maxPages : 0),
   };
+}
+
+export async function extractPdfVisualAssets(file, options = {}) {
+  const data = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
+  try { return await extractPdfVisualAssetsFromDocument(pdf, options); }
+  finally {
+    try { pdf.cleanup(); } catch { /* best effort */ }
+    try { await pdf.destroy(); } catch { /* best effort */ }
+  }
 }
