@@ -4,6 +4,7 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const app=read('src/AppV15.jsx'),studio=read('src/components/AppScreens.jsx');
 const mirror=read('src/components/MirrorReaderV35.jsx'),api=read('api/editionsV36.js');
 assert.match(app,/generateGeminiEditionsV36\(result/);
+assert.match(app,/preferAi:\s*false/,'Il preparatore LAB36 non deve consumare Gemini prima delle sei edizioni');
 assert.match(app,/editionsV36:\s*editions/);
 assert.match(app,/checkpointTail/);
 assert.match(app,/canonicalBookMap:\s*sourceData\?\.canonicalBookMap/);

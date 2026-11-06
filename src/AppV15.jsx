@@ -943,9 +943,11 @@ export default function AppV14() {
     setStatus(fromScanner ? 'MotorLab Runtime · scansione completa · preparo il libro…' : 'MotorLab Runtime · preparo il libro di studio…');
 
     try {
+      // LAB36: prepare the source map locally; the SIX editions below are the only
+      // Gemini requests. Avoid paying a second quota/time cost for throwaway summaries.
       const generated = await buildStudyBook(sourceData, {
         level,
-        preferAi: true,
+        preferAi: false,
         onProgress(done, total, phase, meta) {
           if (phase === 'fidelity') {
             setProgress({done:meta?.chaptersDone||0,total:meta?.chaptersTotal||1});
@@ -977,7 +979,8 @@ export default function AppV14() {
       const editions = await generateGeminiEditionsV36(result,{
         maxConcurrency:2,
         onProgress(snapshot){
-          generatedDraft={...result,editionsV36:snapshot};
+          generatedDraft={...result,editionsV36:snapshot,
+            engine:snapshot.complete?'ai':(snapshot.verifiedChunks>0?'misto':result.engine)};
           setStudyBook(generatedDraft);
           setProgress({done:snapshot.verifiedCells||0,total:snapshot.totalCells||1});
           setStatus('Libro Specchio · sei edizioni Gemini · '+(snapshot.verifiedCells||0)+'/'+(snapshot.totalCells||1)+' paragrafi verificati · checkpoint');
@@ -993,7 +996,8 @@ export default function AppV14() {
         },
       });
       await checkpointTail;
-      result={...result,editionsV36:editions};
+      result={...result,editionsV36:editions,
+        engine:editions.complete?'ai':(editions.verifiedChunks>0?'misto':result.engine)};
       generatedDraft=result;
       setStudyBook(result);
       // LAB12: il titolo finale considera l'intero documento elaborato; non sostituisce mai il nome manuale.
@@ -1065,13 +1069,15 @@ export default function AppV14() {
     try{
       const snapshot=await generateGeminiEditionsV36(current,{maxConcurrency:2,
         onProgress(update){
-          draft={...current,editionsV36:update};
+          draft={...current,editionsV36:update,
+            engine:update.complete?'ai':(update.verifiedChunks>0?'misto':current.engine)};
           setStudyBook(draft);
           setProgress({done:update.verifiedCells||0,total:update.totalCells||1});
           setStatus('Ripresa Gemini · '+(update.verifiedCells||0)+'/'+(update.totalCells||1)+' paragrafi verificati');
         },
       });
-      draft={...current,editionsV36:snapshot};
+      draft={...current,editionsV36:snapshot,
+        engine:snapshot.complete?'ai':(snapshot.verifiedChunks>0?'misto':current.engine)};
       setStudyBook(draft);
       await persistBook(draft,documentData,fileName,libraryId);
       setStatus(snapshot.complete?'Sei edizioni Gemini completate e salvate':
