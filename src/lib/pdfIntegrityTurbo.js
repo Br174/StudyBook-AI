@@ -8,8 +8,14 @@ import {
 import { loadIntegrity360Pages, saveIntegrity360Page } from './ocrResumeStore.js';
 import { detectChaptersFromPages } from './documentParserV10.js';
 import { auditDocumentStructure } from './precisionDocumentAudit.js';
+import { extractPdfVisualAssetsFromDocument } from './pdfVisuals.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
+
+const INK_OPERATORS = new Set([
+  pdfjsLib.OPS.constructPath, pdfjsLib.OPS.stroke, pdfjsLib.OPS.fill,
+  pdfjsLib.OPS.eoFill, pdfjsLib.OPS.fillStroke,
+].filter(Number.isFinite));
 
 const IMAGE_OPERATORS = new Set([
   pdfjsLib.OPS.paintImageXObject,
@@ -42,8 +48,9 @@ function pdfText(items = []) {
   return clean(lines.join('\n'));
 }
 
-function isOcrCandidate(text, imageCount) {
-  return imageCount > 0 && (text.replace(/\s/g, '').length < 90 || suspectText(text));
+function isOcrCandidate(text, imageCount, inkCount) {
+  return (imageCount > 0 || (!text.trim() && inkCount > 3))
+    && (text.replace(/\s/g, '').length < 90 || suspectText(text));
 }
 
 async function readNativePage(pdf, pageNumber) {
@@ -52,15 +59,17 @@ async function readNativePage(pdf, pageNumber) {
   const rawText = pdfText(textContent.items);
   // Inspect graphics only on suspicious / short native pages, not on every 1,000-page PDF.
   let imageCount = 0;
+  let inkCount = 0;
   if (rawText.replace(/\s/g, '').length < 90 || suspectText(rawText)) {
     const operators = await page.getOperatorList();
     imageCount = (operators?.fnArray || []).filter(op => IMAGE_OPERATORS.has(op)).length;
+    inkCount = (operators?.fnArray || []).filter(op => INK_OPERATORS.has(op)).length;
   }
-  const requiresOcr = isOcrCandidate(rawText, imageCount);
+  const requiresOcr = isOcrCandidate(rawText, imageCount, inkCount);
   return {
     pageNumber, text: rawText, rawText, source: 'embedded',
     status: requiresOcr ? 'ocr-pending' : 'verified',
-    imageCount, issue: requiresOcr ? 'page-image-requires-ocr' : '',
+    imageCount, inkCount, issue: requiresOcr ? 'page-visual-requires-ocr' : '',
   };
 }
 
@@ -217,6 +226,10 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
     }));
     onProgress?.({ phase: 'turbo-merge', done: 0, total: pageCount });
     // Keep the exact extracted text and source page separately from reconstructed prose.
+    let visualResult = { assets: [], detected: 0, truncated: 0 };
+    try {
+      visualResult = await extractPdfVisualAssetsFromDocument(pdf, { onProgress, maxPages: 18 });
+    } catch { /* visual snapshots are advisory: source PDF stays immutable */ }
     const textPages = originalPages.map(page => ({
       ...page, pageNumber: page.pageNumber, text: page.text,
     }));
@@ -235,6 +248,9 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
       ocrApplied: originalPages.filter(page => page.source === 'ocr').map(page => page.pageNumber),
       needsOcr: unresolved,
       removedRunningLines: [], // No destructive deletion of headings, notes or page text.
+      assets: visualResult.assets,
+      assetsTruncated: visualResult.truncated,
+      visualPagesDetected: visualResult.detected,
       ocrCheckpointSignature: signature,
       structure: {
         pageCount, chapterCount: chapters.length,
@@ -243,6 +259,9 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
         hierarchyEngine: 'integrity360-turbo-v1', ocrCheckpoint: 'indexeddb-per-page',
         ocrResumedPages: restored, ocrNewPages: originalPages.filter(page => page.source === 'ocr').length,
         ocrPendingPages: unresolved.length, ocrFailures: unresolved.length,
+        assetCount: visualResult.assets.length,
+        imageCount: visualResult.assets.filter(asset => asset.type === 'image').length,
+        tableCount: visualResult.assets.filter(asset => asset.type === 'table').length,
         turboBlocks: blocks.length, turboTextLanesInitial: plannedLanes,
         turboTextLanesFinal: targetLanes, turboElapsedMs: elapsedMs,
       },
@@ -251,6 +270,9 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
         blocks, chapterStates, verifiedChapters: chapterStates.filter(chapter => chapter.status === 'verified').length,
         checkpointSavedPages: savedCount, checkpointResumedPages: restored,
         checkpointFailures, checkpointDurable: checkpointFailures === 0,
+        semanticCertified: false,
+        structuralWarningCount: structural.warningCount,
+        structuralWarnings: structural.warnings,
         visualReferencePages: originalPages.filter(page => page.imageCount > 0).map(page => page.pageNumber),
         runtime: { elapsedMs, textLanesInitial: plannedLanes, textLanesFinal: targetLanes, ocrLanes: 1, errors },
       },
