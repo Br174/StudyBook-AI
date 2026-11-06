@@ -84,6 +84,7 @@ export async function readPdfMirrorV35(file,options={}){
         mirrorImageCheckpointResumed:restored,
       },
       integrity360:{...(parsed.integrity360||{}),
+        ready:parsed.integrity360?.ready!==false && failures===0,
         mirrorStructuralStatus:canonicalBookMap.structuralStatus,
         mirrorReview:review,mirrorFigurePages:pageCount,
         mirrorFigureCheckpointFailures:failures,
