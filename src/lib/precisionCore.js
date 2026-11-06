@@ -2,7 +2,7 @@
 // source traceability and non-destructive quality gates.
 import {
   countWords, countText, countLetters, buildMeaningUnits, checkReducedParagraph,
-  auditChapterContinuity, auditNarrativeSource, hasLexicalSupport,
+  auditChapterContinuity, auditNarrativeSource, hasLexicalSupport, canSafelyBridgeAfterGap,
 } from './studyQualityGuard.js';
 import { explainInSimpleWords } from './simpleLanguage.js';
 
@@ -64,28 +64,48 @@ function computeSelection(items, budget, level) {
   if (level === 0) return;
   let used = 0;
 
-  // Narration-first selection: each paragraph is a single CONTIGUOUS
-  // chronological passage from its beginning, never arbitrary scored
-  // sentences spliced together. A late mandatory exception retains every
-  // preceding statement needed to read it in its proper original context.
+  // Keep the beginning of each paragraph for readable context. Reserve
+  // mandatory legal conditions/formulae individually, NOT every sentence
+  // between the beginning and the last protected sentence (the LAB31 plateau).
+  const keep = (item, unit) => {
+    if (!unit || item.selected.has(unit.index)) return;
+    item.selected.add(unit.index);
+    used += countLetters(unit.value);
+  };
+  const keepWithContext = (item, unit) => {
+    if (!unit || item.selected.has(unit.index)) return;
+    const required = [unit];
+    let cursor = unit;
+    while (cursor.index > 0 && !item.selected.has(cursor.index - 1)
+      && !canSafelyBridgeAfterGap(cursor.source)) {
+      cursor = item.units[cursor.index - 1];
+      if (!cursor) break;
+      required.unshift(cursor);
+    }
+    required.forEach(part => keep(item, part));
+  };
   for (const item of items) {
     if (!item.units.length) continue;
-    const lastProtected = item.units.reduce((last, unit) => unit.mandatory ? unit.index : last, -1);
-    const lastRequired = Math.max(0, lastProtected);
-    for (let i = 0; i <= lastRequired; i++) used += reserveItem(item, item.units[i]);
+    keep(item, item.units[0]);
+    for (const unit of item.units) if (unit.mandatory) keepWithContext(item, unit);
   }
 
-  // Add only the NEXT source sentence of each paragraph. This maintains
-  // original word order and prohibits gaps between selected sentences.
-  // If the budget is impossible because protected passages are too long,
-  // the truthful achieved reduction is reported rather than cutting them.
+  // At each pass choose the next still-available sentence of a paragraph.
+  // Ranking across paragraphs keeps the budget global, while consecutive
+  // selection inside each paragraph retains the source's original sequence.
+  // Late mandatory sentences are allowed when the paragraph's bridge is safe.
   for (;;) {
-    const candidates = items.flatMap(item => {
-      const nextIndex = item.selected.size;
-      const next = item.units[nextIndex];
-      if (!next || next.problematic) return [];
-      return [{item, unit:next, cost:countLetters(next.value)}];
-    });
+    const candidates = [];
+    for (const item of items) {
+      const next = item.units.find(unit => !item.selected.has(unit.index));
+      if (!next || next.problematic) continue;
+      const precedingSelected = next.index === 0 || item.selected.has(next.index - 1);
+      if (!precedingSelected && !canSafelyBridgeAfterGap(next.source)) continue;
+      const parts = [next];
+      if (next.dependent && next.index > 0 && !precedingSelected) continue;
+      const cost = parts.reduce((sum,part) => sum + countLetters(part.value),0);
+      candidates.push({ item, unit: next, cost });
+    }
     candidates.sort((left,right) =>
       right.unit.score - left.unit.score ||
       left.item.chapterIndex - right.item.chapterIndex ||
@@ -93,7 +113,7 @@ function computeSelection(items, budget, level) {
     );
     const chosen = candidates.find(candidate => used + candidate.cost <= budget);
     if (!chosen) break;
-    used += reserveItem(chosen.item, chosen.unit);
+    keep(chosen.item, chosen.unit);
   }
 }
 
@@ -118,7 +138,7 @@ export function buildPrecisionEdition(book, reduction = 10) {
       const item = lookup.get(chapterIndex + ':' + paragraphIndex);
       const units = item.units.filter((unit) => item.selected.has(unit.index));
       const candidate = level === 0 ? item.source : joinUnits(units, level);
-      const audit = checkReducedParagraph(item.source, candidate, { selectedUnits: units });
+      const audit = checkReducedParagraph(item.source, candidate, { selectedUnits: units, allowSafeGaps: true });
       const sourceAudit = auditNarrativeSource(item.source);
       // If OCR/text segmentation is already broken, avoid silently presenting a
       // newly shortened fragment as verified academic prose.
@@ -156,12 +176,13 @@ export function buildPrecisionEdition(book, reduction = 10) {
     if (!continuity.ok) issues.push({ chapterIndex, problems: continuity.issues });
     return { ...result, precisionContinuity: continuity };
   });
-  const achievedPercent = sourceWords ? Math.round((1 - outputWords / sourceWords) * 1000) / 10 : 0;
+  const achievedWordsPercent = sourceWords ? Math.round((1 - outputWords / sourceWords) * 1000) / 10 : 0;
   const achievedLettersPercent = sourceLetters
     ? Math.round((1 - outputLetters / sourceLetters) * 1000) / 10 : 0;
   const targetShortfall = targetPercent === null ? 0 : Math.max(0, Math.round((targetPercent-achievedLettersPercent)*10)/10);
   const metadata = {
-    level, label: REDUCTION_LABELS[level], targetPercent, achievedPercent,
+    level, label: REDUCTION_LABELS[level], targetPercent,
+    achievedPercent: achievedLettersPercent, achievedWordsPercent,
     achievedLettersPercent, originalLetters:sourceLetters, resultingLetters:outputLetters,
     originalWords: sourceWords, resultingWords: outputWords,
     targetReached: targetPercent === null || achievedLettersPercent + 0.5 >= targetPercent,
@@ -230,7 +251,7 @@ export function buildReductionStatistics(book, chapterIndex = null) {
     return {
       level:profile.level,label:profile.label,original,actual,wordsReduced,lettersReduced,
       wholeBook,qualityStatus:profile.qualityStatus,
-      targetReached: profile.level === 'summary' || wordsReduced + .5 >= profile.level,
+      targetReached: profile.level === 'summary' || lettersReduced + .5 >= profile.level,
     };
   });
 }
