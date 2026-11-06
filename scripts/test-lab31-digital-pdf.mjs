@@ -1,7 +1,18 @@
 import assert from 'node:assert/strict';
 import 'fake-indexeddb/auto';
 import { jsPDF } from 'jspdf';
-import { readPdfIntegrity360 } from '../src/lib/pdfIntegrityTurbo.js';
+// pdfjs-dist 6 expects a browser DOMMatrix at module-evaluation time.
+// This minimal test-only definition permits text-extraction checks in Node.
+// It is never shipped to the Android/browser application.
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  globalThis.DOMMatrix = class TestOnlyDOMMatrix {
+    constructor() { this.a=1; this.b=0; this.c=0; this.d=1; this.e=0; this.f=0; }
+  };
+}
+const { readPdfIntegrity360 } = await import('../src/lib/pdfIntegrityTurbo.js');
+const pdfjsLib = await import('pdfjs-dist');
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  new URL('../node_modules/pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
 
 const source = new jsPDF({ unit:'pt', format:'a4' });
 for (let page = 1; page <= 24; page += 1) {
