@@ -45,7 +45,7 @@ assert.throws(()=>requireIntegrityForStudy({integrity360:{ready:false,issues:[{s
 const parser=readFileSync(new URL('../src/lib/documentParserV11.js',import.meta.url),'utf8');
 const turbo=readFileSync(new URL('../src/lib/pdfIntegrityTurbo.js',import.meta.url),'utf8');
 const store=readFileSync(new URL('../src/lib/ocrResumeStore.js',import.meta.url),'utf8');
-assert.ok(parser.includes("import('./pdfIntegrityTurbo.js')"));
+assert.ok(parser.includes("import('./readPdfMirrorV35.js')"));
 assert.ok(turbo.includes("crypto.subtle.digest('SHA-256'"));
 assert.ok(turbo.includes('loadIntegrity360Pages') && turbo.includes('saveIntegrity360Page'));
 assert.ok(turbo.includes("ocrWorker.recognize(canvas)") && turbo.includes('canvas.width = 1'));
