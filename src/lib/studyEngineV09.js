@@ -16,11 +16,11 @@ import {
   runAdaptiveBatchQueue,
 } from './motorLabRuntime.js';
 
-const AI_BATCH_CHAR_LIMIT = 18000;
-const AI_BATCH_ITEM_LIMIT = 5;
+const AI_BATCH_CHAR_LIMIT = 8500;
+const AI_BATCH_ITEM_LIMIT = 2;
 const LONG_PARAGRAPH_LIMIT = 7000;
 const CHUNK_TARGET = 4200;
-const CHECKPOINT_VERSION = 4;
+const CHECKPOINT_VERSION = 5;
 
 function normalize(text) {
   return String(text || '').replace(/\s+/g, ' ').trim();
@@ -191,23 +191,31 @@ function pageContext(meta) {
 }
 
 async function summarizeWithEndpoint(units, level) {
-  const response = await fetch(apiEndpoint('/api/summarize'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      paragraphs: units.map((item) => item.text),
-      contexts: units.map((item) => ({
-        chapterTitle: item.chapterTitle,
-        sectionTitle: item.sourceMeta?.sourceSection,
-        page: pageContext(item.sourceMeta),
-        previousText: item.previousText,
-        nextText: item.nextText,
-        chapterMemory: item.chapterMemory,
-        bookMemory: item.bookMemory,
-      })),
-      level,
-    }),
-  });
+  // Never hold a 900-page study job indefinitely on one network request.
+  // Bounded AI latency permits a reliable local fallback and a new checkpoint.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  let response;
+  try {
+    response = await fetch(apiEndpoint('/api/summarize'), {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paragraphs: units.map((item) => item.text),
+        contexts: units.map((item) => ({
+          chapterTitle: item.chapterTitle,
+          sectionTitle: item.sourceMeta?.sourceSection,
+          page: pageContext(item.sourceMeta),
+          previousText: item.previousText,
+          nextText: item.nextText,
+          chapterMemory: item.chapterMemory,
+          bookMemory: item.bookMemory,
+        })),
+        level,
+      }),
+    });
+  } finally { clearTimeout(timeout); }
 
   let payload = null;
   try {
@@ -286,15 +294,15 @@ function buildResumeSignature(documentData, level) {
   const chapterShape = (documentData?.chapters || []).map((chapter) => (
     `${chapter.title}|${(chapter.paragraphs || []).map((p) => String(p || '').length).join(',')}`
   )).join('||');
+  // Content-address the WHOLE source, not merely first/last text;
+  // a same-length correction in the middle must never replay stale summaries.
+  const fullContentHash = hashText((documentData?.chapters || [])
+    .map(chapter => (chapter.paragraphs || []).map(part => String(part || '')).join('\u241f')).join('\u241e'));
   const fingerprint = [
-    CHECKPOINT_VERSION,
-    level,
-    documentData?.sourceFormat || '',
-    documentData?.sourceTitle || '',
-    full.length,
-    full.slice(0, 3500),
-    full.slice(-3500),
-    chapterShape,
+    CHECKPOINT_VERSION, 'crash-safe-v34',
+    level, documentData?.originalFingerprint || '',
+    documentData?.sourceFormat || '', documentData?.sourceTitle || '',
+    full.length, fullContentHash, chapterShape,
   ].join('::');
   return `studybook-v09-${hashText(fingerprint)}`;
 }
@@ -413,8 +421,12 @@ export async function buildStudyBook(documentData, {
   purgeOldResumeStates().catch(() => {});
   purgeOldRuntimeUnitResults().catch(() => {});
   const signature = buildResumeSignature(documentData, level);
-  // Explicit library reprocessing ignores previous checkpoint output.
-  const saved = forceFresh ? null : await loadResumeState(signature);
+  // Explicit reprocessing ignores a COMPLETE old run, but must reuse an
+  // INCOMPLETE checkpoint after app crash. The new v5 signature prevents
+  // LAB33/LAB32 cached data from contaminating the new source.
+  const previous = await loadResumeState(signature);
+  const saved = forceFresh && previous?.complete ? null : previous;
+  const resumeInterrupted = Boolean(saved && !saved.complete);
   const finalResults = Array(flat.length).fill(null);
   let checkpointResumedParagraphs = 0;
 
@@ -446,6 +458,8 @@ export async function buildStudyBook(documentData, {
 
   const completedParents = new Set(finalResults.map((item, index) => item ? index : null).filter((value) => value !== null));
   // A fresh pass must also bypass the per-unit MotorLab cache.
+  // In fresh mode per-unit caches from older runs are not reused;
+  // only the exact incomplete v5 source checkpoint may be resumed.
   const cached = forceFresh ? new Map() : await loadRuntimeUnitResults(units.map((unit) => unit.cacheKey));
   let cachedChunks = 0;
 
@@ -466,6 +480,16 @@ export async function buildStudyBook(documentData, {
 
   const resumedParagraphs = completedParents.size;
   let firstReadyAtMs = resumedParagraphs ? 0 : null;
+  // Initial durable checkpoint BEFORE the first AI batch, including the
+  // finalResults that survived a prior interrupted run.
+  if (!saved || !resumeInterrupted) {
+    const initialSaved = await saveResumeState(signature, {
+      version:CHECKPOINT_VERSION, signature, level, results:finalResults,
+      completed:completedParents.size, total:flat.length, complete:false,
+      startedAt:new Date().toISOString(), runtimeId:MOTORLAB_RUNTIME_VERSION,
+    });
+    if (!initialSaved) throw new Error('Impossibile salvare il progresso: controllare lo spazio disponibile sul dispositivo.');
+  }
   onProgress?.(
     completedParents.size,
     flat.length,
@@ -483,8 +507,8 @@ export async function buildStudyBook(documentData, {
   const batches = makeChapterBatches(pendingUnits);
   const initialConcurrency = chooseRuntimeConcurrency(maxConcurrency);
   const ceiling = Number.isFinite(Number(maxConcurrency)) && Number(maxConcurrency) > 0
-    ? Math.max(1, Math.min(4, Math.floor(Number(maxConcurrency))))
-    : 4;
+    ? Math.max(1, Math.min(2, Math.floor(Number(maxConcurrency))))
+    : (typeof navigator !== 'undefined' && Number(navigator.deviceMemory || 4) < 4 ? 1 : 2);
 
   const runtimeQueue = await runAdaptiveBatchQueue({
     batches,
@@ -529,8 +553,14 @@ export async function buildStudyBook(documentData, {
         cachedChunks,
         savedAt: new Date().toISOString(),
       };
-      await saveResumeState(signature, checkpoint);
+      const persisted = await saveResumeState(signature, checkpoint);
+      if (!persisted) {
+        throw new Error('Salvataggio progressi fallito. La rielaborazione è stata sospesa per proteggere il lavoro già completato.');
+      }
       if (onCheckpoint) await onCheckpoint(checkpoint);
+      // Yield to Android WebView between waves so paint, cancellation,
+      // memory reclamation and touch events do not starve for minutes.
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       const waveEngine = meta.results.some((item) => item.aiSuccess)
         ? (meta.results.some((item) => item.aiFailure) ? 'misto' : 'ai')
@@ -568,7 +598,9 @@ export async function buildStudyBook(documentData, {
     cachedChunks,
     savedAt: new Date().toISOString(),
   };
-  await saveResumeState(signature, completedCheckpoint);
+  if (!await saveResumeState(signature, completedCheckpoint)) {
+    throw new Error('Libro elaborato ma checkpoint finale non persistito: spazio insufficiente.');
+  }
 
   const totalUnitCount = units.length;
   const cacheMisses = Math.max(0, totalUnitCount - cachedChunks);
