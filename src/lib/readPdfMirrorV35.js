@@ -7,6 +7,7 @@ import { scanPdfPageFigures, loadPdfMirrorOutline } from './visualMirrorV35.js';
 import { loadMirrorVisualPages,saveMirrorVisualPage } from './mirrorVisualStoreV35.js';
 import { buildCanonicalBookMap } from './libroSpecchioV35.js';
 import { detectChaptersFromPages } from './documentParserV10.js';
+import { choosePdfChapterAuthority } from './outlineAuthorityV35.js';
 
 export async function readPdfMirrorV35(file,options={}){
   const progress=options.onProgress;
@@ -52,7 +53,9 @@ export async function readPdfMirrorV35(file,options={}){
     }
     const anchors=rows.flatMap(r=>r.anchors||[]);
     // The unmerged parser preserves the physical owner of every paragraph.
-    const chapters=detectChaptersFromPages(parsed.pages||[]);
+    const detectedChapters=detectChaptersFromPages(parsed.pages||[]);
+    const authority=choosePdfChapterAuthority(parsed.pages||[],detectedChapters,original.outline);
+    const chapters=authority.chapters;
     const canonicalBookMap=buildCanonicalBookMap({
       pages:parsed.pages,chapters,outline:original.outline,pageLabels:original.pageLabels,
       pageDimensions:rows.map(row=>({widthPt:row.pageWidthPt,heightPt:row.pageHeightPt})),
@@ -60,6 +63,7 @@ export async function readPdfMirrorV35(file,options={}){
     });
     const review=[...new Set([
       ...(canonicalBookMap.uncertain||[]),
+      ...(authority.review||[]),
       ...(failures?['visual-page-checkpoint-or-scan-failed']:[]),
       ...rows.filter(r=>(r.review||[]).length).map(r=>'figure-review-on-page:'+r.pageNumber),
     ])];
@@ -75,6 +79,7 @@ export async function readPdfMirrorV35(file,options={}){
         sectionCount:chapters.reduce((n,ch)=>n+(ch.sections||[]).length,0),
         paragraphCount:chapters.reduce((n,ch)=>n+(ch.paragraphs||[]).length,0),
         visualAnchorCount:anchors.length,
+        chapterAuthority:authority.authority,
         mirrorEngine:'libro-specchio-v35',mirrorImageCheckpointSaved:pageCount-failures,
         mirrorImageCheckpointResumed:restored,
       },
