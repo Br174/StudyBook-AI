@@ -114,6 +114,12 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: LAB31 Integrity 360 Turbo mandatory acceptance tests
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-')
+        run: |
+          node scripts/test-lab31-integrity360-turbo.mjs
+          node scripts/test-lab31-digital-pdf.mjs
+
       - name: Resolve monotonic Android version
         shell: bash
         run: |
