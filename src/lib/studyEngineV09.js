@@ -3,6 +3,9 @@ import { filterGlossaryEntries } from './glossaryQuality.js';
 import { refineParagraphWithAi, summarizeLocally, summaryLevels } from './studyEngine.js';
 import {
   loadResumeState,
+  loadStudyParagraphs,
+  saveStudyParagraphs,
+  clearStudyParagraphs,
   loadRuntimeUnitResults,
   purgeOldResumeStates,
   purgeOldRuntimeUnitResults,
@@ -427,14 +430,26 @@ export async function buildStudyBook(documentData, {
   const previous = await loadResumeState(signature);
   const saved = forceFresh && previous?.published ? null : previous;
   const resumeInterrupted = Boolean(saved && !saved.published);
+  const generation = saved?.generation ||
+    (globalThis.crypto?.randomUUID?.() || 'run-' + Date.now().toString(36));
+  // Recover previously saved paragraphs using source-keyed DELTA rows.
+  if (!saved && previous?.published) await clearStudyParagraphs(signature);
+  const priorParagraphs = await loadStudyParagraphs(signature, generation);
   const finalResults = Array(flat.length).fill(null);
   let checkpointResumedParagraphs = 0;
 
   if (saved?.version === CHECKPOINT_VERSION && saved?.signature === signature && saved?.level === level) {
-    (saved.results || []).forEach((item, index) => {
+    priorParagraphs.forEach((entry,index) => {
+      const item=entry?.result;
       if (index < finalResults.length && item?.summary && item?.dsaSummary) {
-        finalResults[index] = item;
-        checkpointResumedParagraphs += 1;
+        finalResults[index]=item;
+        checkpointResumedParagraphs+=1;
+      }
+    });
+    (saved.results || []).forEach((item,index)=>{
+      if (!finalResults[index] && index < flat.length && item?.summary && item?.dsaSummary) {
+        finalResults[index]=item;
+        checkpointResumedParagraphs+=1;
       }
     });
   }
@@ -458,7 +473,12 @@ export async function buildStudyBook(documentData, {
 
   // Recover even partially processed multi-chunk paragraphs after a crash.
   const resumedPieces = new Set();
-  for (const [rawIndex, pieces] of saved?.unitPieces || []) {
+  const previousPieces = [
+    ...[...priorParagraphs.entries()].filter(([index,row])=>!finalResults[index])
+      .map(([index,row])=>[index,row.pieces||[]]),
+    ...(saved?.unitPieces || []),
+  ];
+  for (const [rawIndex, pieces] of previousPieces) {
     const parentIndex = Number(rawIndex);
     if (!Number.isInteger(parentIndex) || parentIndex < 0 || parentIndex >= flat.length
         || finalResults[parentIndex] || !Array.isArray(pieces)) continue;
@@ -504,7 +524,7 @@ export async function buildStudyBook(documentData, {
   // finalResults that survived a prior interrupted run.
   if (!saved) {
     const initialSaved = await saveResumeState(signature, {
-      version:CHECKPOINT_VERSION, signature, level, results:finalResults,
+      version:CHECKPOINT_VERSION, signature, level, results:[], generation,
       completed:completedParents.size, total:flat.length, complete:false,
       startedAt:new Date().toISOString(), runtimeId:MOTORLAB_RUNTIME_VERSION,
     });
@@ -542,11 +562,13 @@ export async function buildStudyBook(documentData, {
     },
     async onWave(meta) {
       const cacheWrites = [];
+      const changedParents = new Set();
 
       for (const item of meta.results) {
         item.batch.forEach((unit, offset) => {
           const piece = ensureSourceFidelity(unit.text, item.summaries[offset]);
           const pieces = unitResults.get(unit.parentIndex) || [];
+          changedParents.add(unit.parentIndex);
           pieces.push({ chunkIndex: unit.chunkIndex, ...piece });
           unitResults.set(unit.parentIndex, pieces);
           const nextDone = (unitDone.get(unit.parentIndex) || 0) + 1;
@@ -561,13 +583,19 @@ export async function buildStudyBook(documentData, {
       }
 
       if (cacheWrites.length) await saveRuntimeUnitResults(cacheWrites);
+      const deltas = [...changedParents].map(index=>({
+        index, result:finalResults[index],
+        pieces:finalResults[index] ? [] : unitResults.get(index)||[],
+      }));
+      if (!await saveStudyParagraphs(signature,generation,deltas)) {
+        throw new Error('Memoria locale insufficiente: impossibile salvare i paragrafi completati. Conservato ultimo checkpoint valido.');
+      }
 
       const checkpoint = {
         version: CHECKPOINT_VERSION,
-        signature,
-        level,
-        results: finalResults,
-        unitPieces:[...unitResults.entries()].filter(([parent]) => !finalResults[parent]),
+        signature, level, generation,
+        results: [],
+        unitPieces:[],
         completed: completedParents.size,
         total: flat.length,
         aiEnabled: meta.aiEnabled,
@@ -613,7 +641,8 @@ export async function buildStudyBook(documentData, {
     version: CHECKPOINT_VERSION,
     signature,
     level,
-    results: finalResults,
+    results:[],
+    generation,
     completed: finalResults.length,
     total: flat.length,
     complete: true,
@@ -622,6 +651,10 @@ export async function buildStudyBook(documentData, {
     cachedChunks,
     savedAt: new Date().toISOString(),
   };
+  if (!await saveStudyParagraphs(signature,generation,
+    finalResults.map((result,index)=>({index,result})))) {
+    throw new Error('Impossibile salvare il checkpoint finale dei paragrafi.');
+  }
   if (!await saveResumeState(signature, completedCheckpoint)) {
     throw new Error('Libro elaborato ma checkpoint finale non persistito: spazio insufficiente.');
   }
