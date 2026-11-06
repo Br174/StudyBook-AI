@@ -120,6 +120,10 @@ jobs:
             node scripts/test-lab35-libro-specchio.mjs
           fi
 
+      - name: LAB36 50-page quota and checkpoint load
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
+        run: node scripts/test-lab36-quota-load.mjs
+
       - name: LAB36 Gemini quota taxonomy and persistent free cooldown
         if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-')
         run: |

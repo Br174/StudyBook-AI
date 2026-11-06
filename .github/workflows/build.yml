@@ -68,6 +68,8 @@ jobs:
           node --check worker/index.js
           echo "[UAB_PROGRESS=45] Controlli statici completati"
 
+      - name: Test LAB36 50-page quota and checkpoint load
+        run: node scripts/test-lab36-quota-load.mjs
       - name: Test LAB36 Gemini quota taxonomy and persistent free cooldown
         run: |
           node scripts/test-lab36-quota-diagnosis.mjs

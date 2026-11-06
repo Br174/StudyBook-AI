@@ -148,6 +148,8 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
     return paused;
   }
   onProgress(makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent),0,pending.length);
+  // Keep progress UI bounded (~40 snapshots) even for an 800-page book.
+  const progressEvery=Math.max(5,Math.ceil(pending.length/40));
   const adaptive=await runAdaptiveBatchQueue({
     // One request at a time; free-tier requests share quotas across keys.
     batches:pending.map(j=>[j]),initialConcurrency:1,
@@ -188,7 +190,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},maxConcu
         if(!saved)checkpointPersistent=false;
         entries.forEach(e=>state.set(e.key,e.result));
       }
-      if(processedBatches%5===0||processedBatches===totalBatches){
+      if(processedBatches%progressEvery===0||processedBatches===totalBatches){
         onProgress(makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent),
           processedBatches,totalBatches);
       }
