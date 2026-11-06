@@ -32,7 +32,11 @@ try{
  assert.equal(blocked.execution.haltedOn,'AI_QUALITY_REVIEW');
  assert.equal(calls.length,2,'At most 2 Gemini calls for a failing edition, not twelve');
  assert.equal(calls[1].repairDraft,'la.','Second call must repair the previous draft');
- assert.ok(blocked.diagnostics.quality.reasons.some(x=>x.startsWith('exact-letters-target')));
+ assert.equal(blocked.diagnostics.quality.level,'summary',
+   'The first blocked level is the initial summary in the progressive study order');
+ assert.ok(blocked.diagnostics.quality.reasons.some(x=>
+   x.includes('coverage')||x.includes('essential')||x.includes('summary')),
+   'A summary rejected for missing concepts must expose the actual quality reason');
  assert.equal(progressDiagnostic(blocked).kind,'QUALITA');
  assert.match(progressDiagnostic(blocked).description,/non supera i vincoli/);
  assert.equal(blocked.verifiedChunkVariants,0,'Invalid draft must never count as verified');
