@@ -140,6 +140,66 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
     extracted = restored;
     onProgress?.({ phase: 'turbo-resume', done: restored, total: pageCount, resumed: restored });
 
+
+    // One OCR consumer overlaps independent text extraction only on capable devices.
+    // This is the existing PDF parser's work queue, never a second MotorLab scheduler.
+    const ocrQueue = [];
+    let nativeFinished = false, wakeOcr = null, ocrTotal = 0, ocrDone = 0;
+    let ocrInitializationFailed = false;
+    const enqueueOcr = row => {
+      ocrQueue.push(row);
+      ocrTotal += 1;
+      if (wakeOcr) { const wake = wakeOcr; wakeOcr = null; wake(); }
+    };
+    const runOcrConsumer = async () => {
+      while (!nativeFinished || ocrQueue.length) {
+        if (!ocrQueue.length) {
+          await new Promise(resolve => { wakeOcr = resolve; });
+          continue;
+        }
+        const row = ocrQueue.shift();
+        ocrPageNumber = row.pageNumber;
+        if (!ocrWorker && !ocrInitializationFailed) {
+          onProgress?.({ phase: 'ocr-loading', done: ocrDone, total: ocrTotal, resumed: restored });
+          try { ocrWorker = await createLocalOcrWorker(onProgress, () => ocrPageNumber); }
+          catch (err) {
+            ocrInitializationFailed = true;
+            onProgress?.({ phase: 'turbo-ocr-unavailable', error: String(err?.message || err) });
+          }
+        }
+        let canvas = null;
+        try {
+          if (!ocrWorker) throw new Error('OCR non disponibile');
+          const pdfPage = await pdf.getPage(row.pageNumber);
+          canvas = await renderForOcr(pdfPage, pageCount);
+          const output = await ocrWorker.recognize(canvas);
+          const recognized = clean(output?.data?.text);
+          const confidence = Number(output?.data?.confidence || 0);
+          if (!recognized || confidence < 40 || suspectText(recognized)) {
+            row.status = 'failed';
+            row.issue = 'ocr-low-confidence:' + Math.round(confidence);
+          } else {
+            row.text = recognized;
+            row.source = 'ocr';
+            row.status = 'verified';
+            row.issue = '';
+            const saved = await saveIntegrity360Page(signature, row);
+            if (saved) savedCount += 1;
+            else checkpointFailures += 1;
+          }
+        } catch (err) {
+          row.status = 'failed';
+          row.issue = 'ocr-failed:' + String(err?.message || err).slice(0, 80);
+        } finally {
+          if (canvas) { canvas.width = 1; canvas.height = 1; }
+        }
+        ocrDone += 1;
+        onProgress?.({ phase: 'ocr-page', done: ocrDone, total: ocrTotal, pageNumber: row.pageNumber });
+      }
+    };
+    const overlapOcr = autoOcr && deviceMemory >= 4 && cores >= 4;
+    const ocrTask = overlapOcr ? runOcrConsumer() : null;
+
     const textLane = async laneId => {
       while (nextBlock < blocks.length && laneId < targetLanes) {
         const block = blocks[nextBlock++];
@@ -150,6 +210,7 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
           try {
             const row = await readNativePage(pdf, pageNumber);
             pages[pageNumber - 1] = row;
+            if (row.status === 'ocr-pending' && autoOcr) enqueueOcr(row);
             if (row.status === 'verified') {
               const saved = await saveIntegrity360Page(signature, row);
               if (saved) savedCount += 1;
@@ -181,48 +242,10 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true } =
     };
     await Promise.all(Array.from({ length: plannedLanes }, (_, i) => textLane(i)));
 
-    const pending = pages.filter(page => page?.status === 'ocr-pending');
-    if (autoOcr && pending.length) {
-      let ocrDone = 0;
-      onProgress?.({ phase: 'ocr-loading', done: 0, total: pending.length, resumed: restored });
-      try {
-        ocrWorker = await createLocalOcrWorker(onProgress, () => ocrPageNumber);
-      } catch (err) {
-        onProgress?.({ phase: 'turbo-ocr-unavailable', error: String(err?.message || err) });
-      }
-      for (const row of pending) {
-        ocrPageNumber = row.pageNumber;
-        let canvas = null;
-        try {
-          if (!ocrWorker) throw new Error('OCR non disponibile');
-          const page = await pdf.getPage(row.pageNumber);
-          canvas = await renderForOcr(page, pageCount);
-          const output = await ocrWorker.recognize(canvas);
-          const ocrText = clean(output?.data?.text);
-          const confidence = Number(output?.data?.confidence || 0);
-          // Never treat a longer, less accurate OCR result as necessarily better.
-          if (!ocrText || confidence < 40 || suspectText(ocrText)) {
-            row.status = 'failed';
-            row.issue = 'ocr-low-confidence:' + Math.round(confidence);
-          } else {
-            row.text = ocrText;
-            row.source = 'ocr';
-            row.status = 'verified';
-            row.issue = '';
-            const saved = await saveIntegrity360Page(signature, row);
-            if (saved) savedCount += 1;
-            else checkpointFailures += 1;
-          }
-        } catch (err) {
-          row.status = 'failed';
-          row.issue = 'ocr-failed:' + String(err?.message || err).slice(0, 80);
-        } finally {
-          if (canvas) { canvas.width = 1; canvas.height = 1; }
-        }
-        ocrDone += 1;
-        onProgress?.({ phase: 'ocr-page', done: ocrDone, total: pending.length, pageNumber: row.pageNumber });
-      }
-    }
+    nativeFinished = true;
+    if (wakeOcr) { const wake = wakeOcr; wakeOcr = null; wake(); }
+    if (ocrTask) await ocrTask;
+    else if (autoOcr && ocrQueue.length) await runOcrConsumer();
 
     const originalPages = pages.map((row, index) => row || ({
       pageNumber: index + 1, text: '', rawText: '', source: 'error',
