@@ -33,6 +33,8 @@ export async function saveMirrorVisualPage(signature,pageNumber,visual={}){
         anchors:visual.anchors||[],review:visual.review||[],
         rasterCount:Number(visual.rasterCount||0),
         vectorCount:Number(visual.vectorCount||0),
+        pageWidthPt:Number(visual.pageWidthPt||0),
+        pageHeightPt:Number(visual.pageHeightPt||0),
         updatedAt:new Date().toISOString(),
       });
       tx.oncomplete=resolve;
