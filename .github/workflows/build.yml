@@ -150,6 +150,8 @@ jobs:
         run: node scripts/test-lab31-digital-pdf.mjs
       - name: Test LAB32 real compression percentages and legal qualifiers
         run: node scripts/test-lab32-real-compression.mjs
+      - name: Test LAB33 chapter fidelity, source boundaries and real reductions
+        run: node scripts/test-lab33-chapter-fidelity.mjs
       - name: Test persistent study-help cache
         run: node scripts/test-study-help-cache-model.mjs
       - name: Test PWA shell
