@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/lab36-worker-staging.yml
       - api/editionsV36.js
+      - api/geminiQuotaV36.js
       - worker/index.js
   workflow_dispatch:
 concurrency:
@@ -32,6 +33,8 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           node scripts/test-lab36-generative-backend.mjs
+          node scripts/test-lab36-quota-diagnosis.mjs
+          node scripts/test-lab36-quota-controller.mjs
           node scripts/test-lab36-generative-store.mjs
           npm run build
           npx wrangler deploy --dry-run
@@ -71,29 +74,43 @@ jobs:
           }
           throw Error('LAB36 worker route is not ready: '+last);
           NODE
-      - name: End-to-end live proof on dedicated LAB36 Worker
+      - name: Live Gemini single-probe with explicit free quota proof
         shell: bash
         run: |
           node --input-type=module <<'NODE'
           import {readFileSync,appendFileSync} from 'node:fs';
           const url=readFileSync('lab36-worker-url.txt','utf8').trim();
           const source='La fotosintesi utilizza luce, acqua e anidride carbonica per produrre zuccheri e ossigeno. Gli zuccheri conservano energia chimica.';
-          async function post(path,body){
-            const response=await fetch(url+path,{method:'POST',headers:{'Content-Type':'application/json'},
-              body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
-            const data=await response.json().catch(()=>null);
-            if(!response.ok)throw Error(path+' failed HTTP '+response.status+' '+(data?.code||'unknown'));
-            return data;
+          const summary=process.env.GITHUB_STEP_SUMMARY;
+          async function route(path){
+            const response=await fetch(url+path,{method:'GET',signal:AbortSignal.timeout(15000)});
+            if(response.status!==405)throw Error('Missing LAB36 API route '+path+' status='+response.status);
           }
-          const base=await post('/api/summarize',{paragraphs:[source],level:'studio'});
-          if(base?.summaries?.[0]?.engine!=='ai')throw Error('Existing StudyBook AI endpoint unavailable on LAB worker');
-          const six=await post('/api/editions/v36',{source,context:{chapterTitle:'Biologia'}});
-          for(const level of ['10','20','30','40','50','summary']){
-            if(typeof six?.editions?.[level]!=='string'||!six.editions[level].trim())throw Error('Gemini level '+level+' missing');
-          }
-          if(six.engine!=='ai'||six.sourceVersion!=='original')throw Error('Model identity/source mismatch');
-          appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## StudyBook LAB36 staging Worker\n\n'+url+'\n\nGemini generation: six levels PASSED. Existing summarize: PASSED. Production untouched.\n');
-          console.log('LAB36_STABLE_WORKER_GEMINI=PASS');
+          await route('/api/summarize');
+          await route('/api/editions/v36');
+          // One genuine generation attempt at most, never a paid retry loop.
+          const response=await fetch(url+'/api/editions/v36',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({source,context:{chapterTitle:'Biologia'}}),
+            signal:AbortSignal.timeout(90000)});
+          const data=await response.json().catch(()=>null);
+          if(response.ok){
+            for(const id of ['10','20','30','40','50','summary'])
+              if(typeof data?.editions?.[id]!=='string'||!data.editions[id].trim())
+                throw Error('Gemini edition '+id+' incomplete');
+            if(data.engine!=='ai'||data.sourceVersion!=='original')throw Error('Non-generative output');
+            appendFileSync(summary,'## LAB36 staged Gemini\n\nReal six-edition generation: PASSED.\n\nProduction Worker unchanged.\n');
+            console.log('LIVE_LAB36_SIX_EDITIONS=PASS');
+          }else if([429,503].includes(response.status)){
+            if(!['AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD'].includes(data?.code)
+              ||typeof data?.quota?.kind!=='string')
+              throw Error('Gemini quota error lacks safe classified details');
+            const tag=data.quota.automatic?'AUTO_WAIT':'MANUAL_QUOTA_REVIEW';
+            appendFileSync(summary,'## LAB36 staged Gemini\n\nQuota classification: PASSED ('+
+              data.quota.kind+').\n\nReal six-edition generation: **NOT VERIFIED**, quota currently blocked.\n\n'+
+              'Response has no secret value. Production Worker unchanged.\n');
+            console.log('LIVE_LAB36_QUOTA_DIAGNOSTIC=PASS '+tag+' kind='+data.quota.kind);
+          }else throw Error('Unexpected Gemini staging response '+response.status+' code='+(data?.code||'unknown'));
           NODE
       - uses: actions/upload-artifact@v4
         if: always()

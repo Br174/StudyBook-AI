@@ -1,12 +1,5 @@
 name: LAB36 real Gemini isolated preview
 on:
-  push:
-    branches:
-      - lab/studybook-core-android-01-update-36-reduction-pdf-reflow-20261106
-    paths:
-      - .github/workflows/lab36-generative-preview.yml
-      - api/editionsV36.js
-      - worker/index.js
   workflow_dispatch:
 jobs:
   verify:
