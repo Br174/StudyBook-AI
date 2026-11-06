@@ -448,7 +448,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
 
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
       {v36Partial && <div className="sb-mirror-warning" role="status">
-        <p>ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi verificati. Le pagine incomplete restano segnalate; PDF e download saranno disponibili dopo la verifica finale.</p>
+        <p>ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi verificati. {studyBook.editionsV36?.verifiedVariants||0}/{studyBook.editionsV36?.totalVariants||0} varianti verificate. Le pagine incomplete restano segnalate; PDF e download saranno disponibili dopo la verifica finale.</p>
         {studyBook.editionsV36?.quota && <p>{studyBook.editionsV36.quota.automatic
           ? ('Attesa Gemini · '+(studyBook.editionsV36.quota.estimated?'orario stimato: ':'ripresa prevista: ')+
             new Date(studyBook.editionsV36.quota.retryAt).toLocaleString('it-IT'))

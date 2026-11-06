@@ -1,6 +1,7 @@
 // LAB36: shared free-tier Gemini cooldown persisted in the EXISTING resumeStore.
 import {loadResumeState,saveResumeState,deleteResumeState} from './resumeStore.js';
-const KEY='lab36-gemini-free-tier-quota-global-v1';
+// The old 3.6 Flash cooldown must not lock the new free model family.
+const KEY='lab36-gemini-free-tier-quota-free-family-v2';
 const MAX_WAIT_MS=48*3600000;
 const validKinds=new Set(['requests-minute','tokens-minute','daily','billing','no-free-allocation','overload','unknown']);
 export function makeGeminiPause(quota={},previous=null,now=Date.now()){

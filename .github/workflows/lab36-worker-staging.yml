@@ -6,7 +6,9 @@ on:
     paths:
       - .github/workflows/lab36-worker-staging.yml
       - api/editionsV36.js
+      - src/lib/generativeEditionsV36.js
       - api/geminiQuotaV36.js
+      - wrangler.jsonc
       - worker/index.js
   workflow_dispatch:
 concurrency:
@@ -91,15 +93,14 @@ jobs:
           // One genuine generation attempt at most, never a paid retry loop.
           const response=await fetch(url+'/api/editions/v36',{
             method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({source,context:{chapterTitle:'Biologia'}}),
+            body:JSON.stringify({source,level:'10',context:{chapterTitle:'Biologia'}}),
             signal:AbortSignal.timeout(90000)});
           const data=await response.json().catch(()=>null);
           if(response.ok){
-            for(const id of ['10','20','30','40','50','summary'])
-              if(typeof data?.editions?.[id]!=='string'||!data.editions[id].trim())
-                throw Error('Gemini edition '+id+' incomplete');
+            if(typeof data?.editions?.['10']!=='string'||!data.editions['10'].trim())
+              throw Error('Gemini single-edition generation incomplete');
             if(data.engine!=='ai'||data.sourceVersion!=='original')throw Error('Non-generative output');
-            appendFileSync(summary,'## LAB36 staged Gemini\n\nReal six-edition generation: PASSED.\n\nProduction Worker unchanged.\n');
+            appendFileSync(summary,'## LAB36 staged Gemini\n\nReal Gemini single-edition generation: PASSED; six-level pipeline checked separately.\n\nProduction Worker unchanged.\n');
             console.log('LIVE_LAB36_SIX_EDITIONS=PASS');
           }else if([429,503].includes(response.status)){
             if(!['AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD'].includes(data?.code)
@@ -107,7 +108,7 @@ jobs:
               throw Error('Gemini quota error lacks safe classified details');
             const tag=data.quota.automatic?'AUTO_WAIT':'MANUAL_QUOTA_REVIEW';
             appendFileSync(summary,'## LAB36 staged Gemini\n\nQuota classification: PASSED ('+
-              data.quota.kind+').\n\nReal six-edition generation: **NOT VERIFIED**, quota currently blocked.\n\n'+
+              data.quota.kind+').\n\nReal Gemini single-edition generation: **NOT VERIFIED**, quota currently blocked.\n\n'+
               'Response has no secret value. Production Worker unchanged.\n');
             console.log('LIVE_LAB36_QUOTA_DIAGNOSTIC=PASS '+tag+' kind='+data.quota.kind);
           }else throw Error('Unexpected Gemini staging response '+response.status+' code='+(data?.code||'unknown'));
