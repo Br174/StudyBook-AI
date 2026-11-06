@@ -20,9 +20,19 @@ try{
   let good=await call({source:'Articolo 7, salvo eccezione: la norma non cambia.',context:{chapterTitle:'Norme'}});
   assert.equal(good.code,200);assert.deepEqual(Object.keys(good.payload.editions),levels);assert.equal(good.payload.engine,'ai');
   assert.equal(requestCount,1);
-  globalThis.fetch=async()=>new Response('rate limit',{status:429});
+  globalThis.fetch=async()=>new Response(JSON.stringify({error:{code:429,message:'You exceeded your quota',details:[
+    {'@type':'type.googleapis.com/google.rpc.QuotaFailure',violations:[{
+      quotaMetric:'generativelanguage.googleapis.com/generate_content_free_tier_requests',
+      quotaId:'GenerateRequestsPerDayPerProjectPerModel-FreeTier',
+      quotaDimensions:{model:'test-model'},quotaValue:'20'}]},
+    {'@type':'type.googleapis.com/google.rpc.RetryInfo',retryDelay:'86400s'}
+  ]}}),{status:429,headers:{'Content-Type':'application/json'}});
   let quota=await call({source:'La regola resta valida.'});
   assert.equal(quota.code,429);assert.equal(quota.payload.code,'AI_QUOTA_LIMIT');
+  assert.equal(quota.payload.quota.kind,'daily');
+  assert.equal(quota.payload.quota.retryAfterSeconds,86400);
+  assert.equal(quota.headers?.['Retry-After'],'86400');
+  assert.equal(JSON.stringify(quota.payload).includes('secret-test'),false);
   globalThis.fetch=async()=>new Response(JSON.stringify({choices:[{message:{content:'{"editions":{"10":"solo una"}}'}}]}),{status:200,headers:{'Content-Type':'application/json'}});
   let bad=await call({source:'La regola resta valida.'});
   assert.equal(bad.code,502);assert.equal(bad.payload.code,'INVALID_GENERATIVE_RESPONSE');

@@ -1,4 +1,5 @@
 // LAB36: all six editions derive independently from the same original.
+import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 const LEVELS=['10','20','30','40','50','summary'];
 const RETRYABLE=new Set([408,425,500,502,503,504]);
 const truncate=(x,n)=>String(x??'').trim().slice(0,n);
@@ -66,7 +67,17 @@ export default async function handler(req,res){
         body:JSON.stringify({model,temperature:0.1,messages}),signal:abort.signal
       });
       if(!response.ok){
-        if(response.status===429)return res.status(429).json({error:'Limite Gemini raggiunto: progressi conservati',code:'AI_QUOTA_LIMIT'});
+        if(response.status===429||response.status===503){
+          const upstream=await response.json().catch(()=>null);
+          const quota=diagnoseGeminiQuota({status:response.status,body:upstream,headers:response.headers,model});
+          if(quota.retryAfterSeconds!==null)res.setHeader('Retry-After',String(quota.retryAfterSeconds));
+          return res.status(response.status===503?503:429).json({
+            error:quotaPublicMessage(quota.kind),
+            code:quota.kind==='billing'||quota.kind==='no-free-allocation'?'AI_QUOTA_MANUAL_REVIEW':
+              response.status===503?'AI_TEMPORARY_OVERLOAD':'AI_QUOTA_LIMIT',
+            quota
+          });
+        }
         if(RETRYABLE.has(response.status)&&attempt<2)continue;
         return res.status(502).json({error:'Provider Gemini non disponibile',code:'AI_PROVIDER_'+response.status});
       }
