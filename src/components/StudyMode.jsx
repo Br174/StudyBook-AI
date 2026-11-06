@@ -105,13 +105,15 @@ export default function StudyMode({ book, sourceBook = book, bookTitle, initialM
   const chapterCount = book?.chapters?.length || 0;
   const wholeBookChapter = useMemo(() => ({
     title: 'Intero libro',
-    paragraphs: (book?.chapters || []).flatMap((item, cIndex) => (item.paragraphs || []).map((paragraph) => ({
-      ...paragraph,
-      sourceSection: [item.title, paragraph.sourceSection].filter(Boolean).join(' · '),
-      sourceChapterIndex: cIndex,
-    }))),
+    paragraphs: (book?.chapters || []).flatMap((item, cIndex) =>
+      item?.precisionChapter?.sourceReady === false ? [] : (item.paragraphs || []).map((paragraph) => ({
+        ...paragraph,
+        sourceSection: [item.title, paragraph.sourceSection].filter(Boolean).join(' · '),
+        sourceChapterIndex: cIndex,
+      }))),
   }), [book]);
-  const studySource = studyScope === 'book' ? wholeBookChapter : (chapter || {});
+  const studySource = studyScope === 'book' ? wholeBookChapter :
+    chapter?.precisionChapter?.sourceReady === false ? { title:chapter.title, paragraphs:[] } : (chapter || {});
   const flashcards = useMemo(() => buildFlashcards(studySource, studyScope === 'book' ? 60 : 36), [studySource, studyScope]);
   const quiz = useMemo(() => buildQuiz(studySource, studyScope === 'book' ? 30 : 18), [studySource, studyScope]);
   const oralQuestions = useMemo(() => buildOralQuestions(studySource, studyScope === 'book' ? 36 : 24), [studySource, studyScope]);
