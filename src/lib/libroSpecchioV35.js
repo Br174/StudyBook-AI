@@ -28,7 +28,7 @@ function flattenOutline(nodes=[],depth=1,result=[]){
   return result;
 }
 export function buildCanonicalBookMap({
-  pages=[],chapters=[],outline=[],pageLabels=[],visualAnchors=[],
+  pages=[],chapters=[],outline=[],pageLabels=[],pageDimensions=[],visualAnchors=[],
   originalFingerprint='',pdfPageCount,
 }={}){
   const maxPage=Number.isInteger(pdfPageCount)&&pdfPageCount>0?pdfPageCount:pages.length;
@@ -47,6 +47,8 @@ export function buildCanonicalBookMap({
     const imageReferences=imageByPage.get(i+1)||[];
     return Object.freeze({
       physicalPage:i+1,label:String(pageLabels?.[i]||i+1),
+      widthPt:Number(pageDimensions?.[i]?.widthPt||595.28),
+      heightPt:Number(pageDimensions?.[i]?.heightPt||841.89),
       sourceStatus:source.status||'unknown',
       text:source.text||'',textLength:String(source.text||'').length,
       imageReferences:imageReferences.map(a=>({
@@ -210,12 +212,13 @@ export function composeMirrorPages(sourceMap,book,{
     }
     const sourceStatus=source.sourceStatus;
     let sheet=pushText(pages,source.label,source.physicalPage,null,[],null,null,null,sourceStatus);
-    let remaining=Math.max(1,maxLines),continuation=0,lastSection='',lastChapter='';
+    const sourceLineCapacity=typeof maxLines==='function'?maxLines(source):maxLines;
+    let remaining=Math.max(1,sourceLineCapacity),continuation=0,lastSection='',lastChapter='';
     function newSheet(){
       continuation+=1;
       sheet=pushText(pages,continuationLabel(source.label,continuation),
         source.physicalPage,null,[],null,null,null,sourceStatus);
-      remaining=Math.max(1,maxLines);lastSection='';lastChapter='';
+      remaining=Math.max(1,sourceLineCapacity);lastSection='';lastChapter='';
     }
     for(const e of withReferences){
       if(e.kind==='image-ref'){
@@ -235,8 +238,8 @@ export function composeMirrorPages(sourceMap,book,{
       }
       if(heading.length*2+1>remaining)newSheet();
       for(const h of heading){sheet.blocks.push(h);remaining-=2;}
-      const targetLines=wrapLines(e.text)||[];
-      const originalLineCount=(wrapLines(e.original)||[]).length;
+      const targetLines=wrapLines(e.text,source)||[];
+      const originalLineCount=(wrapLines(e.original,source)||[]).length;
       const outputCount=targetLines.length;
       const minimum=1;
       let offset=0;
