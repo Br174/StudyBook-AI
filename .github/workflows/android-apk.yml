@@ -570,3 +570,25 @@ jobs:
           fi
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/motorlab/active-studybook-ai" --jq '.object.sha')" = "$GITHUB_SHA"
           echo "[MOTORLAB_STUDYBOOK_ANDROID_ACTIVE] $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record verified LAB31 APK artifact for direct retrieval
+        if: success() && github.event_name == 'push' && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-')
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ART_NAME="$STUDYBOOK_ARTIFACT_BASENAME-APK"
+          ART_ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" --jq ".artifacts[] | select(.name == \"$ART_NAME\") | .id" | head -n1)
+          test -n "$ART_ID"
+          APK_SHA=$(sha256sum "artifacts/$STUDYBOOK_ARTIFACT_BASENAME.apk" | cut -d ' ' -f1)
+          JSON=$(jq -nc --arg source_sha "$GITHUB_SHA" --arg branch "$GITHUB_REF_NAME" --arg run_id "$GITHUB_RUN_ID" --arg artifact_id "$ART_ID" --arg artifact_name "$ART_NAME" --arg apk_sha256 "$APK_SHA" --arg version_code "$STUDYBOOK_VERSION_CODE" --arg version_name "$STUDYBOOK_VERSION_NAME" '{source_sha:$source_sha,branch:$branch,run_id:($run_id|tonumber),artifact_id:($artifact_id|tonumber),artifact_name:$artifact_name,apk_sha256:$apk_sha256,version_code:($version_code|tonumber),version_name:$version_name,application_id:"it.studybook.ai.lab",signed_cert_sha256:"D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC",status:"CI_SIGNED_SCUDO_VERIFIED_DEVICE_PENDING"}')
+          BODY=$(printf '%s' "$JSON" | base64 -w0)
+          TARGET=".motorlab/LAB31_SIGNED_APK_RECEIPT.json"
+          PREVIOUS=$(gh api "repos/$GITHUB_REPOSITORY/contents/$TARGET?ref=$GITHUB_REF_NAME" --jq .sha 2>/dev/null || true)
+          if [[ -n "$PREVIOUS" ]]; then
+            gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$TARGET" -f message="chore(LAB31): record signed artifact receipt [skip ci]" -f content="$BODY" -f branch="$GITHUB_REF_NAME" -f sha="$PREVIOUS" --jq '.commit.sha'
+          else
+            gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$TARGET" -f message="chore(LAB31): record signed artifact receipt [skip ci]" -f content="$BODY" -f branch="$GITHUB_REF_NAME" --jq '.commit.sha'
+          fi
