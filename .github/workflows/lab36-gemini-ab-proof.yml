@@ -1,0 +1,53 @@
+name: LAB36 Gemini API key vs prompt-shape A-B proof
+on:
+  push:
+    branches:
+      - lab/studybook-core-android-01-update-36-reduction-pdf-reflow-20261106
+    paths:
+      - .github/workflows/lab36-gemini-ab-proof.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      LAB36_AI_KEY: ${{ secrets.AI_API_KEY }}
+      LAB36_GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - name: Compare one simple and one formatted request on same key, runner, model
+        run: |
+          node --input-type=module <<'NODE'
+          const key=process.env.LAB36_AI_KEY||process.env.LAB36_GEMINI_KEY;
+          if(!key)throw Error('No test secret');
+          const endpoint='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+          const model='gemini-3.5-flash-lite';
+          const cases=[
+            {name:'simple',messages:[{role:'user',content:'Rispondi solo con la parola OK.'}],max_tokens:128,temperature:0},
+            {name:'structured',messages:[
+              {role:'system',content:'Rispondi solo JSON in italiano con una chiave editions e sei stringhe: 10,20,30,40,50,summary. Ogni stringa conserva i fatti.'},
+              {role:'user',content:'La legge non si applica a persone sotto i 18 anni, salvo eccezioni esplicite.'}
+            ],max_tokens:512,temperature:0}
+          ];
+          for(const c of cases){
+            const response=await fetch(endpoint,{
+              method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},
+              body:JSON.stringify({model,messages:c.messages,max_tokens:c.max_tokens,temperature:c.temperature}),
+              signal:AbortSignal.timeout(30000)});
+            const raw=await response.text();
+            let body;
+            try{body=JSON.parse(raw)}catch{body=null}
+            const candidate=Array.isArray(body)?body?.[0]?.error:body?.error;
+            const message=String(candidate?.message||'').replace(/[A-Za-z0-9_-]{25,}/g,'[redacted]').slice(0,180);
+            const diagnostic={
+              test:c.name,http:response.status,
+              resultKind:Array.isArray(body)?'array':typeof body,
+              googleErrorStatus:String(candidate?.status||'').slice(0,60),
+              errorMessage:message,
+              returnedContent:Boolean(body?.choices?.[0]?.message?.content)
+            };
+            console.log('SAFE_LAB36_AB '+JSON.stringify(diagnostic));
+            if(c===cases[0])await new Promise(resolve=>setTimeout(resolve,6500));
+          }
+          NODE
