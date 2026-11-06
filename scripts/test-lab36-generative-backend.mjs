@@ -4,7 +4,7 @@ const levels=['10','20','30','40','50','summary'];
 const originalFetch=globalThis.fetch;
 const prior={url:process.env.AI_API_URL,key:process.env.AI_API_KEY,model:process.env.AI_MODEL};
 process.env.AI_API_URL='https://provider.invalid/gemini';process.env.AI_API_KEY='secret-test';process.env.AI_MODEL='test-model';
-function recorder(){return {code:200,payload:null,setHeader(){return this},status(n){this.code=n;return this},json(x){this.payload=x;return this}};}
+function recorder(){return {code:200,payload:null,headers:{},setHeader(k,v){this.headers[k]=v;return this},status(n){this.code=n;return this},json(x){this.payload=x;return this}};}
 async function call(body){const res=recorder();await handler({method:'POST',body},res);return res;}
 try{
   const expected=Object.fromEntries(levels.map(x=>[x,'Articolo 7, salvo eccezione: la norma non cambia.']));
