@@ -105,7 +105,7 @@ export async function exportMirrorPdfV35(book,fileName,options={}){
   }
   async function printAll(render){
     for(let i=0;i<all.length;i++){
-      if(i>0){const size=paper(all[i]);pdf.addPage([size.width,size.height]);}
+      if(i>0){const size=paper(all[i]);pdf.addPage([size.width,size.height],size.width>size.height?'landscape':'portrait');}
       if(all[i].kind==='image')await printImageSheet(all[i],render);
       else printTextSheet(all[i]);
       if(i%6===0)await new Promise(resolve=>setTimeout(resolve,0));
