@@ -1,0 +1,26 @@
+MOTORLAB LAB31 INTEGRITY360 TURBO CHECKPOINT
+OPERATION_ID=STUDYBOOK-INTEGRITY360-TURBO-LAB31-20261106
+STATUS=CODE_IMPLEMENTED_CI_ANDROID_ACCEPTANCE_PENDING
+PROJECT=Br174/StudyBook-AI
+CORE_RELEASE=2026.10.29-r40
+VERIFIED_BASE_SHA=ced9a3924915c01502a748806099d5c3686fce31
+LAB_BRANCH=lab/studybook-core-android-01-update-31-integrity360-turbo-20261106
+LATEST_APPLICATION_AND_WORKFLOW_SOURCE_SHA=18149424194c6f6ff0a7af1cead9809a01502671
+SCOPE=LAB31A|LAB31B|LAB31C|LAB31D|LAB31E|LAB31F
+USER_APPROVAL=2026-11-06 explicit approval for complete LAB31A-F isolated implementation and APK+ZIP after tests
+CONTENTS=src/lib/integrity360Core.js|src/lib/pdfIntegrityTurbo.js|src/lib/documentParserV11.js|src/lib/ocrResumeStore.js|src/lib/pdfVisuals.js|src/lib/studyEngineV10.js|src/lib/libraryReprocess.js|src/AppV15.jsx
+TESTS=scripts/test-lab31-integrity360-turbo.mjs|scripts/test-lab31-digital-pdf.mjs
+CI_WORKFLOWS=.github/workflows/build.yml|.github/workflows/android-apk.yml
+SYNTHETIC_TEST=1000 mock pages verified 1000/1000 and order/duplicates/missing checks pass after fixing null progressive pages
+REAL_PDF_TEST=WRITTEN_CI_PENDING
+LARGE_SCANNED_1000_PAGE_ANDROID=NOT_RUN
+PERFORMANCE_COMPARISON_VS_LAB30=NOT_MEASURED
+SIGNED_APK_AND_ZIP=NOT_YET_VERIFIED
+SIGNED_ARTIFACT_RECEIPT=.motorlab/LAB31_SIGNED_APK_RECEIPT.json; NOT_PRESENT_AT_LAST_CHECK
+ANDROID_APPLICATION_ID=it.studybook.ai.lab
+CERT_FINGERPRINT_EXPECTED=D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC
+MAIN_MADRE_CHANGED=NO
+ACTIVE_REF_CAUTION=pre-existing signed android-apk.yml automatically advances motorlab/active-studybook-ai after successful individual LAB pushes; read back latest actual ref before any further writes
+NEXT_SAFE_STEP=Inspect LAB31 signed receipt and its source SHA; verify exact run job test/sign steps, artifact_id and APK fingerprint; only then deliver APK+ZIP. If tests failed read CI logs and correct in isolated LAB. Do not promote to MADRE.
+INTEGRITY_CERTIFICATION_NOTE=Page coverage structural automated tests are not semantic correctness guarantees; require real manual sampling for OCR.
+RELEASE_NOTE=No second scheduler; reuse OCR checkpoint store; PDF original preserved; old formats unaffected.
