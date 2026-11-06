@@ -1,4 +1,5 @@
 import { requireIntegrityForStudy } from './integrity360Core.js';
+import { auditMirrorAgainstSource } from './libroSpecchioV35.js';
 import {
   buildStudyBook as buildBaseStudyBook,
   refineParagraphWithAi,
@@ -120,7 +121,10 @@ export async function buildStudyBook(documentData, options = {}) {
     ...baseBook,
     version: Math.max(Number(baseBook?.version || 0), 9),
     chapters,
+    canonicalBookMap: documentData?.canonicalBookMap || null,
     quality: {
+      mirrorStructureAudit: documentData?.canonicalBookMap
+        ? auditMirrorAgainstSource(documentData.canonicalBookMap,{chapters}) : null,
       ...(baseBook?.quality || {}),
       sourceProvenance: documentData?.integrity360 ? {
         originalFingerprint: documentData.integrity360.fingerprint,
