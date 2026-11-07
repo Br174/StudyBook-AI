@@ -85,6 +85,14 @@ async function askGemini(source,context,level,repairIssues=[],paceMs=6500,signal
     const error=new Error(data?.error||'Servizio Gemini temporaneamente non disponibile');
     error.code=data?.code||(response.status===429?'AI_QUOTA_LIMIT':'AI_SERVICE_ERROR');
     if(/^AI_PROVIDER_\d{3}$/.test(error.code))error.code='AI_PROVIDER_REJECTED';
+    // Provider diagnostics contain only model / timing / status / reason. Never source text or API keys.
+    error.diagnostic=data?.diagnostic&&typeof data.diagnostic==='object'
+      ?{reason:String(data.diagnostic.reason||'').slice(0,60),
+        model:String(data.diagnostic.model||'').slice(0,60),
+        httpStatus:Number(data.diagnostic.httpStatus)||response.status,
+        elapsedMs:Math.max(0,Number(data.diagnostic.elapsedMs)||0),
+        finishReason:String(data.diagnostic.finishReason||'').slice(0,40),
+        attempt:Number(data.diagnostic.attempt)||1}:null;
     if(['AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD'].includes(error.code)){
       error.quota=await registerGeminiPause(data?.quota||{
         kind:error.code==='AI_QUOTA_MANUAL_REVIEW'?'no-free-allocation':
@@ -222,7 +230,8 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     caps.forEach((cap,i)=>{jobs[i].summaryCapLetters=cap;});
   }
   let checkpointPersistent=true;
-  const diagnostics={sourceBlocked:0,providerErrors:0,processedJobs:0,lastCode:null,errorsByCode:{},quality:null};
+  const diagnostics={sourceBlocked:0,providerErrors:0,processedJobs:0,lastCode:null,
+    errorsByCode:{},quality:null,lastProviderDiagnostic:null};
   for(let i=0;i<jobs.length;i+=100){
     const wanted=jobs.slice(i,i+100),cache=await loadRuntimeUnitResults(wanted.map(j=>j.key));
     for(const j of wanted){
@@ -267,13 +276,14 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
   const progressEvery=Math.max(5,Math.ceil(pending.length/40));
   let savedVariantsThisRun=0;
   let consecutiveFormatFailures=0;
+  let consecutiveNetworkFailures=0;
   const adaptive=await runAdaptiveBatchQueue({
     // One request at a time; free-tier requests share quotas across keys.
     batches:pending.map(j=>[j]),initialConcurrency:1,
     maxConcurrency:1,
     stopOnFailures:['AI_QUALITY_REVIEW','AI_MANUAL_RESTART','AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD',
       'AI_NOT_CONFIGURED','AI_PROVIDER_REJECTED','AI_SERVICE_ERROR',
-      'AI_TIMEOUT_OR_NETWORK','AI_FORMAT_REVIEW_REQUIRED'],
+      'AI_FORMAT_REVIEW_REQUIRED','AI_NETWORK_REVIEW_REQUIRED'],
     worker:async([job],{aiAllowed})=>{
       if(job.pageIssues.length||!job.source)return {job,aiFailure:'SOURCE_REVIEW',issues:job.pageIssues};
       if(!aiAllowed)return {job,aiFailure:'AI_PAUSED'};
@@ -317,7 +327,6 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
               record.editions[receivedId]=audit.editions[receivedId];
               record.verified[receivedId]=true;
               record.lastFailure=null;
-              consecutiveFormatFailures=0;
               record.issues[receivedId]=[];
               record.achievedPercent[receivedId]=audit.achievedPercent[receivedId];
             }else{
@@ -358,19 +367,24 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
           }
         }catch(error){
           const code=signal?.aborted?'AI_MANUAL_RESTART':(error?.code||'AI_TIMEOUT_OR_NETWORK');
-          if(code==='INVALID_EDITION_RESPONSE'||code==='INVALID_GENERATIVE_RESPONSE'){
-            // Quarantine only the failed part, with no approval of invalid text.
-            // Two consecutive malformed chunks are a likely systemic outage:
-            // stop safely rather than burning the free quota across the book.
+          const network=['AI_TIMEOUT_OR_NETWORK','AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETWORK'];
+          const format=['INVALID_EDITION_RESPONSE','INVALID_GENERATIVE_RESPONSE'];
+          if(format.includes(code)||network.includes(code)){
+            // Keep all previously verified variants; defer exactly this failed chunk.
+            // Two successive failed chunks of the same family open a safety circuit.
             record.lastFailure=code;
-            consecutiveFormatFailures++;
-            return {job,record,aiFailure:consecutiveFormatFailures>=2?
-              'AI_FORMAT_REVIEW_REQUIRED':code};
+            const isFormat=format.includes(code);
+            if(isFormat){consecutiveFormatFailures++;consecutiveNetworkFailures=0;}
+            else{consecutiveNetworkFailures++;consecutiveFormatFailures=0;}
+            return {job,record,providerDiagnostic:error?.diagnostic||null,
+              aiFailure:(isFormat&&consecutiveFormatFailures>=2)?'AI_FORMAT_REVIEW_REQUIRED':
+                (!isFormat&&consecutiveNetworkFailures>=2)?'AI_NETWORK_REVIEW_REQUIRED':code};
           }
-          return {job,record,aiFailure:code};
+          return {job,record,providerDiagnostic:error?.diagnostic||null,aiFailure:code};
         }
       }
       const valid=GEMINI_LEVELS.every(id=>record.verified[id]===true);
+      if(valid){consecutiveFormatFailures=0;consecutiveNetworkFailures=0;record.lastFailure=null;}
       return {job,record,aiSuccess:valid,aiFailure:valid?null:
         (semanticFailure?'SEMANTIC_REVIEW':'EDITION_INCOMPLETE')};
     },
@@ -378,6 +392,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
       for(const result of results){
         diagnostics.processedJobs++;
         if(result.quality)diagnostics.quality=result.quality;
+        if(result.providerDiagnostic)diagnostics.lastProviderDiagnostic=result.providerDiagnostic;
         if(result.aiFailure){
           const code=String(result.aiFailure).slice(0,60);
           diagnostics.lastCode=code;
@@ -411,7 +426,8 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
   if(adaptive.haltedOn==='AI_NOT_CONFIGURED')final.status='ai-unavailable';
   if(['AI_PROVIDER_REJECTED','AI_SERVICE_ERROR','AI_TIMEOUT_OR_NETWORK',
       'INVALID_EDITION_RESPONSE','INVALID_GENERATIVE_RESPONSE',
-      'AI_FORMAT_REVIEW_REQUIRED'].includes(adaptive.haltedOn))
+      'AI_FORMAT_REVIEW_REQUIRED','AI_NETWORK_REVIEW_REQUIRED',
+      'AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETWORK'].includes(adaptive.haltedOn))
     final.status='provider-blocked';
   if(!adaptive.haltedOn && diagnostics.sourceBlocked>0 && final.verifiedChunkVariants===0)
     final.status='source-review-needed';
