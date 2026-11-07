@@ -46,8 +46,10 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: studybook-android-lab-01
-  cancel-in-progress: false
+  # LAB48 uses an isolated lane: never cancel a stable LAB45/LAB47 build,
+  # and supersede stale LAB48 commits rather than processing a long queue.
+  group: ${{ startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-') && 'studybook-android-lab-48' || 'studybook-android-lab-01' }}
+  cancel-in-progress: ${{ startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-') }}
 
 jobs:
   apk:
