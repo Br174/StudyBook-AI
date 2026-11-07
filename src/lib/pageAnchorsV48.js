@@ -32,7 +32,9 @@ export function anchorPageEntriesV48(source,sourceMap,entries=[]){
   // A heading belongs to its printed original source page, never every
   // processed paragraph, chapter view or bis/tris continuation.
   const headings=[];
-  if(entries.length){
+  // A frontispiece or index fallback already contains the literal source text:
+  // do not duplicate its headings as separate processed objects.
+  if(entries.some(entry=>entry.kind==='paragraph')){
     const page=Number(source?.physicalPage);
     for(const chapter of sourceMap?.chapters||[]){
       if(Number(chapter.pageStart)===page){
