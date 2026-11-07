@@ -29,7 +29,7 @@ import {STUDY_PILLAR_VERSION} from './lib/studyPillarV38.js';
 import {studyHomeAction,sameStoredDocument} from './lib/studyHomeFlowV38.js';
 import {progressDiagnostic} from './lib/geminiRecoveryV39.js';
 import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
-import { planStudyAutoResumeV45 } from './lib/studyAutoResumeV45.js';
+import { planStudyAutoResumeV45,autoResumeWakeDecisionV54,autoResumeNextWakeMsV54 } from './lib/studyAutoResumeV45.js';
 import { studyPageProgressV48 } from './lib/studyPageProgressV48.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
@@ -266,20 +266,44 @@ export default function AppV14() {
     }
     const plan=planStudyAutoResumeV45(editions,Date.now(),state.stalledAttempts);
     if(!plan)return;
-    let fired=false;
+    // LAB54: keep the original single LAB45 recovery owner. A timer that fires
+    // 1ms early must re-arm instead of consuming the only retry. Android sleep,
+    // screen-off and activity re-entry all recompute the SAME saved cooldown.
+    let fired=false,cancelled=false,timer=null;
+    const schedule=()=>{
+      if(cancelled||fired)return;
+      if(timer!==null)clearTimeout(timer);
+      const delay=autoResumeNextWakeMsV54(plan,Date.now());
+      if(delay!==null)timer=setTimeout(tryResume,delay);
+    };
     const tryResume=()=>{
-      if(fired||Date.now()<plan.at)return;
-      if(typeof document!=='undefined'&&document.visibilityState==='hidden')return;
-      fired=true;
+      if(cancelled||fired)return;
+      const visible=typeof document==='undefined'||document.visibilityState!=='hidden';
+      const decision=autoResumeWakeDecisionV54(plan,{
+        now:Date.now(),visible,inFlight:resumeExecutionRef.current
+      });
+      if(decision==='too-early'||decision==='in-flight'){schedule();return;}
+      if(decision==='foreground-required')return; // Resume on visibility/focus/pageshow.
+      if(decision!=='ready')return;
+      fired=true; // One writer, no duplicate request on concurrent wake events.
       if(plan.reason!=='provider-cooldown')state.stalledAttempts++;
       if(activeEdition&&documentData)void resumeGeminiEditions();
       else void resumeFromHome({auto:true});
     };
-    const timer=setTimeout(tryResume,Math.min(2**31-1,Math.max(0,plan.at-Date.now())));
+    schedule();
     if(typeof document!=='undefined')document.addEventListener('visibilitychange',tryResume);
+    if(typeof window!=='undefined'){
+      window.addEventListener('focus',tryResume);
+      window.addEventListener('pageshow',tryResume);
+    }
     return ()=>{
-      clearTimeout(timer);
+      cancelled=true;
+      if(timer!==null)clearTimeout(timer);
       if(typeof document!=='undefined')document.removeEventListener('visibilitychange',tryResume);
+      if(typeof window!=='undefined'){
+        window.removeEventListener('focus',tryResume);
+        window.removeEventListener('pageshow',tryResume);
+      }
     };
   },[generating,libraryId,documentData,studyBook?.editionsV36?.updatedAt,
     studyBook?.editionsV36?.status,studyBook?.editionsV36?.verifiedChunkVariants,
