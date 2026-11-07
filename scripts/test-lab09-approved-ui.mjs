@@ -24,7 +24,7 @@ assert.ok(book.includes('onClick={onRead}') && book.includes('onClick={onStudy}'
 assert.ok(book.includes("onExport('pdf', 'study')") && book.includes('setExportOpen((value) => !value)'), 'PDF and export functionality preserved');
 assert.ok(book.includes('<StudyIcon name="graduate"') && book.includes('<StudyIcon name="download"'), 'new Book icons');
 assert.ok(book.includes('<StudyIcon name="coverage"') && book.includes('<StudyIcon name="compression"'), 'quality metric icons');
-assert.ok(!book.includes('Verifica richiesta') && !book.includes('Tutto quello che fai qui appartiene'), 'redudancies stay removed');
+assert.ok(!book.includes('Tutto quello che fai qui appartiene') && book.includes("generating?'↻ Verifica richiesta Gemini'"), 'Removed redundant banner stays absent; active Gemini recovery button stays available');
 assert.ok(book.includes('Controllo del libro') && book.includes('fidelity?.conceptUnits'), 'quality values preserved');
 assert.ok(nav.includes('<StudyIcon name={icon}'), 'shared navigation icon family');
 assert.ok(study.includes('<StudyIcon name={icon} size={23}') && study.includes("['oral', 'Interrogazione', 'oral']"), 'study tabs use real icons');
