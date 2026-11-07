@@ -36,7 +36,7 @@ function singlePrompt(level,repairIssues,{policy=false,source='',targetLetters=n
     const rawLetters=studyLetters(source);
     const exact=level==='summary'?null:(Number.isInteger(targetLetters)?targetLetters:exactRetained(rawLetters,Number(level)));
     const cap=Number.isInteger(summaryCapLetters)?summaryCapLetters:Math.max(0,exactRetained(rawLetters,50)-1);
-    const mode=level==='summary'?'PRIMA INFARINATURA: elenco compatto di TUTTI i concetti fondamentali con una microspiegazione ciascuno.'
+    const mode=level==='summary'?'PRIMA INFARINATURA: conserva TUTTI i concetti portanti in UNA o POCHE frasi estremamente compatte. Niente introduzioni, ripetizioni o elenco lungo; collega soggetto, definizione, condizioni e conseguenze con parole brevi.'
       :level==='50'?'SCHEMA: concetti portanti in elenco o quasi elenco, con spiegazioni molto brevi.'
       :level==='40'?'SCHEMA COMMENTATO: stessi concetti fondamentali, spiegazioni e nessi essenziali.'
       :level==='30'?'STUDIO INTERMEDIO: conserva i concetti fondamentali, amplia ragionamento, confronti e nessi.'
@@ -48,6 +48,7 @@ function singlePrompt(level,repairIssues,{policy=false,source='',targetLetters=n
     return [...coreRules,
       'REQUISITO IMMUTABILE STUDYBOOK: Riassunto -> 50 -> 40 -> 30 -> 20 -> 10 -> originale. TUTTE le edizioni conservano gli STESSI concetti portanti; soltanto la profondità di spiegazione aumenta.',
       'Non tentare di conservare ogni dettaglio secondario nel 50% e nel riassunto; mantieni argomenti, definizioni indispensabili, nomi/riferimenti, condizioni e negazioni essenziali.',
+      'RIASSUNTO: usa, quando possibile, gli stessi sostantivi chiave della fonte, non sostituirli con sinonimi distanti. In ogni frase-concetto trattieni un riferimento lessicale riconoscibile. Elimina ripetizioni, non concetti; rispetta comunque il massimo assoluto di lettere richiesto.',
       mode,sizeRule,
       'Riscrivi in italiano naturale. NON tagliare parole, NON inventare fatti, NON cancellare concetti fondamentali per rispettare la quota.',
       'Laddove serva uno schema, usa il simbolo • tra i punti, con brevi spiegazioni. Ogni punto resta riconoscibile nel 40, 30, 20 e 10%.',
