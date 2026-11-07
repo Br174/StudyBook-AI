@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {bookUnitsV51,naturalBoundaryV51,planNaturalBlocksV51,
   bisectAtNaturalBoundaryV51,blockLetterTargetV51} from '../src/lib/integralPlannerV51.js';
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
+import {publishSequentialPagesV51} from '../src/lib/pagePublicationV51.js';
 import bulkHandler from '../api/editionsBulkV51.js';
 
 const chapters=[{title:'Capitolo uno',pageStart:1,pageEnd:44,paragraphs:[],sections:[]}];
@@ -30,6 +31,24 @@ for(const level of ['10','20','30','40','50']){
 const summary=planNaturalBlocksV51(units,'summary',{maxOutputTokens:5000});
 assert.ok(summary.reduce((n,b)=>n+blockLetterTargetV51(b,'summary').summaryCapLetters,0)<
   exactRetained(units.reduce((n,u)=>n+studyLetters(u.source),0),50));
+const staged=chapters[0].paragraphs.map((_,pi)=>({
+ editions:{summary:'Risultato'},verified:{summary:pi>=8&&pi<=9},
+ issues:{},achievedPercent:{},partialFragments:{}
+}));
+const visible=publishSequentialPagesV51({
+ chapters,canonicalBookMap:{pageCount:44}
+},[staged]);
+assert.equal(visible.through.summary,0);
+assert.equal(visible.rows[0][8].verified.summary,false,
+  'later pages must never appear ready before page 1');
+assert.equal(staged[8].verified.summary,true,'later checkpoint remains stored');
+staged[0].verified.summary=true;staged[1].verified.summary=true;
+const first=publishSequentialPagesV51({
+ chapters,canonicalBookMap:{pageCount:44}
+},[staged]);
+assert.equal(first.through.summary,1);
+assert.equal(first.rows[0][0].verified.summary,true);
+assert.equal(first.rows[0][8].verified.summary,false);
 const spanning=[
   {id:'0:0',ci:0,source:'a'.repeat(200),pageStart:1,pageEnd:2},
   {id:'0:1',ci:0,source:'b'.repeat(200),pageStart:2,pageEnd:3},
