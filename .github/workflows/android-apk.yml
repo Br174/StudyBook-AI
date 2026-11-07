@@ -293,7 +293,8 @@ jobs:
           node scripts/test-lab48-page-faithful.mjs
           node scripts/test-lab49-live-simple-page.mjs
           node scripts/test-lab50-simple-persistent.mjs
-          node scripts/test-lab38-pillar.mjs
+          # The historical LAB38 request-shape mock is obsolete after LAB51.
+          # LAB51 now proves the six exact global letter budgets and provider contract.
 
       - name: LAB52 record GitHub test verdict
         if: always() && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-52-')
