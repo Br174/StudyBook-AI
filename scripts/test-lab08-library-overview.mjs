@@ -27,7 +27,7 @@ for (const name of ['Leggi sul telefono','Leggi in PDF','Studia sul telefono','S
   assert.ok(studio.includes(name), 'The full book view retains ' + name);
 }
 assert.ok(!studio.includes('Tutto quello che fai qui appartiene a'), 'Redundant context removed');
-assert.ok(!studio.includes('Verifica richiesta'), 'Yellow verification banner removed');
+assert.ok(studio.includes("generating?'↻ Verifica richiesta Gemini'"), 'Recovery action remains inside the inline progress panel, not a yellow banner');
 assert.ok(!studio.includes('sb-fidelity warn'), 'Quality status banner element not rendered');
 assert.ok(studio.includes('fidelity?.conceptUnits') && studio.includes('fidelity.averageCoveragePercent'), 'Quality statistics preserved');
 assert.ok(app.includes('className="sb-back-button" onClick={goBack}'), 'Back button unchanged');
