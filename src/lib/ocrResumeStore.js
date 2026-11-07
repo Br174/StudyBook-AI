@@ -172,6 +172,7 @@ export async function saveIntegrity360Page(signature, page) {
         rawText: typeof page.rawText === 'string' ? page.rawText : page.text,
         source: page.source,
         widthPt:Number(page.widthPt)||null,heightPt:Number(page.heightPt)||null,
+        textLineGeometry:Array.isArray(page.textLineGeometry)?page.textLineGeometry:[],
         // LAB47 book checkpoints store TEXT only, never even visual catalogs.
         ...(signature.endsWith(':text-only-v47') ? {} : {
           imageCount: Number(page.imageCount || 0),
