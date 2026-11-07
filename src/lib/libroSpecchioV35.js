@@ -167,7 +167,8 @@ export function composeMirrorPages(sourceMap,book,{
   if(!sourceMap?.pages?.length || !book) return {pages:[],audit:{valid:false,problems:['missing-input']}};
   const audit=auditMirrorAgainstSource(sourceMap,book);
   const byPhysicalPage=new Map(sourceMap.pages.map(p=>[p.physicalPage,{
-    source:p,entries:[],images:(sourceMap.visualAnchors||[]).filter(a=>a.sourcePage===p.physicalPage),
+    source:p,entries:[],// LAB51: study books are text-only; scanner archive and original PDF remain untouched.
+    images:variant==='study'?[]:(sourceMap.visualAnchors||[]).filter(a=>a.sourcePage===p.physicalPage),
   }]));
   // Each original paragraph has one immutable page owner. Multi-page old
   // paragraphs are marked uncertain, NEVER silently spread to the next page.
@@ -305,7 +306,7 @@ export function composeMirrorPages(sourceMap,book,{
   }
   audit.valid=audit.problems.length===0;
   return {pages,audit,sourcePageCount:sourceMap.pageCount,
-    imageCount:(sourceMap.visualAnchors||[]).length,
+    imageCount:variant==='study'?0:(sourceMap.visualAnchors||[]).length,
     paginationOwner:'physical-source-pages-v48',headingOwner:'source-text-anchors-v48',
     structureLocked:true,variant};
 }
