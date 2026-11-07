@@ -80,7 +80,8 @@ try {
   assert.equal(book.chapters.length, 1);
   assert.equal(book.chapters[0].paragraphs.length, 1, 'Il paragrafo originale deve essere ricomposto');
   assert.equal(book.chapters[0].paragraphs[0].original, pathological, 'Il testo originale deve restare intatto');
-  assert.ok(book.chapters[0].paragraphs[0].simpleSummary, 'La versione in parole semplici deve essere ricomposta');
+  assert.equal(book.chapters[0].paragraphs[0].simpleSummary,undefined, 'La versione In parole semplici deve restare assente finché non viene chiesta sul pulsante');
+  assert.ok(book.chapters[0].paragraphs[0].summary, 'Il riassunto principale lungo deve essere ricomposto');
   assert.equal(book.chapters[0].paragraphs[0].engine, 'misto', 'AI + fallback locale deve risultare misto');
   assert.equal(book.engine, 'misto');
 
