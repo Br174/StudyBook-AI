@@ -378,7 +378,7 @@ jobs:
 
 
       - name: Deploy ONLY isolated LAB42 Gemini recovery Worker
-        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-41-')
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-42-')
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -409,7 +409,7 @@ jobs:
           NODE
 
       - name: LAB42 live Gemini policy and JSON-schema smoke (free tier)
-        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-41-')
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-42-')
         run: node scripts/test-lab42-real-policy.mjs
 
       - name: Deploy ONLY isolated LAB41 Gemini recovery Worker
