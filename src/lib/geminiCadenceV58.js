@@ -69,10 +69,12 @@ export function restoredLargeBlockLimitV58(previous){
    Math.max(1600,Math.min(900000,Number(previous.diagnostics.hardBlockSizeLimitV58))):
    900000;
 }
-export async function learnGeminiCadenceV58(quota){
+export async function learnGeminiCadenceV58(quota,{inputTokens=0}={}){
  if(!quota||!['requests-minute','tokens-minute'].includes(quota.kind))return null;
  const prior=await loadResumeState(KEY);
- const next=cadenceFromQuotaV58(quota,prior);
+ const observed=Number(inputTokens);
+ const known=Number.isFinite(observed)&&observed>0?{...prior,lastInputTokens:observed}:prior;
+ const next=cadenceFromQuotaV58(quota,known);
  if(next)await saveResumeState(KEY,next);
  return next;
 }
