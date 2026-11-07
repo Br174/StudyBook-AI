@@ -2,6 +2,7 @@
 import { countWords, countLetters } from './studyQualityGuard.js';
 import { explainInSimpleWords } from './simpleLanguage.js';
 import { normalizeStudyParagraphFlow } from './readingFlowV36.js';
+import { buildVerifiedFragmentPreviewV45 } from './studyPreviewV45.js';
 
 const PENDING='Testo rielaborato non ancora verificato per questa pagina.';
 const labels={10:'Pulizia leggera',20:'Testo diretto',30:'Studio sintetico',
@@ -12,20 +13,29 @@ export function buildGeminiEditionViewV36(book,reduction){
   if(!Object.hasOwn(labels,id))return null;
   const source=book.editionsV36;
   let sourceLetters=0,outputLetters=0,sourceWords=0,outputWords=0,valid=0,total=0;
+  let readablePartialParagraphs=0,verifiedPreviewFragments=0;
   const chapters=(book.chapters||[]).map((chapter,ci)=>({
     ...chapter,
     paragraphs:(chapter.paragraphs||[]).map((p,pi)=>{
       const paragraph=source.rows?.[ci]?.[pi];
       const verified=paragraph?.verified?.[id]===true&&typeof paragraph?.editions?.[id]==='string'&&paragraph.editions[id].trim();
-      const text=verified?normalizeStudyParagraphFlow(paragraph.editions[id]):PENDING;
+      const fragmentPreview=verified?null:buildVerifiedFragmentPreviewV45(paragraph?.partialFragments?.[id]);
+      const text=verified?normalizeStudyParagraphFlow(paragraph.editions[id]):
+        (fragmentPreview?.text||PENDING);
       const original=String(p.original||'');
       sourceLetters+=countLetters(original);sourceWords+=countWords(original);
       total++;
       if(verified){valid++;outputLetters+=countLetters(text);outputWords+=countWords(text);}
+      if(fragmentPreview){
+        readablePartialParagraphs++;
+        verifiedPreviewFragments+=fragmentPreview.verifiedFragments;
+      }
       return {
         ...p,summary:text,dsaSummary:text,
-        simpleSummary:verified?explainInSimpleWords(text):PENDING,
+        simpleSummary:verified?explainInSimpleWords(text):(fragmentPreview?.text||PENDING),
         editionPending:!verified,
+        editionPreviewOnly:!verified,
+        editionPreviewFragments:fragmentPreview?.verifiedFragments||0,
         editionSource:'gemini-v36-original',
         precisionAudit:{...(p.precisionAudit||{}),sourceNeedsReview:!verified,
           coherent:Boolean(verified),fallbackOriginal:false,
@@ -41,6 +51,8 @@ export function buildGeminiEditionViewV36(book,reduction){
   const targetPercent=id==='summary'?null:Number(id);
   const editionReadiness={
     complete,partial:!complete,verifiedParagraphs:valid,totalParagraphs:total,
+    readableParagraphs:valid+readablePartialParagraphs,
+    verifiedPreviewFragments,
     source:'gemini-v36',level:id,
     status:complete?'complete':'preview-only',
   };
