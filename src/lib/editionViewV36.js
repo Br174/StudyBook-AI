@@ -44,7 +44,8 @@ export function buildGeminiEditionViewV36(book,reduction){
     }),
   }));
   const pillar=book?.studyPillarV38==='studybook-progressive-v38-1';
-  const complete=source.complete===true && total>0&&valid===total&&
+  // A completed single edition is independently studiable/exportable while other levels run.
+  const complete=total>0&&valid===total&&
     (!pillar||source.version==='lab38-progressive-editions-v1');
   const achievedLettersPercent=sourceLetters&&complete
     ?Math.round((1-outputLetters/sourceLetters)*1000)/10:null;
