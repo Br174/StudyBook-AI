@@ -143,7 +143,7 @@ function publishEdition(rows,units,drafts,level){
 async function request(block,level,{bookTitle='',signal=null,phase='draft',repairDrafts=[],
   targetOverride=null}={}){
  const target=blockLetterTargetV51(block,level),chars=block.reduce((n,u)=>n+u.source.length,0);
- const ratio=level==='summary'?.44:1-Number(level)/100;
+ const ratio=level==='summary'?0.44:1-Number(level)/100;
  const tokenBudget=Math.min(BULK_OUTPUT_TOKEN_CEILING,
    Math.max(4096,Math.ceil(chars*ratio/1.5)+block.length*115+1800));
  const expected=targetOverride===null?(level==='summary'?target.summaryCapLetters:target.targetLetters):
