@@ -124,8 +124,14 @@ try{
  assert.equal(state.diagnostics.pendingQualityV61.attentionRequired,true);
  assert.equal(planStudyAutoResumeV45(state),null,
    'no auto-loop after exhausting bounded attempts');
+ // LAB62 grants ONE recovery on the old exhausted LAB61 checkpoint
+ // after the repair strategy changes, never an unbounded rearm.
  state=await generateDraftFirstV57({...q,editionsV36:state});
- assert.equal(badCalls,3,'manual reentry cannot consume quota infinitely');
+ assert.equal(badCalls,4,'one targeted retry allowed after new repair strategy');
+ assert.equal(state.diagnostics.qualityRecoveryV62?.resetOnce,true);
+ for(let i=0;i<3;i++)
+   state=await generateDraftFirstV57({...q,editionsV36:state});
+ assert.equal(badCalls,6,'no infinite quota usage after one-time recovery');
  assert.equal(state.complete,false,'no false 44/44 for bad pedagogical text');
  // Numeric exact target is a final global gate, NOT a page-by-page quota.
  await clearGeminiPause();await clearGeminiCadenceForTestV58();
