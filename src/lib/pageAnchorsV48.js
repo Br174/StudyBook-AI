@@ -21,10 +21,14 @@ function paragraphLine(lines,source){
 }
 export function anchorPageEntriesV48(source,sourceMap,entries=[]){
   const lines=String(source?.text||'').split('\n').map(x=>x.trim()).filter(Boolean);
-  const numbered=entries.map((entry,index)=>({
-    ...entry,sourceLineIndex:paragraphLine(lines,entry.original),
-    sourceOrder:index,
-  }));
+  const geometry=Array.isArray(source?.textLineGeometry)?source.textLineGeometry:[];
+  const topAt=index=>index>=0&&Number.isFinite(geometry[index]?.topPt)
+    ?Number(geometry[index].topPt):null;
+  const numbered=entries.map((entry,index)=>{
+    const line=paragraphLine(lines,entry.original);
+    return {...entry,sourceLineIndex:line,sourceTopPt:topAt(line),
+      sourceOrder:index};
+  });
   // A heading belongs to its printed original source page, never every
   // processed paragraph, chapter view or bis/tris continuation.
   const headings=[];
@@ -33,13 +37,13 @@ export function anchorPageEntriesV48(source,sourceMap,entries=[]){
     for(const chapter of sourceMap?.chapters||[]){
       if(Number(chapter.pageStart)===page){
         const pos=titleLine(lines,chapter.title);
-        if(pos>=0)headings.push({kind:'chapter-title',text:lines[pos],sourceLineIndex:pos});
+        if(pos>=0)headings.push({kind:'chapter-title',text:lines[pos],sourceLineIndex:pos,sourceTopPt:topAt(pos)});
       }
       for(const section of chapter.sections||[]){
         if(Number(section.pageStart)!==page)continue;
         const pos=titleLine(lines,section.title);
         if(pos>=0)headings.push({kind:'section-title',text:lines[pos],
-          sourceLineIndex:pos,sectionLevel:Number(section.level||2)});
+          sourceLineIndex:pos,sourceTopPt:topAt(pos),sectionLevel:Number(section.level||2)});
       }
     }
   }
