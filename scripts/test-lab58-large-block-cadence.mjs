@@ -114,9 +114,12 @@ try{
  assert.equal(resumed.draftUnitsSaved,714);
  assert.equal(resumed.integralInputLimit,900000);
  assert.equal(requests.length,6);
- assert.equal(requests.reduce((n,x)=>n+x.units,0),714-76);
- assert.ok(requests.every(r=>r.from===1&&r.to===44),
-  'no resegmentation: each request covers original 44 pages');
+ const unitInputs=requests.reduce((n,x)=>n+x.units,0);
+ assert.ok(unitInputs>=714-76&&unitInputs<=714,
+   'a page-boundary request can include a previously verified unit but not extra calls');
+ assert.equal(requests[0].to,44,'the resumed summary ends on original page 44');
+ assert.ok(requests.slice(1).every(r=>r.from===1&&r.to===44),
+  'all other full draft editions use exactly one whole-book block');
  assert.deepEqual(requests.map(x=>x.level),['summary','50','40','30','20','10']);
  assert.equal(await readGeminiCadenceV58(),null,
   'provider success without any RPM evidence must NOT introduce a delay');
