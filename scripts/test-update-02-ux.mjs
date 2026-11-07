@@ -28,9 +28,8 @@ assert.ok(css.includes('.sb-book-quick-actions'));
 assert.ok(!tools.includes('...splitSentences(paragraphText(paragraph))'));
 
 const local = summarizeLocally('La disciplina si applica mediante tre condizioni. La prima condizione richiede un requisito specifico. Tuttavia esiste una eccezione espressa. Pertanto occorre verificare il caso concreto.', 'studio');
-assert.ok(local.simpleSummary);
-assert.notEqual(local.simpleSummary, local.summary);
-assert.equal(editorialParagraphText(local, { variant: 'simple' }), local.simpleSummary);
+assert.equal(local.simpleSummary,undefined,'No auto-prepared simple version during the import or download.');
+assert.ok(local.summary,'The primary study summary is still generated normally.');
 assert.equal(editorialParagraphText(local, { variant: 'study' }), local.summary);
 
-console.log(JSON.stringify({ ok:true, openBookCover:true, compactActions:true, processedPdfExplicit:true, originalFormatReader:true, distinctStudyAndSimpleText:true, groundedQuizFlashcardsOnly:true }, null, 2));
+console.log(JSON.stringify({ ok:true, openBookCover:true, compactActions:true, processedPdfExplicit:true, originalFormatReader:true, manualSimpleOnly:true, groundedQuizFlashcardsOnly:true }, null, 2));
