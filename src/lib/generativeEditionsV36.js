@@ -283,7 +283,8 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     maxConcurrency:1,
     stopOnFailures:['AI_QUALITY_REVIEW','AI_MANUAL_RESTART','AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD',
       'AI_NOT_CONFIGURED','AI_PROVIDER_REJECTED','AI_SERVICE_ERROR',
-      'AI_FORMAT_REVIEW_REQUIRED','AI_NETWORK_REVIEW_REQUIRED'],
+      'AI_FORMAT_REVIEW_REQUIRED','AI_NETWORK_REVIEW_REQUIRED',
+      ...(pending.length===1?['AI_TIMEOUT_OR_NETWORK','AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETWORK']:[])],
     worker:async([job],{aiAllowed})=>{
       if(job.pageIssues.length||!job.source)return {job,aiFailure:'SOURCE_REVIEW',issues:job.pageIssues};
       if(!aiAllowed)return {job,aiFailure:'AI_PAUSED'};
