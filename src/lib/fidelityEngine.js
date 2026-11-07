@@ -240,3 +240,61 @@ export function removeExactCrossParagraphRedundancy(paragraphs = []) {
     return { ...paragraph, summary };
   });
 }
+
+
+// LAB43 progressive-study relevance guard. This is an EXPLAINABLE topic
+// consistency check, not a claim of full semantic understanding. Source-word
+// preservation percentages must NOT determine summary correctness: a correct
+// paraphrase may use fewer or different words.
+const PROGRESSIVE_TOPIC_FAMILIES = [
+  ['norma','norme','normativo','normativa','regola','regole','precetto','precetti'],
+  ['diritto','diritti','giuridico','giuridica','giuridici','giuridiche'],
+  ['obbligo','obblighi','dovere','doveri','obbligazione','obbligazioni'],
+  ['facolta','facoltà','potere','poteri','possibilita','possibilità'],
+  ['giustizia','giusto','giusta','equita','equità'],
+  ['liberta','libertà','autonomia'],
+  ['responsabilita','responsabilità','responsabile'],
+  ['sociale','sociali','societa','società','collettivita','collettività'],
+  ['stabilisce','stabilire','prevede','prevedere','fissa','fissare'],
+  ['disciplina','disciplinare','regola','regolano','regolamenta'],
+  ['contratto','contratti','accordo','accordi'],
+  ['sanzione','sanzioni','pena','pene'],
+  ['legge','leggi','legislazione','normativa'],
+];
+const PROGRESSIVE_TOPIC_MAP=new Map(PROGRESSIVE_TOPIC_FAMILIES.flatMap((group,index)=>
+  group.map(word=>[word.toLocaleLowerCase('it-IT').normalize('NFD').replace(/[\u0300-\u036f]/g,''),'t'+index])));
+const PROGRESSIVE_NOISE = new Set(['quindi','infatti','tuttavia','inoltre','piuttosto','distinzione',
+ 'particolare','possibile','considerare','considerazione','elemento','elementi','parte','parti',
+ 'contenuto','contenuti','concetto','concetti','importante','aspetto','aspetti','esempio','esempi',
+ 'generale','generali','specifico','specifica','diverso','diversa']);
+function progressiveKey(word){
+  const token=String(word||'').toLocaleLowerCase('it-IT').normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'');
+  if(PROGRESSIVE_NOISE.has(token))return null;
+  if(PROGRESSIVE_TOPIC_MAP.has(token))return PROGRESSIVE_TOPIC_MAP.get(token);
+  // A light Italian morphological variant, never an arbitrary synonym guess.
+  if(token.length>=6 && /[aeio]$/u.test(token))return token.slice(0,-1);
+  return token.length>=4?token:null;
+}
+function progressiveTerms(text){
+  return [...new Set(contentWords(text).map(progressiveKey).filter(Boolean))];
+}
+export function auditProgressiveConcepts(source,generated){
+  const sourceTopics=progressiveTerms(source),generatedTopics=progressiveTerms(generated);
+  const sourceSet=new Set(sourceTopics);
+  const shared=generatedTopics.filter(key=>sourceSet.has(key));
+  // Require actual source-topic support, including at least two independent
+  // topics for a multi-concept source. No rigid "50% original vocabulary" gate.
+  const minimum=sourceTopics.length>=3?2:sourceTopics.length>0?1:0;
+  const issues=[];
+  if(shared.length<minimum)issues.push('source-topic-support-insufficient');
+  // Newly introduced legal citations, numeric/date claims or qualifiers must
+  // not be approved just because they share the same broad subject.
+  const protectedSource=new Set(extractProtectedItems(source).filter(x=>x.kind!=='qualifier')
+    .map(x=>x.kind+':'+x.value.toLocaleLowerCase('it-IT')));
+  const unsupported=extractProtectedItems(generated)
+    .filter(x=>x.kind!=='qualifier' && !protectedSource.has(x.kind+':'+x.value.toLocaleLowerCase('it-IT')));
+  if(unsupported.length)issues.push('new-protected-fact-not-in-source');
+  return {supported:issues.length===0,issues,sharedTopicCount:shared.length,
+    sourceTopicCount:sourceTopics.length,generatedTopicCount:generatedTopics.length};
+}

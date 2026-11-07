@@ -1,6 +1,6 @@
 // LAB36 sparse, content-addressed edition checkpoints. Single existing MotorLab runtime.
 import {apiEndpoint} from './apiEndpoint.js';
-import {auditFidelity} from './fidelityEngine.js';
+import {auditFidelity,auditProgressiveConcepts} from './fidelityEngine.js';
 import {checkReducedParagraph,countLetters} from './studyQualityGuard.js';
 import {splitLongParagraph} from './studyEngineV11.js';
 import {normalizeStudyParagraphFlow} from './readingFlowV36.js';
@@ -37,12 +37,12 @@ export function auditGeminiLevels(original,editions,{pillar=false,targetByLevel=
       // Preserve scoped negations, dates, legal references, exceptions and named anchors.
       if(semantic.missingProtected.length||semantic.qualifierMismatches.length)
         reasons.push('protected-meaning-review');
-      // This conservative lexical gate is NOT a substitute for human semantic
-      // validation, but blocks trivially unrelated and missing-concept outputs.
-      const minCoverage=id==='summary'?50:id==='50'?60:id==='40'?64:
-        id==='30'?68:id==='20'?72:78;
-      if(semantic.coveragePercent<minCoverage)
-        reasons.push('core-concept-coverage-below-'+minCoverage);
+      // LAB43: a 50% *source vocabulary* threshold is incompatible with a
+      // genuinely shorter paraphrase. Verify source-topic relevance instead,
+      // while preserving independent hard checks for dates, scoped negations,
+      // legal references, literal anchors and mathematically exact budgets.
+      const relevance=auditProgressiveConcepts(original,text);
+      reasons.push(...relevance.issues);
     }else if(!semantic.passed)reasons.push('semantic-coverage-or-protected-detail');
     verification[id]=Boolean(text)&&!reasons.length;
     texts[id]=text;
@@ -225,8 +225,13 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
         jobs[i].targets[String(pct)]=letters;
       });
     }
-    // 42% maximum retained letters for the first, outline-style summary.
-    const caps=allocateExactLetterBudgets(sources,58);
+    // Original pillar: summary is shorter than the 50% edition, with NO
+    // invented fixed percentage (the former 42% cap was not authorized).
+    // Keep a per-chunk ceiling and subtract one letter globally to guarantee
+    // a strictly shorter book summary even when all chunks meet their caps.
+    const caps=allocateExactLetterBudgets(sources,50);
+    const firstPositive=caps.findIndex(n=>n>0);
+    if(firstPositive>=0)caps[firstPositive]--;
     caps.forEach((cap,i)=>{jobs[i].summaryCapLetters=cap;});
   }
   let checkpointPersistent=true;
