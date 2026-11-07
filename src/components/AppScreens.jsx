@@ -4,19 +4,21 @@ import { StudyIcon } from './StudyUiIcons.jsx';
 import RenameTitleDialog from './RenameTitleDialog.jsx';
 import ScannerArchive from './ScannerArchive.jsx';
 import {progressDiagnostic} from '../lib/geminiRecoveryV39.js';
+import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
 import '../appShellV16.css';
 
 function stripExtension(value = '') {
   return String(value || 'StudyBook').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'StudyBook';
 }
 
-function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRenameRequest, onBookActions }) {
+function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRenameRequest, onBookActions, acquisitionProgress=null }) {
   const [deleteArmed, setDeleteArmed] = useState(false);
   const holdTimer = useRef(null);
   const suppressClick = useRef(false);
   const title = stripExtension(item.fileName);
   const subject = item.subject || 'Altro';
   const pages = item.metadata?.pages || 0;
+  const physical=bookAcquisitionProgressV46(item.metadata,acquisitionProgress);
   // LAB18: le copertine reali restano prioritarie quando presenti;
   // in assenza di copertina usiamo un volume disegnato senza modificare il record.
   const coverUrl = item.coverCustom || item.coverOriginal || item.coverAI || item.coverUrl || item.metadata?.coverUrl || null;
@@ -70,6 +72,12 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRename
         <div className="sb-book-meta">
           <strong>{title}</strong>
           <span>{pages ? `${pages} pagine` : (item.metadata?.chapters ? `${item.metadata.chapters} capitoli` : subject)}</span>
+          {physical.total>0 && <div className="sb-library-download" aria-label={`Pagine acquisite ${physical.acquired} di ${physical.total}, ${physical.percent}%`}>
+            <small>${physical.acquired} / ${physical.total} pagine acquisite · ${physical.percent}%</small>
+            <div className="sb-book-download-track" role="progressbar" aria-valuenow={physical.percent} aria-valuemin={0} aria-valuemax={100}>
+              <span style={{width:physical.percent+'%'}} />
+            </div>
+          </div>}
         </div>
       </button>
       {view === 'processed' && onRenameRequest && (
@@ -174,7 +182,7 @@ function ScanPhotoPreview({ blob, title }) {
   return url ? <img src={url} alt={title} loading="lazy" decoding="async" /> : <StudyIcon name="photo" size={21}/>;
 }
 
-export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onReprocessBook, onRecoverOriginal, processingStatus = '', processingProgress = {done:0,total:0}, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
+export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onReprocessBook, onRecoverOriginal, processingStatus = '', processingProgress = {done:0,total:0}, acquisitionProgress=null, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
   const [area, setArea] = useState('subjects');
   const [view, setView] = useState(initialView);
   const [subject, setSubject] = useState('Tutte');
@@ -252,7 +260,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
 
       {filtered.length ? (
         <div className="sb-library-grid">
-          {filtered.map((item) => <BookCover key={item.id} item={item} view={view === 'all' ? (item.metadata?.hasProcessed ? 'processed' : 'original') : view} onOpen={onOpenBook} onDeleteRequest={item => setDeleteCandidate({ ...item, deleteView: view })} onRenameRequest={setRenameCandidate} onBookActions={item => { setActionCandidate(item); setCoverMessage('');  setCoverPhase('idle');  }} />)}
+          {filtered.map((item) => <BookCover key={item.id} item={item} view={view === 'all' ? (item.metadata?.hasProcessed ? 'processed' : 'original') : view} onOpen={onOpenBook} onDeleteRequest={item => setDeleteCandidate({ ...item, deleteView: view })} onRenameRequest={setRenameCandidate} acquisitionProgress={acquisitionProgress?.id===item.id?acquisitionProgress:null} onBookActions={item => { setActionCandidate(item); setCoverMessage('');  setCoverPhase('idle');  }} />)}
         </div>
       ) : <div className="sb-empty-library">Nessun libro in questa sezione.</div>}
       {view === 'all' && scannerProps.entries?.length > 0 && (
