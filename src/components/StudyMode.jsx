@@ -288,7 +288,7 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
       </header>
       {ttsError && <div className="sb-lab05-tts-error" role="alert">{ttsError} <button type="button" onClick={() => { void installItalianSpeechVoice().catch(error => setTtsError(error?.message || 'Controlla la sintesi vocale Android.')); }}>Installa voce italiana</button></div>}
 
-      <nav className="study-chapter-nav sb-lab05-chapter-nav sb-lab06-chapter-nav" aria-label="Navigazione tra i capitoli">
+      {(!isReader || !book?.canonicalBookMap) && <nav className="study-chapter-nav sb-lab05-chapter-nav sb-lab06-chapter-nav" aria-label="Navigazione tra i capitoli">
         <button type="button" onClick={() => changeChapter(chapterIndex - 1)} disabled={chapterIndex <= 0} aria-label="Capitolo precedente">←</button>
         <label className="sb-lab06-chapter-center">
           <span className="sb-lab06-chapter-counter">CAPITOLO <b>{chapterIndex + 1} / {chapterCount}</b></span>
@@ -298,7 +298,7 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
           </select>
         </label>
         <button type="button" onClick={() => changeChapter(chapterIndex + 1)} disabled={chapterIndex >= chapterCount - 1} aria-label="Capitolo successivo">→</button>
-      </nav>
+      </nav>}
 
       {!isReader && <nav className="study-tool-tabs sb-lab05-study-tabs" aria-label="Metodi di studio">
         {[
