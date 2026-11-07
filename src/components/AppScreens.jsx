@@ -7,6 +7,7 @@ import SimplePagesLibraryV50 from './SimplePagesLibraryV50.jsx';
 import {progressDiagnostic} from '../lib/geminiRecoveryV39.js';
 import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
 import {studyPageProgressV48} from '../lib/studyPageProgressV48.js';
+import {geminiResumeDisplayV55} from '../lib/studyAutoResumeV45.js';
 import '../appShellV16.css';
 
 function stripExtension(value = '') {
@@ -458,6 +459,8 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   }
   const fidelity = studyBook?.quality?.sourceFidelityGate || studyBook?.quality?.fidelityGate;
   const geminiCause = studyBook?.editionsV36?progressDiagnostic(studyBook.editionsV36):null;
+  const resumeWait=geminiResumeDisplayV55(studyBook?.editionsV36);
+
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
   const editionStages=studyBook?.editionsV36?.rows?.length
     ? ['summary','50','40','30','20','10'].map(id=>({
@@ -506,11 +509,13 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
               <div className="sb-download-progress-track sb-ia-progress-track" role="progressbar"
                 aria-label="Parti IA realmente verificate" aria-valuemin={0} aria-valuemax={100}
                 aria-valuenow={iaPercent??0}><span style={{width:(iaPercent??0)+'%'}}/></div>
+              {v36Partial && resumeWait.label &&
+                <small className="sb-gemini-wait-note" role="status">{resumeWait.label}</small>}
               {v36Partial && <button type="button" className="sb-resume-manual"
                 onClick={onResumeGemini}>
                 {geminiStalled?'↻ Recupera richiesta bloccata':
-                 geminiCause?.kind==='QUOTA_ATTESA'?'↻ Verifica attesa Gemini e riprendi':
-                 generating?'↻ Verifica richiesta Gemini':'↻ Riprendi elaborazione dal checkpoint'}
+                 generating?'↻ Verifica richiesta Gemini':
+                 resumeWait.label?resumeWait.button:'↻ Riprendi elaborazione dal checkpoint'}
               </button>}
             </div>}
             <p>{isOriginalOnly ? 'Scegli come utilizzare il libro. Il file originale resta invariato; potrai decidere se creare un testo di studio.' : 'Leggi, studia o porta con te il contenuto elaborato di questo libro.'}</p>
