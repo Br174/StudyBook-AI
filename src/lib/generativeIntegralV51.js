@@ -8,6 +8,7 @@ import {runtimeHash} from './motorLabRuntime.js';
 import {auditFidelity,auditProgressiveConcepts} from './fidelityEngine.js';
 import {studyLetters,percentReduced} from './studyPillarV38.js';
 import {publishSequentialPagesV51} from './pagePublicationV51.js';
+import {reviewGeminiPartsV53,auditStudyUnitV53} from './editionRepairV53.js';
 import {bookUnitsV51,planNaturalBlocksV51,bisectAtNaturalBoundaryV51,
   blockLetterTargetV51,BULK_OUTPUT_TOKEN_CEILING} from './integralPlannerV51.js';
 
@@ -70,14 +71,15 @@ function newGrid(book,previous,fingerprint){
 }
 function snapshot(book,grid,fingerprint,checkpointPersistent,diagnostics,activeLevel){
   const {rows,through}=publishSequentialPagesV51(book,grid);
-  const flat=rows.flat();
+  const flat=grid.flat();
   const totalCells=flat.length;
   const verifiedVariants=flat.reduce((n,row)=>n+LEVELS.filter(id=>row.verified[id]).length,0);
   const verifiedCells=flat.filter(row=>LEVELS.every(id=>row.verified[id])).length;
+  const publishedVariants=rows.flat().reduce((n,row)=>n+LEVELS.filter(id=>row.verified[id]).length,0);
   const complete=totalCells>0&&verifiedCells===totalCells&&checkpointPersistent
     &&classifySourceReadinessV52(book).ok;
   return {version:VERSION,sourceFingerprint:fingerprint,rows,stagedRows:grid,
-    publishedThroughPage:through,integralInputLimit:diagnostics.inputLimit,
+    publishedThroughPage:through,publishedVariants,integralInputLimit:diagnostics.inputLimit,
     verifiedCells,totalCells,blockedCells:totalCells-verifiedCells,
     verifiedChunks:verifiedCells,verifiedVariants,totalVariants:totalCells*LEVELS.length,
     verifiedChunkVariants:verifiedVariants,totalChunkVariants:totalCells*LEVELS.length,
@@ -88,33 +90,7 @@ function snapshot(book,grid,fingerprint,checkpointPersistent,diagnostics,activeL
 function blockAlreadyReady(grid,block,level){
   return block.every(u=>grid[u.ci]?.[u.pi]?.verified?.[level]===true);
 }
-function validateOutput(block,level,data){
-  const parts=data?.parts;
-  if(data?.engine!=='ai'||data?.version!=='integral-v51'||data?.level!==level||
-     !Array.isArray(parts)||parts.length!==block.length)return null;
-  for(let i=0;i<parts.length;i++){
-    if(parts[i]?.id!==block[i].id||!clean(parts[i]?.text))return null;
-  }
-  const input=block.map(u=>u.source).join('\n\n');
-  const output=parts.map(p=>clean(p.text)).join('\n\n');
-  const target=blockLetterTargetV51(block,level);
-  const outputLetters=parts.reduce((n,p)=>n+studyLetters(p.text),0);
-  if(level==='summary'?outputLetters>target.summaryCapLetters:
-     outputLetters!==target.targetLetters)return null;
-  const semantic=auditFidelity(input,output);
-  const conceptual=auditProgressiveConcepts(input,output);
-  if(semantic.missingProtected.length||semantic.qualifierMismatches.length||
-     conceptual.issues.length)return null;
-  // A correct aggregate ratio never licenses an invented per-paragraph legal fact.
-  for(let i=0;i<block.length;i++){
-    const local=auditProgressiveConcepts(block[i].source,parts[i].text);
-    const localFidelity=auditFidelity(block[i].source,parts[i].text);
-    if(local.issues.length||localFidelity.missingProtected.length||
-      localFidelity.qualifierMismatches.length)return null;
-  }
-  return parts.map(p=>clean(p.text));
-}
-async function requestBlock(block,level,{bookTitle='',signal=null}={}){
+async function requestBlock(block,level,{bookTitle='',signal=null,repairDrafts=[]}={}){
   const {targetLetters,summaryCapLetters}=blockLetterTargetV51(block,level);
   const sourceChars=block.reduce((n,u)=>n+u.source.length,0);
   const ratio=level==='summary'?0.44:1-Number(level)/100;
@@ -123,7 +99,10 @@ async function requestBlock(block,level,{bookTitle='',signal=null}={}){
   const response=await fetch(apiEndpoint('/api/editions/bulk/v51'),{
     method:'POST',headers:{'Content-Type':'application/json'},signal,
     body:JSON.stringify({bookTitle,level,targetLetters,summaryCapLetters,
-      maxOutputTokens:tokenBudget,timeoutMs:190000,
+      maxOutputTokens:tokenBudget,timeoutMs:190000,repairDrafts,
+      unitBudgets:Object.fromEntries(block.map(u=>[u.id,{
+        targetLetters:u.targetLetters??null,summaryCapLetters:u.summaryCapLetters??null
+      }])),
       units:block.map(u=>({id:u.id,source:u.source,chapterTitle:u.chapterTitle,
         sectionTitle:u.sectionTitle,pageStart:u.pageStart,pageEnd:u.pageEnd}))})});
   const data=await response.json().catch(()=>null);
