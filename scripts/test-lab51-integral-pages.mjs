@@ -6,6 +6,8 @@ import {bookUnitsV51,naturalBoundaryV51,planNaturalBlocksV51,
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
 import {publishSequentialPagesV51} from '../src/lib/pagePublicationV51.js';
 import bulkHandler from '../api/editionsBulkV51.js';
+import {indexedDB as fakeIndexedDB} from 'fake-indexeddb';
+import {generateIntegralEditionsV51} from '../src/lib/generativeIntegralV51.js';
 
 const chapters=[{title:'Capitolo uno',pageStart:1,pageEnd:44,paragraphs:[],sections:[]}];
 for(let page=1;page<=44;page++)for(let part=0;part<2;part++)
@@ -101,4 +103,51 @@ try{
  assert.equal(generated,1);
  assert.equal(requestCap,4500);
 }finally{globalThis.fetch=actualFetch;}
+
+// End-to-end isolated fake provider: the complete 44-page book needs only SIX
+// generation calls, one per edition. No secrets, no live Gemini consumption.
+const previousIndexedDB=globalThis.indexedDB;
+globalThis.indexedDB=fakeIndexedDB;
+const baseSource='argomento '.repeat(20).trim();
+const completeBook={
+  title:'Test 44 pagine',
+  studyPillarV38:'studybook-progressive-v38-1',
+  canonicalBookMap:{pageCount:44,originalFingerprint:'lab51-test-44-pages',
+    uncertain:[],pages:Array.from({length:44},(_,i)=>({
+      physicalPage:i+1,sourceStatus:'verified',text:baseSource
+    }))},
+  chapters:[{title:'Capitolo primo',pageStart:1,pageEnd:44,
+    paragraphs:Array.from({length:44},(_,i)=>({
+      original:baseSource,sourcePageStart:i+1,sourcePageEnd:i+1
+    }))}]
+};
+let aiCalls=0;
+globalThis.fetch=async(_url,request)=>{
+  assert.ok(String(_url).endsWith('/api/editions/bulk/v51'));
+  const input=JSON.parse(request.body);
+  aiCalls++;
+  const reps=input.level==='summary'?8:20*(1-Number(input.level)/100);
+  const parts=input.units.map(u=>({id:u.id,text:'argomento '.repeat(reps).trim()}));
+  return new Response(JSON.stringify({engine:'ai',version:'integral-v51',
+    sourceVersion:'original',level:input.level,parts,model:'gemini-3.5-flash-lite'}),
+    {status:200,headers:{'Content-Type':'application/json'}});
+};
+const stages=[];
+try{
+ const final=await generateIntegralEditionsV51(completeBook,{
+   onProgress:snapshot=>stages.push({level:snapshot.activeLevel,
+     through:snapshot.publishedThroughPage,ready:snapshot.verifiedVariants})
+ });
+ assert.equal(final.complete,true);
+ assert.equal(aiCalls,6,'44 pages in six generation requests');
+ assert.equal(final.rows[0][0].verified['10'],true);
+ assert.equal(final.rows[0][43].verified.summary,true);
+ assert.equal(final.publishedThroughPage['10'],44);
+ assert.ok(stages.some(s=>s.through?.summary===44&&s.through?.['10']===0),
+   'summary is readable before the other five versions');
+}finally{
+ globalThis.fetch=actualFetch;
+ if(previousIndexedDB===undefined)delete globalThis.indexedDB;
+ else globalThis.indexedDB=previousIndexedDB;
+}
 console.log('LAB51 PASS: 44 pages, natural boundaries, six exact budgets, text-only and counted Gemini API.');
