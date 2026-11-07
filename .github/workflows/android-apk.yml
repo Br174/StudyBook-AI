@@ -283,6 +283,17 @@ jobs:
             gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$PATH_TO_REPORT" -f message="chore(LAB51): CI test receipt [skip ci]" -f branch="$GITHUB_REF_NAME" -f content="$DATA" >/dev/null
           fi
 
+      - name: LAB52 original source soft warning recovery + protected hard gates
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-52-')
+        run: |
+          node scripts/test-lab52-source-warning-recovery.mjs
+          node scripts/test-lab51-integral-pages.mjs
+          node scripts/test-lab47-text-only-books.mjs
+          node scripts/test-lab48-page-faithful.mjs
+          node scripts/test-lab49-live-simple-page.mjs
+          node scripts/test-lab50-simple-persistent.mjs
+          node scripts/test-lab38-pillar.mjs
+
       - name: Resolve monotonic Android version
         shell: bash
         run: |
@@ -808,6 +819,19 @@ jobs:
             body:JSON.stringify({pageText:''}),signal:AbortSignal.timeout(12000)});
           if(empty.status!==400)throw Error('LAB49 page input validation failed');
           console.log('LAB49_LIVE_WORKER_READY: page simplification + edition route, source pages protected');
+          NODE
+
+      - name: LAB52 verify existing LAB51 isolated Gemini service
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-52-')
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://studybook-ai-lab51.brunoverlezza.workers.dev';
+          for(const path of ['/api/editions/bulk/v51','/api/page-simple/v49']){
+            const r=await fetch(base+path,{method:'GET',signal:AbortSignal.timeout(15000)});
+            if(r.status!==405)throw Error('LAB52 backend mismatch '+path+' HTTP '+r.status);
+          }
+          console.log('LAB52_EXISTING_ISOLATED_GEMINI_WORKER=READY');
           NODE
 
       - name: Build web core
