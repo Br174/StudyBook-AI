@@ -8,7 +8,7 @@ import {runtimeHash} from './motorLabRuntime.js';
 import {auditFidelity,auditProgressiveConcepts} from './fidelityEngine.js';
 import {studyLetters,percentReduced} from './studyPillarV38.js';
 import {publishSequentialPagesV51} from './pagePublicationV51.js';
-import {reviewGeminiPartsV53,auditStudyUnitV53} from './editionRepairV53.js';
+import {reviewGeminiPartsV53,auditStudyUnitV53,repairFocusForUnitV56} from './editionRepairV53.js';
 import {bookUnitsV51,planNaturalBlocksV51,bisectAtNaturalBoundaryV51,
   blockLetterTargetV51,BULK_OUTPUT_TOKEN_CEILING,adaptiveOverloadBudgetV54} from './integralPlannerV51.js';
 
@@ -149,6 +149,7 @@ export async function generateIntegralEditionsV51(book,{
    lastCode:null,mode:'large-natural-page-blocks-v53-with-verified-draft-salvage',
    requestsSent:0,splits:0,verifiedBlocks:0,verifiedUnits:0,
    repairedDrafts:0,rawDraftsPreserved:0,quality:null,
+   deferredPages:[],qualityDeferrals:0,
    inputLimit:Number(book?.editionsV36?.integralInputLimit)||900000};
  let checkpointPersistent=true;
  const readiness=classifySourceReadinessV52(book,units);
@@ -200,7 +201,8 @@ export async function generateIntegralEditionsV51(book,{
        const stored=drafts.get(unitKey(fp,level,u,'draft'));
        return stored?.kind==='draft-v53'&&stored.id===u.id&&
          stored.signature===signature([u])&&clean(stored.text)
-         ?[{id:u.id,text:stored.text}]:[];
+         ?[{id:u.id,text:stored.text,
+           repairFocus:repairFocusForUnitV56(u,level,stored.text)}]:[];
      });
      try{
        diagnostics.requestsSent++;
@@ -274,9 +276,21 @@ export async function generateIntegralEditionsV51(book,{
          queue.unshift({block:halves[0],attempt:0},{block:halves[1],attempt:0});
          continue;
        }
-       const stopped=publicFailureSnapshot(book,grid,fp,checkpointPersistent,diagnostics,
-         level,'quality-review','AI_QUALITY_REVIEW',remaining);
-       onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);return stopped;
+       // LAB56: a *whole physical page* that still lacks protected concepts
+       // stays unpublished in durable drafts, but cannot block all later pages.
+       // Never split a page or erase earlier verified work. The deferred
+       // page is retried at most on a future explicitly bounded recovery pass.
+       const failedIds=review.failed.map(x=>x.unit.id);
+       const pageNumbers=[...new Set(block.flatMap(u=>
+         Array.from({length:u.pageEnd-u.pageStart+1},(_,i)=>u.pageStart+i)))];
+       diagnostics.deferredPages.push({
+         level,pages:pageNumbers,unverifiedIds:failedIds,
+         reasons:review.numeric.issues||{}
+       });
+       diagnostics.qualityDeferrals++;
+       current=snapshot(book,grid,fp,checkpointPersistent,diagnostics,level);
+       onProgress(current,current.verifiedVariants,current.totalVariants);
+       continue;
      }catch(error){
        const code=signal?.aborted?'AI_MANUAL_RESTART':error?.code||'AI_PROVIDER_NETWORK';
        diagnostics.lastCode=code;
@@ -323,11 +337,30 @@ export async function generateIntegralEditionsV51(book,{
          queue.unshift({block:halves[0],attempt:0},{block:halves[1],attempt:0});
          continue;
        }
+       if(code==='AI_QUALITY_REVIEW'||code==='AI_INCOMPLETE_BLOCK'){
+         diagnostics.deferredPages.push({
+           level,pages:[...new Set(block.flatMap(u=>Array.from({
+             length:u.pageEnd-u.pageStart+1},(_,i)=>u.pageStart+i)))],
+           unverifiedIds:block.map(u=>u.id),reasons:{[code]:1}
+         });
+         diagnostics.qualityDeferrals++;
+         current=snapshot(book,grid,fp,checkpointPersistent,diagnostics,level);
+         onProgress(current,current.verifiedVariants,current.totalVariants);
+         continue;
+       }
        const stopped=publicFailureSnapshot(book,grid,fp,checkpointPersistent,diagnostics,
-         level,code==='AI_QUALITY_REVIEW'?'quality-review':'provider-blocked',code,remaining);
+         level,'provider-blocked',code,remaining);
        onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);return stopped;
      }
    }
+ }
+ if(diagnostics.deferredPages.length){
+   const review=publicFailureSnapshot(book,grid,fp,checkpointPersistent,
+     diagnostics,LEVELS.at(-1),'quality-review','AI_QUALITY_REVIEW',
+     diagnostics.deferredPages.length);
+   review.execution.deferredWholePages=diagnostics.deferredPages.length;
+   onProgress(review,review.verifiedVariants,review.totalVariants);
+   return review;
  }
  const final=snapshot(book,grid,fp,checkpointPersistent,diagnostics,LEVELS.at(-1));
  final.execution={haltedOn:null,remainingBatches:0,
