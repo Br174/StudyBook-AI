@@ -1,0 +1,61 @@
+name: StudyBook LAB45 stable direct download
+
+on:
+  push:
+    branches:
+      - motorlab/studybook-delivery-lab45-20261107
+    paths:
+      - '.github/workflows/studybook-lab45-permanent-download.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish-original-verified-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: Br174/StudyBook-AI
+      RUN_ID: '42354618732'
+      ARTIFACT_NAME: StudyBook-AI-LAB-45-AGGIORNAMENTO-APK
+      SOURCE_SHA: 'b44c2b7b18884ed8ce2b78588ad83b01f61044c7'
+      APK_SHA256: 2191c91654f0bec37e539ce957fbbff3b3d98ee869dca394962e892ec12cfda8
+      TAG: studybook-lab45-v0.3.274
+
+    steps:
+      - name: Verify existing signed and tested original build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq .conclusion)" = success
+          test "$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq .head_sha)" = "$SOURCE_SHA"
+          test "$(gh api "repos/$REPO/actions/artifacts/13566529764" --jq .expired)" = false
+          test "$(gh api "repos/$REPO/actions/artifacts/13566529764" --jq .name)" = "$ARTIFACT_NAME"
+      - name: Download exact artifact and verify original APK bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p original release
+          gh run download "$RUN_ID" --repo "$REPO" --name "$ARTIFACT_NAME" --dir original
+          test -s original/StudyBook-AI-LAB-45-AGGIORNAMENTO.apk
+          printf '%s  %s\n' "$APK_SHA256" "original/StudyBook-AI-LAB-45-AGGIORNAMENTO.apk" | sha256sum --check --status
+          test -s original/StudyBook-AI-LAB-45-AGGIORNAMENTO-signing.txt
+          test -s original/StudyBook-AI-LAB-45-AGGIORNAMENTO-identity.txt
+          cp original/StudyBook-AI-LAB-45-AGGIORNAMENTO.apk release/
+          zip -j -9 -q release/StudyBook-AI-LAB-45-AGGIORNAMENTO.zip original/StudyBook-AI-LAB-45-AGGIORNAMENTO.*
+          unzip -tqq release/StudyBook-AI-LAB-45-AGGIORNAMENTO.zip
+          sha256sum release/StudyBook-AI-LAB-45-AGGIORNAMENTO.apk release/StudyBook-AI-LAB-45-AGGIORNAMENTO.zip
+      - name: Publish non-expiring GitHub Release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            gh release create "$TAG"               release/StudyBook-AI-LAB-45-AGGIORNAMENTO.zip               release/StudyBook-AI-LAB-45-AGGIORNAMENTO.apk               --repo "$REPO"               --target "$SOURCE_SHA"               --title "StudyBook AI LAB45 - Android 0.3.274"               --notes "LAB45 verificata: firmata con certificato della famiglia LAB precedente; appId it.studybook.ai.lab; Scudo360 superato; SHA-256 APK $APK_SHA256. Installare come aggiornamento senza disinstallare. Prova end-to-end del libro originale ancora da eseguire sul telefono."               --prerelease --latest=false
+          fi
+          gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[].name' | tee /tmp/asset-names.txt
+          grep -Fx 'StudyBook-AI-LAB-45-AGGIORNAMENTO.zip' /tmp/asset-names.txt
+          grep -Fx 'StudyBook-AI-LAB-45-AGGIORNAMENTO.apk' /tmp/asset-names.txt
+          echo "https://github.com/$REPO/releases/download/$TAG/StudyBook-AI-LAB-45-AGGIORNAMENTO.zip" >> "$GITHUB_STEP_SUMMARY"
+          echo "Permanent release created from verified signed APK, not recompiled." >> "$GITHUB_STEP_SUMMARY"
