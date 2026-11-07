@@ -12,7 +12,7 @@ const sourcePages=[
   {pageNumber:1,status:'verified',text:'Capitolo primo\n'+originalParagraph1,
     widthPt:612,heightPt:792,textLineGeometry:[{topPt:77},{topPt:115}]},
   {pageNumber:2,status:'verified',text:'Capitolo secondo\nSezione B\n'+originalParagraph2,
-    widthPt:595.28,heightPt:841.89,textLineGeometry:[{topPt:83},{topPt:114},{topPt:188}]},
+    widthPt:595.28,heightPt:841.89,textLineGeometry:[{topPt:83},{topPt:114},{topPt:510}]},
   {pageNumber:3,status:'verified',text:'Appendice\n'+originalParagraph3,
     widthPt:612,heightPt:792,textLineGeometry:[{topPt:90},{topPt:130}]},
 ];
