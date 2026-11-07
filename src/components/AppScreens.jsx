@@ -5,6 +5,7 @@ import RenameTitleDialog from './RenameTitleDialog.jsx';
 import ScannerArchive from './ScannerArchive.jsx';
 import {progressDiagnostic} from '../lib/geminiRecoveryV39.js';
 import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
+import {studyPageProgressV48} from '../lib/studyPageProgressV48.js';
 import '../appShellV16.css';
 
 function stripExtension(value = '') {
@@ -468,6 +469,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   const iaDone=Math.min(iaTotal,Math.max(0,Number(studyBook?.editionsV36?.verifiedChunkVariants||0)));
   const iaPercent=iaTotal?Math.round(iaDone/iaTotal*10000)/100:null;
   const pageTotal=Number(sourceData?.structure?.pageCount||studyBook?.canonicalBookMap?.pageCount||0);
+  const studyPageProgress=studyPageProgressV48(studyBook,studyBook?.editionsV36?.activeLevel||'summary');
   const canPrepare = sourceChapters.some(chapter => chapter.paragraphs?.length);
   return (
     <section className="sb-screen sb-studio-screen">
@@ -499,6 +501,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             {!isOriginalOnly && studyBook?.editionsV36 && <div className="sb-studio-inline-progress" aria-label="Pagine originali e verifica Gemini">
               <small>Pagine originali: {pageTotal||'da rilevare'} / {pageTotal||'da rilevare'} · PDF acquisito</small>
               <strong>Studio IA: {iaDone}/{iaTotal||'…'} parti verificate · {iaPercent===null?'–':iaPercent.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'}</strong>
+              {studyPageProgress.mappedPages>0&&<small>Fogli di studio verificati ({studyPageProgress.level==='summary'?'Riassunto':studyPageProgress.level}): {studyPageProgress.verifiedPages}/{studyPageProgress.mappedPages} pagine con testo · {studyPageProgress.percent}%</small>}
               <div className="sb-download-progress-track sb-ia-progress-track" role="progressbar"
                 aria-label="Parti IA realmente verificate" aria-valuemin={0} aria-valuemax={100}
                 aria-valuenow={iaPercent??0}><span style={{width:(iaPercent??0)+'%'}}/></div>
