@@ -1,6 +1,7 @@
 // LAB51: one bounded Gemini call for a contiguous run of COMPLETE source pages.
 // No images, no OCR changes, no silent fallback, no paid-model routing.
 import {studyLetters} from '../src/lib/studyPillarV38.js';
+import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const DEFAULT_MODEL='gemini-3.5-flash-lite';
 const ENDPOINT='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
@@ -103,14 +104,16 @@ export default async function handler(req,res){
     const payload=await upstream.json().catch(()=>null);
     const elapsedMs=Date.now()-started;
     if(upstream.status===429||upstream.status===503){
-      const raw=payload?.error?.message||'';
-      const retry=upstream.headers.get('Retry-After');
-      if(retry&&/^\d+$/.test(retry))res.setHeader('Retry-After',retry);
-      return fail(res,upstream.status,upstream.status===429?'AI_QUOTA_LIMIT':'AI_TEMPORARY_OVERLOAD',
-        'Limite gratuito Gemini o servizio temporaneamente non disponibile.',
-        {quota:{kind:upstream.status===429?'requests-minute':'overload',
-          retryAfterSeconds:retry&&/^\d+$/.test(retry)?Number(retry):null,
-          estimated:!retry,automatic:true,providerStatus:String(raw).slice(0,100)}});
+      const quota=diagnoseGeminiQuota({status:upstream.status,body:payload,
+        headers:upstream.headers,model:selected});
+      if(!quota.estimated&&quota.retryAfterSeconds!==null)
+        res.setHeader('Retry-After',String(quota.retryAfterSeconds));
+      return fail(res,upstream.status,
+        !quota.automatic?'AI_QUOTA_MANUAL_REVIEW':
+          upstream.status===503?'AI_TEMPORARY_OVERLOAD':'AI_QUOTA_LIMIT',
+        quotaPublicMessage(quota.kind),{quota,
+          diagnostic:{reason:quota.kind,elapsedMs,model:selected,
+            inputTokens,outputTokens}});
     }
     if(!upstream.ok)return fail(res,502,'AI_PROVIDER_REJECTED','Il provider non ha accettato la richiesta.',
       {diagnostic:{status:upstream.status,elapsedMs,model:selected}});
