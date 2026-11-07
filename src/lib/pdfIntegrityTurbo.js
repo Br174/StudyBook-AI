@@ -50,6 +50,25 @@ function pdfText(items = []) {
   return clean(lines.join('\n'));
 }
 
+// LAB48: text glyph coordinates only, derived from the already-fetched
+// getTextContent() items. No page rasterization, JPEG or visual asset storage.
+function pdfTextLineGeometry(items=[],heightPt=842){
+  const lines=[];
+  let lastY=null;
+  for(const item of items){
+    const chunk=String(item?.str||'').trim();
+    if(!chunk)continue;
+    const transform=Array.isArray(item.transform)?item.transform:null;
+    const y=transform?Number(transform[5]):null;
+    const begin=item.hasEOL || (lastY!==null&&y!==null&&Math.abs(y-lastY)>2.5);
+    if(begin||!lines.length){
+      lines.push({xPt:Math.round((Number(transform?.[4])||0)*10)/10,
+        topPt:Math.round((heightPt-(Number(y)||0))*10)/10});
+    }
+    if(y!==null)lastY=y;
+  }
+  return lines.length>350?[]:lines;
+}
 function isOcrCandidate(text, imageCount, inkCount) {
   return (imageCount > 0 || (!text.trim() && inkCount > 3))
     && (text.replace(/\s/g, '').length < 90 || suspectText(text));
@@ -75,6 +94,7 @@ async function readNativePage(pdf, pageNumber, {textOnly=false}={}) {
   return {
     pageNumber, text: rawText, rawText, source: 'embedded',
     widthPt:physicalSize.width,heightPt:physicalSize.height,
+    textLineGeometry:textOnly?pdfTextLineGeometry(textContent.items,physicalSize.height):[],
     status: noText ? 'text-unavailable' : requiresOcr ? 'ocr-pending' : 'verified',
     imageCount, inkCount, issue: noText ? 'no-selectable-text-image-skipped' :
       requiresOcr ? 'page-visual-requires-ocr' : '',
@@ -150,6 +170,7 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, te
         pages[row.pageNumber - 1] = {
           pageNumber: row.pageNumber, text: row.text, rawText: row.rawText || row.text,
           widthPt:row.widthPt||null,heightPt:row.heightPt||null,
+          textLineGeometry:row.textLineGeometry||[],
           status: 'verified', source: row.source || 'resume', imageCount: row.imageCount || 0,
           inkCount:row.inkCount||0,visualAnchors:row.visualAnchors||[],visualReview:row.visualReview||[],
           issue: '',
