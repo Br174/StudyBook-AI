@@ -24,6 +24,6 @@ jobs:
         with:
           node-version: '22'
       - name: Installa dipendenze senza script esterni
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm install --ignore-scripts --no-package-lock --no-audit --no-fund
       - name: Simulazione 44 pagine senza chiave Gemini
         run: node scripts/diagnose-large-block-44-pages.mjs
