@@ -24,7 +24,7 @@ export function progressDiagnostic(snapshot){
  const messages={
   COMPLETO:'Tutte le edizioni verificate e salvate.',
   PARZIALE:'Elaborazione parziale: ripresa possibile dai checkpoint.',
-  QUOTA_ATTESA:'Limite temporaneo Gemini. I checkpoint sono conservati. Non inviare nuove richieste prima della ripresa consentita.',
+  QUOTA_ATTESA:'Gemini ha sospeso una richiesta. I checkpoint sono conservati. Il codice 503 indica sovraccarico, non quota esaurita; il 429 indica un limite d’utilizzo. Riprova solo dopo l’attesa indicata.',
   CONFIGURAZIONE:'Gemini non ha una quota o una configurazione valida. Verificare le impostazioni, senza acquistare nulla.',
   PROVIDER:'Il servizio Gemini ha rifiutato la richiesta; ripetere ora non risolve il problema.',
   CONNESSIONE:'Le richieste a Gemini non sono riuscite. I checkpoint sono conservati; non ripetere tentativi identici senza diagnosi.',
@@ -40,7 +40,11 @@ export function progressDiagnostic(snapshot){
   ?' Livello '+quality.level+' · '+(quality.reasons||[]).slice(0,3).join(', '):'';
  const diagnosticLabel=provider?.reason?(' Diagnosi: '+String(provider.reason).slice(0,60)+
    (provider.httpStatus?' (HTTP '+Number(provider.httpStatus)+')':'')+'.'):'';
- return {kind,base,halted,description:messages[kind]+why+diagnosticLabel,
+ const pauseReason=snapshot?.quota?.kind==='overload'?' Servizio occupato (HTTP 503).':
+   snapshot?.quota?.httpStatus===429?' Limite HTTP 429.':'';
+ const waitSource=snapshot?.quota?.estimated?
+   ' L’orario di ripresa è una stima locale, non una promessa di Google.':'';
+ return {kind,base,halted,description:messages[kind]+why+pauseReason+waitSource+diagnosticLabel,
    checked:stored,remaining:Math.max(0,total-stored),
    retryAt:snapshot?.quota?.retryAt||null,
    canResume:!snapshot?.complete&&kind!=='QUOTA_ATTESA'&&kind!=='CONFIGURAZIONE',

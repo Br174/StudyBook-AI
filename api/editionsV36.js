@@ -88,14 +88,21 @@ function extractLegacy(raw){
   }
   return result;
 }
-function providerError(response,body,model,res){
+function providerError(response,body,model,res,diagnostic=null){
   const quota=diagnoseGeminiQuota({status:response.status,body,headers:response.headers,model});
-  if(quota.retryAfterSeconds!==null)res.setHeader('Retry-After',String(quota.retryAfterSeconds));
+  // Do not present a LOCAL estimate as an official Retry-After from Google.
+  if(!quota.estimated&&quota.retryAfterSeconds!==null)
+    res.setHeader('Retry-After',String(quota.retryAfterSeconds));
   return res.status(response.status===503?503:429).json({
     error:quotaPublicMessage(quota.kind),
     code:quota.kind==='billing'||quota.kind==='no-free-allocation'?'AI_QUOTA_MANUAL_REVIEW':
       response.status===503?'AI_TEMPORARY_OVERLOAD':'AI_QUOTA_LIMIT',
-    quota
+    quota,
+    diagnostic:{...diagnostic,
+      reason:response.status===503?'PROVIDER_503_OVERLOAD':'PROVIDER_429_LIMIT',
+      httpStatus:response.status,
+      retrySource:quota.retrySource,
+      providerStatus:quota.providerStatus}
   });
 }
 async function query(model,key,url,messages,maxTokens,{structured=true}={}){
@@ -155,7 +162,6 @@ export default async function handler(req,res){
   // Gemini 3 reasoning tokens share the completion cap with visible text.
   // Keep the free model family and use bounded low thinking, never paid routing.
   const outputCap=single?3072:4096;
-  let lastError=null;
   let modelAttempts=0;
   let lastDiagnostic=null;
   for(const model of modelList){
@@ -195,10 +201,10 @@ export default async function handler(req,res){
         continue;
       }
       if(response.status===429||response.status===503){
-        lastError={response,body,model};
-        // Try at most one additional known free model, without retries or paid upgrades.
-        if(single&&model!==modelList.at(-1))continue;
-        return providerError(response,body,model,res);
+        // Never issue an IMMEDIATE second request for shared-project 429 quota
+        // or provider 503 overload. Let the client persist a bounded cooldown.
+        // A fallback model may only be tested for an actually unavailable model.
+        return providerError(response,body,model,res,lastDiagnostic);
       }
       return res.status(502).json({error:'Provider Gemini non disponibile',code:'AI_PROVIDER_'+response.status,
         model,diagnostic:{...lastDiagnostic,reason:'HTTP_PROVIDER_REJECTED'}});
@@ -215,6 +221,5 @@ export default async function handler(req,res){
       });
     }
   }
-  if(lastError)return providerError(lastError.response,lastError.body,lastError.model,res);
   return res.status(502).json({error:'Nessuna edizione generata',code:'AI_GENERATION_FAILED'});
 }

@@ -3,6 +3,11 @@ import {loadResumeState,saveResumeState,deleteResumeState} from './resumeStore.j
 // The old 3.6 Flash cooldown must not lock the new free model family.
 const KEY='lab36-gemini-free-tier-quota-free-family-v2';
 const MAX_WAIT_MS=48*3600000;
+const MAX_ESTIMATED_WAIT_MS=6*3600000;
+const ESTIMATED_BASE_SECONDS={daily:24*3600,overload:90,
+  'requests-minute':90,'tokens-minute':90,unknown:15*60};
+// Provider supplied timing is authoritative as a minimum; local estimates
+// increase after repeated failures, and never masquerade as Google deadlines.
 const validKinds=new Set(['requests-minute','tokens-minute','daily','billing','no-free-allocation','overload','unknown']);
 export function makeGeminiPause(quota={},previous=null,now=Date.now()){
   const kind=validKinds.has(quota.kind)?quota.kind:'unknown';
@@ -15,15 +20,21 @@ export function makeGeminiPause(quota={},previous=null,now=Date.now()){
     seconds=Number.isFinite(absolute)&&absolute>now?Math.ceil((absolute-now)/1000):NaN;
   }
   let estimated=Boolean(quota.estimated);
-  if(!Number.isFinite(seconds)||seconds<1){
-    estimated=true;
-    const base=kind==='daily'?24*3600:kind==='overload'?90:
-      kind==='requests-minute'||kind==='tokens-minute'?90:15*60;
-    seconds=Math.min(24*3600,base*Math.pow(2,Math.min(attempts-1,5)));
+  if(!Number.isFinite(seconds)||seconds<1)estimated=true;
+  if(estimated){
+    const base=Number.isFinite(seconds)&&seconds>=1
+      ?seconds:ESTIMATED_BASE_SECONDS[kind]||15*60;
+    seconds=Math.min(MAX_ESTIMATED_WAIT_MS/1000,
+      Math.max(base,base*Math.pow(2,Math.min(attempts-1,8))));
   }
+  // Only non-estimated provider RetryInfo / Retry-After is treated as official.
   const delay=Math.max(15*1000,Math.min(MAX_WAIT_MS,Math.ceil(seconds)*1000));
   return {
     version:1,kind,automatic,estimated,attempts,
+    httpStatus:[429,503].includes(Number(quota.httpStatus))?Number(quota.httpStatus):null,
+    providerStatus:typeof quota.providerStatus==='string'?quota.providerStatus.slice(0,55):null,
+    retrySource:estimated?'local-estimate':
+      typeof quota.retrySource==='string'?quota.retrySource.slice(0,40):'provider',
     model:typeof quota.model==='string'?quota.model.slice(0,100):null,
     quotaId:typeof quota.quotaId==='string'?quota.quotaId.slice(0,120):null,
     quotaMetric:typeof quota.quotaMetric==='string'?quota.quotaMetric.slice(0,120):null,
@@ -61,5 +72,8 @@ export function quotaDisplayV36(pause){
   if(!pause.automatic)return name+'; nessun acquisto automatico.';
   const ms=Date.parse(pause.retryAt);
   const stamp=Number.isFinite(ms)?new Date(ms).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'}):'non disponibile';
-  return name+'; nuova prova '+(pause.estimated?'stimata ':'prevista ')+'dal '+stamp+'.';
+  const source=pause.estimated?'orario stimato dall’app, non comunicato da Google':
+    'orario basato sull’indicazione del provider';
+  const attempt=Number(pause.attempts)>1?' · Tentativo '+Number(pause.attempts):'';
+  return name+'; nuova prova dal '+stamp+' ('+source+')'+attempt+'.';
 }

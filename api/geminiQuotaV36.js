@@ -53,16 +53,22 @@ export function diagnoseGeminiQuota({status=429,body=null,headers=null,model=nul
   else if(/tokens?.?per.?minute|input_token_count|tpm/.test(signal))kind='tokens-minute';
   else if(/per.?minute|rpm|request.?rate/.test(signal))kind='requests-minute';
   let seconds=parseRetryAfter(headers,now);
+  let retrySource=seconds!==null?'provider-header':null;
   if(seconds===null){
     const info=details.find(d=>d.retryDelay!==undefined||d.retry_delay!==undefined);
     seconds=waitSeconds(info?.retryDelay??info?.retry_delay);
+    if(seconds!==null)retrySource='provider-retryinfo';
   }
   if(seconds===null){
     const inline=message.match(/(?:retry|try again)(?:\s+in|\s+after)\s+(\d+(?:\.\d+)?)\s*(seconds?|s|minutes?|m)\b/i);
-    if(inline)seconds=Math.ceil(Number(inline[1])*(inline[2].startsWith('m')?60:1));
+    if(inline){
+      seconds=Math.ceil(Number(inline[1])*(inline[2].startsWith('m')?60:1));
+      retrySource='provider-message';
+    }
   }
   const automatic=!['billing','no-free-allocation'].includes(kind);
   const estimated=seconds===null;
+  if(estimated)retrySource='local-estimate';
   if(seconds===null){
     seconds=kind==='daily'?nextPacificResetSeconds(now):
       kind==='requests-minute'||kind==='tokens-minute'?75:
@@ -72,7 +78,9 @@ export function diagnoseGeminiQuota({status=429,body=null,headers=null,model=nul
   const limit=Number(v.quotaValue);
   const chosenModel=safeCode(v?.quotaDimensions?.model||model);
   return {
-    kind,automatic,estimated,
+    kind,automatic,estimated,retrySource,
+    httpStatus:status===429||status===503?status:null,
+    providerStatus:safeCode(error.status,55),
     retryAfterSeconds:automatic?seconds:null,
     retryAt:automatic?new Date(now+seconds*1000).toISOString():null,
     quotaMetric:safeCode(v.quotaMetric),quotaId:safeCode(v.quotaId),
