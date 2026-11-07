@@ -100,7 +100,7 @@ const priorSnapshot=JSON.stringify({...oldRecord,originalFile:null});
 let writes=0,readCount=0;
 const result=await reacquireFromSavedPdf('book-34',{
   loadBook:async()=>oldRecord,
-  read:async(_,opts)=>{readCount++;assert.equal(opts.autoOcr,true);return newData;},
+  read:async(_,opts)=>{readCount++;assert.equal(opts.autoOcr,false);assert.equal(opts.textOnly,true);return newData;},
   build:async()=>({resumeSignature:null,chapters:[{title:'Diritto',paragraphs:[{original:'La legge prevede la disciplina.',summary:'La legge prevede la disciplina.'}]}]}),
   audit:()=>({passed:true,issues:[]}),
   saveBook:async input=>{writes++;return {...oldRecord,...input};},
