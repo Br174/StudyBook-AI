@@ -134,7 +134,7 @@ export function HomeDashboardV16({
             disabled={resumeBusy||(generating&&workPhase==='preparing')}>
             {resumeBusy?'Verifica in corso…':geminiStalled?'↻ Recupera richiesta bloccata':'↻ Verifica e riprendi'}
           </button>
-        </div>
+        </div>}
       </div>}
       {scanContent}
       {!scanContent && !documentData && !generating && !resumeCandidate && <div className="sb-home-placeholder"><StudyIcon name="document" size={44}/><strong>Qui presto nuove funzionalità</strong><p>Scannerizza, elabora e organizza i tuoi appunti in un unico posto.</p></div>}
