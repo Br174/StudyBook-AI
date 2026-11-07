@@ -140,8 +140,14 @@ export default async function handler(req,res){
   const level=req.body?.level;
   const single=typeof level==='string'&&LEVELS.includes(level);
   if(level!==undefined&&!single)return res.status(400).json({error:'Edizione richiesta non valida',code:'INVALID_LEVEL'});
-  // The new LAB36 path uses only experimentally verified free-family models.
-  const modelList=single?FREE_MODELS:[oldModel||FREE_MODELS[0]];
+  // Worker-only LAB44 routing. An explicitly allowlisted model is exclusive:
+  // quota/rejection on one model must never spend a request on an exhausted
+  // alternate. Without this Worker binding the existing LAB44 behavior stays.
+  const preferred=clean(env.STUDYBOOK_PREFERRED_EDITION_MODEL||
+    process.env.STUDYBOOK_PREFERRED_EDITION_MODEL,60);
+  const modelList=single
+    ?(FREE_MODELS.includes(preferred)?[preferred]:FREE_MODELS)
+    :[oldModel||FREE_MODELS[0]];
   const context=req.body?.context||{};
   const pillar=req.body?.policy===STUDY_PILLAR_VERSION;
   const targetLetters=Number.isInteger(req.body?.targetLetters)?req.body.targetLetters:null;
