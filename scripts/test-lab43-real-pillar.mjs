@@ -46,7 +46,7 @@ try{
  assert.equal(partial.verifiedChunkVariants,2,'Other two summary chunks must be verified while the first is quarantined');
  assert.equal(partial.rows[0][1].verified.summary,true);
  assert.equal(partial.rows[0][2].verified.summary,true);
- assert.equal(partial.rows[0][1].verified['50'],undefined,'Do not start 50% before the whole summary is verified');
+ assert.equal(partial.rows[0][1].verified['50'],false,'Do not start 50% before the whole summary is verified');
  assert.equal(partial.rows[0][0].verified.summary,false,'No silent approval of off-topic draft');
  assert.ok(partial.diagnostics.quality.reasons.includes('source-topic-support-insufficient'));
  assert.equal(calls.length,4,'Only 2 rejected draft attempts plus 2 successful summaries; no advanced reductions before verified summary');
