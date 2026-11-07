@@ -38,7 +38,8 @@ assert.match(home,/Apri libro in elaborazione/);
 assert.doesNotMatch(home,/Elaborazione \{progressPercent\}%/,
   'Local preprocessing must never be presented as 100% Gemini progress');
 assert.match(studio,/if \(!studyBook && generating\)/);
-assert.match(studio,/\(!generating\|\|geminiStalled\)/);
+assert.match(studio,/v36Partial && <button/,'A partial edition retains a manual rescue control');
+assert.match(studio,/onClick=\{onResumeGemini\}/,'Manual recovery still reuses the existing Gemini coordinator');
 assert.match(studio,/Elaborazione Gemini attiva/);
 assert.match(studio,/Apri il testo originale mentre Gemini elabora/);
 assert.match(pillar,/stessi concetti fondamentali/i);
