@@ -115,7 +115,7 @@ const baseSource='argomento '.repeat(20).trim();
 const completeBook={
   title:'Test 44 pagine',
   studyPillarV38:'studybook-progressive-v38-1',
-  canonicalBookMap:{pageCount:44,originalFingerprint:'lab51-test-44-pages',
+  canonicalBookMap:{pageCount:44,originalFingerprint:'a'.repeat(64),
     uncertain:[],pages:Array.from({length:44},(_,i)=>({
       physicalPage:i+1,sourceStatus:'verified',text:baseSource
     }))},
