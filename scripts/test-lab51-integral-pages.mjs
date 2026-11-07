@@ -70,7 +70,8 @@ assert.ok(generator.includes('return generateIntegralEditionsV51(book,options)')
 assert.ok(!generator.includes('for(const level of levels){'),
   'old six tiny-fragment passes must no longer govern pillar books');
 const pageSimple=readFileSync(new URL('../src/lib/pageSimpleV49.js',import.meta.url),'utf8');
-assert.ok(pageSimple.includes('onDemand'));
+assert.ok(pageSimple.includes('/api/page-simple/v49'),
+  'manual-only simple words route preserved');
 const worker=readFileSync(new URL('../worker/index.js',import.meta.url),'utf8');
 assert.ok(worker.includes("'/api/editions/bulk/v51'"));
 const actualFetch=globalThis.fetch;
