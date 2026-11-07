@@ -36,7 +36,7 @@ export async function reacquireFromSavedPdf(id,{
   const retriever=read || (await import('./documentParserV11.js')).readSourceFile;
   onProgress?.({phase:'source-recovery-start',done:0,total:1,reviewPages:suspicious.length});
   const fresh=await retriever(file,{
-    autoOcr:true,retryPages:suspicious,
+    autoOcr:false,textOnly:true,retryPages:suspicious,
     forceReextractAll:!previouslyAudited || !suspiciousFromAudit.length,
     onProgress,
   });
