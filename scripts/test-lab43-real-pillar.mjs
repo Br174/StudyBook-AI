@@ -42,15 +42,18 @@ try{
  };
  const partial=await generateGeminiEditionsV36(createBook('lab43-actual-pillar'),{paceMs:0});
  assert.equal(partial.complete,false);
- assert.equal(partial.execution.haltedOn,null,'First failed chunk must not block subsequent chunks');
- assert.equal(partial.verifiedChunkVariants,12,'Other two chunks each need six verified editions');
+ assert.equal(partial.execution.haltedOn,'AI_QUALITY_REVIEW_REQUIRED','LAB46 staged pillar must pause later editions while a summary is unverified');
+ assert.equal(partial.verifiedChunkVariants,2,'Other two summary chunks must be verified while the first is quarantined');
+ assert.equal(partial.rows[0][1].verified.summary,true);
+ assert.equal(partial.rows[0][2].verified.summary,true);
+ assert.equal(partial.rows[0][1].verified['50'],undefined,'Do not start 50% before the whole summary is verified');
  assert.equal(partial.rows[0][0].verified.summary,false,'No silent approval of off-topic draft');
  assert.ok(partial.diagnostics.quality.reasons.includes('source-topic-support-insufficient'));
- assert.equal(calls.length,14);
+ assert.equal(calls.length,4,'Only 2 rejected draft attempts plus 2 successful summaries; no advanced reductions before verified summary');
  failure=false;const count=calls.length;
  const restored=await generateGeminiEditionsV36(createBook('lab43-actual-pillar'),{paceMs:0});
  assert.equal(restored.complete,true,'Persisted checkpoint must resume the first chunk');
- assert.equal(calls.length-count,6,'Other verified chunks are not re-generated');
+ assert.equal(calls.length-count,16,'One repaired summary plus 15 later edition requests; two previously verified summaries are reused');
  assert.ok(calls[count].repairDraft,'The rejected draft is available for guided repair');
  for(const pct of STUDY_PERCENTAGES){
   const size=restored.rows[0].reduce((sum,row)=>sum+studyLetters(row.editions[String(pct)]),0);
@@ -68,5 +71,5 @@ try{
  const stopped=await generateGeminiEditionsV36(createBook('lab43-three-failed-chunks'),{paceMs:0});
  assert.equal(stopped.execution.haltedOn,'AI_QUALITY_REVIEW_REQUIRED','Systemic outage circuit preserved');
  assert.equal(calls.length,6,'At most six failed requests for three bad chunks');
- console.log('LAB43 REAL PILLAR TEST PASS: synonyms, protected facts, negation, summary cap, exact letter budgets, sparse resumption, systemic circuit');
+ console.log('LAB43 / LAB46 STAGED PILLAR TEST PASS: semantic guard, complete summary before 50%, verified neighbors, exact budgets, resumable rejected chunk, systemic circuit');
 }finally{globalThis.fetch=oldFetch;await clearGeminiPause();}
