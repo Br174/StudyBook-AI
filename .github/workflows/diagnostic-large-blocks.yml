@@ -1,0 +1,29 @@
+name: StudyBook - Prove grandi blocchi (solo test)
+on:
+  push:
+    branches:
+      - 'lab/diagnostics-studybook-bulk-tests-*'
+    paths:
+      - 'scripts/diagnose-large-block-44-pages.mjs'
+      - '.github/workflows/diagnostic-large-blocks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-synthetic:
+    name: Misura blocchi, ripetizioni, fedelta (zero chiamate reali)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout sorgente verificato
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Installa dipendenze senza script esterni
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Simulazione 44 pagine senza chiave Gemini
+        run: node scripts/diagnose-large-block-44-pages.mjs
