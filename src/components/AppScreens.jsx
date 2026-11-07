@@ -468,7 +468,9 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         </p>}
         {generating && <p>Elaborazione Gemini attiva · {status||'checkpoint in corso'}.
           Può consultare le parti già verificate senza interrompere la generazione.</p>}
-        <p>ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi verificati. {studyBook.editionsV36?.verifiedVariants||0}/{studyBook.editionsV36?.totalVariants||0} varianti verificate. Le pagine incomplete restano segnalate; PDF e download saranno disponibili dopo la verifica finale.</p>
+        <p>ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi completi. {studyBook.editionsV36?.verifiedVariants||0}/{studyBook.editionsV36?.totalVariants||0} varianti intere verificate.</p>
+        <p><strong>Può iniziare a studiare:</strong> {studyBook.editionReadiness.readableParagraphs||0} paragrafi consultabili nella riduzione selezionata, compresi {studyBook.editionReadiness.verifiedPreviewFragments||0} frammenti verificati di paragrafi lunghi. Le parti mancanti restano marcate «in elaborazione»; nessuna bozza non verificata è pubblicata.</p>
+        <p>Il PDF e il download del libro rielaborato completo restano disponibili soltanto dopo la verifica finale.</p>
         {Number.isFinite(studyBook.editionsV36?.totalChunkVariants) &&
           studyBook.editionsV36.totalChunkVariants>0 && <p>
             Parti IA verificate: {studyBook.editionsV36.verifiedChunkVariants||0}/
