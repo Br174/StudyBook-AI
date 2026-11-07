@@ -375,7 +375,7 @@ jobs:
 
 
       - name: Deploy ONLY isolated LAB41 Gemini recovery Worker
-        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-40-')
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-41-')
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
