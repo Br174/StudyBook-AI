@@ -11,6 +11,11 @@ import {clearGeminiPause} from '../src/lib/geminiQuotaControllerV36.js';
 const homeMarkup=readFileSync(new URL('../src/components/HomeDashboardV16.jsx',import.meta.url),'utf8');
 const libraryMarkup=readFileSync(new URL('../src/components/AppScreens.jsx',import.meta.url),'utf8');
 const appSource=readFileSync(new URL('../src/AppV15.jsx',import.meta.url),'utf8');
+const librarySource=readFileSync(new URL('../src/lib/library.js',import.meta.url),'utf8');
+assert.match(appSource,/acquisitionSaveTail/, 'Source pages periodically checkpointed');
+assert.match(appSource,/await acquisitionSaveTail/, 'Wait for checkpoint writes before final original save');
+assert.match(librarySource,/pagesAcquired:/, 'Original page acquisition is durable metadata');
+
 assert.match(homeMarkup,/Pagine scaricate:/);
 assert.match(homeMarkup,/sb-download-progress-track/);
 assert.match(libraryMarkup,/sb-library-download/);
