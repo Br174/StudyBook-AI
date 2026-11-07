@@ -94,12 +94,14 @@ try{
  const secondCallCount=calls.length;
  const resumed=await generateDraftFirstV57({...buildBook('b'),editionsV36:faulty});
  assert.equal(resumed.draftUnitsSaved,714,'no new drafts requested on resume');
- assert.equal(calls.length,secondCallCount,'bounded repair attempt prevents loops');
+ assert.equal(calls.length,secondCallCount+1,
+   'LAB61 safely retries an unresolved quality page within durable bounds');
  assert.equal(resumed.stagedRows[0][0].verified.summary,false);
  assert.equal(resumed.stagedRows[0][1].verified['10'],true,
   'later verified variants preserved in stage');
  const qualityPlan=planStudyAutoResumeV45(faulty);
- assert.equal(qualityPlan,null,'do not schedule endless 15-second quality retries');
+ assert.equal(qualityPlan?.reason,'quality-continue',
+   'LAB61 uses the existing foreground recovery owner with bounded attempts');
  
  calls=[];events=[];
  let failedOnce=false;

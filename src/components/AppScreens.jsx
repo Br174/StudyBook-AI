@@ -549,7 +549,6 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
 
       {v36Partial && <div className="sb-mirror-warning" role="status">
         {geminiCause && <p><strong>Diagnosi elaborazione:</strong> {geminiCause.description}
-          {' '}({geminiCause.base}).
           {geminiCause.halted ? ' Codice: '+geminiCause.halted+'.' : ''}
         </p>}
         {generating && <p>Elaborazione Gemini attiva · {status||'checkpoint in corso'}.

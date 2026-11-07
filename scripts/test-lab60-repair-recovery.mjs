@@ -67,8 +67,8 @@ try {
    assert.equal(initialCalls.filter(x=>x.phase==='repair').length,1);
    assert.deepEqual(initialCalls[6].pages,[17],
      'only physical page 17 is the repair scope');
-   assert.equal(paused.verifiedChunkVariants,0,
-     '503 is never approved as completed');
+   assert.equal(paused.verifiedChunkVariants,16,
+     '16 independently checked pages survive 503; bad page 17 not approved');
    const repairId='summary:17-17';
    if(legacy)paused.repairAttemptsV57[repairId]=1; // LAB59 defective historical checkpoint
    else assert.equal(paused.repairAttemptsV57[repairId],undefined,

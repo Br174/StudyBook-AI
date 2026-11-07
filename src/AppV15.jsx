@@ -1205,6 +1205,9 @@ export default function AppV14() {
       }
       const lab36BookId=firstSave.id;
       let savedVerified = 0,savedDrafts = 0;
+      // LAB61: a successful but not-yet-verified correction is real progress.
+      // Persist its attempt map and updated drafts, not only approved counts.
+      let savedRepairMarker='{}';
       let checkpointTail = Promise.resolve();
       const editions = await runGeminiWithSafeRestart(result,(snapshot)=>{
           generatedDraft={...result,editionsV36:snapshot,
@@ -1217,12 +1220,15 @@ export default function AppV14() {
               ?'Verifica e correzione mirata delle pagine'
               :'Verifica del libro · controllo di qualità delle sei versioni');
           // Save progress occasionally, never let concurrent IndexedDB writers race.
+          const repairMarker=JSON.stringify(snapshot.repairAttemptsV57||{});
           if(lab36BookId && (
               (snapshot.draftUnitsSaved||0)>savedDrafts ||
-              (snapshot.verifiedChunkVariants||0)>savedVerified
+              (snapshot.verifiedChunkVariants||0)>savedVerified ||
+              repairMarker!==savedRepairMarker
             )){
             savedVerified=snapshot.verifiedChunkVariants||0;
             savedDrafts=snapshot.draftUnitsSaved||0;
+            savedRepairMarker=repairMarker;
             const copy=generatedDraft;
             checkpointTail=checkpointTail.then(()=>saveLibraryBook({
               id:lab36BookId,fileName:sourceName,sourceData,studyBook:copy,
@@ -1346,7 +1352,8 @@ export default function AppV14() {
         return;
       }
       let checkpointTail=Promise.resolve(),savedVerified=current.editionsV36.verifiedChunkVariants||0,
-        savedDrafts=current.editionsV36.draftUnitsSaved||0;
+        savedDrafts=current.editionsV36.draftUnitsSaved||0,
+        savedRepairMarker=JSON.stringify(current.editionsV36.repairAttemptsV57||{});
       const snapshot=await runGeminiWithSafeRestart(current,(update)=>{
         draft={...current,editionsV36:update,
           engine:update.complete?'ai':(update.verifiedChunks>0?'misto':current.engine)};
@@ -1358,9 +1365,12 @@ export default function AppV14() {
             ?'Verifica e correzione mirata · bozze complete conservate'
             :'Verifica del libro completo · pagine approvate per versione');
         const count=update.verifiedChunkVariants||0;
-        if(targetId&&(count>savedVerified||(update.draftUnitsSaved||0)>savedDrafts)){
+        const repairMarker=JSON.stringify(update.repairAttemptsV57||{});
+        if(targetId&&(count>savedVerified||(update.draftUnitsSaved||0)>savedDrafts||
+          repairMarker!==savedRepairMarker)){
           savedVerified=count;
           savedDrafts=update.draftUnitsSaved||0;
+          savedRepairMarker=repairMarker;
           const copy=draft;
           checkpointTail=checkpointTail.then(()=>saveLibraryBook({
             id:targetId,fileName:targetName,sourceData:targetSource,studyBook:copy,

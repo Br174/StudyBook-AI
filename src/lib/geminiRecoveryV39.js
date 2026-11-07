@@ -36,7 +36,9 @@ export function progressDiagnostic(snapshot){
   CONNESSIONE:'Le richieste a Gemini non sono riuscite. I checkpoint sono conservati; non ripetere tentativi identici senza diagnosi.',
   RISPOSTA_NON_VALIDA:'Una risposta Gemini non è valida. La parte è conservata come non verificata; le altre vengono elaborate, salvo errori ripetuti.',
   SORGENTE_DA_VERIFICARE:'Una o più pagine della fonte richiedono verifica prima della compressione.',
-  QUALITA:'Alcuni paragrafi attendono una verifica didattica mirata. Le bozze non vengono pubblicate; i risultati delle altre pagine sono conservati.',
+  QUALITA:snapshot?.diagnostics?.pendingQualityV61?.attentionRequired
+    ?'Verifica non ancora superata. Le correzioni automatiche sono state limitate per evitare richieste ripetute senza miglioramenti; controllare le pagine indicate. Bozze e risultati approvati conservati.'
+    :'Verifica didattica in corso sulle pagine ancora problematiche. Le bozze complete restano salvate, le pagine già approvate vengono conservate e la ripresa mirata è programmata senza rigenerare il libro.',
   INTERROTTO:'Elaborazione interrotta: i checkpoint precedenti restano validi.',
   ATTESA:'Stato di elaborazione non conclusivo: verifica i dettagli.'
  };

@@ -186,7 +186,9 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
 }
 async function restoreDrafts(units,drafts,rows,fp){
  for(const level of LEVELS){
-   const open=units.filter(u=>!draftOf(drafts,u,level));
+   // LAB61: recover durable corrected drafts even if library still has an older
+   // non-approved full draft. Never overwrite an already approved page.
+   const open=units.filter(u=>!rows[u.ci]?.[u.pi]?.verified?.[level]);
    if(!open.length)continue;
    const current=await loadRuntimeUnitResults(open.map(u=>key(fp,level,u)));
    const old=await loadRuntimeUnitResults(open.map(u=>priorKey(fp,level,u)));
@@ -219,21 +221,65 @@ function recoverLegacyTransientRepairV60(previous,attempts){
  delete attempts[candidate];
  return candidate;
 }
-function selectedRepairPages(units,issues,level){
- const problemPages=new Set();
- for(const item of issues.violations)for(let i=item.u.pageStart;i<=item.u.pageEnd;i++)
-   problemPages.add(i);
- if(!problemPages.size&&!issues.exact){
-   // Prefer the page with the most editable natural language, not the legal
-   // citation by itself. The original pages remain indivisible.
-   const size=new Map();
-   for(const u of units)size.set(u.pageStart,(size.get(u.pageStart)||0)+u.source.length);
-   const ranked=[...size].sort((a,b)=>b[1]-a[1]);
-   if(ranked.length)problemPages.add(ranked[0][0]);
+// LAB61: one quality coordinator, continuing the original two-phase runner.
+// A page may become visible only after its concepts/negations have been
+// checked; the global exact-letter target is still a REQUIRED final gate.
+const MAX_REPAIR_ATTEMPTS_V61=3;
+const MAX_REPAIR_PAGES_V61=5;
+const MAX_REPAIR_CALLS_V61=4;
+const attemptKeyV61=(level,page)=>level+':'+page+'-'+page;
+function semanticIssuePagesV61(issues){
+ return [...new Set(issues.violations.flatMap(({u})=>
+   Array.from({length:u.pageEnd-u.pageStart+1},(_,i)=>u.pageStart+i)))].sort((a,b)=>a-b);
+}
+function numericReservedPagesV61(units,issues,level,rows){
+ if(issues.exact)return [];
+ let needed=Math.abs(issues.delta);
+ const mapped=[...pageSets(units)].filter(([page,members])=>members.some(u=>
+   !rows[u.ci]?.[u.pi]?.verified?.[level])).sort((a,b)=>b[0]-a[0]);
+ const selected=[];
+ for(const [page,members] of mapped){
+   selected.push(page);
+   const letters=members.reduce((n,u)=>n+studyLetters(u.source),0);
+   needed-=Math.max(6,Math.floor(letters*.55));
+   if(needed<=0)break;
  }
- const matched=units.filter(u=>Array.from({length:u.pageEnd-u.pageStart+1},(_,i)=>u.pageStart+i)
-   .some(p=>problemPages.has(p)));
- return {pages:[...problemPages],units:matched};
+ return selected.sort((a,b)=>a-b);
+}
+function stageApprovedPrefixV61(rows,units,drafts,level,issues){
+ const blocked=new Set([
+   ...semanticIssuePagesV61(issues),
+   ...numericReservedPagesV61(units,issues,level,rows)
+ ]);
+ const firstBad=blocked.size?Math.min(...blocked):Infinity;
+ let newlyApproved=0;
+ const failed=new Set(issues.violations.map(x=>x.u.id));
+ for(const u of units){
+   const row=rows[u.ci][u.pi];
+   if(row?.verified?.[level]===true||u.pageEnd>=firstBad||
+     failed.has(u.id))continue;
+   const value=draftOf(drafts,u,level);
+   if(!value)continue;
+   row.editions[level]=value;
+   row.verified[level]=true;
+   row.issues[level]=[];
+   row.achievedPercent[level]=percentReduced(studyLetters(u.source),studyLetters(value));
+   newlyApproved++;
+ }
+ return newlyApproved;
+}
+function selectedRepairPages(units,issues,level,rows,attempts){
+ const semantic=semanticIssuePagesV61(issues);
+ const candidate=semantic.length?semantic:
+   numericReservedPagesV61(units,issues,level,rows);
+ const eligible=candidate.filter(page=>
+   (Number(attempts[attemptKeyV61(level,page)])||0)<MAX_REPAIR_ATTEMPTS_V61);
+ const pages=eligible.slice(0,MAX_REPAIR_PAGES_V61);
+ // Keep full original pages, including every paragraph spanning the page.
+ const selected=units.filter(u=>pages.some(page=>
+   page>=u.pageStart&&page<=u.pageEnd));
+ return {pages,units:selected,eligibleCount:eligible.length,
+   blockedCount:candidate.length,exhausted:Math.max(0,candidate.length-eligible.length)};
 }
 export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=()=>{},signal=null}={}){
  const units=orderSourceUnitsV59(bookUnitsV51(book)),fp=fingerprint(book),previous=book.editionsV36;
@@ -337,33 +383,43 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
      missing:reviews[l].missing.length,semanticIssues:reviews[l].violations.length,
      target:reviews[l].target,actual:reviews[l].letters}]))};
  emit(onProgress,book,units,rows,drafts,fp,diagnostics,'review');
- // SECOND PHASE: at most one targeted whole-page attempt per level per
- // session, with a durable per-page attempt marker to avoid quota storms.
+ // SECOND PHASE: strict Riassunto -> 50 -> 40 -> 30 -> 20 -> 10
+ // and physical-page order. No global check during compression.
+ let unfinishedLevel=null;
+ let repairCalls=0;
  for(const level of LEVELS){
    let review=reviews[level];
-   if(review.verified){publishEdition(rows,units,drafts,level);continue;}
-   const selection=selectedRepairPages(units,review,level);
-   if(!selection.units.length)continue;
-   const groups=planNaturalBlocksV51(selection.units,level,
-     {maxInputTokens:diagnostics.inputLimit});
-   // Bound additional requests. Always work on complete original pages.
-   for(const group of groups){
-     const id=level+':'+group[0].pageStart+'-'+group.at(-1).pageEnd;
-     if(diagnostics.repairAttempts[id]>=1)continue;
+   if(review.verified){
+     publishEdition(rows,units,drafts,level);
+     emit(onProgress,book,units,rows,drafts,fp,diagnostics,'review');
+     continue;
+   }
+   stageApprovedPrefixV61(rows,units,drafts,level,review);
+   emit(onProgress,book,units,rows,drafts,fp,diagnostics,'review');
+   while(!review.verified&&repairCalls<MAX_REPAIR_CALLS_V61){
+     const selection=selectedRepairPages(units,review,level,rows,diagnostics.repairAttempts);
+     if(!selection.units.length)break;
+     const groups=planNaturalBlocksV51(selection.units,level,
+       {maxInputTokens:diagnostics.inputLimit});
+     const group=groups[0];
+     if(!group?.length)break;
+     const groupPages=[...new Set(group.flatMap(u=>
+       Array.from({length:u.pageEnd-u.pageStart+1},(_,i)=>u.pageStart+i)))];
      const pause=await readGeminiPause();
      if(pause)return halt(onProgress,book,units,rows,drafts,fp,diagnostics,'repair',
        pause.automatic?'quota-paused':'quota-review',
        pause.automatic?'AI_QUOTA_LIMIT':'AI_QUOTA_MANUAL_REVIEW',persisted,pause);
      const gap=review.exact?0:review.target-review.letters;
      const lengthBefore=group.reduce((n,u)=>n+studyLetters(draftOf(drafts,u,level)),0);
-     const desired=Math.max(1,lengthBefore+gap);
+     const sourceLetters=group.reduce((n,u)=>n+studyLetters(u.source),0);
+     const maxAdjustment=Math.max(6,Math.floor(sourceLetters*.55));
+     const boundedGap=Math.max(-maxAdjustment,Math.min(maxAdjustment,gap));
+     const desired=Math.max(1,lengthBefore+boundedGap);
      const repairDrafts=group.map(u=>({
        id:u.id,text:draftOf(drafts,u,level),
        repairFocus:repairFocusForUnitV56(u,level,draftOf(drafts,u,level))
      }));
-     // Never persist a successful repair marker until the provider responds
-     // and any returned draft is durably checkpointed.
-     diagnostics.requestsSent++;diagnostics.repairRequests++;
+     diagnostics.requestsSent++;diagnostics.repairRequests++;repairCalls++;
      emit(onProgress,book,units,rows,drafts,fp,diagnostics,'repair');
      try{
        onActivity({phase:'repair',level,pageStart:group[0].pageStart,
@@ -374,7 +430,8 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        const indexed=new Map((response.parts||[]).filter(x=>clean(x?.text))
          .map(x=>[x.id,clean(x.text)]));
        const changes=group.filter(u=>indexed.has(u.id)&&
-         !rows[u.ci][u.pi].verified[level]).map(u=>({
+         !rows[u.ci][u.pi].verified[level]&&
+         indexed.get(u.id)!==draftOf(drafts,u,level)).map(u=>({
            u,text:indexed.get(u.id),key:key(fp,level,u)
          }));
        if(changes.length){
@@ -385,14 +442,24 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
          for(const change of changes)saveDraftToGrid(drafts,change.u,level,change.text);
          await clearGeminiPause();
        }
-       // Only a valid Gemini HTTP 200 response reaches this point.
-       // A quota/503/timeout/abort leaves this page eligible for safe resume.
-       // A valid but unhelpful response still counts as one bounded attempt.
-       diagnostics.repairAttempts[id]=1;
+       // HTTP 200 counts as a bounded ATTEMPT, never as approval.
+       // 503/429/timeout never increments the durable attempt counters.
+       for(const page of groupPages){
+         const id=attemptKeyV61(level,page);
+         diagnostics.repairAttempts[id]=(Number(diagnostics.repairAttempts[id])||0)+1;
+       }
+       const previousMissing=review.violations.length;
+       const previousDelta=Math.abs(review.delta);
        review=reviewEdition(units,drafts,level);
        reviews[level]=review;
+       if(review.verified)publishEdition(rows,units,drafts,level);
+       else stageApprovedPrefixV61(rows,units,drafts,level,review);
        emit(onProgress,book,units,rows,drafts,fp,diagnostics,'review');
-       if(review.verified)break;
+       // Do not repeatedly request the same unhelpful response in one pass.
+       const improved=review.verified||
+         review.violations.length<previousMissing||
+         Math.abs(review.delta)<previousDelta;
+       if(!improved)break;
      }catch(error){
        const code=signal?.aborted?'AI_MANUAL_RESTART':error?.code||'AI_PROVIDER_NETWORK';
        diagnostics.lastCode=code;diagnostics.providerErrors++;
@@ -404,14 +471,21 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
          'provider-blocked',code,persisted);
      }
    }
-   if(reviews[level].verified)publishEdition(rows,units,drafts,level);
-   emit(onProgress,book,units,rows,drafts,fp,diagnostics,'review');
+   if(!review.verified){unfinishedLevel=level;break;}
  }
+ diagnostics.quality={...diagnostics.quality,
+   pendingLevel:unfinishedLevel,
+   retryablePages:unfinishedLevel?selectedRepairPages(units,reviews[unfinishedLevel],
+     unfinishedLevel,rows,diagnostics.repairAttempts).eligibleCount:0};
  state=emit(onProgress,book,units,rows,drafts,fp,diagnostics,'review');
  if(!state.complete){
    state.status='quality-review';
-   state.execution={haltedOn:'AI_QUALITY_REVIEW',remainingBatches:
-     LEVELS.filter(l=>!reviews[l].verified).length};
+   const remaining=diagnostics.quality?.retryablePages||0;
+   state.execution={haltedOn:'AI_QUALITY_REVIEW',remainingBatches:remaining,
+     reviewAfter:new Date(Date.now()+30000).toISOString()};
+   state.diagnostics.pendingQualityV61={level:unfinishedLevel,
+     retryablePages:remaining,attentionRequired:remaining===0,
+     maxAttemptsPerPage:MAX_REPAIR_ATTEMPTS_V61};
    state.diagnostics.quality={phase:'book-review',
      levels:Object.fromEntries(LEVELS.map(l=>[l,{exact:reviews[l].exact,
        missing:reviews[l].missing.length,semanticIssues:reviews[l].violations.length,
