@@ -57,7 +57,7 @@ function snapshot(book,grid,fingerprint,checkpointPersistent,diagnostics,activeL
   const complete=totalCells>0&&verifiedCells===totalCells&&checkpointPersistent
     &&!(book.canonicalBookMap?.uncertain||[]).length;
   return {version:VERSION,sourceFingerprint:fingerprint,rows,stagedRows:grid,
-    publishedThroughPage:through,
+    publishedThroughPage:through,integralInputLimit:diagnostics.inputLimit,
     verifiedCells,totalCells,blockedCells:totalCells-verifiedCells,
     verifiedChunks:verifiedCells,verifiedVariants,totalVariants:totalCells*LEVELS.length,
     verifiedChunkVariants:verifiedVariants,totalChunkVariants:totalCells*LEVELS.length,
@@ -112,7 +112,7 @@ async function requestBlock(block,level,{bookTitle='',signal=null}={}){
     if((response.status===429||response.status===503)&&data?.quota)
       await registerGeminiPause(data.quota);
     throw Object.assign(new Error(data?.error||'Edizione integrale non completata.'),{code,
-      diagnostic:data?.diagnostic||null});
+      diagnostic:data?.diagnostic||null,quota:data?.quota||null});
   }
   return data;
 }
@@ -131,7 +131,8 @@ export async function generateIntegralEditionsV51(book,{
   const grid=newGrid(book,book.editionsV36,fingerprint);
   const diagnostics={processedJobs:0,providerErrors:0,sourceBlocked:0,
     errorsByCode:{},lastCode:null,mode:'large-natural-page-blocks-v51',
-    requestsSent:0,splits:0,verifiedBlocks:0};
+    requestsSent:0,splits:0,verifiedBlocks:0,
+    inputLimit:Number(book?.editionsV36?.integralInputLimit)||900000};
   let checkpointPersistent=true;
   const initial=snapshot(book,grid,fingerprint,true,diagnostics,LEVELS[0]);
   onProgress(initial,initial.verifiedVariants,initial.totalVariants);
@@ -142,7 +143,7 @@ export async function generateIntegralEditionsV51(book,{
     return blocked;
   }
   for(const level of LEVELS){
-    const planned=planNaturalBlocksV51(units,level);
+    const planned=planNaturalBlocksV51(units,level,{maxInputTokens:diagnostics.inputLimit});
     const queue=[...planned];
     while(queue.length){
       const block=queue.shift();
@@ -189,6 +190,15 @@ export async function generateIntegralEditionsV51(book,{
           diagnostics.lastCode=code;
           diagnostics.errorsByCode[code]=(diagnostics.errorsByCode[code]||0)+1;
           diagnostics.providerErrors++;
+          if(error?.quota?.kind==='tokens-minute'){
+            // A model's 1M-token context is NOT the project's free TPM quota.
+            // Persist an adaptive lower budget for the next safe resume window.
+            const estimate=Math.ceil(block.reduce((n,u)=>n+u.source.length,0)/2)+1200;
+            const quotaCap=Number(error.quota.limit);
+            const observed=quotaCap>0?Math.min(quotaCap,estimate):estimate;
+            diagnostics.inputLimit=Math.max(1600,Math.min(diagnostics.inputLimit,
+              Math.floor(observed*.65)));
+          }
           // Splitting is ONLY permitted at a chapter or full physical page boundary.
           const splittable=['AI_BLOCK_TOO_LARGE','AI_INCOMPLETE_BLOCK','AI_QUALITY_REVIEW',
             'AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETWORK'].includes(code);
