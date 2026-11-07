@@ -56,6 +56,7 @@ export async function exportMirrorPdfV35(book,fileName,options={}){
     pdf.text('Libro Specchio · Pagina '+sheet.label,margin,17);
     let y=29;
     for(const block of sheet.blocks){
+      if(block.kind==='vertical-gap'){y+=Math.max(0,Number(block.lines)||0)*5.2;continue;}
       if(block.kind==='chapter-title'){
         pdf.setFont('helvetica','bold');pdf.setFontSize(14);pdf.setTextColor(32,51,79);
         for(const line of pdf.splitTextToSize(block.text,contentWidth)){
