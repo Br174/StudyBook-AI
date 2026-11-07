@@ -1,0 +1,61 @@
+name: StudyBook LAB42 stable direct download
+
+on:
+  push:
+    branches:
+      - motorlab/studybook-delivery-lab42-20261107
+    paths:
+      - '.github/workflows/studybook-lab42-permanent-download.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish-original-verified-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: Br174/StudyBook-AI
+      RUN_ID: '42324174262'
+      ARTIFACT_NAME: StudyBook-AI-LAB-42-AGGIORNAMENTO-APK
+      SOURCE_SHA: '1d1cc81b171479c7c695e277bacfe1a21f5ead31'
+      APK_SHA256: e8ce00c70cd83208517a4eaa1629fa371497633189dd38a4da23c4e304571682
+      TAG: studybook-lab42-v0.3.254
+
+    steps:
+      - name: Verify existing signed and tested original build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq .conclusion)" = success
+          test "$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq .head_sha)" = "$SOURCE_SHA"
+          test "$(gh api "repos/$REPO/actions/artifacts/13554477443" --jq .expired)" = false
+          test "$(gh api "repos/$REPO/actions/artifacts/13554477443" --jq .name)" = "$ARTIFACT_NAME"
+      - name: Download exact artifact and verify original APK bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p original release
+          gh run download "$RUN_ID" --repo "$REPO" --name "$ARTIFACT_NAME" --dir original
+          test -s original/StudyBook-AI-LAB-42-AGGIORNAMENTO.apk
+          printf '%s  %s\n' "$APK_SHA256" "original/StudyBook-AI-LAB-42-AGGIORNAMENTO.apk" | sha256sum --check --status
+          test -s original/StudyBook-AI-LAB-42-AGGIORNAMENTO-signing.txt
+          test -s original/StudyBook-AI-LAB-42-AGGIORNAMENTO-identity.txt
+          cp original/StudyBook-AI-LAB-42-AGGIORNAMENTO.apk release/
+          zip -j -9 -q release/StudyBook-AI-LAB-42-AGGIORNAMENTO.zip original/StudyBook-AI-LAB-42-AGGIORNAMENTO.*
+          unzip -tqq release/StudyBook-AI-LAB-42-AGGIORNAMENTO.zip
+          sha256sum release/StudyBook-AI-LAB-42-AGGIORNAMENTO.apk release/StudyBook-AI-LAB-42-AGGIORNAMENTO.zip
+      - name: Publish non-expiring GitHub Release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            gh release create "$TAG"               release/StudyBook-AI-LAB-42-AGGIORNAMENTO.zip               release/StudyBook-AI-LAB-42-AGGIORNAMENTO.apk               --repo "$REPO"               --target "$SOURCE_SHA"               --title "StudyBook AI LAB42 - Android 0.3.254"               --notes "LAB42 verificata: firmata con certificato della famiglia LAB precedente; appId it.studybook.ai.lab; Scudo360 superato; SHA-256 APK $APK_SHA256. Installare come aggiornamento senza disinstallare. Prova end-to-end del libro originale ancora da eseguire sul telefono."               --prerelease --latest=false
+          fi
+          gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[].name' | tee /tmp/asset-names.txt
+          grep -Fx 'StudyBook-AI-LAB-42-AGGIORNAMENTO.zip' /tmp/asset-names.txt
+          grep -Fx 'StudyBook-AI-LAB-42-AGGIORNAMENTO.apk' /tmp/asset-names.txt
+          echo "https://github.com/$REPO/releases/download/$TAG/StudyBook-AI-LAB-42-AGGIORNAMENTO.zip" >> "$GITHUB_STEP_SUMMARY"
+          echo "Permanent release created from verified signed APK, not recompiled." >> "$GITHUB_STEP_SUMMARY"
