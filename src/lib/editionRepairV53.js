@@ -84,21 +84,31 @@ export function fitStudyUnitV53(unit,level,value,{maxEdits=160}={}){
  return {text:best,audit:auditStudyUnitV53(unit,level,best),edits};
 }
 export function reviewGeminiPartsV53(block,level,parts){
- if(!Array.isArray(parts)||parts.length!==block.length||
-   parts.some((p,i)=>p?.id!==block[i].id||typeof p.text!=='string'))
-   return {structural:false,verified:[],failed:block.map(u=>({unit:u,reason:['missing-ordered-paragraphs']})),
-     publicReason:'missing-ordered-paragraphs',numeric:{received:Array.isArray(parts)?parts.length:0,expected:block.length}};
+ const all=new Map(),accepted=new Set(block.map(u=>u.id));
+ if(Array.isArray(parts))for(const part of parts){
+   if(accepted.has(part?.id)&&typeof part.text==='string'&&!all.has(part.id))
+     all.set(part.id,part.text);
+ }
  const verified=[],failed=[],diagnostics={};
- for(let i=0;i<block.length;i++){
-   const fit=fitStudyUnitV53(block[i],level,parts[i].text);
-   if(fit.audit.ok)verified.push({unit:block[i],text:fit.text});
+ for(const unit of block){
+   if(!all.has(unit.id)){
+     failed.push({unit,reason:['missing-ordered-paragraphs'],
+       letterDelta:null,targetLetters:null,observedLetters:null});
+     diagnostics['missing-ordered-paragraphs']=(diagnostics['missing-ordered-paragraphs']||0)+1;
+     continue;
+   }
+   const draft=all.get(unit.id);
+   const fit=fitStudyUnitV53(unit,level,draft);
+   if(fit.audit.ok)verified.push({unit,text:fit.text});
    else{
-     failed.push({unit:block[i],draft:parts[i].text,reason:fit.audit.reasons,
-       letterDelta:fit.audit.delta,targetLetters:fit.audit.target,observedLetters:fit.audit.length});
+     failed.push({unit,draft,reason:fit.audit.reasons,
+       letterDelta:fit.audit.delta,targetLetters:fit.audit.target,
+       observedLetters:fit.audit.length});
      for(const code of fit.audit.reasons)diagnostics[code]=(diagnostics[code]||0)+1;
    }
  }
- return {structural:true,verified,failed,
+ return {structural:all.size>0,verified,failed,
    publicReason:failed.length?'some-paragraphs-need-repair':'verified',
-   numeric:{received:parts.length,verified:verified.length,unverified:failed.length,issues:diagnostics}};
+   numeric:{received:all.size,verified:verified.length,unverified:failed.length,
+     expected:block.length,issues:diagnostics}};
 }
