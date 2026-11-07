@@ -59,6 +59,8 @@ async function readNativePage(pdf, pageNumber, {textOnly=false}={}) {
   const page = await pdf.getPage(pageNumber);
   try {
   const textContent = await page.getTextContent();
+  // PDF page metadata only: getViewport does not render or decode any pictures.
+  const physicalSize = page.getViewport({scale:1});
   const rawText = pdfText(textContent.items);
   // LAB47: textual PDF imports never inspect graphical operators.
   let imageCount = 0;
@@ -72,6 +74,7 @@ async function readNativePage(pdf, pageNumber, {textOnly=false}={}) {
   const noText = textOnly && !rawText.trim();
   return {
     pageNumber, text: rawText, rawText, source: 'embedded',
+    widthPt:physicalSize.width,heightPt:physicalSize.height,
     status: noText ? 'text-unavailable' : requiresOcr ? 'ocr-pending' : 'verified',
     imageCount, inkCount, issue: noText ? 'no-selectable-text-image-skipped' :
       requiresOcr ? 'page-visual-requires-ocr' : '',
@@ -146,6 +149,7 @@ export async function readPdfIntegrity360(file, { onProgress, autoOcr = true, te
         && !retrySet.has(row.pageNumber) && !pages[row.pageNumber - 1]) {
         pages[row.pageNumber - 1] = {
           pageNumber: row.pageNumber, text: row.text, rawText: row.rawText || row.text,
+          widthPt:row.widthPt||null,heightPt:row.heightPt||null,
           status: 'verified', source: row.source || 'resume', imageCount: row.imageCount || 0,
           inkCount:row.inkCount||0,visualAnchors:row.visualAnchors||[],visualReview:row.visualReview||[],
           issue: '',
