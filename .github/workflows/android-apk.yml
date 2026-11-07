@@ -284,6 +284,7 @@ jobs:
           fi
 
       - name: LAB52 original source soft warning recovery + protected hard gates
+        id: lab52tests
         if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-52-')
         run: |
           node scripts/test-lab52-source-warning-recovery.mjs
@@ -293,6 +294,25 @@ jobs:
           node scripts/test-lab49-live-simple-page.mjs
           node scripts/test-lab50-simple-persistent.mjs
           node scripts/test-lab38-pillar.mjs
+
+      - name: LAB52 record GitHub test verdict
+        if: always() && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-52-')
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEST_OUTCOME: ${{ steps.lab52tests.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          DATA=$(jq -nc --arg sha "$GITHUB_SHA" --arg run "$GITHUB_RUN_ID" --arg result "$TEST_OUTCOME" '{source_sha:$sha,run_id:($run|tonumber),tests:$result,device:"PENDING"}')
+          BODY=$(printf '%s' "$DATA" | base64 -w0)
+          TARGET=".motorlab/LAB52_TEST_RECEIPT.json"
+          PREV=$(gh api "repos/$GITHUB_REPOSITORY/contents/$TARGET?ref=$GITHUB_REF_NAME" --jq .sha 2>/dev/null || true)
+          if [[ -n "$PREV" ]]; then
+            gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$TARGET" -f message="chore(LAB52): test verdict [skip ci]" -f branch="$GITHUB_REF_NAME" -f content="$BODY" -f sha="$PREV" >/dev/null
+          else
+            gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$TARGET" -f message="chore(LAB52): test verdict [skip ci]" -f branch="$GITHUB_REF_NAME" -f content="$BODY" >/dev/null
+          fi
 
       - name: Resolve monotonic Android version
         shell: bash
