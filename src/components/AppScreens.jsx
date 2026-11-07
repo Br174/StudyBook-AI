@@ -7,6 +7,7 @@ import SimplePagesLibraryV50 from './SimplePagesLibraryV50.jsx';
 import {progressDiagnostic} from '../lib/geminiRecoveryV39.js';
 import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
 import StudyPhaseProgressV59 from './StudyPhaseProgressV59.jsx';
+import StudyDraftInspectorV63 from './StudyDraftInspectorV63.jsx';
 import {geminiResumeDisplayV55} from '../lib/studyAutoResumeV45.js';
 import '../appShellV16.css';
 
@@ -425,6 +426,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   const [exportVariant, setExportVariant] = useState('study');
   const [exportOpen, setExportOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
+  const [draftInspectorOpen,setDraftInspectorOpen] = useState(false);
   const [prepareOpen, setPrepareOpen] = useState(false);
   if (!studyBook && generating) {
     return <section className="sb-screen sb-studio-screen" aria-label="Preparazione libro">
@@ -519,6 +521,16 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             : <button type="button" onClick={onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>}
           <button type="button" disabled={v36Partial&&!isOriginalOnly} className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>Scarica libro</strong></button>
         </div>
+        {!isOriginalOnly && studyBook?.editionsV36 && <>
+          <button type="button" className="sb-resume-manual"
+            style={{width:'100%',marginTop:12}}
+            aria-expanded={draftInspectorOpen}
+            onClick={()=>setDraftInspectorOpen(v=>!v)}>
+            {draftInspectorOpen?'Chiudi controllo pagine':'Controlla pagine elaborate'}
+          </button>
+          {draftInspectorOpen && <StudyDraftInspectorV63
+            book={studyBook} onClose={()=>setDraftInspectorOpen(false)}/>}
+        </>}
         {!isOriginalOnly && studyBook && (
           <div className="sb-precision-control" style={{ padding: '14px 16px', marginTop: 10, border: '1px solid #dce6f1', borderRadius: 14 }}>
             <label htmlFor="sb-precision-slider" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontWeight: 700 }}>
