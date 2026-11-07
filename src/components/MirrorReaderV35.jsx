@@ -56,7 +56,7 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
         </button>
       ):<>
         <div className="sb-mirror-content">
-        {(page.blocks||[]).map((p,i)=>p.kind==='chapter-title'?<h2 key={i}>{p.text}</h2>:
+        {(page.blocks||[]).map((p,i)=>p.kind==='vertical-gap'?<div key={i} className="sb-mirror-source-gap" style={{height:Math.max(0,Number(p.lines)||0)*1.55+'em'}} aria-hidden="true"/>:p.kind==='chapter-title'?<h2 key={i}>{p.text}</h2>:
           p.kind==='section-title'?<h3 key={i}>{p.text}</h3>:
           p.kind==='image-ref'?<button className="sb-mirror-image-ref" key={i}
             onClick={()=>showPicture(book.canonicalBookMap?.visualAnchors?.find(a=>a.id===p.anchorId))}>
