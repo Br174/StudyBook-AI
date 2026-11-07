@@ -249,9 +249,17 @@ export async function generateIntegralEditionsV51(book,{
        }
        diagnostics.rawDraftsPreserved+=review.failed.filter(x=>clean(x.draft)).length;
        diagnostics.processedJobs++;
+       // LAB55: a real Gemini 200 response with identified paragraphs proves
+       // the provider recovered, even if editorial review remains unfinished.
+       // Reset only the transient provider cooldown history; do NOT mark a
+       // draft as verified, erase checkpoints or bypass quality gates.
+       if(review.structural&&review.numeric.received>0){
+         await clearGeminiPause();
+         diagnostics.providerRecovered=true;
+       }
        current=snapshot(book,grid,fp,checkpointPersistent,diagnostics,level);
        onProgress(current,current.verifiedVariants,current.totalVariants);
-       if(blockAlreadyReady(grid,block,level)){diagnostics.verifiedBlocks++;await clearGeminiPause();continue;}
+       if(blockAlreadyReady(grid,block,level)){diagnostics.verifiedBlocks++;continue;}
        diagnostics.errorsByCode.AI_QUALITY_REVIEW=(diagnostics.errorsByCode.AI_QUALITY_REVIEW||0)+1;
        diagnostics.lastCode='AI_QUALITY_REVIEW';
        // ONE repair pass at the same natural boundaries, then split only at
