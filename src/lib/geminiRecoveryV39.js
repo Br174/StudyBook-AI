@@ -17,12 +17,18 @@ export function progressDiagnostic(snapshot){
  const status=snapshot?.status||'partial';
  const halted=snapshot?.execution?.haltedOn||snapshot?.diagnostics?.lastCode||null;
  const kind=snapshot?.quota?.automatic?'QUOTA_ATTESA':snapshot?.quota?'CONFIGURAZIONE':
+  status==='drafting'?'BOZZA':
+  status==='reviewing'?'VERIFICA':
   status==='quality-review'?'QUALITA':
   status==='source-review-needed'?'SORGENTE_DA_VERIFICARE':
   RECOVERY_KINDS[halted]|| (status==='complete'?'COMPLETO':status==='partial'?'PARZIALE':'ATTESA');
- const base=stored+'/'+total+' parti IA verificate';
+ const base=stored+'/'+total+' parti IA verificate'+
+   (snapshot?.draftUnitsTotal?
+     ' · bozze '+(snapshot.draftUnitsSaved||0)+'/'+snapshot.draftUnitsTotal:'');
  const messages={
   COMPLETO:'Tutte le edizioni verificate e salvate.',
+  BOZZA:'Prima fase: Gemini sta creando e salvando i blocchi completi. Le verifiche didattiche inizieranno solo a bozza completa.',
+  VERIFICA:'La bozza del libro è stata completata e salvata. Sono in corso verifica globale e correzioni mirate.',
   PARZIALE:'Elaborazione parziale: ripresa possibile dai checkpoint.',
   QUOTA_ATTESA:'Gemini ha sospeso una richiesta. I checkpoint sono conservati. Il codice 503 indica sovraccarico, non quota esaurita; il 429 indica un limite d’utilizzo. Riprova solo dopo l’attesa indicata.',
   CONFIGURAZIONE:'Gemini non ha una quota o una configurazione valida. Verificare le impostazioni, senza acquistare nulla.',
