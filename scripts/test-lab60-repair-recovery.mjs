@@ -48,7 +48,7 @@ try {
  await clearGeminiCadenceForTestV58();
  for(const legacy of [false,true]){
    cases++;
-   const book=buildBook(legacy?'m':'n');
+   const book=buildBook(legacy?'b':'a');
    const initialCalls=[],resumeCalls=[];
    globalThis.fetch=async(_url,options)=>{
      const p=JSON.parse(options.body);
