@@ -1,0 +1,50 @@
+name: StudyBook LAB45 Scudo360 preflight (no APK)
+on:
+  push:
+    branches:
+      - lab/studybook-core-android-01-update-45-autonomous-preview-20261107
+    paths:
+      - .github/workflows/studybook-lab45-preflight.yml
+
+permissions:
+  contents: read
+
+jobs:
+  lab45_offline:
+    name: Existing checks + 3000-page preview + autonomous recovery
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false
+      - name: Pilastro, Gemini quota, and 44-page checkpoint regressions
+        run: |
+          set -euo pipefail
+          node scripts/test-lab43-real-pillar.mjs
+          node scripts/test-lab44-503-429-backoff.mjs
+          node scripts/test-lab45-autonomy-preview.mjs
+      - name: Build native web app before Scudo360
+        run: npm run build
+      - name: Scudo360 mandatory native gate
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-lab45-preflight-report.json
+      - name: Verify unchanged immutable pedagogy and Android identity
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          import {STUDY_PILLAR_VERSION,STUDY_ORDER,STUDY_PERCENTAGES} from './src/lib/studyPillarV38.js';
+          assert.equal(STUDY_PILLAR_VERSION,'studybook-progressive-v38-1');
+          assert.deepEqual(STUDY_ORDER,['summary','50','40','30','20','10','0']);
+          assert.deepEqual(STUDY_PERCENTAGES,[10,20,30,40,50]);
+          const c=JSON.parse(readFileSync('capacitor.config.json','utf8'));
+          assert.equal(c.appId,'it.studybook.ai.lab');
+          assert.equal(c.android.androidScheme,'https');
+          const w=JSON.parse(readFileSync('wrangler.lab44-model31.jsonc','utf8'));
+          assert.equal(w.name,'studybook-ai-lab44');
+          assert.equal(w.vars.STUDYBOOK_PREFERRED_EDITION_MODEL,'gemini-3.1-flash-lite');
+          console.log('LAB45 IDENTITY + PILLAR + GEMINI3.1 PASS');
+          NODE
