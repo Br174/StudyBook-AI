@@ -122,112 +122,197 @@ function addBlock(grid,block,level,parts){
     row.achievedPercent[level]=percentReduced(studyLetters(u.source),studyLetters(text));
   }
 }
+// LAB53: one canonical executor, no second scheduler. Each complete model
+// response is inspected per source paragraph, never discarded wholesale.
+const unitKey=(fp,level,unit,kind)=>recordKey(fp,level,[unit])+':'+kind;
+function addVerifiedRow(grid,u,level,text){
+ const row=grid[u.ci][u.pi];
+ row.editions[level]=text;row.verified[level]=true;row.issues[level]=[];
+ row.achievedPercent[level]=percentReduced(studyLetters(u.source),studyLetters(text));
+}
+function publicFailureSnapshot(book,grid,fp,persisted,diag,level,status,code,remaining,quota=null){
+ diag.lastCode=code;
+ const out={...snapshot(book,grid,fp,persisted,diag,level),
+   status,execution:{haltedOn:code,remainingBatches:remaining,
+     verifiedBlocks:diag.verifiedBlocks,requestsSent:diag.requestsSent,
+     splits:diag.splits,verifiedUnits:diag.verifiedUnits}};
+ if(quota)out.quota=quota;
+ return out;
+}
 export async function generateIntegralEditionsV51(book,{
-  onProgress=()=>{},onActivity=()=>{},signal=null
+ onProgress=()=>{},onActivity=()=>{},signal=null
 }={}){
-  const units=bookUnitsV51(book);
-  const fingerprint=sourceFingerprint(book);
-  const grid=newGrid(book,book.editionsV36,fingerprint);
-  const diagnostics={processedJobs:0,providerErrors:0,sourceBlocked:0,
-    errorsByCode:{},lastCode:null,mode:'large-natural-page-blocks-v51',
-    requestsSent:0,splits:0,verifiedBlocks:0,
-    inputLimit:Number(book?.editionsV36?.integralInputLimit)||900000};
-  let checkpointPersistent=true;
-  const initial=snapshot(book,grid,fingerprint,true,diagnostics,LEVELS[0]);
-  onProgress(initial,initial.verifiedVariants,initial.totalVariants);
-  const sourceReadiness=classifySourceReadinessV52(book,units);
-  if(!sourceReadiness.ok){
-    const blocked={...initial,status:'source-review-needed',
-      sourceReview:sourceReadiness,
-      execution:{haltedOn:'SOURCE_REVIEW',remainingBatches:units.length}};
-    onProgress(blocked,blocked.verifiedVariants,blocked.totalVariants);
-    return blocked;
-  }
-  for(const level of LEVELS){
-    const planned=planNaturalBlocksV51(units,level,{maxInputTokens:diagnostics.inputLimit});
-    const queue=[...planned];
-    while(queue.length){
-      const block=queue.shift();
-      if(blockAlreadyReady(grid,block,level))continue;
-      if(signal?.aborted){
-        const paused={...snapshot(book,grid,fingerprint,checkpointPersistent,diagnostics,level),
-          status:'interrupted',execution:{haltedOn:'AI_MANUAL_RESTART',remainingBatches:queue.length+1}};
-        onProgress(paused,paused.verifiedVariants,paused.totalVariants);return paused;
-      }
-      const pause=await readGeminiPause();
-      if(pause){
-        const paused={...snapshot(book,grid,fingerprint,checkpointPersistent,diagnostics,level),
-          status:pause.automatic?'quota-paused':'quota-review',quota:pause,
-          execution:{haltedOn:pause.automatic?'AI_QUOTA_LIMIT':'AI_QUOTA_MANUAL_REVIEW',
-            remainingBatches:queue.length+1}};
-        onProgress(paused,paused.verifiedVariants,paused.totalVariants);return paused;
-      }
-      const key=recordKey(fingerprint,level,block);
-      const cached=(await loadRuntimeUnitResults([key])).get(key);
-      let parts=null;
-      if(cached?.signature===signature(block)&&cached?.ids?.join('|')===block.map(u=>u.id).join('|'))
-        parts=validateOutput(block,level,cached);
-      if(!parts){
-        try{
-          diagnostics.requestsSent++;
-          onActivity({phase:'request',level,pageStart:block[0].pageStart,
-            pageEnd:block[block.length-1].pageEnd});
-          const response=await requestBlock(block,level,{bookTitle:book.title||'',signal});
-          onActivity({phase:'response',level});
-          parts=validateOutput(block,level,response);
-          if(!parts)throw Object.assign(new Error('Verifica didattica incompleta: blocco non pubblicato.'),{
-            code:'AI_QUALITY_REVIEW'});
-          const stored=await saveRuntimeUnitResults([{key,result:{
-            ...response,signature:signature(block),ids:block.map(u=>u.id)}}]);
-          if(!stored){checkpointPersistent=false;
-            const stopped={...snapshot(book,grid,fingerprint,false,diagnostics,level),
-              status:'local-storage-error',
-              execution:{haltedOn:'AI_CHECKPOINT_UNAVAILABLE',remainingBatches:queue.length+1}};
-            onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);return stopped;
-          }
-          await clearGeminiPause();
-        }catch(error){
-          const code=signal?.aborted?'AI_MANUAL_RESTART':error?.code||'AI_PROVIDER_NETWORK';
-          diagnostics.lastCode=code;
-          diagnostics.errorsByCode[code]=(diagnostics.errorsByCode[code]||0)+1;
-          diagnostics.providerErrors++;
-          if(error?.quota?.kind==='tokens-minute'){
-            // A model's 1M-token context is NOT the project's free TPM quota.
-            // Persist an adaptive lower budget for the next safe resume window.
-            const estimate=Math.ceil(block.reduce((n,u)=>n+u.source.length,0)/2)+1200;
-            const quotaCap=Number(error.quota.limit);
-            const observed=quotaCap>0?Math.min(quotaCap,estimate):estimate;
-            diagnostics.inputLimit=Math.max(1600,Math.min(diagnostics.inputLimit,
-              Math.floor(observed*.65)));
-          }
-          // Splitting is ONLY permitted at a chapter or full physical page boundary.
-          const splittable=['AI_BLOCK_TOO_LARGE','AI_INCOMPLETE_BLOCK','AI_QUALITY_REVIEW',
-            'AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETWORK'].includes(code);
-          const halves=splittable?bisectAtNaturalBoundaryV51(block):null;
-          if(halves&&!signal?.aborted){
-            diagnostics.splits++;
-            queue.unshift(...halves);continue;
-          }
-          const pause=await readGeminiPause();
-          const status=code==='AI_MANUAL_RESTART'?'interrupted':
-            pause?(pause.automatic?'quota-paused':'quota-review'):
-            code==='AI_QUALITY_REVIEW'?'quality-review':'provider-blocked';
-          const stopped={...snapshot(book,grid,fingerprint,checkpointPersistent,diagnostics,level),
-            status,quota:pause||undefined,
-            execution:{haltedOn:code,remainingBatches:queue.length+1}};
-          onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);return stopped;
-        }
-      }
-      addBlock(grid,block,level,parts);
-      diagnostics.verifiedBlocks++;diagnostics.processedJobs++;
-      const current=snapshot(book,grid,fingerprint,checkpointPersistent,diagnostics,level);
-      onProgress(current,current.verifiedVariants,current.totalVariants);
-    }
-  }
-  const final=snapshot(book,grid,fingerprint,checkpointPersistent,diagnostics,LEVELS.at(-1));
-  final.execution={haltedOn:null,remainingBatches:0,
-    maxConcurrencyUsed:1,verifiedBlocks:diagnostics.verifiedBlocks,
-    requestsSent:diagnostics.requestsSent,splits:diagnostics.splits};
-  onProgress(final,final.verifiedVariants,final.totalVariants);
-  return final;
+ const units=bookUnitsV51(book);
+ const fp=sourceFingerprint(book);
+ const grid=newGrid(book,book.editionsV36,fp);
+ const diagnostics={processedJobs:0,providerErrors:0,sourceBlocked:0,errorsByCode:{},
+   lastCode:null,mode:'large-natural-page-blocks-v53-with-verified-draft-salvage',
+   requestsSent:0,splits:0,verifiedBlocks:0,verifiedUnits:0,
+   repairedDrafts:0,rawDraftsPreserved:0,quality:null,
+   inputLimit:Number(book?.editionsV36?.integralInputLimit)||900000};
+ let checkpointPersistent=true;
+ const readiness=classifySourceReadinessV52(book,units);
+ if(!readiness.ok){
+   const blocked=publicFailureSnapshot(book,grid,fp,true,diagnostics,'summary',
+     'source-review-needed','SOURCE_REVIEW',units.length);
+   blocked.sourceReview=readiness;
+   onProgress(blocked,blocked.verifiedVariants,blocked.totalVariants);
+   return blocked;
+ }
+ // Restore previously VERIFIED per-unit results, including successful units
+ // from a partly rejected 44-page response. Check provenance AND meaning.
+ for(const level of LEVELS){
+   const allocated=planNaturalBlocksV51(units,level,{maxInputTokens:diagnostics.inputLimit}).flat();
+   const keys=allocated.map(u=>unitKey(fp,level,u,'verified'));
+   const cached=await loadRuntimeUnitResults(keys);
+   for(const u of allocated){
+     if(grid[u.ci]?.[u.pi]?.verified?.[level])continue;
+     const row=cached.get(unitKey(fp,level,u,'verified'));
+     if(row?.kind!=='verified-v53'||row.id!==u.id||row.signature!==signature([u]))continue;
+     if(!auditStudyUnitV53(u,level,row.text).ok)continue;
+     addVerifiedRow(grid,u,level,row.text);
+   }
+ }
+ let current=snapshot(book,grid,fp,checkpointPersistent,diagnostics,LEVELS[0]);
+ onProgress(current,current.verifiedVariants,current.totalVariants);
+ for(const level of LEVELS){
+   const planned=planNaturalBlocksV51(units,level,{maxInputTokens:diagnostics.inputLimit});
+   const queue=planned.map(block=>({block,attempt:0}));
+   while(queue.length){
+     const job=queue.shift(),block=job.block;
+     if(blockAlreadyReady(grid,block,level))continue;
+     const remaining=queue.length+1;
+     if(signal?.aborted){
+       const stopped=publicFailureSnapshot(book,grid,fp,checkpointPersistent,diagnostics,
+         level,'interrupted','AI_MANUAL_RESTART',remaining);
+       onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);return stopped;
+     }
+     const pause=await readGeminiPause();
+     if(pause){
+       const code=pause.automatic?'AI_QUOTA_LIMIT':'AI_QUOTA_MANUAL_REVIEW';
+       const stopped=publicFailureSnapshot(book,grid,fp,checkpointPersistent,diagnostics,
+         level,pause.automatic?'quota-paused':'quota-review',code,remaining,pause);
+       onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);return stopped;
+     }
+     const draftKeys=block.map(u=>unitKey(fp,level,u,'draft'));
+     const drafts=await loadRuntimeUnitResults(draftKeys);
+     const repairDrafts=block.filter(u=>!grid[u.ci][u.pi].verified[level]).flatMap(u=>{
+       const stored=drafts.get(unitKey(fp,level,u,'draft'));
+       return stored?.kind==='draft-v53'&&stored.id===u.id&&
+         stored.signature===signature([u])&&clean(stored.text)
+         ?[{id:u.id,text:stored.text}]:[];
+     });
+     try{
+       diagnostics.requestsSent++;
+       onActivity({phase:repairDrafts.length?'repair':'request',level,
+         pageStart:block[0].pageStart,pageEnd:block[block.length-1].pageEnd});
+       const response=await requestBlock(block,level,{
+         bookTitle:book.title||'',signal,repairDrafts});
+       onActivity({phase:'response',level});
+       if(response?.engine!=='ai'||response?.version!=='integral-v51'||
+          response?.level!==level)throw Object.assign(
+            new Error('Risposta Gemini senza provenienza verificabile.'),
+            {code:'INVALID_EDITION_RESPONSE'});
+       const review=reviewGeminiPartsV53(block,level,response.parts);
+       diagnostics.quality={level,reasons:Object.keys(review.numeric.issues||{}).slice(0,5),
+         issues:review.numeric.issues,received:review.numeric.received,
+         expected:review.numeric.expected,
+         verified:review.numeric.verified,unverified:review.numeric.unverified};
+       const writes=[];
+       for(const result of review.verified){
+         const u=result.unit;
+         if(grid[u.ci][u.pi].verified[level])continue;
+         writes.push({key:unitKey(fp,level,u,'verified'),result:{
+           kind:'verified-v53',id:u.id,signature:signature([u]),text:result.text}});
+       }
+       for(const problem of review.failed){
+         const u=problem.unit;
+         if(grid[u.ci][u.pi].verified[level]||!clean(problem.draft))continue;
+         writes.push({key:unitKey(fp,level,u,'draft'),result:{
+           kind:'draft-v53',id:u.id,signature:signature([u]),text:problem.draft}});
+       }
+       if(writes.length){
+         const persisted=await saveRuntimeUnitResults(writes);
+         if(!persisted){
+           checkpointPersistent=false;
+           const stopped=publicFailureSnapshot(book,grid,fp,false,diagnostics,level,
+             'local-storage-error','AI_CHECKPOINT_UNAVAILABLE',remaining);
+           onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);
+           return stopped;
+         }
+       }
+       for(const good of review.verified){
+         const u=good.unit;
+         if(grid[u.ci][u.pi].verified[level])continue;
+         addVerifiedRow(grid,u,level,good.text);
+         diagnostics.verifiedUnits++;
+       }
+       diagnostics.rawDraftsPreserved+=review.failed.filter(x=>clean(x.draft)).length;
+       diagnostics.processedJobs++;
+       current=snapshot(book,grid,fp,checkpointPersistent,diagnostics,level);
+       onProgress(current,current.verifiedVariants,current.totalVariants);
+       if(blockAlreadyReady(grid,block,level)){diagnostics.verifiedBlocks++;await clearGeminiPause();continue;}
+       diagnostics.errorsByCode.AI_QUALITY_REVIEW=(diagnostics.errorsByCode.AI_QUALITY_REVIEW||0)+1;
+       diagnostics.lastCode='AI_QUALITY_REVIEW';
+       // ONE repair pass at the same natural boundaries, then split only at
+       // complete physical pages or chapters. No endless identical retries.
+       if(job.attempt===0&&review.structural&&review.numeric.received>0){
+         diagnostics.repairedDrafts++;
+         queue.unshift({block,attempt:1});continue;
+       }
+       const halves=bisectAtNaturalBoundaryV51(block);
+       if(halves){
+         diagnostics.splits++;
+         queue.unshift({block:halves[0],attempt:0},{block:halves[1],attempt:0});
+         continue;
+       }
+       const stopped=publicFailureSnapshot(book,grid,fp,checkpointPersistent,diagnostics,
+         level,'quality-review','AI_QUALITY_REVIEW',remaining);
+       onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);return stopped;
+     }catch(error){
+       const code=signal?.aborted?'AI_MANUAL_RESTART':error?.code||'AI_PROVIDER_NETWORK';
+       diagnostics.lastCode=code;
+       diagnostics.errorsByCode[code]=(diagnostics.errorsByCode[code]||0)+1;
+       diagnostics.providerErrors++;
+       diagnostics.lastProvider={code,reason:error?.diagnostic?.reason||null,
+         status:error?.diagnostic?.status||null,
+         elapsedMs:error?.diagnostic?.elapsedMs||null};
+       if(error?.quota?.kind==='tokens-minute'){
+         const estimate=Math.ceil(block.reduce((n,u)=>n+u.source.length,0)/2)+1200;
+         const quotaCap=Number(error.quota.limit);
+         const observed=quotaCap>0?Math.min(quotaCap,estimate):estimate;
+         diagnostics.inputLimit=Math.max(1600,Math.min(diagnostics.inputLimit,
+           Math.floor(observed*.65)));
+       }
+       const pause=await readGeminiPause();
+       if(pause){
+         const stopped=publicFailureSnapshot(book,grid,fp,checkpointPersistent,diagnostics,
+           level,pause.automatic?'quota-paused':'quota-review',code,remaining,pause);
+         onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);return stopped;
+       }
+       if(code==='AI_MANUAL_RESTART'){
+         const stopped=publicFailureSnapshot(book,grid,fp,checkpointPersistent,diagnostics,
+           level,'interrupted',code,remaining);
+         onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);return stopped;
+       }
+       const splitting=['AI_BLOCK_TOO_LARGE','AI_INCOMPLETE_BLOCK','AI_QUALITY_REVIEW',
+         'AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETWORK'].includes(code);
+       const halves=splitting?bisectAtNaturalBoundaryV51(block):null;
+       if(halves){
+         diagnostics.splits++;
+         queue.unshift({block:halves[0],attempt:0},{block:halves[1],attempt:0});
+         continue;
+       }
+       const stopped=publicFailureSnapshot(book,grid,fp,checkpointPersistent,diagnostics,
+         level,code==='AI_QUALITY_REVIEW'?'quality-review':'provider-blocked',code,remaining);
+       onProgress(stopped,stopped.verifiedVariants,stopped.totalVariants);return stopped;
+     }
+   }
+ }
+ const final=snapshot(book,grid,fp,checkpointPersistent,diagnostics,LEVELS.at(-1));
+ final.execution={haltedOn:null,remainingBatches:0,
+   maxConcurrencyUsed:1,verifiedBlocks:diagnostics.verifiedBlocks,
+   requestsSent:diagnostics.requestsSent,splits:diagnostics.splits};
+ onProgress(final,final.verifiedVariants,final.totalVariants);
+ return final;
 }
