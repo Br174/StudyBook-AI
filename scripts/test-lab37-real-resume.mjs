@@ -58,7 +58,7 @@ try {
   const app=readFileSync(new URL('../src/AppV15.jsx',import.meta.url),'utf8');
   const home=readFileSync(new URL('../src/components/HomeDashboardV16.jsx',import.meta.url),'utf8');
   const studio=readFileSync(new URL('../src/components/AppScreens.jsx',import.meta.url),'utf8');
-  assert.match(app,/async function resumeFromHome\(\)/);
+  assert.match(app,/async function resumeFromHome\(/,'Auto-resume now supports an optional mode argument');
   assert.match(app,/runGeminiWithSafeRestart\(current/);
   assert.match(app,/if\(generating\)\{\s*if\(geminiStalled\)requestActiveGeminiRecovery\(\)/,
   'Active Gemini must never be interrupted by ordinary navigation');
