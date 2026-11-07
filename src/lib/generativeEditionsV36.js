@@ -481,42 +481,10 @@ async function generateGeminiEditionsPassV46(book,{onProgress=()=>{},onActivity=
   return final;
 }
 
-// LAB46: ONE shared source/context model, ONE original-based edition level at a time.
-// Every verified chunk keeps the existing content-addressed durable checkpoint.
-// A whole completed reduction is available before any request for the next.
+// LAB51 supersedes the former six passes of 680-character fragments.
+// The old small-chunk runner is retained ONLY for unversioned legacy books.
 export async function generateGeminiEditionsV36(book,options={}){
-  const pillar=book?.studyPillarV38===STUDY_PILLAR_VERSION;
-  // LAB51: one verified whole-page/chapter generator owns new pillar books.
-  // Historical non-pillar books retain read-only compatibility without
-  // competing with the new runtime path.
-  if(pillar)return generateIntegralEditionsV51(book,options);
-  if(!pillar)return generateGeminiEditionsPassV46(book,options);
-  const levels=['summary','50','40','30','20','10'];
-  let last=null;
-  for(const level of levels){
-    last=await generateGeminiEditionsPassV46(book,{
-      ...options,focusLevel:level,
-      onProgress:(snapshot,done,total)=>options.onProgress?.({...snapshot,activeLevel:level},done,total),
-    });
-    last.activeLevel=level;
-    if(last.checkpointPersistent===false){
-      last.status='local-storage-error';
-      last.execution={...(last.execution||{}),haltedOn:'AI_CHECKPOINT_UNAVAILABLE'};
-      return last;
-    }
-    if(last.complete||last.quota||last.execution?.haltedOn||
-       ['source-review-needed','provider-blocked','quota-paused','quota-review','ai-unavailable','interrupted'].includes(last.status))
-      return last;
-    const verified=last.rows?.length>0&&last.rows.every(chapter=>
-      chapter.every(paragraph=>paragraph?.verified?.[level]===true));
-    if(!verified){
-      // Never silently start 50/40/... while a summary fragment is unverified.
-      // The existing Recovery owner decides whether another bounded attempt is safe.
-      last.status='quality-review';
-      last.execution={...(last.execution||{}),
-        haltedOn:'AI_QUALITY_REVIEW_REQUIRED',remainingBatches:1};
-      return last;
-    }
-  }
-  return last;
+  if(book?.studyPillarV38===STUDY_PILLAR_VERSION)
+    return generateIntegralEditionsV51(book,options);
+  return generateGeminiEditionsPassV46(book,options);
 }
