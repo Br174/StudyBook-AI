@@ -1109,3 +1109,13 @@
   .sb-download-book-row{gap:10px}
   .sb-resume-panel-v46{padding:12px}
 }
+
+/* LAB46: override LAB37 generic `.sb-resume-panel div{display:grid}` owner safely. */
+.sb-resume-panel-v46{flex-direction:column;align-items:stretch}
+.sb-resume-panel-v46 .sb-download-book-row{display:flex;align-items:flex-start;gap:14px}
+.sb-resume-panel-v46 .sb-download-book-content{display:flex;flex-direction:column;flex:1;gap:5px}
+.sb-resume-panel-v46 .sb-resume-ia-details{display:flex;flex-direction:column}
+.sb-edition-stages{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.sb-edition-stages>span{display:inline-block;border-radius:10px;padding:6px 9px;font-size:.73rem;font-weight:700}
+.sb-edition-stages>.sb-edition-ready{color:#17663f;background:#e8f6ee;border:1px solid #aedcc2}
+.sb-edition-stages>.sb-edition-pending{color:#5d7083;background:#f1f6fa;border:1px solid #d7e4ef}
