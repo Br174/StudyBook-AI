@@ -968,6 +968,12 @@ export default function AppV14() {
 
   async function processFile(file, { resumeRecord = null } = {}) {
     if (!file) return;
+    // LAB47: PDF/eBook importer only. Images belong to the separate Scanner flow.
+    if (/^image\//i.test(file.type||'') || /\.(?:png|jpe?g|webp|gif|bmp|tiff?)$/i.test(file.name||'')) {
+      setError('Immagini escluse dall’importazione libri. Per acquisire una foto usa Scanner.');
+      setStatus('Importazione solo testo · nessuna immagine caricata');
+      return;
+    }
     setError('');
     setStatus('Analisi del documento…');
     setFileName(file.name);
@@ -1000,7 +1006,7 @@ export default function AppV14() {
       let acquisitionCheckpointDone=-1;
       let acquisitionCheckpointTotal=0;
       const parsed = await readSourceFile(file, {
-        autoOcr: true,
+        autoOcr: false, textOnly: true,
         onProgress(update) {
           setStatus(importStatus(update));
           if (Number.isFinite(update?.done) && Number.isFinite(update?.total) && update.total > 0) {
@@ -2033,7 +2039,7 @@ export default function AppV14() {
         </div>
       </header>
 
-      <input ref={documentFileInputRef} type="file" hidden accept=".pdf,.docx,.epub,.txt,.html,.htm,.rtf,.odt,.md,.markdown,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,application/rtf,application/vnd.oasis.opendocument.text,text/plain,text/html,text/markdown,image/png,image/jpeg,image/webp" onChange={handleFile} />
+      <input ref={documentFileInputRef} type="file" hidden accept=".pdf,.docx,.epub,.txt,.html,.htm,.rtf,.odt,.md,.markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,application/rtf,application/vnd.oasis.opendocument.text,text/plain,text/html,text/markdown" onChange={handleFile} />
       {error && <div className="error-box sb-global-error">{error}</div>}
 
       {activeScreen === 'home' && (
