@@ -24,8 +24,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
+      - run: npm install --no-save --package-lock=false
       - name: Regression and negative model routing tests
         run: |
           set -euo pipefail
@@ -61,8 +60,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
+      - run: npm install --no-save --package-lock=false
       - name: One real request, no retry or alternate model, strict study quality
         run: node scripts/test-worker-lab44-one-real-3-1.mjs
 
@@ -80,8 +78,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
+      - run: npm install --no-save --package-lock=false
       - name: Require existing authorized Worker and existing secret
         run: |
           set -euo pipefail
