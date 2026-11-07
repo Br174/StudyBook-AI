@@ -43,8 +43,36 @@ export function auditStudyUnitV53(unit,level,value){
  if(concepts.issues.length)reasons.push(...concepts.issues);
  return {ok:reasons.length===0,reasons,target,length,delta,
    protectedMissing:fidelity.missingProtected.length,
+   protectedKinds:[...new Set(fidelity.missingProtected.map(x=>x.kind))],
    qualifierFailures:fidelity.qualifierMismatches.length,
    conceptualFailures:concepts.issues.length};
+}
+// LAB56: diagnostic attached ONLY to a non-published draft. The provider
+// receives the exact original passage already within the authorised request,
+// plus focused factual corrections; end-user status receives category counts,
+// never unverified facts as truth.
+export function repairFocusForUnitV56(unit,level,draft){
+  const fidelity=auditFidelity(String(unit?.source||''),String(draft||''));
+  const length=studyLetters(draft);
+  const target=level==='summary'?unit?.summaryCapLetters:unit?.targetLetters;
+  return {
+    reason:'restore-verified-source-meaning-not-word-copying',
+    missingProtected:fidelity.missingProtected.slice(0,14).map(x=>({
+      kind:x.kind,value:String(x.value).slice(0,100)
+    })),
+    qualifierContexts:fidelity.qualifierMismatches.slice(0,5).map(x=>({
+      originalClause:String(x.source).slice(0,300)
+    })),
+    highValueContexts:fidelity.missingHighValue.slice(0,5).map(x=>({
+      originalClause:String(x.text).slice(0,300)
+    })),
+    targetLetters:level==='summary'?null:Number(target),
+    maxSummaryLetters:level==='summary'?Number(target):null,
+    actualLetters:length,
+    note:'Conserva esattamente date, riferimenti, condizioni, negazioni e nesso logico. '+
+      'Riformulazioni equivalenti sono consentite soltanto a parità di significato. '+
+      'Non inventare e non inserire frasi riempitive.'
+  };
 }
 export function fitStudyUnitV53(unit,level,value,{maxEdits=160}={}){
  const original=String(value||'').trim();
