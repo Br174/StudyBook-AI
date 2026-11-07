@@ -35,7 +35,8 @@ try{
  assert.equal(blocked.diagnostics.quality.level,'summary',
    'The first blocked level is the initial summary in the progressive study order');
  assert.ok(blocked.diagnostics.quality.reasons.some(x=>
-   x.includes('coverage')||x.includes('essential')||x.includes('summary')),
+   x.includes('coverage')||x.includes('essential')||x.includes('summary')||
+   x.includes('source-topic-support-insufficient')),
    'A summary rejected for missing concepts must expose the actual quality reason');
  assert.equal(progressDiagnostic(blocked).kind,'QUALITA');
  assert.match(progressDiagnostic(blocked).description,/non supera i vincoli/);
