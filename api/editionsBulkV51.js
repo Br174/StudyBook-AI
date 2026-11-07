@@ -38,6 +38,10 @@ function instructions(level,target,cap){
     'Mantieni esattamente le stesse unità di paragrafi perché StudyBook le ricollegherà alle pagine originali.',
     'Le sei edizioni sono progressivamente più approfondite: summary, 50, 40, 30, 20, 10.',
     'Se per un paragrafo viene fornita previousDraft, correggi quella bozza conservando le informazioni vere, senza ripetere inutilmente le parti corrette.',
+    'Se viene fornito repairFocus, correggi SOLTANTO i difetti indicati nel relativo id, servendoti della fonte originale. Una parola diversa può esprimere lo stesso significato ma un divieto non deve mai diventare un permesso.',
+    'Non omettere negazioni, termini, eccezioni, cifre, nomi o riferimenti normativi. Le alternative lessicali sono accettabili solo se mantengono gli stessi soggetto, predicato, oggetto e condizioni.',
+    'Se devi correggere un testo, evita di rigenerare inutilmente il resto della pagina. Per gli id senza previousDraft produci la normale elaborazione.',
+    'Se non riesci a rispettare contemporaneamente fedeltà e quota di lettere, privilegia la fedeltà, senza inventare informazioni. La verifica della quota avviene dopo la risposta.',
     'Ogni unità può includere targetLetters o summaryCapLetters. Rispetta la lunghezza per unità, con prosa naturale e informazioni complete. Non inserire riempitivi.',
     limit,'Rispondi SOLO con un oggetto JSON conforme allo schema.'
   ].join('\n');
@@ -99,6 +103,26 @@ export default async function handler(req,res){
       (Number.isInteger(req.body?.unitBudgets?.[unit.id]?.summaryCapLetters)?
         req.body.unitBudgets[unit.id].summaryCapLetters:null):null;
     if(byId.has(unit.id))unit.previousDraft=byId.get(unit.id);
+    const focus=repairDrafts.find(d=>d.id===unit.id)?.repairFocus;
+    if(focus && typeof focus==='object'){
+      const hints=Array.isArray(focus.missingProtected)?focus.missingProtected:[];
+      const clauses=Array.isArray(focus.qualifierContexts)?focus.qualifierContexts:[];
+      const high=Array.isArray(focus.highValueContexts)?focus.highValueContexts:[];
+      unit.repairFocus={
+        missingProtected:hints.slice(0,14).map(x=>({
+          kind:String(x.kind||'').slice(0,30),value:String(x.value||'').slice(0,100)
+        })),
+        qualifierContexts:clauses.slice(0,5).map(x=>({
+          originalClause:String(x.originalClause||'').slice(0,300)
+        })),
+        highValueContexts:high.slice(0,5).map(x=>({
+          originalClause:String(x.originalClause||'').slice(0,300)
+        })),
+        targetLetters:Number.isInteger(focus.targetLetters)?focus.targetLetters:null,
+        maxSummaryLetters:Number.isInteger(focus.maxSummaryLetters)?focus.maxSummaryLetters:null,
+        note:'Recupera il significato originale e le informazioni protette senza inventare.'
+      };
+    }
   }
   const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),
     units:safe,repair:byId.size>0});
