@@ -1,14 +1,19 @@
-import React,{useMemo,useState,useEffect} from 'react';
+import React,{useMemo,useState,useEffect,useRef} from 'react';
 import './MirrorReaderV35.css';
 import { composeMirrorPages,actualMirrorPageStatistics } from '../lib/libroSpecchioV35.js';
 import { renderMirrorImage } from '../lib/visualMirrorV35.js';
-export default function MirrorReaderV35({book,originalFile,chapterIndex=0,variant='study'}){
+import { explainStudyPageOnDemandV49 } from '../lib/pageSimpleV49.js';
+export default function MirrorReaderV35({book,originalFile,chapterIndex=0,variant='study',simpleRequestToken=0,bookTitle='',onPageChange}){
   const [index,setIndex]=useState(0);
   const [picture,setPicture]=useState(null);
   const [pictureUrl,setPictureUrl]=useState('');
   const [pictureError,setPictureError]=useState('');
   const [pictureBusy,setPictureBusy]=useState(false);
-  const output=useMemo(()=>composeMirrorPages(book?.canonicalBookMap,book,{variant,maxLines:40}),[book,variant]);
+  // The printed/study text always stays original reduced text. Page-simple is a
+  // separate transient Gemini explanation generated ONLY on explicit tap.
+  const output=useMemo(()=>composeMirrorPages(book?.canonicalBookMap,book,{variant:'study',maxLines:40}),[book]);
+  const [simpleLive,setSimpleLive]=useState(null);
+  const liveController=useRef(null);
   const pages=output.pages||[];
   useEffect(()=>{
     const target=book?.chapters?.[chapterIndex]?.pageStart||1;
@@ -16,6 +21,46 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
     setIndex(Math.max(0,found));
   },[chapterIndex,book?.canonicalBookMap]);
   const page=pages[Math.min(index,pages.length-1)];
+  // Cancel stale explanations when leaving the page/book. Never show the
+  // previous page's Gemini answer as the current page's content.
+  useEffect(()=>{
+    liveController.current?.abort();
+    setSimpleLive(null);
+  },[index,book]);
+  useEffect(()=>{
+    if(variant!=='study')return;
+    liveController.current?.abort();
+    setSimpleLive(null);
+  },[variant]);
+  useEffect(()=>()=>{
+    liveController.current?.abort();
+  },[]);
+  useEffect(()=>{
+    if(variant!=='simple'||!simpleRequestToken)return;
+    const requestedPage=pages[Math.min(index,pages.length-1)];
+    if(!requestedPage)return;
+    liveController.current?.abort();
+    const controller=new AbortController();
+    liveController.current=controller;
+    setSimpleLive({status:'loading',label:requestedPage.label});
+    void explainStudyPageOnDemandV49(requestedPage,{bookTitle,signal:controller.signal})
+      .then(result=>{
+        if(!controller.signal.aborted)
+          setSimpleLive({status:'ready',label:requestedPage.label,
+            text:result.text,incompleteSource:result.incompleteSource});
+      }).catch(error=>{
+        if(!controller.signal.aborted)
+          setSimpleLive({status:'error',label:requestedPage.label,
+            message:error?.message||'Gemini non disponibile per questa pagina.'});
+      });
+    return ()=>controller.abort();
+  },[simpleRequestToken]);
+  const navigatePage=next=>{
+    liveController.current?.abort();
+    setSimpleLive(null);
+    setIndex(next);
+    onPageChange?.();
+  };
   useEffect(()=>{setPicture(null);setPictureUrl('');setPictureError('');},[index]);
   const pageTotals=actualMirrorPageStatistics(
     book?.canonicalBookMap,book,pages,page?.sourcePage);
@@ -33,11 +78,11 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
   return <div className="sb-mirror-reader">
     {book?.editionReadiness?.partial && <p role="status" className="sb-mirror-warning">ANTEPRIMA PARZIALE · Solo i paragrafi verificati da Gemini sono leggibili. Il libro definitivo non è ancora pubblicato.</p>}
     <nav className="sb-mirror-page-nav">
-      <button onClick={()=>setIndex(Math.max(0,index-1))} disabled={index===0}>←</button>
-      <select value={index} onChange={e=>setIndex(Number(e.target.value))}>
+      <button onClick={()=>navigatePage(Math.max(0,index-1))} disabled={index===0}>←</button>
+      <select value={index} onChange={e=>navigatePage(Number(e.target.value))}>
         {pages.map((p,i)=><option key={i} value={i}>Pagina {p.label}</option>)}
       </select>
-      <button onClick={()=>setIndex(Math.min(pages.length-1,index+1))}
+      <button onClick={()=>navigatePage(Math.min(pages.length-1,index+1))}
         disabled={index>=pages.length-1}>→</button>
     </nav>
     {(output.audit?.problems?.length>0 || book.canonicalBookMap?.structuralStatus!=='source-mapped')&&
@@ -56,6 +101,21 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
         </button>
       ):<>
         <div className="sb-mirror-content">
+        {variant==='simple' && simpleLive?.label===page.label && simpleLive.status==='ready' ?
+          <div className="sb-simple-live-answer" role="region"
+            aria-label={'Spiegazione Gemini della pagina '+page.label}>
+            <strong>Spiegazione in parole semplici · Pagina {page.label}</strong>
+            {simpleLive.incompleteSource && <p role="status">Solo i paragrafi gia verificati
+              sono stati spiegati. Questa pagina e ancora in elaborazione.</p>}
+            <p>{simpleLive.text}</p>
+          </div> :
+          <>
+          {variant==='simple' && simpleLive?.label===page.label && simpleLive.status==='loading' &&
+            <p role="status" className="sb-simple-live-loading">Gemini sta spiegando
+              la pagina {page.label} con parole comuni. Il testo sotto e ancora quello di studio.</p>}
+          {variant==='simple' && simpleLive?.label===page.label && simpleLive.status==='error' &&
+            <p role="alert" className="sb-simple-live-error">{simpleLive.message}
+              {' '}Prema nuovamente «In parole semplici» per riprovare, quando disponibile.</p>}
         {(page.blocks||[]).map((p,i)=>p.kind==='vertical-gap'?<div key={i} className="sb-mirror-source-gap" style={{height:Math.max(0,Number(p.lines)||0)*1.55+'em'}} aria-hidden="true"/>:p.kind==='chapter-title'?<h2 key={i}>{p.text}</h2>:
           p.kind==='section-title'?<h3 key={i}>{p.text}</h3>:
           p.kind==='image-ref'?<button className="sb-mirror-image-ref" key={i}
@@ -63,15 +123,18 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
             (Immagine {p.imageNumber}) · pagina {p.sourcePage}/{p.imageNumber}
           </button>:
           <p key={i} className={p.editionPending?'sb-mirror-warning':undefined}>{p.text}</p>)}
+          </>}
         </div>
         <footer className="sb-mirror-statistics">
           <strong>Pagina originale {page.sourcePage}</strong>
+          {variant==='simple' ? <small>Spiegazione Gemini su richiesta, non e una nuova riduzione.
+            Il PDF stampato e il testo di studio rimangono invariati.</small> : <>
           {pageTotals.measured ? <>
             <span>Parole: {pageTotals.originalWords} → {pageTotals.resultWords} · Risparmiate: {pageTotals.wordsSaved}</span>
             <span>Lettere: {pageTotals.originalLetters} → {pageTotals.resultLetters} · Risparmiate: {pageTotals.lettersSaved}</span>
             <span>Riduzione effettiva: {pageTotals.achievedPercent}%</span>
             <small>Confronto delle lettere realmente presenti nella pagina originale e nel testo visualizzato.</small>
-          </> : <span>Statistiche non disponibili: verificare la corrispondenza con la pagina originale.</span>}
+          </> : <span>Statistiche non disponibili: verificare la corrispondenza con la pagina originale.</span>}</>}
         </footer>
       </>}
     </article>
