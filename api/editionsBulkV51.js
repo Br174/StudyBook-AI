@@ -37,6 +37,8 @@ function instructions(level,target,cap){
     'Non generare immagini, riferimenti a fotografie o segnaposti. Non inventare contenuti.',
     'Mantieni esattamente le stesse unità di paragrafi perché StudyBook le ricollegherà alle pagine originali.',
     'Le sei edizioni sono progressivamente più approfondite: summary, 50, 40, 30, 20, 10.',
+    'Se per un paragrafo viene fornita previousDraft, correggi quella bozza conservando le informazioni vere, senza ripetere inutilmente le parti corrette.',
+    'Ogni unità può includere targetLetters o summaryCapLetters. Rispetta la lunghezza per unità, con prosa naturale e informazioni complete. Non inserire riempitivi.',
     limit,'Rispondi SOLO con un oggetto JSON conforme allo schema.'
   ].join('\n');
 }
@@ -82,7 +84,24 @@ export default async function handler(req,res){
     ?!Number.isInteger(cap)||cap<0
     :!Number.isInteger(target)||target<0)
     return fail(res,400,'INVALID_LENGTH_TARGET','Quota di lettere assente.');
-  const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),units:safe});
+  const repairDrafts=Array.isArray(req.body?.repairDrafts)?req.body.repairDrafts:[];
+  const byId=new Map();
+  if(repairDrafts.length>safe.length)return fail(res,400,'INVALID_REPAIR_DRAFT','Troppe correzioni richieste.');
+  for(const draft of repairDrafts){
+    if(typeof draft?.id!=='string'||typeof draft?.text!=='string'||
+      draft.text.length>30000||!draft.text.trim()||byId.has(draft.id)||!ids.has(draft.id))
+      return fail(res,400,'INVALID_REPAIR_DRAFT','Bozza da correggere non valida.');
+    byId.set(draft.id,draft.text);
+  }
+  for(const unit of safe){
+    unit.targetLetters=level==='summary'?null:Number(req.body?.unitBudgets?.[unit.id]?.targetLetters)||null;
+    unit.summaryCapLetters=level==='summary'?
+      (Number.isInteger(req.body?.unitBudgets?.[unit.id]?.summaryCapLetters)?
+        req.body.unitBudgets[unit.id].summaryCapLetters:null):null;
+    if(byId.has(unit.id))unit.previousDraft=byId.get(unit.id);
+  }
+  const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),
+    units:safe,repair:byId.size>0});
   const messages=[{role:'system',content:instructions(level,target,cap)},{role:'user',content:user}];
   const outputTokens=bounded(req.body?.maxOutputTokens,4096,OUTPUT_LIMIT,OUTPUT_LIMIT);
   const controller=new AbortController();
@@ -126,13 +145,16 @@ export default async function handler(req,res){
         {diagnostic:{reason:payload?.choices?.[0]?.finish_reason||'missing-ordered-parts',
           elapsedMs,model:selected}});
     const totalLetters=parts.reduce((n,p)=>n+studyLetters(p.text),0);
-    if(level==='summary'?totalLetters>cap:totalLetters!==target)
-      return fail(res,422,'AI_QUALITY_REVIEW','Riduzione non conforme alla percentuale esatta.',
-        {diagnostic:{reason:'letter-budget',target:level==='summary'?cap:target,
-          observed:totalLetters,elapsedMs,model:selected}});
+    const hasExactLength=level==='summary'?totalLetters<=cap:totalLetters===target;
+    // LAB53: DO NOT discard 100+ complete paragraphs solely because Gemini
+    // missed a numeric letter budget. Only the client may mark a unit verified
+    // after its own exact-length and fidelity review; otherwise store as draft.
+    // No draft can be displayed as verified or used for PDF export.
     return res.status(200).json({engine:'ai',version:'integral-v51',sourceVersion:'original',
       level,parts,inputTokens,outputTokensUsed:payload?.usage?.completion_tokens||null,
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
+      lengthReview:{exact:hasExactLength,targetLetters:level==='summary'?cap:target,
+        observedLetters:totalLetters,delta:totalLetters-(level==='summary'?cap:target)},
       model:selected,elapsedMs});
   }catch(error){
     return fail(res,controller.signal.aborted?504:502,
