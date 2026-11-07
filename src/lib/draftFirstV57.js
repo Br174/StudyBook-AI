@@ -200,6 +200,25 @@ async function restoreDrafts(units,drafts,rows,fp){
    }
  }
 }
+// LAB60: LAB59 persisted a "repair sent" marker BEFORE any Gemini response.
+// On 503/timeout that marker could permanently skip an unserved correction.
+// Recover only the most recently attempted legacy scope, only for snapshots
+// known to have halted on a transient during the repair phase. Never clear
+// accepted drafts or verified pages. Once upgraded, failed requests are no
+// longer counted as performed repairs in the first place.
+function recoverLegacyTransientRepairV60(previous,attempts){
+ if(previous?.phase!=='repair'||
+   !['quota-paused','provider-blocked','interrupted'].includes(previous?.status))
+   return null;
+ const code=previous?.execution?.haltedOn||previous?.diagnostics?.lastCode;
+ if(!['AI_TEMPORARY_OVERLOAD','AI_QUOTA_LIMIT','AI_PROVIDER_NETWORK',
+   'AI_PROVIDER_TIMEOUT','AI_TIMEOUT_OR_NETWORK','AI_MANUAL_RESTART',
+   'HTTP_503','HTTP_429'].includes(code))return null;
+ const candidate=Object.keys(attempts).filter(k=>attempts[k]>=1).at(-1);
+ if(!candidate)return null;
+ delete attempts[candidate];
+ return candidate;
+}
 function selectedRepairPages(units,issues,level){
  const problemPages=new Set();
  for(const item of issues.violations)for(let i=item.u.pageStart;i<=item.u.pageEnd;i++)
@@ -224,8 +243,11 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
    // A previous 503 can no longer permanently shrink a whole-book plan.
    // Provider hard 413 still splits safely at complete page boundaries.
    inputLimit:restoredLargeBlockLimitV58(previous),
-   repairAttempts:{...(previous?.repairAttemptsV57||{})},phase:'draft',
+   repairAttempts:previous?.sourceFingerprint===fp
+     ?{...(previous?.repairAttemptsV57||{})}:{},phase:'draft',
    remainingBatches:0,lastCode:null};
+ diagnostics.recoveredLegacyRepairV60=previous?.sourceFingerprint===fp
+   ?recoverLegacyTransientRepairV60(previous,diagnostics.repairAttempts):null;
  let persisted=true;
  const source=classifySourceReadinessV52(book,units);
  if(!source.ok)return halt(onProgress,book,units,rows,drafts,fp,diagnostics,
@@ -339,7 +361,8 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        id:u.id,text:draftOf(drafts,u,level),
        repairFocus:repairFocusForUnitV56(u,level,draftOf(drafts,u,level))
      }));
-     diagnostics.repairAttempts[id]=1;
+     // Never persist a successful repair marker until the provider responds
+     // and any returned draft is durably checkpointed.
      diagnostics.requestsSent++;diagnostics.repairRequests++;
      emit(onProgress,book,units,rows,drafts,fp,diagnostics,'repair');
      try{
@@ -362,6 +385,10 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
          for(const change of changes)saveDraftToGrid(drafts,change.u,level,change.text);
          await clearGeminiPause();
        }
+       // Only a valid Gemini HTTP 200 response reaches this point.
+       // A quota/503/timeout/abort leaves this page eligible for safe resume.
+       // A valid but unhelpful response still counts as one bounded attempt.
+       diagnostics.repairAttempts[id]=1;
        review=reviewEdition(units,drafts,level);
        reviews[level]=review;
        emit(onProgress,book,units,rows,drafts,fp,diagnostics,'review');
