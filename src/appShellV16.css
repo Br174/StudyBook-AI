@@ -1119,3 +1119,52 @@
 .sb-edition-stages>span{display:inline-block;border-radius:10px;padding:6px 9px;font-size:.73rem;font-weight:700}
 .sb-edition-stages>.sb-edition-ready{color:#17663f;background:#e8f6ee;border:1px solid #aedcc2}
 .sb-edition-stages>.sb-edition-pending{color:#5d7083;background:#f1f6fa;border:1px solid #d7e4ef}
+
+/* LAB48: the progress card participates in normal document flow.
+   It must never overlap the library buttons, the Recenti carousel or the nav. */
+.sb-home-v16 { min-height:0; height:auto; overflow:visible; padding-bottom:108px; }
+.sb-home-v16 .sb-home-workspace {
+  flex:0 0 auto; min-height:0; width:100%; padding:12px 0; 
+  display:block; overflow:visible;
+}
+.sb-home-v16 .sb-home-recent { margin-top:16px; flex:none; position:relative; }
+.sb-home-v16 .sb-resume-panel-v46 {
+  position:relative; z-index:auto; width:100%; max-width:100%;
+  margin:0; box-sizing:border-box; overflow:visible;
+}
+.sb-resume-panel-v46 .sb-download-book-content,
+.sb-resume-panel-v46 .sb-ia-inline-progress { min-width:0; max-width:100%; }
+.sb-resume-panel-v46 .sb-ia-inline-progress {
+  display:flex;flex-direction:column;gap:5px;margin-top:12px;
+}
+.sb-ia-inline-progress strong,.sb-studio-inline-progress strong{
+  font-size:clamp(.76rem,2.8vw,.92rem);color:#174e7e;
+  overflow-wrap:anywhere;line-height:1.35;
+}
+.sb-ia-progress-track>span{background:#2372d3}
+.sb-resume-panel-v46 .sb-resume-action-row {
+  display:flex;flex-direction:column;gap:8px;margin-top:13px;width:100%;
+}
+.sb-resume-panel-v46 .sb-resume-action-row button,
+.sb-studio-inline-progress .sb-resume-manual {
+  width:100%;min-height:44px;white-space:normal;overflow-wrap:anywhere;
+}
+.sb-resume-panel-v46 .sb-resume-action-row .sb-resume-manual,
+.sb-studio-inline-progress .sb-resume-manual {
+  border:1px solid #1d74bb;border-radius:12px;padding:10px 12px;
+  color:#11599b;background:#e9f4ff;font-weight:800;
+  cursor:pointer;text-align:center;
+}
+.sb-studio-inline-progress {
+  display:flex;flex-direction:column;gap:7px;width:100%;min-width:0;
+  margin:10px 0 3px;padding:10px;border:1px solid #d2e3f2;
+  border-radius:13px;background:#f4faff;box-sizing:border-box;
+}
+.sb-studio-inline-progress>small {font-size:.77rem;color:#607b94}
+.sb-studio-screen {padding-bottom:max(108px,calc(env(safe-area-inset-bottom) + 98px));}
+@media(max-width:390px){
+  .sb-home-v16 .sb-download-book-row{gap:10px}
+  .sb-home-v16 .sb-download-book-cover{width:66px;min-height:94px}
+  .sb-home-v16 .sb-download-book-cover img{height:94px}
+  .sb-studio-inline-progress{padding:8px}
+}
