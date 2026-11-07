@@ -89,16 +89,16 @@ try{
  assert.ok(calls.slice(firstRepair).every(c=>c.pages[0]===1&&c.pages[1]===1),
   'only original complete PAGE 1 is retried, never the 44-page book');
  assert.ok(calls.length<=8,'single targeted correction, not repeated large blocks');
- assert.equal(faulty.verifiedChunkVariants,595,
-  'all FIVE correctly formed levels are verified; bad summary is not');
+ assert.equal(faulty.verifiedChunkVariants,0,
+  'LAB61: later editions must wait until defective Riassunto is approved');
  const secondCallCount=calls.length;
  const resumed=await generateDraftFirstV57({...buildBook('b'),editionsV36:faulty});
  assert.equal(resumed.draftUnitsSaved,714,'no new drafts requested on resume');
  assert.equal(calls.length,secondCallCount+1,
    'LAB61 safely retries an unresolved quality page within durable bounds');
  assert.equal(resumed.stagedRows[0][0].verified.summary,false);
- assert.equal(resumed.stagedRows[0][1].verified['10'],true,
-  'later verified variants preserved in stage');
+ assert.equal(resumed.stagedRows[0][1].verified['10'],false,
+  'later versions are never certified before the Riassunto is complete');
  const qualityPlan=planStudyAutoResumeV45(faulty);
  assert.equal(qualityPlan?.reason,'quality-continue',
    'LAB61 uses the existing foreground recovery owner with bounded attempts');

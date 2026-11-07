@@ -154,7 +154,7 @@ try{
  globalThis.fetch=async()=>{unexpected++;throw Error('approved work must not rerun')};
  assert.equal((await generateDraftFirstV57({...n,editionsV36:numericDone})).complete,true);
  assert.equal(unexpected,0);
- console.log('LAB61 PASS: 44-page multi-failure progression 16->24->44, real 503 cooldown, two leftover repair pages only, 264 drafts retained, strict edition order, global exact % target, three bounded unhelpful attempts, persistent quality checkpoints, no false approval.');
+ console.log('LAB61 PASS: 44-page multi-failure progression 16->24->44, simulated 503 cooldown, two leftover repair pages only, 264 drafts retained, strict edition order, global exact % target, three bounded unhelpful attempts, persistent quality checkpoints, no false approval.');
 }finally{
  globalThis.fetch=oldFetch;
  await clearGeminiPause();await clearGeminiCadenceForTestV58();
