@@ -9,8 +9,10 @@ import {runtimeHash} from './motorLabRuntime.js';
 import {loadRuntimeUnitResults,saveRuntimeUnitResults} from './resumeStore.js';
 import {readGeminiPause,registerGeminiPause,clearGeminiPause} from './geminiQuotaControllerV36.js';
 import {bookUnitsV51,planNaturalBlocksV51,bisectAtNaturalBoundaryV51,
-  blockLetterTargetV51,BULK_OUTPUT_TOKEN_CEILING,
-  adaptiveOverloadBudgetV54} from './integralPlannerV51.js';
+  blockLetterTargetV51,BULK_OUTPUT_TOKEN_CEILING} from './integralPlannerV51.js';
+import {restoredLargeBlockLimitV58,learnGeminiCadenceV58,
+  markGeminiCadenceSuccessV58,waitForGeminiCadenceV58,
+  readGeminiCadenceV58} from './geminiCadenceV58.js';
 import {classifySourceReadinessV52} from './generativeIntegralV51.js';
 import {publishSequentialPagesV51} from './pagePublicationV51.js';
 import {studyLetters,percentReduced,exactRetained} from './studyPillarV38.js';
@@ -141,7 +143,7 @@ function publishEdition(rows,units,drafts,level){
  }
 }
 async function request(block,level,{bookTitle='',signal=null,phase='draft',repairDrafts=[],
-  targetOverride=null}={}){
+  targetOverride=null,onWait=()=>{}}={}){
  const target=blockLetterTargetV51(block,level),chars=block.reduce((n,u)=>n+u.source.length,0);
  const ratio=level==='summary'?0.44:1-Number(level)/100;
  const tokenBudget=Math.min(BULK_OUTPUT_TOKEN_CEILING,
@@ -154,18 +156,31 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
    maxOutputTokens:tokenBudget,timeoutMs:190000,repairDrafts,
    units:block.map(u=>({id:u.id,source:u.source,chapterTitle:u.chapterTitle,
      sectionTitle:u.sectionTitle,pageStart:u.pageStart,pageEnd:u.pageEnd}))};
+ await waitForGeminiCadenceV58({signal,onWait});
+ // The in-request wait is part of the existing single Gemini runner.
+ // Re-check quota here because Android may resume after a background pause.
+ const cooling=await readGeminiPause();
+ if(cooling)throw Object.assign(new Error('Quota Gemini in attesa'),{
+   code:'AI_QUOTA_LIMIT',quota:cooling});
+ const startedAt=Date.now();
  const response=await fetch(apiEndpoint('/api/editions/bulk/v51'),{
    method:'POST',headers:{'Content-Type':'application/json'},signal,body:JSON.stringify(body)
  });
  const data=await response.json().catch(()=>null);
  if(!response.ok){
    const code=data?.code||(response.status===404?'AI_BULK_ENDPOINT_MISSING':'HTTP_'+response.status);
-   if((response.status===429||response.status===503)&&data?.quota)await registerGeminiPause(data.quota);
+   if((response.status===429||response.status===503)&&data?.quota){
+     await registerGeminiPause(data.quota);
+     if(response.status===429)await learnGeminiCadenceV58(data.quota,{
+       inputTokens:data?.diagnostic?.inputTokens||0});
+   }
    throw Object.assign(new Error(data?.error||'Risposta Gemini non disponibile'),{
      code,quota:data?.quota||null,diagnostic:data?.diagnostic||null});
  }
  if(data?.engine!=='ai'||data?.version!=='integral-v51'||data?.level!==level)
    throw Object.assign(new Error('Provenienza risposta Gemini non verificata'),{code:'INVALID_EDITION_RESPONSE'});
+ await markGeminiCadenceSuccessV58({requestStartedAt:startedAt,
+   inputTokens:data?.inputTokens||0});
  return data;
 }
 async function restoreDrafts(units,drafts,rows,fp){
@@ -205,7 +220,9 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
  const {rows,drafts}=gridFrom(book,previous,fp);
  const diagnostics={mode:'draft-first-v57',requestsSent:0,draftRequests:0,
    repairRequests:0,rawDraftsSaved:0,providerErrors:0,splits:0,errorsByCode:{},
-   inputLimit:Number(previous?.integralInputLimit)||900000,
+   // A previous 503 can no longer permanently shrink a whole-book plan.
+   // Provider hard 413 still splits safely at complete page boundaries.
+   inputLimit:restoredLargeBlockLimitV58(previous),
    repairAttempts:{...(previous?.repairAttemptsV57||{})},phase:'draft',
    remainingBatches:0,lastCode:null};
  let persisted=true;
@@ -213,6 +230,11 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
  if(!source.ok)return halt(onProgress,book,units,rows,drafts,fp,diagnostics,
    'draft','source-review-needed','SOURCE_REVIEW',true);
  await restoreDrafts(units,drafts,rows,fp);
+ // Learn a historical quota signal only once, after a LAB57-to-58 update.
+ // Do not count opening the app repeatedly as new 429 failures.
+ const oldPause=await readGeminiPause();
+ if(oldPause?.kind==='requests-minute' && !(await readGeminiCadenceV58()))
+   await learnGeminiCadenceV58(oldPause);
  emit(onProgress,book,units,rows,drafts,fp,diagnostics,'draft');
  // FIRST PHASE: finish every required draft, no pedagogical evaluation here.
  for(const level of LEVELS){
@@ -232,7 +254,8 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        diagnostics.requestsSent++;diagnostics.draftRequests++;
        onActivity({phase:'draft',level,pageStart:block[0].pageStart,
          pageEnd:block.at(-1).pageEnd});
-       const response=await request(block,level,{bookTitle:book.title||'',signal,phase:'draft'});
+       const response=await request(block,level,{bookTitle:book.title||'',signal,
+         phase:'draft',onWait:data=>onActivity({phase:'pacing',level,...data})});
        const indexed=new Map();
        for(const item of response.parts||[])if(typeof item?.id==='string'&&clean(item.text))
          indexed.set(item.id,clean(item.text));
@@ -266,16 +289,13 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        diagnostics.lastCode=code;diagnostics.providerErrors++;
        diagnostics.errorsByCode[code]=(diagnostics.errorsByCode[code]||0)+1;
        const pause=await readGeminiPause();
-       if(pause?.kind==='overload'||error?.quota?.kind==='overload'){
-         const adjusted=adaptiveOverloadBudgetV54(block,level,diagnostics.inputLimit,pause?.attempts||1);
-         diagnostics.inputLimit=adjusted.inputLimit;
-       }
+       // A 503 means server overload, not proof the source block is too big.
+       // Keep the large-block plan unchanged; a genuine hard 413 may split.
        if(pause)return halt(onProgress,book,units,rows,drafts,fp,diagnostics,'draft',
          pause.automatic?'quota-paused':'quota-review',code,persisted,pause);
        if(code==='AI_MANUAL_RESTART')return halt(onProgress,book,units,rows,drafts,fp,diagnostics,
          'draft','interrupted',code,persisted);
-       const splittable=['AI_BLOCK_TOO_LARGE','AI_INCOMPLETE_BLOCK',
-         'AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETWORK'].includes(code);
+       const splittable=['AI_BLOCK_TOO_LARGE','AI_INCOMPLETE_BLOCK'].includes(code);
        const halves=splittable?bisectAtNaturalBoundaryV51(block):null;
        if(halves){diagnostics.splits++;queue.unshift(...halves.map(b=>({block:b,attempt:0})));continue;}
        return halt(onProgress,book,units,rows,drafts,fp,diagnostics,'draft',
@@ -325,7 +345,8 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        onActivity({phase:'repair',level,pageStart:group[0].pageStart,
          pageEnd:group.at(-1).pageEnd});
        const response=await request(group,level,{bookTitle:book.title||'',signal,
-         phase:'repair',repairDrafts,targetOverride:desired});
+         phase:'repair',repairDrafts,targetOverride:desired,
+         onWait:data=>onActivity({phase:'pacing',level,...data})});
        const indexed=new Map((response.parts||[]).filter(x=>clean(x?.text))
          .map(x=>[x.id,clean(x.text)]));
        const changes=group.filter(u=>indexed.has(u.id)&&
