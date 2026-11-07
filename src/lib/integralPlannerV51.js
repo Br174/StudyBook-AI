@@ -32,7 +32,8 @@ export function naturalBoundaryV51(units,i){
   if(i===units.length-1)return true;
   const a=units[i],b=units[i+1];
   // Never divide a source page midway or break a paragraph spanning pages.
-  return a.ci!==b.ci || (a.pageEnd<b.pageStart);
+  // A chapter change on the SAME physical page is not a safe cut.
+  return a.pageEnd < b.pageStart;
 }
 function estimatedTokens(units,level){
   const letters=units.reduce((n,x)=>n+studyLetters(x.source),0);
@@ -51,12 +52,39 @@ export function assignBudgetsV51(units,level){
   return units.map((u,i)=>({...u,targetLetters:level==='summary'?null:targets[i],
     summaryCapLetters:Math.max(0,caps[i]-(level==='summary'&&i===0?1:0))}));
 }
+export function minimumCompletePageInputV55(units,level){
+  // Recompute across the WHOLE book, not just the block that returned 503.
+  // A later page can be larger than the block which triggered the cooldown.
+  let start=0,minimum=0;
+  for(let i=0;i<units.length;i++){
+    if(!naturalBoundaryV51(units,i))continue;
+    minimum=Math.max(minimum,estimatedTokens(units.slice(start,i+1),String(level)).input);
+    start=i+1;
+  }
+  return minimum;
+}
+export function safeNaturalInputLimitV55(units,level,requestedLimit){
+  const floor=minimumCompletePageInputV55(units,level);
+  const requested=Number.isFinite(Number(requestedLimit))
+    ?Math.max(1600,Math.floor(Number(requestedLimit))):BULK_INPUT_TOKEN_CEILING;
+  // The client's upper bound remains 900k; we never bypass model limits.
+  // The floor can only raise an overly aggressive adaptive budget, NOT the
+  // hard provider budget. If a whole page exceeds 900k, fail safely.
+  if(floor>BULK_INPUT_TOKEN_CEILING){
+    throw Object.assign(new Error('Pagina originale troppo grande per il limite Gemini: verifica manuale necessaria, nessuna pagina tagliata.'),{
+      code:'NATURAL_PAGE_EXCEEDS_PROVIDER_CAP',neededInputTokens:floor});
+  }
+  return Math.min(BULK_INPUT_TOKEN_CEILING,Math.max(requested,floor+256));
+}
 export function planNaturalBlocksV51(units,level,{
   maxInputTokens=BULK_INPUT_TOKEN_CEILING,
   maxOutputTokens=BULK_OUTPUT_TOKEN_CEILING
 }={}){
   if(!LEVELS.has(String(level)))throw new Error('Livello sconosciuto.');
   const bounded=assignBudgetsV51(units,String(level));
+  // LAB55: a saved reduced limit MUST NOT strand a later complete page.
+  // This is the actual cause of NATURAL_BOUNDARY_REQUIRED after LAB54's 503.
+  const effectiveInputTokens=safeNaturalInputLimitV55(bounded,String(level),maxInputTokens);
   const blocks=[];
   let start=0;
   while(start<bounded.length){
@@ -64,7 +92,7 @@ export function planNaturalBlocksV51(units,level,{
     for(let i=start;i<bounded.length;i++){
       const candidate=bounded.slice(start,i+1);
       const estimate=estimatedTokens(candidate,String(level));
-      if(estimate.input>maxInputTokens||estimate.output>maxOutputTokens||
+      if(estimate.input>effectiveInputTokens||estimate.output>maxOutputTokens||
          estimate.chars>MAX_REQUEST_CHARS)break;
       if(naturalBoundaryV51(bounded,i))lastSafe=i+1;
     }
