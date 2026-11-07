@@ -255,6 +255,7 @@ jobs:
           node scripts/test-lab50-simple-persistent.mjs
 
       - name: LAB51 integral 44-page boundaries and Gemini response safety
+        id: lab51tests
         if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-51-')
         run: |
           node scripts/test-lab51-integral-pages.mjs
@@ -262,6 +263,25 @@ jobs:
           node scripts/test-lab48-page-faithful.mjs
           node scripts/test-lab49-live-simple-page.mjs
           node scripts/test-lab50-simple-persistent.mjs
+
+      - name: LAB51 persist isolated unit-test verdict for connector verification
+        if: always() && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-51-')
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEST_OUTCOME: ${{ steps.lab51tests.outcome }}
+        run: |
+          set -euo pipefail
+          RESULT=$(jq -nc --arg sha "$GITHUB_SHA" --arg run "$GITHUB_RUN_ID" --arg status "$TEST_OUTCOME"             '{source_sha:$sha,run_id:($run|tonumber),tests:$status,device_test:"PENDING"}')
+          DATA=$(printf '%s' "$RESULT" | base64 -w0)
+          PATH_TO_REPORT=".motorlab/LAB51_TEST_RECEIPT.json"
+          CURRENT=$(gh api "repos/$GITHUB_REPOSITORY/contents/$PATH_TO_REPORT?ref=$GITHUB_REF_NAME" --jq .sha 2>/dev/null || true)
+          if [[ -n "$CURRENT" ]]; then
+            gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$PATH_TO_REPORT" -f message="chore(LAB51): CI test receipt [skip ci]" -f branch="$GITHUB_REF_NAME" -f content="$DATA" -f sha="$CURRENT" >/dev/null
+          else
+            gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$PATH_TO_REPORT" -f message="chore(LAB51): CI test receipt [skip ci]" -f branch="$GITHUB_REF_NAME" -f content="$DATA" >/dev/null
+          fi
 
       - name: Resolve monotonic Android version
         shell: bash
