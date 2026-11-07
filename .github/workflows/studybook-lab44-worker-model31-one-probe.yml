@@ -1,0 +1,117 @@
+name: StudyBook LAB44 Worker-only Gemini 3.1 evidence gate
+
+on:
+  push:
+    branches:
+      - motorlab/studybook-lab44-worker-model31-pilot-20261107
+    paths:
+      - .github/workflows/studybook-lab44-worker-model31-one-probe.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studybook-worker-only-lab44-31
+  cancel-in-progress: false
+
+jobs:
+  scudo360:
+    name: Scudo360 offline, no Gemini calls
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Regression and negative model routing tests
+        run: |
+          set -euo pipefail
+          node scripts/test-worker-lab44-model31-routing.mjs
+          node scripts/test-lab44-503-429-backoff.mjs
+          node scripts/test-lab43-real-pillar.mjs
+      - name: MotorLab Scudo360 mandatory Worker gate
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-worker31-report.json
+      - name: Check isolated Worker config before provider quota is used
+        run: |
+          set -euo pipefail
+          npm run build
+          npx wrangler deploy --dry-run --config wrangler.lab44-model31.jsonc
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('wrangler.lab44-model31.jsonc','utf8'));
+          assert.equal(c.name,'studybook-ai-lab44');
+          assert.equal(c.vars.STUDYBOOK_PREFERRED_EDITION_MODEL,'gemini-3.1-flash-lite');
+          console.log('SCUDO360_MODEL31_CONFIG_PASS LAB44 isolated Worker; zero APK edits');
+          NODE
+
+  one_real_gemini_request:
+    name: Exactly ONE real Gemini 3.1 free-tier study probe
+    needs: scudo360
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      AI_API_KEY: ${{ secrets.AI_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: One real request, no retry or alternate model, strict study quality
+        run: node scripts/test-worker-lab44-one-real-3-1.mjs
+
+  deploy_lab44_worker_only:
+    name: Deploy existing LAB44 Worker, never Android APK
+    needs: one_real_gemini_request
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Require existing authorized Worker and existing secret
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          npx wrangler secret list --name studybook-ai-lab44 > /tmp/studybook-lab44-secret-names.txt
+          grep -q 'AI_API_KEY' /tmp/studybook-lab44-secret-names.txt
+          echo "Existing key binding present; value never accessed."
+      - name: Deploy ONLY existing LAB44 Worker, no Android build
+        run: |
+          set -euo pipefail
+          npm run build
+          npx wrangler deploy --config wrangler.lab44-model31.jsonc
+      - name: Verify same LAB44 route without Gemini generation
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          const url='https://studybook-ai-lab44.brunoverlezza.workers.dev/api/editions/v36';
+          let ready=false;
+          for(let i=0;i<12;i++){
+            try{
+              const response=await fetch(url,{method:'GET',signal:AbortSignal.timeout(12000)});
+              if(response.status===405){ready=true;break;}
+            }catch{}
+            await new Promise(r=>setTimeout(r,2000));
+          }
+          if(!ready)throw Error('LAB44 route unavailable; review rollback');
+          console.log('LAB44_MODEL31_WORKER_DEPLOYED_AND_REACHABLE no APK');
+          NODE
+      - name: Deployment evidence
+        run: |
+          echo "LAB44 Worker-only 3.1 model routing updated; original Android 0.3.265 unchanged." >> "$GITHUB_STEP_SUMMARY"
+          echo "Scudo360 + one strict live Gemini 3.1 probe passed before deployment." >> "$GITHUB_STEP_SUMMARY"
