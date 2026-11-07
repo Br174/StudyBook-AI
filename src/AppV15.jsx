@@ -1054,7 +1054,7 @@ export default function AppV14() {
       const unresolved = parsed.needsOcr?.length || 0;
       const suspected = parsed.sourceShield?.reviewPages?.length || 0;
       const structuralWarnings = parsed.precisionAudit?.warningCount || 0;
-      if (unresolved) setStatus(`Documento analizzato · OCR recuperato su ${recovered} pagine · ${unresolved} da verificare`);
+      if (unresolved) setStatus(`Importazione solo testo · ${unresolved} pagine prive di testo selezionabile da verificare · nessuna immagine elaborata`);
       else if (suspected) setStatus(`Originale conservato · ${suspected} pagine da confrontare con il PDF · nessun testo cancellato`);
       else if (structuralWarnings) setStatus(`Documento analizzato · ${structuralWarnings} possibili anomalie da verificare`);
       else if (recovered) setStatus(`Documento analizzato · OCR completato su ${recovered} pagine`);
