@@ -1205,18 +1205,25 @@ export default function AppV14() {
         return initialDraft;
       }
       const lab36BookId=firstSave.id;
-      let savedVerified = 0;
+      let savedVerified = 0,savedDrafts = 0;
       let checkpointTail = Promise.resolve();
       const editions = await runGeminiWithSafeRestart(result,(snapshot)=>{
           generatedDraft={...result,editionsV36:snapshot,
             engine:snapshot.complete?'ai':(snapshot.verifiedChunks>0?'misto':result.engine)};
           setStudyBook(generatedDraft);
           setProgress({done:snapshot.verifiedChunkVariants||0,total:snapshot.totalChunkVariants||1});
-          setStatus('Libro Specchio · Gemini · '+(snapshot.verifiedChunkVariants||0)+'/'+(snapshot.totalChunkVariants||0)+' parti IA verificate · checkpoint');
+          setStatus(snapshot.phase==='draft'
+            ?'Creazione libro · '+(snapshot.draftUnitsSaved||0)+'/'+(snapshot.draftUnitsTotal||0)+' bozze salvate · verifica solo dopo il completamento'
+            :snapshot.phase==='repair'
+              ?'Correzione mirata delle pagine · '+(snapshot.verifiedChunkVariants||0)+' risultati già verificati'
+              :'Verifica libro completo · '+(snapshot.verifiedChunkVariants||0)+'/'+(snapshot.totalChunkVariants||0)+' parti approvate');
           // Save progress occasionally, never let concurrent IndexedDB writers race.
-          if(lab36BookId && (snapshot.verifiedChunkVariants||0)>savedVerified &&
-             (savedVerified<8||(snapshot.verifiedChunkVariants||0)-savedVerified>=6)){
+          if(lab36BookId && (
+              (snapshot.draftUnitsSaved||0)>savedDrafts ||
+              (snapshot.verifiedChunkVariants||0)>savedVerified
+            )){
             savedVerified=snapshot.verifiedChunkVariants||0;
+            savedDrafts=snapshot.draftUnitsSaved||0;
             const copy=generatedDraft;
             checkpointTail=checkpointTail.then(()=>saveLibraryBook({
               id:lab36BookId,fileName:sourceName,sourceData,studyBook:copy,
@@ -1339,16 +1346,22 @@ export default function AppV14() {
           ' · Nessuna richiesta inviata. Ripresa automatica quando il telefono torna in primo piano e termina la pausa. Checkpoint conservati.');
         return;
       }
-      let checkpointTail=Promise.resolve(),savedVerified=0;
+      let checkpointTail=Promise.resolve(),savedVerified=current.editionsV36.verifiedChunkVariants||0,
+        savedDrafts=current.editionsV36.draftUnitsSaved||0;
       const snapshot=await runGeminiWithSafeRestart(current,(update)=>{
         draft={...current,editionsV36:update,
           engine:update.complete?'ai':(update.verifiedChunks>0?'misto':current.engine)};
         setStudyBook(draft);
         setProgress({done:update.verifiedChunkVariants||0,total:update.totalChunkVariants||1});
-        setStatus('Ripresa Gemini · '+(update.verifiedChunkVariants||0)+'/'+(update.totalChunkVariants||0)+' parti IA verificate');
+        setStatus(update.phase==='draft'
+          ?'Creazione bozze · '+(update.draftUnitsSaved||0)+'/'+(update.draftUnitsTotal||0)+' unità salvate'
+          :update.phase==='repair'
+            ?'Correzioni mirate · bozze complete conservate'
+            :'Verifica libro completo · '+(update.verifiedChunkVariants||0)+'/'+(update.totalChunkVariants||0)+' unità approvate');
         const count=update.verifiedChunkVariants||0;
-        if(targetId&&count>savedVerified&&(savedVerified<8||count-savedVerified>=6)){
+        if(targetId&&(count>savedVerified||(update.draftUnitsSaved||0)>savedDrafts)){
           savedVerified=count;
+          savedDrafts=update.draftUnitsSaved||0;
           const copy=draft;
           checkpointTail=checkpointTail.then(()=>saveLibraryBook({
             id:targetId,fileName:targetName,sourceData:targetSource,studyBook:copy,
