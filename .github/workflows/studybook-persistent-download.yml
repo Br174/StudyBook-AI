@@ -1,0 +1,102 @@
+name: StudyBook signed APK permanent downloads
+
+# Runs on the default branch after the Android workflow has finished.
+# Never rebuilds, re-signs, or alters the original APK; it only republishes
+# the already verified CI artifact as a versioned GitHub Release.
+on:
+  workflow_run:
+    workflows:
+      - StudyBook Android LAB APK
+    types:
+      - completed
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  distribute:
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.head_repository.full_name == github.repository &&
+          startsWith(github.event.workflow_run.head_branch, 'lab/studybook-core-android-01-update-') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      BUILD_RUN: ${{ github.event.workflow_run.id }}
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Inspect signed Android artifact and exact source commit
+        id: artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(gh api "repos/$REPO/git/ref/heads/motorlab/active-studybook-ai" --jq .object.sha)
+          if [[ "$current" != "$SOURCE_SHA" ]]; then
+            echo "Verified active Android ref has moved; skip stale build without publishing."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          item=$(gh api "repos/$REPO/actions/runs/$BUILD_RUN/artifacts" --jq '.artifacts[] | select(.expired == false and (.name | test("^StudyBook-AI-LAB-[0-9]+-AGGIORNAMENTO-APK$"))) | .name' | head -n1)
+          test -n "$item"
+          echo "artifact_name=$item" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+      - name: Fetch and audit original signed APK
+        if: steps.artifact.outputs.skip == 'false'
+        id: audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p original release
+          gh run download "$BUILD_RUN" --repo "$REPO" --name "${{ steps.artifact.outputs.artifact_name }}" --dir original
+          shopt -s nullglob
+          apks=(original/StudyBook-AI-LAB-*-AGGIORNAMENTO.apk)
+          test "${#apks[@]}" -eq 1
+          apk="${apks[0]}"
+          basename="${apk##*/}"
+          base="${basename%.apk}"
+          test -s "original/$base.sha256"
+          test -s "original/$base-signing.txt"
+          test -s "original/$base-identity.txt"
+          expected=$(awk 'NR==1{print $1}' "original/$base.sha256")
+          echo "$expected  $apk" | sha256sum -c --status
+          grep -Fqx 'applicationId=it.studybook.ai.lab' "original/$base-identity.txt"
+          grep -Fqx 'mode=update' "original/$base-identity.txt"
+          grep -Fq 'D7:BB:93:15:C9:C4:35:18:72:49:54:78:61:0C:48:47:25:08:6E:2B:AB:BC:04:BE:C6:5E:C8:23:45:5F:BD:CC' "original/$base-signing.txt"
+          branch=$(grep '^branch=' "original/$base-identity.txt" | cut -d= -f2-)
+          test "$branch" = "${{ github.event.workflow_run.head_branch }}"
+          version=$(grep '^versionName=' "original/$base-identity.txt" | cut -d= -f2-)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$basename" =~ ^StudyBook-AI-LAB-([0-9]+)-AGGIORNAMENTO\.apk$ ]]
+          lab="${BASH_REMATCH[1]}"
+          test -n "$lab"
+          tag="studybook-lab${lab}-v${version}"
+          cp "$apk" release/
+          zip -j -9 -q "release/$base.zip" original/"$base".*
+          unzip -tqq "release/$base.zip"
+          echo "zip=release/$base.zip" >> "$GITHUB_OUTPUT"
+          echo "apk=release/$basename" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha=$expected" >> "$GITHUB_OUTPUT"
+      - name: Publish versioned GitHub Release download
+        if: steps.artifact.outputs.skip == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${{ steps.audit.outputs.tag }}"
+          if gh release view "$tag" --repo "$REPO" >/dev/null 2>&1; then
+            echo "Existing stable release already published; never overwrite verified assets."
+          else
+            gh release create "$tag" "${{ steps.audit.outputs.zip }}" "${{ steps.audit.outputs.apk }}" \
+              --repo "$REPO" --target "$SOURCE_SHA" \
+              --title "StudyBook AI LAB update ${{ steps.audit.outputs.version }}" \
+              --notes "Android update signed with preserved StudyBook LAB certificate. Scudo360 and CI checks passed. APK SHA-256: ${{ steps.audit.outputs.sha }}. End-to-end acceptance on user's imported book remains a separate test." \
+              --prerelease --latest=false
+          fi
+          gh release view "$tag" --repo "$REPO" --json assets --jq '.assets[].name' | tee /tmp/release-assets.txt
+          grep -Fx "$(basename '${{ steps.audit.outputs.zip }}')" /tmp/release-assets.txt
+          grep -Fx "$(basename '${{ steps.audit.outputs.apk }}')" /tmp/release-assets.txt
+          echo "Stable direct downloads published from verified APK, no re-sign or rebuild." >> "$GITHUB_STEP_SUMMARY"
