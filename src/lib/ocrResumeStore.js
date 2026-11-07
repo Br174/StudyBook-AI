@@ -171,9 +171,12 @@ export async function saveIntegrity360Page(signature, page) {
         text: page.text,
         rawText: typeof page.rawText === 'string' ? page.rawText : page.text,
         source: page.source,
-        imageCount: Number(page.imageCount || 0),
-        visualAnchors:page.visualAnchors||[],visualReview:page.visualReview||[],
-        inkCount: Number(page.inkCount || 0),
+        // LAB47 book checkpoints store TEXT only, never even visual catalogs.
+        ...(signature.endsWith(':text-only-v47') ? {} : {
+          imageCount: Number(page.imageCount || 0),
+          visualAnchors:page.visualAnchors||[],visualReview:page.visualReview||[],
+          inkCount: Number(page.inkCount || 0),
+        }),
         status: page.status,
         updatedAt: new Date().toISOString(),
       });
