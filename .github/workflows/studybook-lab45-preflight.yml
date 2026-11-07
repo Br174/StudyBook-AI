@@ -42,7 +42,7 @@ jobs:
           assert.deepEqual(STUDY_PERCENTAGES,[10,20,30,40,50]);
           const c=JSON.parse(readFileSync('capacitor.config.json','utf8'));
           assert.equal(c.appId,'it.studybook.ai.lab');
-          assert.equal(c.android.androidScheme,'https');
+          assert.equal(c.server.androidScheme,'https');
           const w=JSON.parse(readFileSync('wrangler.lab44-model31.jsonc','utf8'));
           assert.equal(w.name,'studybook-ai-lab44');
           assert.equal(w.vars.STUDYBOOK_PREFERRED_EDITION_MODEL,'gemini-3.1-flash-lite');
