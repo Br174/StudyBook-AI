@@ -457,6 +457,12 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   const fidelity = studyBook?.quality?.sourceFidelityGate || studyBook?.quality?.fidelityGate;
   const geminiCause = studyBook?.editionsV36?progressDiagnostic(studyBook.editionsV36):null;
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
+  const editionStages=studyBook?.editionsV36?.rows?.length
+    ? ['summary','50','40','30','20','10'].map(id=>({
+        id,label:id==='summary'?'Riassunto':id+'%',
+        ready:studyBook.editionsV36.checkpointPersistent!==false
+          &&studyBook.editionsV36.rows.every(ch=>ch.every(p=>p?.verified?.[id]===true)),
+      })) : [];
   const sourceChapters = sourceData?.chapters || [];
   const canPrepare = sourceChapters.some(chapter => chapter.paragraphs?.length);
   return (
@@ -468,6 +474,11 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         </div>
       </header>
 
+      {editionStages.length>0 && <div className="sb-edition-stages" aria-label="Versioni indipendenti di studio">
+        {editionStages.map(item=><span key={item.id} className={item.ready?'sb-edition-ready':'sb-edition-pending'}>
+          {item.label}: {item.ready?'Studiabile':'In lavorazione'}
+        </span>)}
+      </div>}
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
       {v36Partial && <div className="sb-mirror-warning" role="status">
         {geminiCause && <p><strong>Diagnosi elaborazione:</strong> {geminiCause.description}
