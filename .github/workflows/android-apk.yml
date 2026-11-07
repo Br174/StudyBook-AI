@@ -1,5 +1,6 @@
 name: StudyBook Android LAB APK
 # LAB45 final candidate; Scudo360 standalone preflight 42354315707 was successful.
+# LAB47 text-only books: isolated source test, Scudo360, existing stable signing.
 
 on:
   push:
