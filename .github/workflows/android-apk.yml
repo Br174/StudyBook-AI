@@ -967,7 +967,7 @@ jobs:
           if-no-files-found: error
 
       - name: Advance verified StudyBook source only after signed Scudo APK
-        if: success() && github.event_name == 'push' && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-')
+        if: success() && github.event_name == 'push' && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-')
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
