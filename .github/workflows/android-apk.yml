@@ -199,7 +199,7 @@ jobs:
           fi
 
       - name: LAB46 mandatory pillar, pause, checkpoint and staged-edition tests
-        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-46-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-')
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-46-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-')
         run: |
           node scripts/test-lab38-pillar.mjs
           node scripts/test-lab39-causal-recovery.mjs
@@ -212,7 +212,7 @@ jobs:
           node scripts/test-lab46-staged-study.mjs
 
       - name: LAB47 text-only original PDF, scanner isolation and no-image persistence
-        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-')
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-')
         run: |
           node scripts/test-lab31-integrity360-turbo.mjs
           node scripts/test-lab31-digital-pdf.mjs
@@ -220,6 +220,12 @@ jobs:
           node scripts/test-lab35-libro-specchio.mjs
           node scripts/test-lab36-app-integration.mjs
           node scripts/test-lab47-text-only-books.mjs
+
+      - name: LAB48 page-faithful mirror, bis/tris, manual Gemini recovery, UI safe flow
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-')
+        run: |
+          node scripts/test-lab35-libro-specchio.mjs
+          node scripts/test-lab48-page-faithful.mjs
 
       - name: Resolve monotonic Android version
         shell: bash
@@ -711,7 +717,7 @@ jobs:
 
       - name: Build web core
         env:
-          VITE_NATIVE_API_BASE: ${{ (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-46-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-45-')) && 'https://studybook-ai-lab44.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-44-') && 'https://studybook-ai-lab44.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-43-') && 'https://studybook-ai-lab43.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-42-') && 'https://studybook-ai-lab42.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-41-') && 'https://studybook-ai-lab41.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-40-') && 'https://studybook-ai-lab40.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-39-') && 'https://studybook-ai-lab39.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-38-') && 'https://studybook-ai-lab38.brunoverlezza.workers.dev' || ((startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-37-')) && 'https://studybook-ai-lab36.brunoverlezza.workers.dev' || 'https://studybook-ai.brunoverlezza.workers.dev'))))))) }}
+          VITE_NATIVE_API_BASE: ${{ (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-46-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-45-')) && 'https://studybook-ai-lab44.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-44-') && 'https://studybook-ai-lab44.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-43-') && 'https://studybook-ai-lab43.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-42-') && 'https://studybook-ai-lab42.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-41-') && 'https://studybook-ai-lab41.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-40-') && 'https://studybook-ai-lab40.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-39-') && 'https://studybook-ai-lab39.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-38-') && 'https://studybook-ai-lab38.brunoverlezza.workers.dev' || ((startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-37-')) && 'https://studybook-ai-lab36.brunoverlezza.workers.dev' || 'https://studybook-ai.brunoverlezza.workers.dev'))))))) }}
         run: npm run build
 
       - name: Scudo360 mandatory LAB23 covers and duplicate regression
@@ -967,7 +973,7 @@ jobs:
           if-no-files-found: error
 
       - name: Advance verified StudyBook source only after signed Scudo APK
-        if: success() && github.event_name == 'push' && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-')
+        if: success() && github.event_name == 'push' && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-')
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -984,7 +990,7 @@ jobs:
           echo "[MOTORLAB_STUDYBOOK_ANDROID_ACTIVE] $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Record verified LAB31-39 APK artifact for direct retrieval
-        if: (success() && github.event_name == 'push' && (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-32-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-33-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-34-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-35-') || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-37-') || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-38-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-39-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-40-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-41-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-42-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-43-') || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-44-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-45-')))))) || (success() && github.event_name == 'push' && (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-46-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-')))
+        if: (success() && github.event_name == 'push' && (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-31-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-32-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-33-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-34-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-35-') || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-37-') || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-38-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-39-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-40-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-41-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-42-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-43-') || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-44-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-45-')))))) || (success() && github.event_name == 'push' && (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-46-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-')))
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
