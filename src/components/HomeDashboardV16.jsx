@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { StudyIcon } from './StudyUiIcons.jsx';
 import '../appShellV16.css';
 import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
+import {geminiResumeDisplayV55} from '../lib/studyAutoResumeV45.js';
 
 const titleOf = name => String(name || 'Documento').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
 export function HomeDashboardV16({
@@ -9,7 +10,7 @@ export function HomeDashboardV16({
   onScanner, onImport, onScannerArchive, onCategory, onRecentScan,
   onOpenOriginal, onContinueBook, onViewAll, documentData, fileName,
   scanContent, onCreateBook, progressPercent, workPhase='idle',homeAction='create',
-  resumeCandidate = null, resumeBusy = false, onResumeProcessing = () => {},
+  resumeCandidate = null, resumeBusy = false, resumeEdition = null, onResumeProcessing = () => {},
   onManualRecovery = () => {}, iaProgress = null, studyPageProgress = null, geminiStalled = false,
   currentBookId='',acquisitionProgress=null,
 }) {
@@ -61,6 +62,8 @@ export function HomeDashboardV16({
   const iaTotal = Math.max(0,Number(iaProgress?.total||resumeCandidate?.total||0));
   const iaDone = Math.min(iaTotal,Math.max(0,Number(iaProgress?.done??resumeCandidate?.done??0)));
   const iaPercent = iaTotal ? Math.round((iaDone / iaTotal)*10000)/100 : null;
+  const resumeWait=geminiResumeDisplayV55(resumeEdition||resumeCandidate?.edition);
+
   return <section className={scannerActive ? 'sb-screen sb-home-screen sb-home-v16 sb-home-scanning' : 'sb-screen sb-home-screen sb-home-v16'}>
     <div className="sb-home-primary">
       <div className="sb-home-source-actions">
@@ -125,6 +128,8 @@ export function HomeDashboardV16({
               :'Verifica dei checkpoint IA conservati'}</small>
           {!generating&&resumeCandidate?.diagnostic?.description &&
             <small role="status">{resumeCandidate.diagnostic.description}</small>}
+          {!generating&&resumeWait.label&&
+            <small className="sb-gemini-wait-note" role="status">{resumeWait.label}</small>}
         </div>}
         {!importing && <div className="sb-resume-action-row">
           <button type="button" onClick={onResumeProcessing} disabled={resumeBusy}>
@@ -132,7 +137,7 @@ export function HomeDashboardV16({
           </button>
           <button type="button" className="sb-resume-manual" onClick={onManualRecovery}
             disabled={resumeBusy||(generating&&workPhase==='preparing')}>
-            {resumeBusy?'Verifica in corso…':geminiStalled?'↻ Recupera richiesta bloccata':'↻ Verifica e riprendi'}
+            {resumeBusy?'Verifica in corso…':geminiStalled?'↻ Recupera richiesta bloccata':resumeWait.label?resumeWait.button:'↻ Verifica e riprendi'}
           </button>
         </div>}
       </div>}
