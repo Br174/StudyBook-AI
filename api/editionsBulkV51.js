@@ -138,12 +138,24 @@ export default async function handler(req,res){
       {diagnostic:{status:upstream.status,elapsedMs,model:selected}});
     const answer=payload?.choices?.[0]?.message?.content;
     const parsed=parseReply(answer);
-    const parts=parsed?.parts;
-    if(!Array.isArray(parts)||parts.length!==safe.length||
-       parts.some((part,i)=>part?.id!==safe[i].id||typeof part.text!=='string'||!part.text.trim()))
-      return fail(res,422,'AI_INCOMPLETE_BLOCK','Gemini non ha restituito tutti i paragrafi ordinati.',
-        {diagnostic:{reason:payload?.choices?.[0]?.finish_reason||'missing-ordered-parts',
-          elapsedMs,model:selected}});
+    const rawParts=parsed?.parts;
+    // Salvage only structurally identifiable pieces. NEVER infer a missing id,
+    // and never call an incomplete response "verified".
+    const parts=[];
+    const validIds=new Set(safe.map(u=>u.id)),seen=new Set();
+    if(Array.isArray(rawParts)){
+      for(const part of rawParts){
+        if(!validIds.has(part?.id)||seen.has(part?.id)||
+          typeof part.text!=='string'||!part.text.trim())continue;
+        seen.add(part.id);parts.push({id:part.id,text:part.text});
+      }
+    }
+    if(!parts.length)return fail(res,422,'AI_INCOMPLETE_BLOCK',
+      'Nessun paragrafo utilizzabile nella risposta Gemini.',
+      {diagnostic:{reason:payload?.choices?.[0]?.finish_reason||'invalid-structure',
+        received:Array.isArray(rawParts)?rawParts.length:0,expected:safe.length,
+        elapsedMs,model:selected}});
+    parts.sort((x,y)=>safe.findIndex(u=>u.id===x.id)-safe.findIndex(u=>u.id===y.id));
     const totalLetters=parts.reduce((n,p)=>n+studyLetters(p.text),0);
     const hasExactLength=level==='summary'?totalLetters<=cap:totalLetters===target;
     // LAB53: DO NOT discard 100+ complete paragraphs solely because Gemini
@@ -151,7 +163,8 @@ export default async function handler(req,res){
     // after its own exact-length and fidelity review; otherwise store as draft.
     // No draft can be displayed as verified or used for PDF export.
     return res.status(200).json({engine:'ai',version:'integral-v51',sourceVersion:'original',
-      level,parts,inputTokens,outputTokensUsed:payload?.usage?.completion_tokens||null,
+      level,parts,completeParts:parts.length===safe.length,
+      expectedParts:safe.length,inputTokens,outputTokensUsed:payload?.usage?.completion_tokens||null,
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
       lengthReview:{exact:hasExactLength,targetLetters:level==='summary'?cap:target,
         observedLetters:totalLetters,delta:totalLetters-(level==='summary'?cap:target)},
