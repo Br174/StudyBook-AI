@@ -10,6 +10,7 @@ import {makeRuntimeUnitKey,chooseRuntimeConcurrency,runAdaptiveBatchQueue,runtim
 import {STUDY_PILLAR_VERSION,STUDY_PERCENTAGES,allocateExactLetterBudgets,
   inspectProgressiveEdition} from './studyPillarV38.js';
 import {progressDiagnostic} from './geminiRecoveryV39.js';
+import {restoreMissingTerminalPunctuation} from './studyEditionRepairV45.js';
 
 export const GEMINI_LEVELS=['10','20','30','40','50','summary'];
 const VERSION='lab38-progressive-editions-v1';
@@ -153,7 +154,7 @@ function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,di
   const rows=(book.chapters||[]).map((chapter,ci)=>(chapter.paragraphs||[]).map((paragraph,pi)=>{
     totalCells++;
     const jobs=chapterJobs.get(ci+':'+pi)||[];
-    const texts={},verified={},issues={},achievedPercent={};
+    const texts={},verified={},issues={},achievedPercent={},partialFragments={};
     totalChunkVariants+=jobs.length*GEMINI_LEVELS.length;
     for(const job of jobs)for(const id of GEMINI_LEVELS){
       if(state.get(job.key)?.verified?.[id]===true)verifiedChunkVariants++;
@@ -161,6 +162,12 @@ function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,di
     for(const id of GEMINI_LEVELS){
       const fragments=jobs.map(j=>state.get(j.key)?.verified?.[id]===true?state.get(j.key)?.editions?.[id]:null);
       const ready=jobs.length>0&&fragments.every(t=>typeof t==='string'&&t.trim());
+      if(!ready && fragments.some(t=>typeof t==='string'&&t.trim())){
+        // Only checkpoint-verified fragments are exposed. Unverified drafts and
+        // original text cannot be presented as completed generative content.
+        partialFragments[id]={count:jobs.length,parts:fragments.flatMap((text,index)=>
+          typeof text==='string'&&text.trim()?[{index,text}]:[])};
+      }
       const joined=ready?normalizeStudyParagraphFlow(fragments.join(' ')):'';
       const final=ready?auditGeminiLevels(originalOf(paragraph),{[id]:joined},{
         pillar,targetByLevel:pillar?{[id]:jobs.reduce((n,j)=>n+(j.targets?.[id]||0),0)}:{},
@@ -174,7 +181,7 @@ function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,di
     verifiedVariants+=GEMINI_LEVELS.filter(id=>verified[id]).length;
     if(GEMINI_LEVELS.every(id=>verified[id]))verifiedCells++;else blockedCells++;
     verifiedChunks+=jobs.filter(j=>GEMINI_LEVELS.every(id=>state.get(j.key)?.verified?.[id])).length;
-    return {editions:texts,verified,issues,achievedPercent,sourcePageStart:paragraph.sourcePageStart??null};
+    return {editions:texts,verified,issues,achievedPercent,partialFragments,sourcePageStart:paragraph.sourcePageStart??null};
   }));
   const noReviewSource=(book.canonicalBookMap?.uncertain||[]).length===0;
   const complete=Boolean(totalCells)&&blockedCells===0&&noReviewSource&&checkpointPersistent;
@@ -320,15 +327,32 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
             pillar?STUDY_PILLAR_VERSION:null,job.targets?.[id]??null,job.summaryCapLetters??null,
             record.drafts?.[id]||null);
           onActivity({phase:'response',level:id});
-          let audit=auditGeminiLevels(job.source,editions,{pillar,targetByLevel:job.targets,summaryCapLetters:job.summaryCapLetters});
+          // LAB45: repair punctuation only when a NEW FULL audit accepts the
+          // exact same alphabetic letter budget and protected meaning.
+          const review=(value)=>auditGeminiLevels(job.source,value,{
+            pillar,targetByLevel:job.targets,summaryCapLetters:job.summaryCapLetters});
+          const normalizeSafe=(value)=>{
+            const before=review(value);
+            if(before.verified[id])return {editions:value,audit:before};
+            const candidate=restoreMissingTerminalPunctuation(value?.[id]);
+            if(!candidate||candidate===value?.[id])return {editions:value,audit:before};
+            const next={...value,[id]:candidate};
+            const checked=review(next);
+            return checked.verified[id]?{editions:next,audit:checked}:
+              {editions:value,audit:before};
+          };
+          let checked=normalizeSafe(editions);
+          editions=checked.editions;
+          let audit=checked.audit;
           if(!audit.verified[id]){
             onActivity({phase:'repair-request',level:id});
             editions=await askGemini(job.source,job.context,id,audit.issues[id],paceMs,signal,
               pillar?STUDY_PILLAR_VERSION:null,job.targets?.[id]??null,job.summaryCapLetters??null,
               editions?.[id]||record.drafts?.[id]||null);
             onActivity({phase:'repair-response',level:id});
-            audit=auditGeminiLevels(job.source,editions,{
-              pillar,targetByLevel:job.targets,summaryCapLetters:job.summaryCapLetters});
+            checked=normalizeSafe(editions);
+            editions=checked.editions;
+            audit=checked.audit;
           }
           // A one-edition response is the normal mode. A complete legacy response
           // is accepted only after independently auditing all provided levels.
