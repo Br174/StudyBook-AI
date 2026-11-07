@@ -26,6 +26,7 @@ export async function readPdfMirrorV35(file, options = {}) {
   const chapters=authority.chapters;
   const canonicalBookMap=buildCanonicalBookMap({
     pages:parsed.pages,chapters,outline:originalOutline,pageLabels,
+    pageDimensions:parsed.pages.map(p=>({widthPt:p.widthPt,heightPt:p.heightPt})),
     originalFingerprint:fingerprint,pdfPageCount:pageCount,visualAnchors:[],
   });
   const review=[...new Set([
