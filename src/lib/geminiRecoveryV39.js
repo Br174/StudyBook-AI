@@ -8,7 +8,8 @@ export const RECOVERY_KINDS={
  'AI_TIMEOUT_OR_NETWORK':'CONNESSIONE','INVALID_EDITION_RESPONSE':'RISPOSTA_NON_VALIDA',
  'INVALID_GENERATIVE_RESPONSE':'RISPOSTA_NON_VALIDA','AI_FORMAT_REVIEW_REQUIRED':'RISPOSTA_NON_VALIDA',
  'SOURCE_REVIEW':'SORGENTE_DA_VERIFICARE',
- 'AI_QUALITY_REVIEW':'QUALITA','AI_QUALITY_STOP':'QUALITA','AI_MANUAL_RESTART':'INTERROTTO'
+ 'AI_QUALITY_REVIEW':'QUALITA','AI_QUALITY_REVIEW_REQUIRED':'QUALITA',
+ 'AI_QUALITY_STOP':'QUALITA','AI_MANUAL_RESTART':'INTERROTTO'
 };
 export function progressDiagnostic(snapshot){
  const stored=Math.max(0,Number(snapshot?.verifiedChunkVariants)||0);
@@ -29,7 +30,7 @@ export function progressDiagnostic(snapshot){
   CONNESSIONE:'Le richieste a Gemini non sono riuscite. I checkpoint sono conservati; non ripetere tentativi identici senza diagnosi.',
   RISPOSTA_NON_VALIDA:'Una risposta Gemini non è valida. La parte è conservata come non verificata; le altre vengono elaborate, salvo errori ripetuti.',
   SORGENTE_DA_VERIFICARE:'Una o più pagine della fonte richiedono verifica prima della compressione.',
-  QUALITA:'La risposta Gemini non supera i vincoli di fedeltà o riduzione esatta. Le parti non verificate restano salvate come bozze.',
+  QUALITA:'Una risposta Gemini non supera i vincoli di fedeltà o riduzione esatta. La parte resta in bozza; le altre proseguono salvo errori ripetuti.',
   INTERROTTO:'Elaborazione interrotta: i checkpoint precedenti restano validi.',
   ATTESA:'Stato di elaborazione non conclusivo: verifica i dettagli.'
  };

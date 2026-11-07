@@ -10,12 +10,33 @@ export const exactRetained=(letters,percentage)=>Math.round(Math.max(0,letters)*
 export const percentReduced=(before,after)=>before>0?Math.round((1-after/before)*1000)/10:null;
 const stop=new Set(['La','Il','Lo','Gli','Le','Un','Uno','Una','In','Per','Nel','Nella','Questo',
   'Questa','Sono','Come','Quando','Articolo','Capitolo','Dopo','Prima','Tra','Con','Senza','Tale']);
+// LAB42: sentence-initial capitals and generic textbook headings are not
+// automatically proper names. Precise legal facts and recognized names stay
+// protected; semantic faithfulness remains checked by the separate guard.
+const GENERIC_CAPITALIZED_WORDS=new Set([
+  'Piuttosto','Distinzione','Tuttavia','Inoltre','Dunque','Infatti','Quindi',
+  'Pertanto','Viceversa','Comunque','Eppure','Anzitutto','Innanzitutto',
+  'Introduzione','Conclusione','Premessa','Approfondimento','Definizione',
+  'Esempio','Paragrafo','Sezione','Capitolo','Teoria','Concetto','Norma'
+]);
 export function coreAnchors(source){
-  const names=[...String(source||'').matchAll(/\b[\p{Lu}][\p{Ll}]{2,}\b/gu)]
-    .map(x=>x[0]).filter(x=>!stop.has(x));
-  const protectedFacts=extractProtectedItems(source)
+  const text=String(source||'');
+  const names=[...text.matchAll(/(?<!\p{L})\p{Lu}\p{Ll}{2,}(?!\p{L})/gu)]
+    .filter(hit=>{
+      const name=hit[0];
+      if(stop.has(name)||GENERIC_CAPITALIZED_WORDS.has(name))return false;
+      const before=text.slice(0,hit.index);
+      const sentenceStart=/(?:^|[.!?:;\n]\s*)$/u.test(before);
+      const after=text.slice(hit.index+name.length);
+      // Both members of "Kant e Bobbio" are real co-mentioned names.
+      const properPair=/^\s+(?:e|ed|o)\s+\p{Lu}\p{Ll}{2,}(?!\p{L})/u.test(after);
+      return !sentenceStart||properPair;
+    }).map(hit=>hit[0]);
+  const acronyms=[...text.matchAll(/(?<![\p{L}\p{N}])\p{Lu}{2,8}(?![\p{L}\p{N}])/gu)]
+    .map(hit=>hit[0]).filter(name=>!stop.has(name));
+  const protectedFacts=extractProtectedItems(text)
     .filter(x=>['legal-ref','date-number','deadline'].includes(x.kind)).map(x=>x.value);
-  return [...new Set([...protectedFacts,...names])].slice(0,20);
+  return [...new Set([...protectedFacts,...acronyms,...names])].slice(0,20);
 }
 export function allocateExactLetterBudgets(sourceChunks,percentage){
   const lengths=sourceChunks.map(studyLetters),total=lengths.reduce((a,b)=>a+b,0);

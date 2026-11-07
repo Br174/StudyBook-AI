@@ -277,11 +277,16 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
   let savedVariantsThisRun=0;
   let consecutiveFormatFailures=0;
   let consecutiveNetworkFailures=0;
+  let consecutiveQualityFailures=0;
   const adaptive=await runAdaptiveBatchQueue({
     // One request at a time; free-tier requests share quotas across keys.
     batches:pending.map(j=>[j]),initialConcurrency:1,
     maxConcurrency:1,
-    stopOnFailures:['AI_QUALITY_REVIEW','AI_MANUAL_RESTART','AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD',
+    stopOnFailures:[
+      // Preserve the legacy one-part stop; quarantine a single failed part
+      // only when there are other paragraphs that can still make progress.
+      ...(pending.length===1?['AI_QUALITY_REVIEW']:['AI_QUALITY_REVIEW_REQUIRED']),
+      'AI_MANUAL_RESTART','AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD',
       'AI_NOT_CONFIGURED','AI_PROVIDER_REJECTED','AI_SERVICE_ERROR',
       'AI_FORMAT_REVIEW_REQUIRED','AI_NETWORK_REVIEW_REQUIRED',
       ...(pending.length===1?['AI_TIMEOUT_OR_NETWORK','AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETWORK']:[])],
@@ -356,9 +361,15 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
                 (record.drafts[id].match(/\p{L}/gu)||[]).length:null,
               attempts:2};
             diagnostics.quality=detail;
+            record.lastFailure='AI_QUALITY_REVIEW';
+            consecutiveQualityFailures++;
             state.set(job.key,{...record});
             onActivity({phase:'quality-blocked',level:id});
-            return {job,record,aiFailure:'AI_QUALITY_REVIEW',quality:detail};
+            // Keep drafts unverified. Stop after three consecutively
+            // irreparable chunks to protect Gemini free-tier quota.
+            return {job,record,
+              aiFailure:pending.length>1&&consecutiveQualityFailures>=3
+                ?'AI_QUALITY_REVIEW_REQUIRED':'AI_QUALITY_REVIEW',quality:detail};
           }
           // Recomputing the entire book after every variant made large books freeze.
           savedVariantsThisRun++;
@@ -385,7 +396,8 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
         }
       }
       const valid=GEMINI_LEVELS.every(id=>record.verified[id]===true);
-      if(valid){consecutiveFormatFailures=0;consecutiveNetworkFailures=0;record.lastFailure=null;}
+      if(valid){consecutiveFormatFailures=0;consecutiveNetworkFailures=0;
+        consecutiveQualityFailures=0;record.lastFailure=null;}
       return {job,record,aiSuccess:valid,aiFailure:valid?null:
         (semanticFailure?'SEMANTIC_REVIEW':'EDITION_INCOMPLETE')};
     },
@@ -422,7 +434,8 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     final.quota=await readGeminiPause();
     final.status=final.quota?.automatic?'quota-paused':'quota-review';
   }
-  if(adaptive.haltedOn==='AI_QUALITY_REVIEW')final.status='quality-review';
+  if(['AI_QUALITY_REVIEW','AI_QUALITY_REVIEW_REQUIRED'].includes(adaptive.haltedOn))
+    final.status='quality-review';
   if(adaptive.haltedOn==='AI_MANUAL_RESTART')final.status='interrupted';
   if(adaptive.haltedOn==='AI_NOT_CONFIGURED')final.status='ai-unavailable';
   if(['AI_PROVIDER_REJECTED','AI_SERVICE_ERROR','AI_TIMEOUT_OR_NETWORK',
