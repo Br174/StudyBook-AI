@@ -31,12 +31,13 @@ jobs:
           node scripts/test-worker-lab44-model31-routing.mjs
           node scripts/test-lab44-503-429-backoff.mjs
           node scripts/test-lab43-real-pillar.mjs
+      - name: Build web bundle required by Cloudflare Scudo360 tests
+        run: npm run build
       - name: MotorLab Scudo360 mandatory Worker gate
         run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-worker31-report.json
       - name: Check isolated Worker config before provider quota is used
         run: |
           set -euo pipefail
-          npm run build
           npx wrangler deploy --dry-run --config wrangler.lab44-model31.jsonc
           node --input-type=module <<'NODE'
           import assert from 'node:assert/strict';
