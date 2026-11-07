@@ -119,6 +119,33 @@ try{
  assert.equal((await generateDraftFirstV57({...book,editionsV36:recovered})).complete,true);
  assert.equal(accidental,0,'fully verified checkpoint never regenerates content');
 
+ // A real legacy checkpoint can have several exhausted pages. Recovering
+ // only page 17 would leave page 18 blocked forever. Re-arm both ONCE,
+ // in source order, without touching unrelated attempts or 264 drafts.
+ const multiBook=makeBook('d');
+ const multiCheckpoint=structuredClone(stopped);
+ multiCheckpoint.sourceFingerprint='d'.repeat(64);
+ multiCheckpoint.draftRowsV57[2][4].editions.summary=bad;
+ multiCheckpoint.repairAttemptsV57['summary:18-18']=3;
+ multiCheckpoint.repairAttemptsV57['summary:20-20']=2;
+ const multiCalls=[];
+ globalThis.fetch=async(_url,opts)=>{
+   const req=JSON.parse(opts.body);
+   multiCalls.push({phase:req.phase,level:req.level,
+     pages:req.units.map(u=>u.pageStart)});
+   return response(req,false);
+ };
+ const allRecovered=await generateDraftFirstV57({
+   ...multiBook,editionsV36:multiCheckpoint});
+ assert.equal(allRecovered.complete,true,
+   'both legacy exhausted pages must be recoverable in one bounded request');
+ assert.deepEqual(allRecovered.diagnostics.qualityRecoveryV62?.recoveredPages,[17,18]);
+ assert.deepEqual(multiCalls,[{phase:'repair',level:'summary',pages:[17,18]}],
+   'two adjacent blocked original pages, no repeat of draft stage');
+ assert.equal(allRecovered.repairAttemptsV57['summary:20-20'],2,
+   'unrelated non-exhausted attempts remain preserved');
+ assert.deepEqual(counts(multiBook,allRecovered),[44,44,44,44,44,44]);
+
  // An independent source hash isolates this negative-test cache from the
  // successful recovery above; otherwise cached page17 would preempt the test.
  const blockedBook=makeBook('b');

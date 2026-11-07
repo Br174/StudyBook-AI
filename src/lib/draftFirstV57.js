@@ -295,11 +295,17 @@ function restoreExhaustedQualityV62(previous,fp,units,rows,reviews,attempts){
  const issues=reviews[level];
  const bad=semanticIssuePagesV61(issues);
  const ordered=bad.length?bad:numericReservedPagesV61(units,issues,level,rows);
- const page=ordered.find(p=>(Number(attempts[attemptKeyV61(level,p)])||0)>=MAX_REPAIR_ATTEMPTS_V61);
- const evidence={policy:'focused-v62',level,page:page||null,
-   previousAttempts:page?Number(attempts[attemptKeyV61(level,page)]):0,
-   resetOnce:page!==undefined};
- if(page!==undefined)attempts[attemptKeyV61(level,page)]=0;
+ // Re-arm every exhausted LEGACY page of this edition once, otherwise
+ // correcting page 17 merely moves the permanent barrier to page 18.
+ // Source-order selection, per-page limits and at-most-four calls per session
+ // still control actual Gemini traffic. No later reopen on app relaunch.
+ const pages=ordered.filter(p=>(Number(attempts[attemptKeyV61(level,p)])||0)>=MAX_REPAIR_ATTEMPTS_V61);
+ const first=pages[0]??null;
+ const evidence={policy:'focused-v62',level,page:first,
+   recoveredPages:pages,
+   previousAttempts:first!==null?Number(attempts[attemptKeyV61(level,first)]):0,
+   resetOnce:pages.length>0};
+ for(const page of pages)attempts[attemptKeyV61(level,page)]=0;
  return evidence;
 }
 export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=()=>{},signal=null}={}){
