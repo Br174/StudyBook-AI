@@ -18,3 +18,15 @@
 .sb-mirror-lightbox{position:fixed;inset:0;z-index:9999;background:#0b1524ec;padding:24px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff}
 .sb-mirror-lightbox button{align-self:flex-end;min-height:44px;border-radius:8px;border:1px solid #dae6ff;padding:7px 14px;background:#edf2fc;color:#172d4c}
 .sb-mirror-lightbox img{max-width:100%;max-height:80vh;object-fit:contain}
+
+/* LAB49: the simple explanation is a transient live Gemini view of this page.
+   Scrolling remains inside the page viewport; never change book pagination. */
+.sb-simple-live-answer{display:flex;flex-direction:column;gap:12px;line-height:1.7;
+  font-size:clamp(13px,3.2vw,16px);color:#18334d;overflow-wrap:anywhere;}
+.sb-simple-live-answer strong{font-size:1.07em;color:#1766a8}
+.sb-simple-live-answer p{white-space:pre-wrap;margin:0 0 8px}
+.sb-simple-live-loading,.sb-simple-live-error{padding:11px 12px;
+  border:1px solid #c4dcec;border-radius:12px;background:#eaf5ff;
+  color:#174d72;line-height:1.5;overflow-wrap:anywhere}
+.sb-simple-live-error{background:#fff8ed;border-color:#ead3a0;color:#77510e}
+.sb-mirror-content{min-height:0}
