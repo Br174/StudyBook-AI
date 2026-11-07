@@ -24,10 +24,26 @@ function parseReply(raw){
     .replace(new RegExp('\\s*'+fence+'$'),'');
   try{return JSON.parse(text);}catch{return null;}
 }
-function instructions(level,target,cap){
+function instructions(level,target,cap,phase='repair'){
+  const creation=phase==='draft';
   const limit=level==='summary'
     ?'La somma delle lettere alfabetiche dei testi restituiti deve essere AL MASSIMO '+cap+'. Il riassunto deve essere più breve dell’edizione al 50%.'
     :'La somma delle lettere Unicode alfabetiche delle risposte deve essere ESATTAMENTE '+target+'. Spazi e punteggiatura non contano. La riduzione globale è '+level+'%.';
+  if(creation)return [
+    'Sei StudyBook AI, generatore di bozze didattiche. Usa SOLO il testo originale integrale.',
+    'FASE 1 DI 2: CREA E SALVA IL TESTO. Non eseguire controlli o correzioni.',
+    'Restituisci JSON con parts {id,text} per ogni id ricevuto, nello stesso ordine.',
+    'Questi paragrafi saranno ricomposti come pagine originali dopo la generazione.',
+    'Conserva concetti, negazioni, eccezioni, riferimenti, condizioni e nomi; non inventare.',
+    'Prosa italiana semplice e scorrevole, senza immagini, segnaposti o istruzioni tecniche.',
+    'Riduzione richiesta: '+(level==='summary'?'riassunto più breve del 50%':
+      String(level)+'% rispetto all’originale')+'.',
+    'Obiettivo globale orientativo di lettere per QUESTO BLOCCO: '+
+      (level==='summary'?cap:target)+
+      '. Evita tagli ai concetti per rispettare una quota numerica.',
+    'NON imporre quote esatte ai singoli paragrafi. NON correggere o rifiutare testi.',
+    'Restituisci soltanto JSON conforme allo schema.'
+  ].join('\n');
   return [
     'Sei il motore didattico di StudyBook AI. Utilizza il testo originale integrale, NON altre riduzioni.',
     'Riceverai un insieme ordinato di paragrafi, già raggruppati per pagine o capitoli COMPLETI.',
@@ -126,7 +142,8 @@ export default async function handler(req,res){
   }
   const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),
     units:safe,repair:byId.size>0});
-  const messages=[{role:'system',content:instructions(level,target,cap)},{role:'user',content:user}];
+  const phase=req.body?.phase==='draft'?'draft':'repair';
+  const messages=[{role:'system',content:instructions(level,target,cap,phase)},{role:'user',content:user}];
   const outputTokens=bounded(req.body?.maxOutputTokens,4096,OUTPUT_LIMIT,OUTPUT_LIMIT);
   const controller=new AbortController();
   const timeoutMs=bounded(req.body?.timeoutMs,55000,220000,180000);
