@@ -10,6 +10,7 @@ import {makeRuntimeUnitKey,chooseRuntimeConcurrency,runAdaptiveBatchQueue,runtim
 import {STUDY_PILLAR_VERSION,STUDY_PERCENTAGES,allocateExactLetterBudgets,
   inspectProgressiveEdition} from './studyPillarV38.js';
 import {progressDiagnostic} from './geminiRecoveryV39.js';
+import {generateIntegralEditionsV51} from './generativeIntegralV51.js';
 import {restoreMissingTerminalPunctuation} from './studyEditionRepairV45.js';
 
 export const GEMINI_LEVELS=['10','20','30','40','50','summary'];
@@ -485,6 +486,10 @@ async function generateGeminiEditionsPassV46(book,{onProgress=()=>{},onActivity=
 // A whole completed reduction is available before any request for the next.
 export async function generateGeminiEditionsV36(book,options={}){
   const pillar=book?.studyPillarV38===STUDY_PILLAR_VERSION;
+  // LAB51: one verified whole-page/chapter generator owns new pillar books.
+  // Historical non-pillar books retain read-only compatibility without
+  // competing with the new runtime path.
+  if(pillar)return generateIntegralEditionsV51(book,options);
   if(!pillar)return generateGeminiEditionsPassV46(book,options);
   const levels=['summary','50','40','30','20','10'];
   let last=null;
