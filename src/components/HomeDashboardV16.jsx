@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StudyIcon } from './StudyUiIcons.jsx';
 import '../appShellV16.css';
+import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
 
 const titleOf = name => String(name || 'Documento').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
 export function HomeDashboardV16({
@@ -9,6 +10,7 @@ export function HomeDashboardV16({
   onOpenOriginal, onContinueBook, onViewAll, documentData, fileName,
   scanContent, onCreateBook, progressPercent, workPhase='idle',homeAction='create',
   resumeCandidate = null, resumeBusy = false, onResumeProcessing = () => {},
+  currentBookId='',acquisitionProgress=null,
 }) {
   const strip = useRef(null);
   const [photoUrls, setPhotoUrls] = useState({});
@@ -44,6 +46,15 @@ export function HomeDashboardV16({
   // LAB17: durante le scansioni, dedicare tutta l'area al documento:
   // il carosello Recenti (con le piccole anteprime a icona) non deve
   // invadere le informazioni o i comandi dello scanner.
+  const progressBookId=importing?acquisitionProgress?.id:
+    (generating?currentBookId:(resumeCandidate?.id||currentBookId));
+  const progressBook=libraryItems.find(item=>item.id===progressBookId);
+  const physical=bookAcquisitionProgressV46(progressBook?.metadata,
+    importing&&acquisitionProgress?.id===progressBookId?acquisitionProgress:null);
+  const activeTitle=(importing||generating)?titleOf(fileName):
+    titleOf(resumeCandidate?.fileName||fileName);
+  const coverUrl=progressBook?.coverCustom||progressBook?.coverOriginal||
+    progressBook?.coverAI||progressBook?.coverUrl||null;
   const scannerActive = Boolean(scanContent);
   return <section className={scannerActive ? 'sb-screen sb-home-screen sb-home-v16 sb-home-scanning' : 'sb-screen sb-home-screen sb-home-v16'}>
     <div className="sb-home-primary">
@@ -69,24 +80,43 @@ export function HomeDashboardV16({
           ? 'Preparazione del documento, non ancora elaborazione IA · '+status
           : 'Elaborazione Gemini in corso · '+status}
       </p>}
-      {(generating || resumeCandidate) && <div className="sb-resume-panel" role="region" aria-label="Ripresa elaborazione del libro">
-        <div>
-          <strong>{generating ? titleOf(fileName) : (resumeCandidate?.fileName ? titleOf(resumeCandidate.fileName) : titleOf(fileName))}</strong>
-          <small>{generating
-            ? (workPhase==='preparing'?'Sto preparando la struttura. I risultati IA arriveranno dopo.'
-              :'Elaborazione Gemini avviata. Aprire il libro non interrompe la generazione.')
-            :resumeCandidate?.total > 0
-              ? String(resumeCandidate.done || 0)+'/'+resumeCandidate.total+' parti IA conservate'
-              : 'La ripresa verifica i checkpoint già salvati'}</small>
-          {!generating && resumeCandidate?.diagnostic?.description &&
-            <small role="status">{resumeCandidate.diagnostic.description}</small>}
+      {(importing || generating || resumeCandidate) && <div className="sb-resume-panel sb-resume-panel-v46" role="region" aria-label="Pagine del libro e stato elaborazione">
+        <div className="sb-download-book-row">
+          <span className="sb-download-book-cover">
+            {coverUrl?<img src={coverUrl} alt={'Copertina di '+activeTitle}/>:
+              <StudyIcon name="book" size={31}/>}
+          </span>
+          <div className="sb-download-book-content">
+            <strong>{activeTitle}</strong>
+            <small>Pagine totali: {physical.total||'in rilevamento'}</small>
+            <small>Pagine acquisite: {physical.total?physical.acquired+' / '+physical.total:'in rilevamento'}</small>
+            <div className="sb-download-percent-label">
+              <span>Scaricamento / acquisizione</span>
+              <b>{physical.percent===null?'–':physical.percent+'%'}</b>
+            </div>
+            <div className="sb-download-progress-track" role="progressbar"
+              aria-valuemin={0} aria-valuemax={100} aria-valuenow={physical.percent??0}
+              aria-label="Avanzamento delle pagine acquisite">
+              <span style={{width:(physical.percent??0)+'%'}}/>
+            </div>
+          </div>
         </div>
-        <button type="button" onClick={onResumeProcessing}
-          disabled={resumeBusy || (generating && workPhase==='preparing')}>
+        {!importing && <div className="sb-resume-ia-details">
+          <small>{generating
+            ? (workPhase==='preparing'?'Sto preparando la struttura del libro.'
+              :'Elaborazione Gemini in corso; le pagine originali restano disponibili.')
+            :resumeCandidate?.total>0
+              ? String(resumeCandidate.done||0)+' / '+resumeCandidate.total+' parti IA conservate'
+              :'Verifica dei checkpoint IA conservati'}</small>
+          {!generating&&resumeCandidate?.diagnostic?.description &&
+            <small role="status">{resumeCandidate.diagnostic.description}</small>}
+        </div>}
+        {!importing&&<button type="button" onClick={onResumeProcessing}
+          disabled={resumeBusy||(generating&&workPhase==='preparing')}>
           {resumeBusy?'Recupero in corso…':generating
             ?(workPhase==='preparing'?'Preparazione in corso':'Apri libro in elaborazione')
             :'Riprendi elaborazione'}
-        </button>
+        </button>}
       </div>}
       {scanContent}
       {!scanContent && !documentData && !generating && !resumeCandidate && <div className="sb-home-placeholder"><StudyIcon name="document" size={44}/><strong>Qui presto nuove funzionalità</strong><p>Scannerizza, elabora e organizza i tuoi appunti in un unico posto.</p></div>}
