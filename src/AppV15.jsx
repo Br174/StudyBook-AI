@@ -30,7 +30,6 @@ import {studyHomeAction,sameStoredDocument} from './lib/studyHomeFlowV38.js';
 import {progressDiagnostic} from './lib/geminiRecoveryV39.js';
 import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
 import { planStudyAutoResumeV45,autoResumeWakeDecisionV54,autoResumeNextWakeMsV54 } from './lib/studyAutoResumeV45.js';
-import { studyPageProgressV48 } from './lib/studyPageProgressV48.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
 import { reacquireFromSavedPdf } from './lib/sourceRecoveryV34.js';
@@ -1213,10 +1212,10 @@ export default function AppV14() {
           setStudyBook(generatedDraft);
           setProgress({done:snapshot.verifiedChunkVariants||0,total:snapshot.totalChunkVariants||1});
           setStatus(snapshot.phase==='draft'
-            ?'Creazione libro · '+(snapshot.draftUnitsSaved||0)+'/'+(snapshot.draftUnitsTotal||0)+' bozze salvate · verifica solo dopo il completamento'
+            ?'Compressione delle sei versioni · bozze salvate man mano, verifica successiva'
             :snapshot.phase==='repair'
-              ?'Correzione mirata delle pagine · '+(snapshot.verifiedChunkVariants||0)+' risultati già verificati'
-              :'Verifica libro completo · '+(snapshot.verifiedChunkVariants||0)+'/'+(snapshot.totalChunkVariants||0)+' parti approvate');
+              ?'Verifica e correzione mirata delle pagine'
+              :'Verifica del libro · controllo di qualità delle sei versioni');
           // Save progress occasionally, never let concurrent IndexedDB writers race.
           if(lab36BookId && (
               (snapshot.draftUnitsSaved||0)>savedDrafts ||
@@ -1354,10 +1353,10 @@ export default function AppV14() {
         setStudyBook(draft);
         setProgress({done:update.verifiedChunkVariants||0,total:update.totalChunkVariants||1});
         setStatus(update.phase==='draft'
-          ?'Creazione bozze · '+(update.draftUnitsSaved||0)+'/'+(update.draftUnitsTotal||0)+' unità salvate'
+          ?'Compressione delle sei versioni · bozze conservate'
           :update.phase==='repair'
-            ?'Correzioni mirate · bozze complete conservate'
-            :'Verifica libro completo · '+(update.verifiedChunkVariants||0)+'/'+(update.totalChunkVariants||0)+' unità approvate');
+            ?'Verifica e correzione mirata · bozze complete conservate'
+            :'Verifica del libro completo · pagine approvate per versione');
         const count=update.verifiedChunkVariants||0;
         if(targetId&&(count>savedVerified||(update.draftUnitsSaved||0)>savedDrafts)){
           savedVerified=count;
@@ -2082,10 +2081,7 @@ export default function AppV14() {
           resumeCandidate={resumeCandidate} resumeBusy={resumeBusy} geminiStalled={geminiStalled}
           resumeEdition={studyBook?.editionsV36?.complete===false
             ?studyBook.editionsV36:resumeCandidate?.edition||null}
-          studyPageProgress={studyBook?.editionsV36 ? studyPageProgressV48(studyBook,studyBook.editionsV36.activeLevel||'summary') : null}
-          iaProgress={generating&&workPhase==='gemini' ? progress : studyBook?.editionsV36
-            ? {done:studyBook.editionsV36.verifiedChunkVariants,total:studyBook.editionsV36.totalChunkVariants}
-            : resumeCandidate ? {done:resumeCandidate.done,total:resumeCandidate.total} : null}
+          progressStudyBook={studyBook}
           onResumeProcessing={()=>generating ? navigateTo('studio') : void resumeFromHome()}
           onManualRecovery={()=>generating
             ? (geminiStalled ? requestActiveGeminiRecovery() : setStatus('Gemini sta già lavorando · nessuna richiesta duplicata'))

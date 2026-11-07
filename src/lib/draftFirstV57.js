@@ -18,6 +18,7 @@ import {publishSequentialPagesV51} from './pagePublicationV51.js';
 import {studyLetters,percentReduced,exactRetained} from './studyPillarV38.js';
 import {auditFidelity,auditProgressiveConcepts} from './fidelityEngine.js';
 import {repairFocusForUnitV56} from './editionRepairV53.js';
+import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 
 const LEVELS=['summary','50','40','30','20','10'];
 const CACHE='integral-v57-draft-first',VERSION='lab38-progressive-editions-v1';
@@ -216,7 +217,7 @@ function selectedRepairPages(units,issues,level){
  return {pages:[...problemPages],units:matched};
 }
 export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=()=>{},signal=null}={}){
- const units=bookUnitsV51(book),fp=fingerprint(book),previous=book.editionsV36;
+ const units=orderSourceUnitsV59(bookUnitsV51(book)),fp=fingerprint(book),previous=book.editionsV36;
  const {rows,drafts}=gridFrom(book,previous,fp);
  const diagnostics={mode:'draft-first-v57',requestsSent:0,draftRequests:0,
    repairRequests:0,rawDraftsSaved:0,providerErrors:0,splits:0,errorsByCode:{},

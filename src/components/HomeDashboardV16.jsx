@@ -3,6 +3,7 @@ import { StudyIcon } from './StudyUiIcons.jsx';
 import '../appShellV16.css';
 import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
 import {geminiResumeDisplayV55} from '../lib/studyAutoResumeV45.js';
+import StudyPhaseProgressV59 from './StudyPhaseProgressV59.jsx';
 
 const titleOf = name => String(name || 'Documento').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
 export function HomeDashboardV16({
@@ -11,7 +12,7 @@ export function HomeDashboardV16({
   onOpenOriginal, onContinueBook, onViewAll, documentData, fileName,
   scanContent, onCreateBook, progressPercent, workPhase='idle',homeAction='create',
   resumeCandidate = null, resumeBusy = false, resumeEdition = null, onResumeProcessing = () => {},
-  onManualRecovery = () => {}, iaProgress = null, studyPageProgress = null, geminiStalled = false,
+  onManualRecovery = () => {}, progressStudyBook = null, geminiStalled = false,
   currentBookId='',acquisitionProgress=null,
 }) {
   const strip = useRef(null);
@@ -58,10 +59,6 @@ export function HomeDashboardV16({
   const coverUrl=progressBook?.coverCustom||progressBook?.coverOriginal||
     progressBook?.coverAI||progressBook?.coverUrl||null;
   const scannerActive = Boolean(scanContent);
-  // IA variants are NOT PDF pages. Never display acquisition 100% as IA completion.
-  const iaTotal = Math.max(0,Number(iaProgress?.total||resumeCandidate?.total||0));
-  const iaDone = Math.min(iaTotal,Math.max(0,Number(iaProgress?.done??resumeCandidate?.done??0)));
-  const iaPercent = iaTotal ? Math.round((iaDone / iaTotal)*10000)/100 : null;
   const resumeWait=geminiResumeDisplayV55(resumeEdition||resumeCandidate?.edition);
 
   return <section className={scannerActive ? 'sb-screen sb-home-screen sb-home-v16 sb-home-scanning' : 'sb-screen sb-home-screen sb-home-v16'}>
@@ -97,35 +94,18 @@ export function HomeDashboardV16({
           <div className="sb-download-book-content">
             <strong>{activeTitle}</strong>
             <small>Pagine totali: {physical.total||'in rilevamento'}</small>
-            <small>Pagine scaricate: {physical.total?physical.acquired+' / '+physical.total:'in rilevamento'}</small>
-            <div className="sb-download-percent-label">
-              <span>Scaricamento</span>
-              <b>{physical.percent===null?'–':physical.percent+'%'}</b>
-            </div>
-            <div className="sb-download-progress-track" role="progressbar"
-              aria-valuemin={0} aria-valuemax={100} aria-valuenow={physical.percent??0}
-              aria-label="Avanzamento delle pagine acquisite">
-              <span style={{width:(physical.percent??0)+'%'}}/>
-            </div>
-            {!importing && <div className="sb-ia-inline-progress" aria-label="Avanzamento effettivo dell'elaborazione Gemini">
-              <strong>Studio IA: {iaTotal ? iaDone+' / '+iaTotal+' parti verificate' : 'verifica checkpoint'}</strong>
-              <div className="sb-download-percent-label"><span>Elaborazione IA</span><b>{iaPercent===null?'–':iaPercent.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'}</b></div>
-              <div className="sb-download-progress-track sb-ia-progress-track" role="progressbar"
-                aria-valuenow={iaPercent??0} aria-valuemin={0} aria-valuemax={100} aria-label="Percentuale delle parti IA verificate">
-                <span style={{width:(iaPercent??0)+'%'}}/>
-              </div>
-              {studyPageProgress?.mappedPages>0 && <small>Fogli di studio verificati ({studyPageProgress.level==='summary'?'Riassunto':studyPageProgress.level}): {studyPageProgress.verifiedPages}/{studyPageProgress.mappedPages} pagine con testo · {studyPageProgress.percent}%</small>}
-              <small>{geminiStalled?'Richiesta senza avanzamenti: recupero manuale disponibile':generating?'Gemini sta elaborando o attendendo il provider':'Checkpoint salvati: ripresa disponibile'}</small>
-            </div>}
+            {(importing||generating||progressStudyBook)
+              ? <StudyPhaseProgressV59
+                  book={importing||workPhase==='preparing'?null:progressStudyBook}
+                  acquisition={{done:physical.acquired,total:physical.total}} />
+              : <small>Apri il libro per consultare la compressione e la verifica delle singole pagine.</small>}
           </div>
         </div>
         {!importing && <div className="sb-resume-ia-details">
           <small>{generating
             ? (workPhase==='preparing'?'Sto preparando la struttura del libro.'
               :'Elaborazione Gemini in corso; le pagine originali restano disponibili.')
-            :resumeCandidate?.total>0
-              ? String(resumeCandidate.done||0)+' / '+resumeCandidate.total+' parti IA conservate'
-              :'Verifica dei checkpoint IA conservati'}</small>
+            :'Checkpoint di compressione e verifica conservati'}</small>
           {!generating&&resumeCandidate?.diagnostic?.description &&
             <small role="status">{resumeCandidate.diagnostic.description}</small>}
           {!generating&&resumeWait.label&&

@@ -6,7 +6,7 @@ import ScannerArchive from './ScannerArchive.jsx';
 import SimplePagesLibraryV50 from './SimplePagesLibraryV50.jsx';
 import {progressDiagnostic} from '../lib/geminiRecoveryV39.js';
 import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
-import {studyPageProgressV48} from '../lib/studyPageProgressV48.js';
+import StudyPhaseProgressV59 from './StudyPhaseProgressV59.jsx';
 import {geminiResumeDisplayV55} from '../lib/studyAutoResumeV45.js';
 import '../appShellV16.css';
 
@@ -469,11 +469,6 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
           &&studyBook.editionsV36.rows.every(ch=>ch.every(p=>p?.verified?.[id]===true)),
       })) : [];
   const sourceChapters = sourceData?.chapters || [];
-  const iaTotal=Math.max(0,Number(studyBook?.editionsV36?.totalChunkVariants||0));
-  const iaDone=Math.min(iaTotal,Math.max(0,Number(studyBook?.editionsV36?.verifiedChunkVariants||0)));
-  const iaPercent=iaTotal?Math.round(iaDone/iaTotal*10000)/100:null;
-  const pageTotal=Number(sourceData?.structure?.pageCount||studyBook?.canonicalBookMap?.pageCount||0);
-  const studyPageProgress=studyPageProgressV48(studyBook,studyBook?.editionsV36?.activeLevel||'summary');
   const canPrepare = sourceChapters.some(chapter => chapter.paragraphs?.length);
   return (
     <section className="sb-screen sb-studio-screen">
@@ -502,13 +497,8 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             <small>STAI LAVORANDO SU</small>
             <h2>{stripExtension(fileName)}</h2>
             <button type="button" className="sb-studio-rename" onClick={()=>setRenameOpen(true)}>✎ Rinomina libro</button>
-            {!isOriginalOnly && studyBook?.editionsV36 && <div className="sb-studio-inline-progress" aria-label="Pagine originali e verifica Gemini">
-              <small>Pagine originali: {pageTotal||'da rilevare'} / {pageTotal||'da rilevare'} · PDF acquisito</small>
-              <strong>Studio IA: {iaDone}/{iaTotal||'…'} parti verificate · {iaPercent===null?'–':iaPercent.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'}</strong>
-              {studyPageProgress.mappedPages>0&&<small>Fogli di studio verificati ({studyPageProgress.level==='summary'?'Riassunto':studyPageProgress.level}): {studyPageProgress.verifiedPages}/{studyPageProgress.mappedPages} pagine con testo · {studyPageProgress.percent}%</small>}
-              <div className="sb-download-progress-track sb-ia-progress-track" role="progressbar"
-                aria-label="Parti IA realmente verificate" aria-valuemin={0} aria-valuemax={100}
-                aria-valuenow={iaPercent??0}><span style={{width:(iaPercent??0)+'%'}}/></div>
+            {!isOriginalOnly && studyBook && <div className="sb-studio-inline-progress" aria-label="Avanzamento per pagine fisiche">
+              <StudyPhaseProgressV59 book={studyBook} acquisition={{done:sourceData?.structure?.pageCount||studyBook?.canonicalBookMap?.pageCount||0,total:sourceData?.structure?.pageCount||studyBook?.canonicalBookMap?.pageCount||0}} />
               {v36Partial && resumeWait.label &&
                 <small className="sb-gemini-wait-note" role="status">{resumeWait.label}</small>}
               {v36Partial && <button type="button" className="sb-resume-manual"
@@ -564,15 +554,8 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         </p>}
         {generating && <p>Elaborazione Gemini attiva · {status||'checkpoint in corso'}.
           Può consultare le parti già verificate senza interrompere la generazione.</p>}
-        <p>ANTEPRIMA PARZIALE · {studyBook.editionReadiness.verifiedParagraphs}/{studyBook.editionReadiness.totalParagraphs} paragrafi completi. {studyBook.editionsV36?.verifiedVariants||0}/{studyBook.editionsV36?.totalVariants||0} varianti intere verificate.</p>
-        <p><strong>Può iniziare a studiare:</strong> {studyBook.editionReadiness.readableParagraphs||0} paragrafi consultabili nella riduzione selezionata, compresi {studyBook.editionReadiness.verifiedPreviewFragments||0} frammenti verificati di paragrafi lunghi. Le parti mancanti restano marcate «in elaborazione»; nessuna bozza non verificata è pubblicata.</p>
-        <p>Il PDF e il download del libro rielaborato completo restano disponibili soltanto dopo la verifica finale.</p>
-        {Number.isFinite(studyBook.editionsV36?.totalChunkVariants) &&
-          studyBook.editionsV36.totalChunkVariants>0 && <p>
-            Parti IA verificate: {studyBook.editionsV36.verifiedChunkVariants||0}/
-            {studyBook.editionsV36.totalChunkVariants}.
-            I paragrafi lunghi compaiono come completi solo quando tutte le loro parti sono verificate.
-          </p>}
+        <p>ANTEPRIMA PARZIALE · le pagine già verificate restano consultabili; nessuna bozza non verificata è pubblicata.</p>
+        <p>Il PDF e il download del libro completo saranno disponibili dopo la verifica finale.</p>
         {studyBook.editionsV36?.diagnostics?.sourceBlocked>0 && <p>
           {studyBook.editionsV36.diagnostics.sourceBlocked} parti del documento
           richiedono verifica della pagina originale. Le altre parti sicure vengono elaborate.
