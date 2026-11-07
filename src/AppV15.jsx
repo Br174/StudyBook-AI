@@ -29,6 +29,7 @@ import {STUDY_PILLAR_VERSION} from './lib/studyPillarV38.js';
 import {studyHomeAction,sameStoredDocument} from './lib/studyHomeFlowV38.js';
 import {progressDiagnostic} from './lib/geminiRecoveryV39.js';
 import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
+import { planStudyAutoResumeV45 } from './lib/studyAutoResumeV45.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
 import { reacquireFromSavedPdf } from './lib/sourceRecoveryV34.js';
@@ -224,6 +225,7 @@ export default function AppV14() {
   const scanOcrCancelledRef = useRef(new Set());
   const scannerRestoreStartedRef = useRef(false);
   const screenHistoryRef = useRef([]);
+  const qualityAutoResumeRef = useRef({fingerprint:'',verified:-1,stalledAttempts:0});
 
   const paragraphCount = useMemo(() => countParagraphs(documentData?.chapters), [documentData]);
   const scanReadyCount = useMemo(
@@ -244,29 +246,38 @@ export default function AppV14() {
     hasSavedIncomplete:Boolean(resumeCandidate),
   });
 
-  // Foreground-only scheduled resume. Android may suspend the app when closed;
-  // the persisted checkpoint and cooldown survive reopening without a paid job.
+  // LAB45: one bounded foreground owner for BOTH quota and recoverable quality
+  // stops. A new verified fragment resets the no-progress budget. No invisible
+  // endless retries, no requests before the provider's allowed retry time.
   useEffect(() => {
     const editions=studyBook?.editionsV36;
-    const pause=editions?.quota;
-    if(activeScreen!=='studio'||generating||!pause?.automatic||editions?.complete)return;
-    const due=Date.parse(pause.retryAt||'');
-    if(!Number.isFinite(due))return;
+    if(activeScreen!=='studio'||generating||!editions||editions.complete)return;
+    const progress=Number(editions.verifiedChunkVariants)||0;
+    const fingerprint=String(libraryId||'')+':'+String(editions.sourceFingerprint||'');
+    const state=qualityAutoResumeRef.current;
+    if(state.fingerprint!==fingerprint||progress>state.verified){
+      state.fingerprint=fingerprint;
+      state.verified=progress;
+      state.stalledAttempts=0;
+    }
+    const plan=planStudyAutoResumeV45(editions,Date.now(),state.stalledAttempts);
+    if(!plan)return;
     let fired=false;
     const tryResume=()=>{
-      if(fired||Date.now()<due)return;
+      if(fired||Date.now()<plan.at)return;
       if(typeof document!=='undefined'&&document.visibilityState==='hidden')return;
       fired=true;
+      if(plan.reason==='quality-continue')state.stalledAttempts++;
       void resumeGeminiEditions();
     };
-    const wait=Math.min(2**31-1,Math.max(0,due-Date.now()));
-    const timer=setTimeout(tryResume,wait);
+    const timer=setTimeout(tryResume,Math.min(2**31-1,Math.max(0,plan.at-Date.now())));
     if(typeof document!=='undefined')document.addEventListener('visibilitychange',tryResume);
     return ()=>{
       clearTimeout(timer);
       if(typeof document!=='undefined')document.removeEventListener('visibilitychange',tryResume);
     };
-  },[activeScreen,generating,libraryId,studyBook?.editionsV36?.status,
+  },[activeScreen,generating,libraryId,studyBook?.editionsV36?.updatedAt,
+    studyBook?.editionsV36?.status,studyBook?.editionsV36?.verifiedChunkVariants,
     studyBook?.editionsV36?.quota?.retryAt,studyBook?.editionsV36?.quota?.automatic]);
 
   function navigateTo(nextScreen, { replace = false } = {}) {
@@ -1129,8 +1140,8 @@ export default function AppV14() {
           setProgress({done:snapshot.verifiedChunkVariants||0,total:snapshot.totalChunkVariants||1});
           setStatus('Libro Specchio · Gemini · '+(snapshot.verifiedChunkVariants||0)+'/'+(snapshot.totalChunkVariants||0)+' parti IA verificate · checkpoint');
           // Save progress occasionally, never let concurrent IndexedDB writers race.
-          if(lab36BookId && (snapshot.verifiedCells||0)-savedVerified>=10){
-            savedVerified=snapshot.verifiedCells||0;
+          if(lab36BookId && (snapshot.verifiedChunkVariants||0)-savedVerified>=6){
+            savedVerified=snapshot.verifiedChunkVariants||0;
             const copy=generatedDraft;
             checkpointTail=checkpointTail.then(()=>saveLibraryBook({
               id:lab36BookId,fileName:sourceName,sourceData,studyBook:copy,
