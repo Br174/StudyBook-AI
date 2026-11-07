@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {anchorPageEntriesV48} from '../src/lib/pageAnchorsV48.js';
+import {studyPageProgressV48} from '../src/lib/studyPageProgressV48.js';
 import {buildCanonicalBookMap,composeMirrorPages,auditMirrorAgainstSource,continuationLabel}
   from '../src/lib/libroSpecchioV35.js';
 
@@ -67,6 +68,18 @@ assert.equal(continuationLabel('12',2),'12 tris');
 
 // A title-only source page has literal source text, not a duplicate generated heading.
 const frontmatter={physicalPage:1,text:'Capitolo unico',textLineGeometry:[{topPt:82}]};
+const progressBook={...book,editionsV36:{activeLevel:'summary',rows:[
+  [{verified:{summary:true}}],
+  [{verified:{summary:false}},{verified:{summary:true}}],
+]}};
+const progressPages=studyPageProgressV48(progressBook,'summary');
+assert.equal(progressPages.originalPageCount,3);
+assert.equal(progressPages.mappedPages,3);
+assert.equal(progressPages.verifiedPages,2,'One failed paragraph must not certify its source page');
+assert.equal(progressPages.percent,66.67);
+assert.equal(studyPageProgressV48(progressBook,'50').verifiedPages,0,
+  'A completed summary must never certify the 50 percent edition');
+
 const noBody=anchorPageEntriesV48(frontmatter,{chapters:[{title:'Capitolo unico',pageStart:1,sections:[]}]},
   [{kind:'original-page',original:'Capitolo unico',text:'Capitolo unico'}]);
 assert.equal(noBody.entries.filter(x=>x.kind==='chapter-title').length,0);
