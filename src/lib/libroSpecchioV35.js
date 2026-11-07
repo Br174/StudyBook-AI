@@ -51,6 +51,7 @@ export function buildCanonicalBookMap({
       physicalPage:i+1,label:String(pageLabels?.[i]||i+1),
       widthPt:Number(pageDimensions?.[i]?.widthPt||595.28),
       heightPt:Number(pageDimensions?.[i]?.heightPt||841.89),
+      textLineGeometry:Array.isArray(source.textLineGeometry)?source.textLineGeometry:[],
       sourceStatus:source.status||'unknown',
       text:source.text||'',textLength:String(source.text||'').length,
       imageReferences:imageReferences.map(a=>({
