@@ -3,6 +3,7 @@
 // Derived "bis/ter" leaves are text overflow; "/N" leaves are figures.
 // Visual coordinates are source evidence, not semantic OCR certification.
 import { normalizeStudyParagraphFlow } from './readingFlowV36.js';
+import { anchorPageEntriesV48 } from './pageAnchorsV48.js';
 export const MIRROR_VERSION = 35;
 const clean = value => String(value ?? '').replace(/\s+/gu,' ').trim();
 const countLetters = value => (String(value || '').match(/\p{L}/gu)||[]).length;
@@ -11,7 +12,7 @@ const slug = s => clean(s).toLocaleLowerCase('it-IT')
   .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\p{L}\p{N}]+/gu,' ');
 const sameTitle=(a,b)=>slug(a)===slug(b);
 const safeNumber=(num,other)=>Number.isInteger(num)&&num>0?num:other;
-const labels=['','bis','ter','quater','quinquies','sexies','septies','octies','nonies','decies'];
+const labels=['','bis','tris','quater','quinquies','sexies','septies','octies','nonies','decies'];
 export function continuationLabel(page,number) {
   return number < labels.length ? page+' '+labels[number] : page+' bis '+number;
 }
@@ -194,7 +195,8 @@ export function composeMirrorPages(sourceMap,book,{
       row.entries.push({kind:'original-page',chapterIndex:null,chapterTitle:'',
         sectionTitle:'',original:source.text,text:source.text});
     }
-    const textEntries=row.entries.slice();
+    const anchored=anchorPageEntriesV48(source,sourceMap,row.entries);
+    const textEntries=anchored.entries;
     const totalCharacters=textEntries.reduce((n,e)=>n+e.text.length,0);
     const withReferences=[];
     let consumed=0,figIndex=0;
@@ -227,23 +229,25 @@ export function composeMirrorPages(sourceMap,book,{
       remaining=Math.max(1,sourceLineCapacity);lastSection='';lastChapter='';
     }
     for(const e of withReferences){
+      if(e.kind==='chapter-title'||e.kind==='section-title'){
+        // Original headings appear ONLY at their witnessed source position.
+        // Never repeat chapter titles after a page break or on a bis/tris leaf.
+        const headingLines=wrapLines(e.text,source)||[];
+        const needed=Math.max(2,headingLines.length+1);
+        if(remaining<needed)newSheet();
+        sheet.blocks.push({kind:e.kind,text:e.text,layoutLines:headingLines,
+          sourcePage:source.physicalPage,sourceLineIndex:e.sourceLineIndex});
+        remaining=Math.max(0,remaining-needed);
+        continue;
+      }
       if(e.kind==='image-ref'){
         if(remaining<1)newSheet();
         sheet.blocks.push({kind:'image-ref',text:e.text,anchorId:e.anchor.id,
           sourcePage:e.anchor.sourcePage,imageNumber:e.anchor.imageNumber});
         sheet.imageLinks.push(e.anchor.id);remaining-=1;continue;
       }
-      const heading=[];
-      if(e.chapterTitle && lastChapter!==e.chapterTitle){
-        heading.push({kind:'chapter-title',text:e.chapterTitle});
-        lastChapter=e.chapterTitle;
-      }
-      if(e.sectionTitle && lastSection!==e.sectionTitle){
-        heading.push({kind:'section-title',text:e.sectionTitle});
-        lastSection=e.sectionTitle;
-      }
-      if(heading.length*2+1>remaining)newSheet();
-      for(const h of heading){sheet.blocks.push(h);remaining-=2;}
+      // Page-level text anchors already placed any printed headings once.
+      // Paragraphs are never allowed to synthesize a title on every page.
       const targetLines=wrapLines(e.text,source)||[];
       const originalLineCount=(wrapLines(e.original,source)||[]).length;
       const outputCount=targetLines.length;
@@ -283,6 +287,7 @@ export function composeMirrorPages(sourceMap,book,{
   audit.valid=audit.problems.length===0;
   return {pages,audit,sourcePageCount:sourceMap.pageCount,
     imageCount:(sourceMap.visualAnchors||[]).length,
+    paginationOwner:'physical-source-pages-v48',headingOwner:'source-text-anchors-v48',
     structureLocked:true,variant};
 }
 export function mirrorPageStatistics(page){
