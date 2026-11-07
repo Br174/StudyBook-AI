@@ -91,3 +91,27 @@ export function blockLetterTargetV51(block,level){
   return {targetLetters:block.reduce((n,u)=>n+u.targetLetters,0),
     summaryCapLetters:null};
 }
+
+
+// LAB54: after a 503, reduce the NEXT request's context budget while
+// respecting physical-page/chapter boundaries. No source paragraph is cut.
+export function adaptiveOverloadBudgetV54(block,level,currentLimit,attempt=1){
+  const current=Math.max(1600,Math.floor(Number(currentLimit)||BULK_INPUT_TOKEN_CEILING));
+  if(!Array.isArray(block)||!block.length)return {inputLimit:current,reduced:false};
+  const ratio=Number(attempt)>=3?0.34:Number(attempt)>=2?0.50:0.70;
+  const overloadTokens=estimatedTokens(block,level).input;
+  let pageStart=0;
+  let largestWholePage=0;
+  for(let i=0;i<block.length;i++){
+    if(!naturalBoundaryV51(block,i))continue;
+    largestWholePage=Math.max(largestWholePage,
+      estimatedTokens(block.slice(pageStart,i+1),level).input);
+    pageStart=i+1;
+  }
+  // If the *single* complete page is too large, never silently halve it.
+  const floor=Math.max(1600,largestWholePage+300);
+  const next=Math.min(current,Math.max(floor,Math.floor(overloadTokens*ratio)));
+  return {inputLimit:next,reduced:next<current,largestWholePage,
+    previousLimit:current,overloadTokens,
+    reason:next<current?'overload-smaller-full-pages':'single-page-or-minimum-limit'};
+}
