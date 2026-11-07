@@ -66,7 +66,9 @@ assert.throws(()=>planNaturalBlocksV51([{
 const mirror=readFileSync(new URL('../src/lib/libroSpecchioV35.js',import.meta.url),'utf8');
 assert.ok(mirror.includes("images:variant==='study'?[]:"));
 const generator=readFileSync(new URL('../src/lib/generativeEditionsV36.js',import.meta.url),'utf8');
-assert.ok(generator.includes('if(pillar)return generateIntegralEditionsV51(book,options)'));
+assert.ok(generator.includes('return generateIntegralEditionsV51(book,options)'));
+assert.ok(!generator.includes('for(const level of levels){'),
+  'old six tiny-fragment passes must no longer govern pillar books');
 const pageSimple=readFileSync(new URL('../src/lib/pageSimpleV49.js',import.meta.url),'utf8');
 assert.ok(pageSimple.includes('onDemand'));
 const worker=readFileSync(new URL('../worker/index.js',import.meta.url),'utf8');
