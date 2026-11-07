@@ -270,7 +270,7 @@ export async function readSourceFile(file, options = {}) {
     // LAB31: the former sequential PDF+OCR path is retired from the active route.
     // Scanner/image/eBook parsing remains owned by the existing native parser.
     const { readPdfMirrorV35 } = await import('./readPdfMirrorV35.js');
-    return readPdfMirrorV35(file, { ...options, onProgress, autoOcr });
+    return readPdfMirrorV35(file, { ...options, onProgress, autoOcr:false, textOnly:true });
   }
   const base = await readV10SourceFile(file, {
     ...options,
