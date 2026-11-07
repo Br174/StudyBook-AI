@@ -246,6 +246,10 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
   }
   // Incomplete checkpoints must be repaired, not treated as permanently finished.
   const pending=jobs.filter(j=>!GEMINI_LEVELS.every(id=>state.get(j.key)?.verified?.[id]===true));
+  // Resume clean work first: a single previously malformed Gemini response must
+  // not block the other chapters on every restart. Keyed verified data is reused.
+  pending.sort((a,b)=>Number(Boolean(state.get(a.key)?.lastFailure))-
+    Number(Boolean(state.get(b.key)?.lastFailure)));
   const blocked= pending.length ? await readGeminiPause() : null;
   if(blocked){
     const paused=makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,diagnostics);
@@ -262,13 +266,14 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
   // Keep progress UI bounded (~40 snapshots) even for an 800-page book.
   const progressEvery=Math.max(5,Math.ceil(pending.length/40));
   let savedVariantsThisRun=0;
+  let consecutiveFormatFailures=0;
   const adaptive=await runAdaptiveBatchQueue({
     // One request at a time; free-tier requests share quotas across keys.
     batches:pending.map(j=>[j]),initialConcurrency:1,
     maxConcurrency:1,
     stopOnFailures:['AI_QUALITY_REVIEW','AI_MANUAL_RESTART','AI_QUOTA_LIMIT','AI_QUOTA_MANUAL_REVIEW','AI_TEMPORARY_OVERLOAD',
       'AI_NOT_CONFIGURED','AI_PROVIDER_REJECTED','AI_SERVICE_ERROR',
-      'AI_TIMEOUT_OR_NETWORK','INVALID_EDITION_RESPONSE','INVALID_GENERATIVE_RESPONSE'],
+      'AI_TIMEOUT_OR_NETWORK','AI_FORMAT_REVIEW_REQUIRED'],
     worker:async([job],{aiAllowed})=>{
       if(job.pageIssues.length||!job.source)return {job,aiFailure:'SOURCE_REVIEW',issues:job.pageIssues};
       if(!aiAllowed)return {job,aiFailure:'AI_PAUSED'};
@@ -279,7 +284,8 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
         verified:{...(previous?.verified||{})},
         issues:{...(previous?.issues||{})},
         achievedPercent:{...(previous?.achievedPercent||{})},
-        drafts:{...(previous?.drafts||{})}};
+        drafts:{...(previous?.drafts||{})},
+        lastFailure:previous?.lastFailure||null};
       let semanticFailure=false;
       // Prioritize the student's starting point: summary first, then progressively deeper editions.
       const generationOrder=pillar?['summary','50','40','30','20','10']:GEMINI_LEVELS;
@@ -310,6 +316,8 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
             if(audit.verified[receivedId]){
               record.editions[receivedId]=audit.editions[receivedId];
               record.verified[receivedId]=true;
+              record.lastFailure=null;
+              consecutiveFormatFailures=0;
               record.issues[receivedId]=[];
               record.achievedPercent[receivedId]=audit.achievedPercent[receivedId];
             }else{
@@ -349,7 +357,17 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
             onProgress(snapshot,snapshot.verifiedVariants,snapshot.totalVariants);
           }
         }catch(error){
-          return {job,record,aiFailure:signal?.aborted?'AI_MANUAL_RESTART':(error?.code||'AI_TIMEOUT_OR_NETWORK')};
+          const code=signal?.aborted?'AI_MANUAL_RESTART':(error?.code||'AI_TIMEOUT_OR_NETWORK');
+          if(code==='INVALID_EDITION_RESPONSE'||code==='INVALID_GENERATIVE_RESPONSE'){
+            // Quarantine only the failed part, with no approval of invalid text.
+            // Two consecutive malformed chunks are a likely systemic outage:
+            // stop safely rather than burning the free quota across the book.
+            record.lastFailure=code;
+            consecutiveFormatFailures++;
+            return {job,record,aiFailure:consecutiveFormatFailures>=2?
+              'AI_FORMAT_REVIEW_REQUIRED':code};
+          }
+          return {job,record,aiFailure:code};
         }
       }
       const valid=GEMINI_LEVELS.every(id=>record.verified[id]===true);
@@ -392,7 +410,8 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
   if(adaptive.haltedOn==='AI_MANUAL_RESTART')final.status='interrupted';
   if(adaptive.haltedOn==='AI_NOT_CONFIGURED')final.status='ai-unavailable';
   if(['AI_PROVIDER_REJECTED','AI_SERVICE_ERROR','AI_TIMEOUT_OR_NETWORK',
-      'INVALID_EDITION_RESPONSE','INVALID_GENERATIVE_RESPONSE'].includes(adaptive.haltedOn))
+      'INVALID_EDITION_RESPONSE','INVALID_GENERATIVE_RESPONSE',
+      'AI_FORMAT_REVIEW_REQUIRED'].includes(adaptive.haltedOn))
     final.status='provider-blocked';
   if(!adaptive.haltedOn && diagnostics.sourceBlocked>0 && final.verifiedChunkVariants===0)
     final.status='source-review-needed';

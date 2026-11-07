@@ -5,7 +5,8 @@ export const RECOVERY_KINDS={
  'AI_QUOTA_MANUAL_REVIEW':'CONFIGURAZIONE','AI_NOT_CONFIGURED':'CONFIGURAZIONE',
  'AI_PROVIDER_REJECTED':'PROVIDER','AI_SERVICE_ERROR':'PROVIDER',
  'AI_TIMEOUT_OR_NETWORK':'CONNESSIONE','INVALID_EDITION_RESPONSE':'RISPOSTA_NON_VALIDA',
- 'INVALID_GENERATIVE_RESPONSE':'RISPOSTA_NON_VALIDA','SOURCE_REVIEW':'SORGENTE_DA_VERIFICARE',
+ 'INVALID_GENERATIVE_RESPONSE':'RISPOSTA_NON_VALIDA','AI_FORMAT_REVIEW_REQUIRED':'RISPOSTA_NON_VALIDA',
+ 'SOURCE_REVIEW':'SORGENTE_DA_VERIFICARE',
  'AI_QUALITY_REVIEW':'QUALITA','AI_QUALITY_STOP':'QUALITA','AI_MANUAL_RESTART':'INTERROTTO'
 };
 export function progressDiagnostic(snapshot){
@@ -25,7 +26,7 @@ export function progressDiagnostic(snapshot){
   CONFIGURAZIONE:'Gemini non ha una quota o una configurazione valida. Verificare le impostazioni, senza acquistare nulla.',
   PROVIDER:'Il servizio Gemini ha rifiutato la richiesta; ripetere ora non risolve il problema.',
   CONNESSIONE:'La richiesta a Gemini è fallita o è scaduta. I dati locali sono conservati.',
-  RISPOSTA_NON_VALIDA:'Gemini ha restituito una risposta non valida. Nessuna parte scorretta è stata approvata.',
+  RISPOSTA_NON_VALIDA:'Una risposta Gemini non è valida. La parte è conservata come non verificata; le altre vengono elaborate, salvo errori ripetuti.',
   SORGENTE_DA_VERIFICARE:'Una o più pagine della fonte richiedono verifica prima della compressione.',
   QUALITA:'La risposta Gemini non supera i vincoli di fedeltà o riduzione esatta. Le parti non verificate restano salvate come bozze.',
   INTERROTTO:'Elaborazione interrotta: i checkpoint precedenti restano validi.',

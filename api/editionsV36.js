@@ -92,7 +92,7 @@ async function query(model,key,url,messages,maxTokens){
   try{
     const response=await fetch(url,{method:'POST',
       headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},
-      body:JSON.stringify({model,temperature:0.1,max_tokens:maxTokens,messages}),
+      body:JSON.stringify({model,temperature:0.1,reasoning_effort:'low',max_tokens:maxTokens,messages}),
       signal:controller.signal});
     const body=await response.json().catch(()=>null);
     return {response,body};
@@ -132,10 +132,14 @@ export default async function handler(req,res){
     {role:'user',content:user}];
   // For a single short chunk, a bounded output avoids giant six-edition responses.
   // Do NOT generate a false "edition" from incomplete JSON.
-  const outputCap=single?1024:4096;
+  // Gemini 3 reasoning tokens share the completion cap with visible text.
+  // Keep the free model family and use bounded low thinking, never paid routing.
+  const outputCap=single?3072:4096;
   let lastError=null;
+  let modelAttempts=0;
   for(const model of modelList){
     try{
+      modelAttempts++;
       const {response,body}=await query(model,key,url,messages,outputCap);
       if(response.ok){
         const raw=body?.choices?.[0]?.message?.content;
@@ -146,8 +150,19 @@ export default async function handler(req,res){
             engine:'ai',sourceVersion:'original',levels:single?[level]:LEVELS,model,policyVersion:pillar?STUDY_PILLAR_VERSION:null
           });
         }
-        return res.status(502).json({error:'Risposta Gemini incompleta: nessun testo pubblicato',
-          code:'INVALID_GENERATIVE_RESPONSE',model});
+        // A 200 may contain no visible content after thinking exhausts its cap,
+        // or non-JSON/truncated output. A second DIFFERENT known-free model gets
+        // at most one chance. Never accept or invent unverified text.
+        if(single&&model!==modelList.at(-1))continue;
+        const reason=body?.choices?.[0]?.finish_reason==='length'?'OUTPUT_TRUNCATED':
+          !raw?'EMPTY_GENERATIVE_CONTENT':'INVALID_JSON_OR_EDITION';
+        return res.status(502).json({error:'Risposta Gemini non utilizzabile: nessun testo pubblicato',
+          code:'INVALID_GENERATIVE_RESPONSE',model,
+          diagnostic:{reason,modelAttempts,finishReason:clean(body?.choices?.[0]?.finish_reason,30)}});
+      }
+      if(single&&[400,404].includes(response.status)&&model!==modelList.at(-1)){
+        // A free model can be unavailable to this key. Try only the declared free fallback.
+        continue;
       }
       if(response.status===429||response.status===503){
         lastError={response,body,model};
