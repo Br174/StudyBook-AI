@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {generateGeminiEditionsV36} from '../src/lib/generativeEditionsV36.js';
 import {buildGeminiEditionViewV36,mayPublishGeminiEdition} from '../src/lib/editionViewV36.js';
 import {bookAcquisitionProgressV46} from '../src/lib/bookAcquisitionV46.js';
@@ -7,6 +8,13 @@ import {planStudyAutoResumeV45} from '../src/lib/studyAutoResumeV45.js';
 import {STUDY_PILLAR_VERSION,studyLetters} from '../src/lib/studyPillarV38.js';
 import {clearGeminiPause} from '../src/lib/geminiQuotaControllerV36.js';
 
+const homeMarkup=readFileSync(new URL('../src/components/HomeDashboardV16.jsx',import.meta.url),'utf8');
+const libraryMarkup=readFileSync(new URL('../src/components/AppScreens.jsx',import.meta.url),'utf8');
+const appSource=readFileSync(new URL('../src/AppV15.jsx',import.meta.url),'utf8');
+assert.match(homeMarkup,/Pagine scaricate:/);
+assert.match(homeMarkup,/sb-download-progress-track/);
+assert.match(libraryMarkup,/sb-library-download/);
+assert.match(appSource,/resumeFromHome\(\{auto:true\}\)/);
 assert.deepEqual(bookAcquisitionProgressV46({pages:44,pagesAcquired:44,hasOriginal:true}),
   {total:44,acquired:44,percent:100,completed:true});
 assert.equal(bookAcquisitionProgressV46({pages:44,pagesAcquired:44},
