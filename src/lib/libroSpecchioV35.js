@@ -229,7 +229,24 @@ export function composeMirrorPages(sourceMap,book,{
       sheet.widthPt=source.widthPt;sheet.heightPt=source.heightPt;
       remaining=Math.max(1,sourceLineCapacity);lastSection='';lastChapter='';
     }
+    function alignOriginalTextTop(entry){
+      // Text coordinates only: a shorter rendition leaves the original
+      // whitespace. Never move later physical source pages.
+      if(continuation!==0||!Number.isFinite(entry.sourceTopPt))return;
+      const topMarginPt=82,bottomMarginPt=76;
+      const printableHeight=Math.max(1,source.heightPt-topMarginPt-bottomMarginPt);
+      const target=Math.floor(Math.max(0,entry.sourceTopPt-topMarginPt)/
+        printableHeight*sourceLineCapacity);
+      const used=sourceLineCapacity-remaining;
+      const gap=Math.max(0,Math.min(target-used,remaining-2));
+      if(gap>0){
+        sheet.blocks.push({kind:'vertical-gap',lines:gap,
+          sourcePage:source.physicalPage,sourceTopPt:entry.sourceTopPt});
+        remaining-=gap;
+      }
+    }
     for(const e of withReferences){
+      if(e.kind!=='image-ref')alignOriginalTextTop(e);
       if(e.kind==='chapter-title'||e.kind==='section-title'){
         // Original headings appear ONLY at their witnessed source position.
         // Never repeat chapter titles after a page break or on a bis/tris leaf.
@@ -237,7 +254,7 @@ export function composeMirrorPages(sourceMap,book,{
         const needed=Math.max(2,headingLines.length+1);
         if(remaining<needed)newSheet();
         sheet.blocks.push({kind:e.kind,text:e.text,layoutLines:headingLines,
-          sourcePage:source.physicalPage,sourceLineIndex:e.sourceLineIndex});
+          sourcePage:source.physicalPage,sourceLineIndex:e.sourceLineIndex,sourceTopPt:e.sourceTopPt});
         remaining=Math.max(0,remaining-needed);
         continue;
       }
@@ -265,6 +282,7 @@ export function composeMirrorPages(sourceMap,book,{
           chapterIndex:e.chapterIndex,paragraphIndex:e.paragraphIndex,
           sourcePage:source.physicalPage,
           sectionTitle:e.sectionTitle,
+          sourceLineIndex:e.sourceLineIndex,sourceTopPt:e.sourceTopPt,
           continued:!first});
         // Attribute the original words once, not repeatedly on each overflow.
         const weight=take/Math.max(1,outputCount);
