@@ -88,7 +88,9 @@ function validateOutput(block,level,data){
   // A correct aggregate ratio never licenses an invented per-paragraph legal fact.
   for(let i=0;i<block.length;i++){
     const local=auditProgressiveConcepts(block[i].source,parts[i].text);
-    if(local.issues.length)return null;
+    const localFidelity=auditFidelity(block[i].source,parts[i].text);
+    if(local.issues.length||localFidelity.missingProtected.length||
+      localFidelity.qualifierMismatches.length)return null;
   }
   return parts.map(p=>clean(p.text));
 }
