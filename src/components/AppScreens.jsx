@@ -72,8 +72,8 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRename
         <div className="sb-book-meta">
           <strong>{title}</strong>
           <span>{pages ? `${pages} pagine` : (item.metadata?.chapters ? `${item.metadata.chapters} capitoli` : subject)}</span>
-          {physical.total>0 && <div className="sb-library-download" aria-label={`Pagine acquisite ${physical.acquired} di ${physical.total}, ${physical.percent}%`}>
-            <small>{physical.acquired} / {physical.total} pagine acquisite · {physical.percent}%</small>
+          {physical.total>0 && <div className="sb-library-download" aria-label={`Pagine scaricate ${physical.acquired} di ${physical.total}, ${physical.percent}%`}>
+            <small>{physical.acquired} / {physical.total} pagine scaricate · {physical.percent}%</small>
             <div className="sb-book-download-track" role="progressbar" aria-valuenow={physical.percent} aria-valuemin={0} aria-valuemax={100}>
               <span style={{width:physical.percent+'%'}} />
             </div>
