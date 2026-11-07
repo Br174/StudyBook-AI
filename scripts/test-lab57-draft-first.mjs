@@ -5,6 +5,7 @@ import {indexedDB as fakeIndexedDB} from 'fake-indexeddb';
 import {generateDraftFirstV57} from '../src/lib/draftFirstV57.js';
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
 import {clearGeminiPause,readGeminiPause} from '../src/lib/geminiQuotaControllerV36.js';
+import {clearGeminiCadenceForTestV58} from '../src/lib/geminiCadenceV58.js';
 import {planStudyAutoResumeV45} from '../src/lib/studyAutoResumeV45.js';
 
 const original='argomento '.repeat(20).trim();
@@ -122,6 +123,8 @@ try{
  assert.equal(paused.status,'quota-paused');
  assert.equal(calls.length,2,'cooldown forbids early Gemini request');
  await clearGeminiPause();
+ // This LAB57 regression tests checkpoint reuse, not the separate LAB58 cadence.
+ await clearGeminiCadenceForTestV58();
  const resumedAfterPause=await generateDraftFirstV57({...buildBook('c'),editionsV36:blocked});
  assert.equal(resumedAfterPause.complete,true);
  assert.equal(resumedAfterPause.draftUnitsSaved,714);
@@ -130,6 +133,7 @@ try{
 }finally{
  globalThis.fetch=oldFetch;
  await clearGeminiPause();
+ await clearGeminiCadenceForTestV58();
  if(oldDb===undefined)delete globalThis.indexedDB;
  else globalThis.indexedDB=oldDb;
 }
