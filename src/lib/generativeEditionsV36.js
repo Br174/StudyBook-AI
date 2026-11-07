@@ -11,6 +11,7 @@ import {STUDY_PILLAR_VERSION,STUDY_PERCENTAGES,allocateExactLetterBudgets,
   inspectProgressiveEdition} from './studyPillarV38.js';
 import {progressDiagnostic} from './geminiRecoveryV39.js';
 import {generateIntegralEditionsV51} from './generativeIntegralV51.js';
+import {generateDraftFirstV57} from './draftFirstV57.js';
 import {restoreMissingTerminalPunctuation} from './studyEditionRepairV45.js';
 
 export const GEMINI_LEVELS=['10','20','30','40','50','summary'];
@@ -485,6 +486,6 @@ async function generateGeminiEditionsPassV46(book,{onProgress=()=>{},onActivity=
 // The old small-chunk runner is retained ONLY for unversioned legacy books.
 export async function generateGeminiEditionsV36(book,options={}){
   if(book?.studyPillarV38===STUDY_PILLAR_VERSION)
-    return generateIntegralEditionsV51(book,options);
+    return generateDraftFirstV57(book,options);
   return generateGeminiEditionsPassV46(book,options);
 }
