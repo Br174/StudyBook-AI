@@ -23,6 +23,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      # Repository senza lockfile: installazione test effimera, nessun commit di dipendenze.
       - name: Installa dipendenze senza script esterni
         run: npm install --ignore-scripts --no-package-lock --no-audit --no-fund
       - name: Simulazione 44 pagine senza chiave Gemini
