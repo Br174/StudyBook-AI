@@ -89,9 +89,9 @@ export function HomeDashboardV16({
           <div className="sb-download-book-content">
             <strong>{activeTitle}</strong>
             <small>Pagine totali: {physical.total||'in rilevamento'}</small>
-            <small>Pagine acquisite: {physical.total?physical.acquired+' / '+physical.total:'in rilevamento'}</small>
+            <small>Pagine scaricate: {physical.total?physical.acquired+' / '+physical.total:'in rilevamento'}</small>
             <div className="sb-download-percent-label">
-              <span>Scaricamento / acquisizione</span>
+              <span>Scaricamento</span>
               <b>{physical.percent===null?'–':physical.percent+'%'}</b>
             </div>
             <div className="sb-download-progress-track" role="progressbar"
