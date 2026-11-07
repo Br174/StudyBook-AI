@@ -4,7 +4,6 @@ import {
   countWords, countText, countLetters, buildMeaningUnits, checkReducedParagraph,
   auditChapterContinuity, auditNarrativeSource, hasLexicalSupport, canSafelyBridgeAfterGap,
 } from './studyQualityGuard.js';
-import { explainInSimpleWords } from './simpleLanguage.js';
 import { buildGeminiEditionViewV36 } from './editionViewV36.js';
 import { inspectChapterBoundaries, chapterMeasuredStats, chapterLevelTarget, stripConfirmedNextHeading, auditChapterOutput } from './chapterFidelityV33.js';
 
@@ -181,13 +180,12 @@ export function buildPrecisionEdition(book, reduction = 10) {
       outputLetters += countLetters(finalText);
       // Accessible reading is a linguistic transformation of the CURRENT edition.
       // Never reuse an older independent summary or reselect facts.
-      const simpleText = explainInSimpleWords(finalText);
       return {
         ...paragraph,
         original: paragraph.original || item.source,
         summary: finalText,
         dsaSummary: finalText,
-        simpleSummary: simpleText,
+        simpleSummary: undefined, // LAB50: NEVER precompute, Gemini is manual page-only
         precisionAudit: {
           coherent: audit.ok && sourceAudit.ok,
           fallbackOriginal: fallback,
@@ -214,7 +212,7 @@ export function buildPrecisionEdition(book, reduction = 10) {
       outputLetters += countLetters(p.original) - countLetters(p.summary);
       p.summary = p.original;
       p.dsaSummary = p.original;
-      p.simpleSummary = explainInSimpleWords(p.original);
+      p.simpleSummary = undefined;
       p.precisionAudit = {
         ...p.precisionAudit, coherent:false, sourceNeedsReview:true,
         chapterRestored:true,

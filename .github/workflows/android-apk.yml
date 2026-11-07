@@ -235,6 +235,18 @@ jobs:
           node scripts/test-lab48-page-faithful.mjs
           node scripts/test-lab49-live-simple-page.mjs
 
+      - name: LAB50 verify inherited isolated Gemini Worker route without deployment
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-50-')
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://studybook-ai-lab49.brunoverlezza.workers.dev';
+          const response=await fetch(base+'/api/page-simple/v49',{
+            method:'GET',signal:AbortSignal.timeout(12000)});
+          if(response.status!==405)throw Error('LAB49 manual Gemini route unavailable: HTTP '+response.status);
+          console.log('LAB50_VERIFIED_EXISTING_MANUAL_GEMINI_ROUTE');
+          NODE
+
       - name: LAB50 one explanation per page, persistent library and PDF
         if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-50-')
         run: |

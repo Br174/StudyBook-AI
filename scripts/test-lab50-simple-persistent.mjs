@@ -25,4 +25,9 @@ assert.ok(read('src/components/StudyMode.jsx').includes('setSimpleRequestToken(n
 assert.ok(!read('src/components/StudyMode.jsx').includes("onPageChange={()=>setReadingVariant('study')}"));
 assert.ok(read('src/components/AppScreens.jsx').includes('SimplePagesLibraryV50'));
 assert.ok(!read('src/lib/editionViewV36.js').includes('explainInSimpleWords(text)'));
+assert.ok(!read('src/lib/precisionCore.js').includes('explainInSimpleWords('));
+assert.ok(!read('src/lib/studyEngine.js').includes('simpleVersion('));
+assert.ok(!read('src/lib/studyEngineV11.js').includes('valid.map((item) => item?.simpleSummary'));
+assert.ok(read('src/lib/exportSimplePagesV50.js').includes('exportSavedSimplePagesPdfV50'));
+assert.ok(read('src/components/SimplePagesLibraryV50.jsx').includes('Esporta tutte le pagine in PDF'));
 console.log('LAB50 PASS: one persistent explanation per page, replacement, failure preservation and archive.');
