@@ -10,7 +10,7 @@ import {studyLetters,percentReduced} from './studyPillarV38.js';
 import {publishSequentialPagesV51} from './pagePublicationV51.js';
 import {reviewGeminiPartsV53,auditStudyUnitV53} from './editionRepairV53.js';
 import {bookUnitsV51,planNaturalBlocksV51,bisectAtNaturalBoundaryV51,
-  blockLetterTargetV51,BULK_OUTPUT_TOKEN_CEILING} from './integralPlannerV51.js';
+  blockLetterTargetV51,BULK_OUTPUT_TOKEN_CEILING,adaptiveOverloadBudgetV54} from './integralPlannerV51.js';
 
 const LEVELS=['summary','50','40','30','20','10'];
 const VERSION='lab38-progressive-editions-v1';
@@ -285,6 +285,18 @@ export async function generateIntegralEditionsV51(book,{
            Math.floor(observed*.65)));
        }
        const pause=await readGeminiPause();
+       if(pause?.kind==='overload'||error?.quota?.kind==='overload'){
+         // One scheduler owns the wait. The NEXT pass plans smaller requests
+         // ending ONLY at complete physical pages/chapters. Verified rows stay.
+         const adjusted=adaptiveOverloadBudgetV54(block,level,diagnostics.inputLimit,
+           pause?.attempts||1);
+         diagnostics.inputLimit=adjusted.inputLimit;
+         diagnostics.overloadRecovery={
+           previousLimit:adjusted.previousLimit,nextLimit:adjusted.inputLimit,
+           reduced:adjusted.reduced,attempts:pause?.attempts||1,
+           method:adjusted.reason
+         };
+       }
        if(pause){
          const stopped=publicFailureSnapshot(book,grid,fp,checkpointPersistent,diagnostics,
            level,pause.automatic?'quota-paused':'quota-review',code,remaining,pause);
