@@ -7,6 +7,7 @@ import {readGeminiPause,registerGeminiPause,clearGeminiPause} from './geminiQuot
 import {runtimeHash} from './motorLabRuntime.js';
 import {auditFidelity,auditProgressiveConcepts} from './fidelityEngine.js';
 import {studyLetters,percentReduced} from './studyPillarV38.js';
+import {publishSequentialPagesV51} from './pagePublicationV51.js';
 import {bookUnitsV51,planNaturalBlocksV51,bisectAtNaturalBoundaryV51,
   blockLetterTargetV51,BULK_OUTPUT_TOKEN_CEILING} from './integralPlannerV51.js';
 
@@ -34,7 +35,7 @@ function checkSourcePages(book,units){
 function newGrid(book,previous,fingerprint){
   const validPrior=previous?.sourceFingerprint===fingerprint&&previous.rows?.length===book.chapters.length;
   return (book.chapters||[]).map((ch,ci)=>(ch.paragraphs||[]).map((p,pi)=>{
-    const saved=validPrior?previous.rows?.[ci]?.[pi]:null;
+    const saved=validPrior?(previous.stagedRows||previous.rows)?.[ci]?.[pi]:null;
     const editions={},verified={},issues={},achievedPercent={};
     for(const level of LEVELS){
       const isValid=saved?.verified?.[level]===true&&clean(saved?.editions?.[level]);
@@ -48,13 +49,15 @@ function newGrid(book,previous,fingerprint){
   }));
 }
 function snapshot(book,grid,fingerprint,checkpointPersistent,diagnostics,activeLevel){
-  const flat=grid.flat();
+  const {rows,through}=publishSequentialPagesV51(book,grid);
+  const flat=rows.flat();
   const totalCells=flat.length;
   const verifiedVariants=flat.reduce((n,row)=>n+LEVELS.filter(id=>row.verified[id]).length,0);
   const verifiedCells=flat.filter(row=>LEVELS.every(id=>row.verified[id])).length;
   const complete=totalCells>0&&verifiedCells===totalCells&&checkpointPersistent
     &&!(book.canonicalBookMap?.uncertain||[]).length;
-  return {version:VERSION,sourceFingerprint:fingerprint,rows:grid,
+  return {version:VERSION,sourceFingerprint:fingerprint,rows,stagedRows:grid,
+    publishedThroughPage:through,
     verifiedCells,totalCells,blockedCells:totalCells-verifiedCells,
     verifiedChunks:verifiedCells,verifiedVariants,totalVariants:totalCells*LEVELS.length,
     verifiedChunkVariants:verifiedVariants,totalChunkVariants:totalCells*LEVELS.length,
