@@ -27,3 +27,26 @@ export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0
     return {reason:'unfinished-checkpoint',at:now+1500};
   return null;
 }
+
+
+// LAB54: pure wakeup decisions for the EXISTING single foreground scheduler.
+// Browser timers can fire just before the threshold, be frozen by Android,
+// or be discarded while the app is hidden. Recompute the remaining wait on
+// every wake; do not consume the only retry event prematurely.
+export function autoResumeWakeDecisionV54(plan,{
+  now=Date.now(),visible=true,inFlight=false
+}={}){
+  if(!plan||!Number.isFinite(Number(plan.at)))return 'no-plan';
+  if(inFlight)return 'in-flight';
+  if(now<Number(plan.at))return 'too-early';
+  if(!visible)return 'foreground-required';
+  return 'ready';
+}
+
+export function autoResumeNextWakeMsV54(plan,now=Date.now()){
+  if(!plan||!Number.isFinite(Number(plan.at)))return null;
+  // Periodic recheck within the SAME one-shot scheduler catches clock changes
+  // without a retry storm and never asks Gemini before the provider cooldown.
+  const remaining=Math.max(0,Number(plan.at)-now);
+  return Math.max(40,Math.min(60_000,remaining+80));
+}
