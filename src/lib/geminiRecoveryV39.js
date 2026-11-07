@@ -30,14 +30,27 @@ export function progressDiagnostic(snapshot){
   CONNESSIONE:'Le richieste a Gemini non sono riuscite. I checkpoint sono conservati; non ripetere tentativi identici senza diagnosi.',
   RISPOSTA_NON_VALIDA:'Una risposta Gemini non è valida. La parte è conservata come non verificata; le altre vengono elaborate, salvo errori ripetuti.',
   SORGENTE_DA_VERIFICARE:'Una o più pagine della fonte richiedono verifica prima della compressione.',
-  QUALITA:'Una risposta Gemini non supera i vincoli di fedeltà o riduzione esatta. La parte resta in bozza; le altre proseguono salvo errori ripetuti.',
+  QUALITA:'Alcuni paragrafi attendono una verifica didattica mirata. Le bozze non vengono pubblicate; i risultati delle altre pagine sono conservati.',
   INTERROTTO:'Elaborazione interrotta: i checkpoint precedenti restano validi.',
   ATTESA:'Stato di elaborazione non conclusivo: verifica i dettagli.'
  };
  const quality=snapshot?.diagnostics?.quality||null;
  const provider=snapshot?.diagnostics?.lastProviderDiagnostic||null;
- const why=kind==='QUALITA'&&quality?.level
-  ?' Livello '+quality.level+' · '+(quality.reasons||[]).slice(0,3).join(', '):'';
+ const reasons=Array.isArray(quality?.reasons)?quality.reasons:[];
+ const reasonLabels={
+  'missing-protected':'informazione essenziale da recuperare',
+  'scoped-qualifier':'negazione o condizione da verificare',
+  'letter-budget':'numero di lettere non ancora conforme',
+  'new-protected-fact-not-in-source':'dato aggiunto non presente nell’originale',
+  'source-topic-support-insufficient':'argomento non sufficientemente fedele',
+  'missing-ordered-paragraphs':'paragrafo non restituito da Gemini'
+ };
+ const reasonText=reasons.slice(0,3).map(x=>reasonLabels[x]||'verifica didattica da completare').join('; ');
+ const delayed=Math.max(0,Number(snapshot?.diagnostics?.qualityDeferrals)||0);
+ const why=kind==='QUALITA'
+  ?(quality?.level?' Livello '+quality.level+' · '+reasonText+'.':'')+
+   (delayed?' '+delayed+' blocchi di pagine intere restano da correggere; le altre elaborazioni sono state salvate e possono proseguire.':'')
+  :'';
  const diagnosticLabel=provider?.reason?(' Diagnosi: '+String(provider.reason).slice(0,60)+
    (provider.httpStatus?' (HTTP '+Number(provider.httpStatus)+')':'')+'.'):'';
  const pauseReason=snapshot?.quota?.kind==='overload'?' Servizio occupato (HTTP 503).':
