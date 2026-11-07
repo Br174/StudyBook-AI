@@ -2053,8 +2053,14 @@ export default function AppV14() {
           documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
           scanContent={scannerPanel} workPhase={workPhase} homeAction={homeAction}
           currentBookId={libraryId} acquisitionProgress={importAcquisition}
-          resumeCandidate={resumeCandidate} resumeBusy={resumeBusy}
-          onResumeProcessing={()=>void resumeFromHome()}
+          resumeCandidate={resumeCandidate} resumeBusy={resumeBusy} geminiStalled={geminiStalled}
+          iaProgress={generating&&workPhase==='gemini' ? progress : studyBook?.editionsV36
+            ? {done:studyBook.editionsV36.verifiedChunkVariants,total:studyBook.editionsV36.totalChunkVariants}
+            : resumeCandidate ? {done:resumeCandidate.done,total:resumeCandidate.total} : null}
+          onResumeProcessing={()=>generating ? navigateTo('studio') : void resumeFromHome()}
+          onManualRecovery={()=>generating
+            ? (geminiStalled ? requestActiveGeminiRecovery() : setStatus('Gemini sta già lavorando · nessuna richiesta duplicata'))
+            : void resumeFromHome()}
         />
       )}
 
