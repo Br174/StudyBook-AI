@@ -551,8 +551,9 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         {geminiCause && <p><strong>Diagnosi elaborazione:</strong> {geminiCause.description}
           {geminiCause.halted ? ' Codice: '+geminiCause.halted+'.' : ''}
         </p>}
-        {generating && <p>Elaborazione Gemini attiva · {status||'checkpoint in corso'}.
-          Può consultare le parti già verificate senza interrompere la generazione.</p>}
+        {generating && <p>Verifica Gemini attiva. Le pagine approvate restano
+          consultabili senza interrompere il lavoro. I progressi reali
+          sono nel grafico della fase in corso.</p>}
         <p>ANTEPRIMA PARZIALE · le pagine già verificate restano consultabili; nessuna bozza non verificata è pubblicata.</p>
         <p>Il PDF e il download del libro completo saranno disponibili dopo la verifica finale.</p>
         {studyBook.editionsV36?.diagnostics?.sourceBlocked>0 && <p>

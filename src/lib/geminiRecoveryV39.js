@@ -51,10 +51,30 @@ export function progressDiagnostic(snapshot){
   'letter-budget':'numero di lettere non ancora conforme',
   'new-protected-fact-not-in-source':'dato aggiunto non presente nell’originale',
   'source-topic-support-insufficient':'argomento non sufficientemente fedele',
-  'missing-ordered-paragraphs':'paragrafo non restituito da Gemini'
+  'missing-ordered-paragraphs':'paragrafo non restituito da Gemini',
+  'draft-missing':'bozza da completare',
+  'new-protected-fact-not-in-source':'riferimento o dato aggiunto non presente nel libro',
+  'source-topic-support-insufficient':'concetti del testo originale non sufficientemente presenti'
  };
  const reasonText=reasons.slice(0,3).map(x=>reasonLabels[x]||'verifica didattica da completare').join('; ');
  const delayed=Math.max(0,Number(snapshot?.diagnostics?.qualityDeferrals)||0);
+ // LAB62: show the first REAL original page and the reason for the stall.
+ // No source text, API tokens or 714 internal unit counters are disclosed.
+ const pending=snapshot?.diagnostics?.pendingQualityV62||null;
+ const kindLabel={summary:'Riassunto','50':'50%','40':'40%','30':'30%',
+   '20':'20%','10':'10%'};
+ const issueDescriptions=pending?.reasons?.slice(0,3).map(x=>
+   reasonLabels[x]||'controllo didattico da completare')||[];
+ const qualityPageMessage=kind==='QUALITA'&&pending?.page
+   ?(' Prima pagina da correggere: '+pending.page+' ('+
+       (kindLabel[pending.level]||pending.level)+').'+
+       (issueDescriptions.length?' Motivo: '+issueDescriptions.join('; ')+'.':'')+
+       ' Tentativi mirati: '+(pending.attempted||0)+'/'+
+       (pending.maxAttempts||3)+'.'+
+       (pending.needsManualReview
+         ?' Correzioni automatiche esaurite: intervento mirato necessario.'
+         :' Ripresa mirata disponibile, senza ripartire dal PDF.') )
+   :'';
  const why=kind==='QUALITA'
   ?(quality?.level?' Livello '+quality.level+' · '+reasonText+'.':'')+
    (delayed?' '+delayed+' blocchi di pagine intere restano da correggere; le altre elaborazioni sono state salvate e possono proseguire.':'')
@@ -65,11 +85,13 @@ export function progressDiagnostic(snapshot){
    snapshot?.quota?.httpStatus===429?' Limite HTTP 429.':'';
  const waitSource=snapshot?.quota?.estimated?
    ' L’orario di ripresa è una stima locale, non una promessa di Google.':'';
- return {kind,base,halted,description:messages[kind]+why+pauseReason+waitSource+diagnosticLabel,
+ return {kind,base,halted,description:messages[kind]+qualityPageMessage+why+pauseReason+waitSource+diagnosticLabel,
    checked:stored,remaining:Math.max(0,total-stored),
    retryAt:snapshot?.quota?.retryAt||null,
    canResume:!snapshot?.complete&&kind!=='QUOTA_ATTESA'&&kind!=='CONFIGURAZIONE',
-   pendingManualReview:kind==='QUALITA'||kind==='SORGENTE_DA_VERIFICARE'||kind==='PROVIDER'};
+   pendingManualReview:(kind==='QUALITA'?
+     (pending?.needsManualReview??true):
+     kind==='SORGENTE_DA_VERIFICARE'||kind==='PROVIDER')};
 }
 export function limitedQualityAttemptCount(oldCount=0){
  return Math.min(2,Math.max(0,Number(oldCount)||0)+1);

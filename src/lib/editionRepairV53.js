@@ -1,7 +1,8 @@
 // LAB53: deterministic editorial fit, exact letters without deleting factual text.
 // A draft is NEVER verified until every educational guard passes.
 import {studyLetters} from './studyPillarV38.js';
-import {auditFidelity,auditProgressiveConcepts} from './fidelityEngine.js';
+import {auditFidelity,auditProgressiveConcepts,extractProtectedItems,
+  splitSemanticUnits} from './fidelityEngine.js';
 
 // Italian discourse equivalents. Never edit negations, citations or legal names.
 const PAIRS=[
@@ -74,6 +75,53 @@ export function repairFocusForUnitV56(unit,level,draft){
       'Non inventare e non inserire frasi riempitive.'
   };
 }
+// LAB62: the production LAB57 Gemini Worker accepts ONLY these existing
+// repairFocus fields; additional JSON properties would be ignored server-side.
+// Translate the actual local quality failure into those recognised fields.
+// Keep source clauses and unsupported draft claims separate: no invented
+// material may be presented to Gemini as authoritative source content.
+export function repairFocusForUnitV62(unit,level,draft,reasonCodes=[]){
+ const source=String(unit?.source||''),output=String(draft||'');
+ const focus=repairFocusForUnitV56(unit,level,output);
+ const issues=new Set(Array.isArray(reasonCodes)?reasonCodes:[]);
+ const concepts=auditProgressiveConcepts(source,output);
+ for(const code of concepts.issues)issues.add(code);
+ const needed=issues.has('source-topic-support-insufficient');
+ const invented=issues.has('new-protected-fact-not-in-source');
+ if(needed||invented){
+   // The Worker preserves highValueContexts[].originalClause (max 5).
+   // Provide the authentic context so Gemini knows WHAT to recover, not
+   // merely that a lexical/topic check failed.
+   const seen=new Set(focus.highValueContexts.map(x=>x.originalClause));
+   for(const clause of splitSemanticUnits(source)){
+     const originalClause=String(clause||'').trim().slice(0,300);
+     if(!originalClause||seen.has(originalClause))continue;
+     focus.highValueContexts.push({originalClause});
+     seen.add(originalClause);
+     if(focus.highValueContexts.length>=5)break;
+   }
+ }
+ if(invented){
+   const sourceFacts=new Set(extractProtectedItems(source).filter(x=>x.kind!=='qualifier')
+     .map(x=>x.kind+':'+String(x.value).toLocaleLowerCase('it-IT')));
+   const seen=new Set(focus.missingProtected.map(x=>x.kind+':'+x.value));
+   for(const fact of extractProtectedItems(output)){
+     if(fact.kind==='qualifier')continue;
+     if(sourceFacts.has(fact.kind+':'+String(fact.value).toLocaleLowerCase('it-IT')))continue;
+     const item={kind:'remove-unsupported-'+String(fact.kind).slice(0,9),
+       value:String(fact.value).slice(0,100)};
+     if(seen.has(item.kind+':'+item.value))continue;
+     // Signal deletion of an invented claim; never label it a missing
+     // source fact. This field is forwarded verbatim by the LAB57 Worker.
+     focus.missingProtected.push(item);
+     seen.add(item.kind+':'+item.value);
+     if(focus.missingProtected.length>=14)break;
+   }
+ }
+ return {...focus,missingProtected:focus.missingProtected.slice(0,14),
+   highValueContexts:focus.highValueContexts.slice(0,5)};
+}
+
 export function fitStudyUnitV53(unit,level,value,{maxEdits=160}={}){
  const original=String(value||'').trim();
  let best=original,diag=auditStudyUnitV53(unit,level,best);

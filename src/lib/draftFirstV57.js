@@ -17,7 +17,7 @@ import {classifySourceReadinessV52} from './generativeIntegralV51.js';
 import {publishSequentialPagesV51} from './pagePublicationV51.js';
 import {studyLetters,percentReduced,exactRetained} from './studyPillarV38.js';
 import {auditFidelity,auditProgressiveConcepts} from './fidelityEngine.js';
-import {repairFocusForUnitV56} from './editionRepairV53.js';
+import {repairFocusForUnitV62} from './editionRepairV53.js';
 import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 
 const LEVELS=['summary','50','40','30','20','10'];
@@ -281,6 +281,27 @@ function selectedRepairPages(units,issues,level,rows,attempts){
  return {pages,units:selected,eligibleCount:eligible.length,
    blockedCount:candidate.length,exhausted:Math.max(0,candidate.length-eligible.length)};
 }
+// LAB62: a LAB61 checkpoint can be permanently quality-stalled at the
+// three-attempt cap even after upgrading to improved, genuinely targeted
+// prompts. Safely re-arm ONLY the earliest exhausted original page, ONCE
+// per immutable source fingerprint. Never re-arm just because the app opens.
+function restoreExhaustedQualityV62(previous,fp,units,rows,reviews,attempts){
+ if(previous?.sourceFingerprint!==fp||previous?.complete||
+   !previous?.draftComplete||previous?.status!=='quality-review'||
+   previous?.diagnostics?.pendingQualityV61?.attentionRequired!==true||
+   previous?.diagnostics?.qualityRecoveryV62?.policy==='focused-v62')return null;
+ const level=LEVELS.find(l=>!reviews[l].verified);
+ if(!level)return null;
+ const issues=reviews[level];
+ const bad=semanticIssuePagesV61(issues);
+ const ordered=bad.length?bad:numericReservedPagesV61(units,issues,level,rows);
+ const page=ordered.find(p=>(Number(attempts[attemptKeyV61(level,p)])||0)>=MAX_REPAIR_ATTEMPTS_V61);
+ const evidence={policy:'focused-v62',level,page:page||null,
+   previousAttempts:page?Number(attempts[attemptKeyV61(level,page)]):0,
+   resetOnce:page!==undefined};
+ if(page!==undefined)attempts[attemptKeyV61(level,page)]=0;
+ return evidence;
+}
 export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=()=>{},signal=null}={}){
  const units=orderSourceUnitsV59(bookUnitsV51(book)),fp=fingerprint(book),previous=book.editionsV36;
  const {rows,drafts}=gridFrom(book,previous,fp);
@@ -291,7 +312,10 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
    inputLimit:restoredLargeBlockLimitV58(previous),
    repairAttempts:previous?.sourceFingerprint===fp
      ?{...(previous?.repairAttemptsV57||{})}:{},phase:'draft',
-   remainingBatches:0,lastCode:null};
+   remainingBatches:0,lastCode:null,
+   // Persist proof of a one-off legacy recovery in every subsequent snapshot.
+   qualityRecoveryV62:previous?.sourceFingerprint===fp
+     ?previous?.diagnostics?.qualityRecoveryV62||null:null};
  diagnostics.recoveredLegacyRepairV60=previous?.sourceFingerprint===fp
    ?recoverLegacyTransientRepairV60(previous,diagnostics.repairAttempts):null;
  let persisted=true;
@@ -378,6 +402,9 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
    'draft','draft-incomplete','AI_INCOMPLETE_BLOCK',persisted);
  const reviews={};
  for(const level of LEVELS)reviews[level]=reviewEdition(units,drafts,level);
+ if(!diagnostics.qualityRecoveryV62)
+   diagnostics.qualityRecoveryV62=restoreExhaustedQualityV62(previous,fp,
+     units,rows,reviews,diagnostics.repairAttempts);
  diagnostics.quality={phase:'book-review',
    levels:Object.fromEntries(LEVELS.map(l=>[l,{exact:reviews[l].exact,
      missing:reviews[l].missing.length,semanticIssues:reviews[l].violations.length,
@@ -417,7 +444,8 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
      const desired=Math.max(1,lengthBefore+boundedGap);
      const repairDrafts=group.map(u=>({
        id:u.id,text:draftOf(drafts,u,level),
-       repairFocus:repairFocusForUnitV56(u,level,draftOf(drafts,u,level))
+       repairFocus:repairFocusForUnitV62(u,level,draftOf(drafts,u,level),
+         review.violations.find(v=>v.u.id===u.id)?.reasons||[])
      }));
      diagnostics.requestsSent++;diagnostics.repairRequests++;repairCalls++;
      emit(onProgress,book,units,rows,drafts,fp,diagnostics,'repair');
@@ -477,6 +505,24 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
    pendingLevel:unfinishedLevel,
    retryablePages:unfinishedLevel?selectedRepairPages(units,reviews[unfinishedLevel],
      unfinishedLevel,rows,diagnostics.repairAttempts).eligibleCount:0};
+ if(unfinishedLevel){
+   const problem=reviews[unfinishedLevel];
+   const semanticPages=semanticIssuePagesV61(problem);
+   const numericPages=numericReservedPagesV61(units,problem,unfinishedLevel,rows);
+   const nextPage=(semanticPages[0]??numericPages[0])||null;
+   const reasons=[...new Set(problem.violations.filter(v=>
+     nextPage!==null&&v.u.pageStart<=nextPage&&v.u.pageEnd>=nextPage)
+     .flatMap(v=>v.reasons))];
+   if(!problem.exact)reasons.push('letter-budget');
+   const attempts=nextPage===null?0:Number(
+     diagnostics.repairAttempts[attemptKeyV61(unfinishedLevel,nextPage)])||0;
+   diagnostics.pendingQualityV62={
+     level:unfinishedLevel,page:nextPage,reasons:[...new Set(reasons)].slice(0,5),
+     attempted:attempts,maxAttempts:MAX_REPAIR_ATTEMPTS_V61,
+     remainingEligible:diagnostics.quality.retryablePages,
+     needsManualReview:diagnostics.quality.retryablePages===0,
+     recoveryApplied:diagnostics.qualityRecoveryV62?.resetOnce===true};
+ }
  state=emit(onProgress,book,units,rows,drafts,fp,diagnostics,'review');
  if(!state.complete){
    state.status='quality-review';

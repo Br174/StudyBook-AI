@@ -1385,7 +1385,7 @@ export default function AppV14() {
       await persistBook(draft,targetSource,targetName,targetId);
       const outcome=progressDiagnostic(snapshot);
       setStatus(snapshot.complete?'Sei edizioni Gemini completate e salvate':
-        outcome.description+' · '+outcome.base+' · originale conservato');
+        outcome.description+' · originale conservato');
     }catch(error){
       setStudyBook(draft);
       await persistBook(draft,targetSource,targetName,targetId);
