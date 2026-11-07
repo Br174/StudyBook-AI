@@ -993,6 +993,12 @@ export default function AppV14() {
       setOriginalRecord(originalSaved);
       setOriginalReading(false);
       await refreshLibrary(activeProfileId);
+      // LAB46: persist true page acquisition every ~5% (at most 20 writes for
+      // large books) without rewriting the original or the Gemini checkpoints.
+      // All updates use the existing library owner with one serialized writer.
+      let acquisitionSaveTail=Promise.resolve();
+      let acquisitionCheckpointDone=-1;
+      let acquisitionCheckpointTotal=0;
       const parsed = await readSourceFile(file, {
         autoOcr: true,
         onProgress(update) {
@@ -1010,10 +1016,25 @@ export default function AppV14() {
             const done=Math.max(0,Math.min(total,Math.trunc(Number(count)||0)));
             setImportAcquisition(old=>({id:old.id,total,done:Math.max(
               old.total===total?old.done:0,done)}));
+            const threshold=Math.max(10,Math.ceil(total/20));
+            if(total!==acquisitionCheckpointTotal ||
+               done>=acquisitionCheckpointDone+threshold || done===total){
+              acquisitionCheckpointTotal=total;
+              acquisitionCheckpointDone=done;
+              acquisitionSaveTail=acquisitionSaveTail.then(async()=>{
+                const saved=await getLibraryBook(originalSaved.id);
+                if(!saved)return;
+                const current=saved.metadata||{};
+                const metadata={...current,pages:Math.max(total,Number(current.pages)||0),
+                  pagesAcquired:Math.min(total,Math.max(done,Number(current.pagesAcquired)||0))};
+                await updateLibraryMetadata(originalSaved.id,{metadata});
+              }).catch(()=>null);
+            }
           }
         },
       });
       setDocumentData(parsed);
+      await acquisitionSaveTail;
       const parsedOriginal = await saveLibraryBook({
         id: originalSaved.id, fileName: file.name, profileId: activeProfileId,
         originalFile: file, sourceData: parsed,
