@@ -91,6 +91,8 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
   const [ttsSpeaking, setTtsSpeaking] = useState(false);
   const [ttsError, setTtsError] = useState('');
   const [readingVariant, setReadingVariant] = useState('study');
+  // LAB49: a monotonically increasing token is one deliberate tap, not a generated book edition.
+  const [simpleRequestToken, setSimpleRequestToken] = useState(0);
   const [studyScope, setStudyScope] = useState('chapter');
   const [toolIndex, setToolIndex] = useState(0);
   const swipeStart = useRef(null);
@@ -224,7 +226,8 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
   }
 
   function paragraphReadingText(paragraph) {
-    return editorialParagraphText(paragraph, { variant: readingVariant, dsaMode });
+    // No precomputed simpleSummary is ever shown as the Gemini live result.
+    return editorialParagraphText(paragraph, { variant: 'study', dsaMode });
   }
 
   function speakChapter() {
@@ -324,18 +327,25 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
         <>
           <div className="study-reading-variant" aria-label="Versione del testo">
             <button type="button" className={readingVariant === 'study' ? 'active' : ''} onClick={() => setReadingVariant('study')}>Testo di studio</button>
-            <button type="button" className={readingVariant === 'simple' ? 'active' : ''} onClick={() => setReadingVariant('simple')}>In parole semplici</button>
+            <button type="button" className={readingVariant === 'simple' ? 'active' : ''}
+              onClick={() => {setReadingVariant('simple');setSimpleRequestToken(n=>n+1);}}
+              disabled={!book?.canonicalBookMap}
+              title={!book?.canonicalBookMap?'Serve la mappa delle pagine originali':'Chiedi ora a Gemini una spiegazione della pagina aperta'}>
+              In parole semplici
+            </button>
           </div>
           <div className="study-mode-tip">
             {readingVariant === 'study'
               ? 'Versione rigorosa e concentrata: conserva le informazioni utili allo studio.'
-              : 'Stessi concetti e stessa riduzione, spiegati con parole più facili. Non è un ulteriore riassunto.'}
+              : 'Gemini spiega ora questa pagina con parole comuni, senza ridurla ulteriormente. Non modifica il libro né il PDF stampato.'}
           </div>
         </>
       )}
 
       {isReader && book?.canonicalBookMap && (
-        <MirrorReaderV35 book={book} originalFile={originalFile} chapterIndex={chapterIndex} variant={readingVariant} />
+        <MirrorReaderV35 book={book} originalFile={originalFile} chapterIndex={chapterIndex}
+          variant={readingVariant} simpleRequestToken={simpleRequestToken}
+          bookTitle={bookTitle} onPageChange={()=>setReadingVariant('study')}/>
       )}
       {isReader && !book?.canonicalBookMap && (
         <main className="study-mode-pages" onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
