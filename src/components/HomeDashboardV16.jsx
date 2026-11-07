@@ -10,7 +10,7 @@ export function HomeDashboardV16({
   onOpenOriginal, onContinueBook, onViewAll, documentData, fileName,
   scanContent, onCreateBook, progressPercent, workPhase='idle',homeAction='create',
   resumeCandidate = null, resumeBusy = false, onResumeProcessing = () => {},
-  onManualRecovery = () => {}, iaProgress = null, geminiStalled = false,
+  onManualRecovery = () => {}, iaProgress = null, studyPageProgress = null, geminiStalled = false,
   currentBookId='',acquisitionProgress=null,
 }) {
   const strip = useRef(null);
@@ -111,6 +111,7 @@ export function HomeDashboardV16({
                 aria-valuenow={iaPercent??0} aria-valuemin={0} aria-valuemax={100} aria-label="Percentuale delle parti IA verificate">
                 <span style={{width:(iaPercent??0)+'%'}}/>
               </div>
+              {studyPageProgress?.mappedPages>0 && <small>Fogli di studio verificati ({studyPageProgress.level==='summary'?'Riassunto':studyPageProgress.level}): {studyPageProgress.verifiedPages}/{studyPageProgress.mappedPages} pagine con testo · {studyPageProgress.percent}%</small>}
               <small>{geminiStalled?'Richiesta senza avanzamenti: recupero manuale disponibile':generating?'Gemini sta elaborando o attendendo il provider':'Checkpoint salvati: ripresa disponibile'}</small>
             </div>}
           </div>
