@@ -10,6 +10,7 @@ export function HomeDashboardV16({
   onOpenOriginal, onContinueBook, onViewAll, documentData, fileName,
   scanContent, onCreateBook, progressPercent, workPhase='idle',homeAction='create',
   resumeCandidate = null, resumeBusy = false, onResumeProcessing = () => {},
+  onManualRecovery = () => {}, iaProgress = null, geminiStalled = false,
   currentBookId='',acquisitionProgress=null,
 }) {
   const strip = useRef(null);
@@ -56,6 +57,10 @@ export function HomeDashboardV16({
   const coverUrl=progressBook?.coverCustom||progressBook?.coverOriginal||
     progressBook?.coverAI||progressBook?.coverUrl||null;
   const scannerActive = Boolean(scanContent);
+  // IA variants are NOT PDF pages. Never display acquisition 100% as IA completion.
+  const iaTotal = Math.max(0,Number(iaProgress?.total||resumeCandidate?.total||0));
+  const iaDone = Math.min(iaTotal,Math.max(0,Number(iaProgress?.done??resumeCandidate?.done??0)));
+  const iaPercent = iaTotal ? Math.round((iaDone / iaTotal)*10000)/100 : null;
   return <section className={scannerActive ? 'sb-screen sb-home-screen sb-home-v16 sb-home-scanning' : 'sb-screen sb-home-screen sb-home-v16'}>
     <div className="sb-home-primary">
       <div className="sb-home-source-actions">
@@ -99,6 +104,15 @@ export function HomeDashboardV16({
               aria-label="Avanzamento delle pagine acquisite">
               <span style={{width:(physical.percent??0)+'%'}}/>
             </div>
+            {!importing && <div className="sb-ia-inline-progress" aria-label="Avanzamento effettivo dell'elaborazione Gemini">
+              <strong>Studio IA: {iaTotal ? iaDone+' / '+iaTotal+' parti verificate' : 'verifica checkpoint'}</strong>
+              <div className="sb-download-percent-label"><span>Elaborazione IA</span><b>{iaPercent===null?'–':iaPercent.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'}</b></div>
+              <div className="sb-download-progress-track sb-ia-progress-track" role="progressbar"
+                aria-valuenow={iaPercent??0} aria-valuemin={0} aria-valuemax={100} aria-label="Percentuale delle parti IA verificate">
+                <span style={{width:(iaPercent??0)+'%'}}/>
+              </div>
+              <small>{geminiStalled?'Richiesta senza avanzamenti: recupero manuale disponibile':generating?'Gemini sta elaborando o attendendo il provider':'Checkpoint salvati: ripresa disponibile'}</small>
+            </div>}
           </div>
         </div>
         {!importing && <div className="sb-resume-ia-details">
@@ -111,12 +125,15 @@ export function HomeDashboardV16({
           {!generating&&resumeCandidate?.diagnostic?.description &&
             <small role="status">{resumeCandidate.diagnostic.description}</small>}
         </div>}
-        {!importing&&<button type="button" onClick={onResumeProcessing}
-          disabled={resumeBusy||(generating&&workPhase==='preparing')}>
-          {resumeBusy?'Recupero in corso…':generating
-            ?(workPhase==='preparing'?'Preparazione in corso':'Apri libro in elaborazione')
-            :'Riprendi elaborazione'}
-        </button>}
+        {!importing && <div className="sb-resume-action-row">
+          <button type="button" onClick={onResumeProcessing} disabled={resumeBusy}>
+            Apri libro in elaborazione
+          </button>
+          <button type="button" className="sb-resume-manual" onClick={onManualRecovery}
+            disabled={resumeBusy||(generating&&workPhase==='preparing')}>
+            {resumeBusy?'Verifica in corso…':geminiStalled?'↻ Recupera richiesta bloccata':'↻ Verifica e riprendi'}
+          </button>
+        </div>
       </div>}
       {scanContent}
       {!scanContent && !documentData && !generating && !resumeCandidate && <div className="sb-home-placeholder"><StudyIcon name="document" size={44}/><strong>Qui presto nuove funzionalità</strong><p>Scannerizza, elabora e organizza i tuoi appunti in un unico posto.</p></div>}
