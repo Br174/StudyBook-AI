@@ -14,7 +14,7 @@ assert.equal(auditProgressiveConcepts('La norma tutela il diritto.','La norma tu
 assert.equal(auditGeminiLevels('La norma non consente il ricorso.',{summary:'La norma consente il ricorso.'},
  {pillar:true,summaryCapLetters:70}).verified.summary,false);
 const clause='La norma disciplina i rapporti sociali. ';
-const sources=[clause.repeat(8),clause.repeat(9),clause.repeat(10)];
+const sources=[clause.repeat(8),clause.repeat(9),clause.repeat(10)].map(value=>value.trim());
 const createBook=key=>({studyPillarV38:STUDY_PILLAR_VERSION,
  canonicalBookMap:{originalFingerprint:key,uncertain:[],pages:[{physicalPage:1,sourceStatus:'verified'}]},
  chapters:[{title:'Filosofia del diritto',paragraphs:sources.map(original=>({original,sourcePageStart:1,sourcePageEnd:1}))}]});
