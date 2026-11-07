@@ -147,6 +147,8 @@ export default function AppV14() {
   const [reduction, setReduction] = useState('summary');
   const [dsaMode, setDsaMode] = useState(true);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  // LAB46: separate physical pages from Gemini chunk/edition counters.
+  const [importAcquisition,setImportAcquisition]=useState({id:null,done:0,total:0});
   const [generating, setGenerating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [sourceEditor, setSourceEditor] = useState(null);
@@ -246,19 +248,20 @@ export default function AppV14() {
     hasSavedIncomplete:Boolean(resumeCandidate),
   });
 
-  // LAB45: one bounded foreground owner for BOTH quota and recoverable quality
-  // stops. A new verified fragment resets the no-progress budget. No invisible
-  // endless retries, no requests before the provider's allowed retry time.
+  // LAB46: the SAME LAB45 recovery planner owns manual and automatic resume.
+  // Operates on Home, Studio and Library while the app is foreground-visible.
+  // Cold-start candidate is loaded from IndexedDB, not reconstructed from UI text.
   useEffect(() => {
-    const editions=studyBook?.editionsV36;
-    if(activeScreen!=='studio'||generating||!editions||editions.complete)return;
-    const progress=Number(editions.verifiedChunkVariants)||0;
-    const fingerprint=String(libraryId||'')+':'+String(editions.sourceFingerprint||'');
+    const activeEdition=studyBook?.editionsV36?.complete===false?studyBook.editionsV36:null;
+    if(studyBook?.editionsV36?.complete===true&&libraryId===resumeCandidate?.id)return;
+    const editions=activeEdition||resumeCandidate?.edition;
+    if(generating||resumeExecutionRef.current||!editions||editions.complete)return;
+    const currentKey=activeEdition?libraryId:resumeCandidate?.id;
+    const verified=Number(editions.verifiedChunkVariants)||0;
+    const fingerprint=String(currentKey||'')+':'+String(editions.sourceFingerprint||'');
     const state=qualityAutoResumeRef.current;
-    if(state.fingerprint!==fingerprint||progress>state.verified){
-      state.fingerprint=fingerprint;
-      state.verified=progress;
-      state.stalledAttempts=0;
+    if(state.fingerprint!==fingerprint||verified>state.verified){
+      state.fingerprint=fingerprint;state.verified=verified;state.stalledAttempts=0;
     }
     const plan=planStudyAutoResumeV45(editions,Date.now(),state.stalledAttempts);
     if(!plan)return;
@@ -267,8 +270,9 @@ export default function AppV14() {
       if(fired||Date.now()<plan.at)return;
       if(typeof document!=='undefined'&&document.visibilityState==='hidden')return;
       fired=true;
-      if(plan.reason==='quality-continue')state.stalledAttempts++;
-      void resumeGeminiEditions();
+      if(plan.reason!=='provider-cooldown')state.stalledAttempts++;
+      if(activeEdition&&documentData)void resumeGeminiEditions();
+      else void resumeFromHome({auto:true});
     };
     const timer=setTimeout(tryResume,Math.min(2**31-1,Math.max(0,plan.at-Date.now())));
     if(typeof document!=='undefined')document.addEventListener('visibilitychange',tryResume);
@@ -276,9 +280,11 @@ export default function AppV14() {
       clearTimeout(timer);
       if(typeof document!=='undefined')document.removeEventListener('visibilitychange',tryResume);
     };
-  },[activeScreen,generating,libraryId,studyBook?.editionsV36?.updatedAt,
+  },[generating,libraryId,documentData,studyBook?.editionsV36?.updatedAt,
     studyBook?.editionsV36?.status,studyBook?.editionsV36?.verifiedChunkVariants,
-    studyBook?.editionsV36?.quota?.retryAt,studyBook?.editionsV36?.quota?.automatic]);
+    studyBook?.editionsV36?.quota?.retryAt,resumeCandidate?.id,
+    resumeCandidate?.edition?.updatedAt,resumeCandidate?.edition?.status,
+    resumeCandidate?.edition?.verifiedChunkVariants]);
 
   function navigateTo(nextScreen, { replace = false } = {}) {
     if (!nextScreen || nextScreen === activeScreen) return;
@@ -434,7 +440,7 @@ export default function AppV14() {
         if(edition && edition.complete!==true){
           setResumeCandidate({id:item.id,fileName:saved.fileName,
             done:edition.verifiedChunkVariants||0,total:edition.totalChunkVariants||0,
-            diagnostic:progressDiagnostic(edition)});
+            edition,diagnostic:progressDiagnostic(edition)});
           return;
         }
       }
@@ -973,6 +979,7 @@ export default function AppV14() {
     setSourceEditor(null);
     setSummaryEditor(null);
     setProgress({ done: 0, total: 0 });
+    setImportAcquisition({id:resumeRecord?.id||null,done:0,total:0});
     setImporting(true);
 
     try {
@@ -982,6 +989,7 @@ export default function AppV14() {
         id: createLibraryId(), fileName: file.name, profileId: activeProfileId, originalFile: file,
       });
       setLibraryId(originalSaved.id);
+      setImportAcquisition({id:originalSaved.id,done:0,total:0});
       setOriginalRecord(originalSaved);
       setOriginalReading(false);
       await refreshLibrary(activeProfileId);
@@ -992,6 +1000,17 @@ export default function AppV14() {
           if (Number.isFinite(update?.done) && Number.isFinite(update?.total) && update.total > 0) {
             setProgress({ done: update.done, total: update.total });
           }
+          // Only physical source-page events update the source acquisition meter.
+          // OCR progress and Gemini chunks must never masquerade as downloaded pages.
+          const phase=String(update?.phase||'');
+          if(['turbo-inventory','turbo-resume','extract','turbo-verify'].includes(phase)
+              && Number.isFinite(update?.total)&&update.total>0){
+            const total=Math.max(0,Math.trunc(update.total));
+            const count=phase==='turbo-resume'?(update.resumed||0):(update.done||0);
+            const done=Math.max(0,Math.min(total,Math.trunc(Number(count)||0)));
+            setImportAcquisition(old=>({id:old.id,total,done:Math.max(
+              old.total===total?old.done:0,done)}));
+          }
         },
       });
       setDocumentData(parsed);
@@ -1000,6 +1019,8 @@ export default function AppV14() {
         originalFile: file, sourceData: parsed,
       });
       setOriginalRecord(parsedOriginal);
+      const totalPages=Number(parsed?.structure?.pageCount||parsed?.pages?.length)||0;
+      setImportAcquisition({id:parsedOriginal.id,total:totalPages,done:totalPages});
       await refreshLibrary(activeProfileId);
       setSelectedChapter(0);
       const recovered = parsed.ocrApplied?.length || 0;
@@ -1140,7 +1161,8 @@ export default function AppV14() {
           setProgress({done:snapshot.verifiedChunkVariants||0,total:snapshot.totalChunkVariants||1});
           setStatus('Libro Specchio · Gemini · '+(snapshot.verifiedChunkVariants||0)+'/'+(snapshot.totalChunkVariants||0)+' parti IA verificate · checkpoint');
           // Save progress occasionally, never let concurrent IndexedDB writers race.
-          if(lab36BookId && (snapshot.verifiedChunkVariants||0)-savedVerified>=6){
+          if(lab36BookId && (snapshot.verifiedChunkVariants||0)>savedVerified &&
+             (savedVerified<8||(snapshot.verifiedChunkVariants||0)-savedVerified>=6)){
             savedVerified=snapshot.verifiedChunkVariants||0;
             const copy=generatedDraft;
             checkpointTail=checkpointTail.then(()=>saveLibraryBook({
@@ -1239,7 +1261,7 @@ export default function AppV14() {
       else {setStatus('Gemini sta già lavorando · nessuna nuova richiesta avviata');navigateTo('studio');}
       return;
     }
-    if(resumeExecutionRef.current)return;
+    if(resumeExecutionRef.current){setStatus('Recupero già avviato · nessuna richiesta duplicata');return;}
     const current={...(record?.studyBook||studyBook),studyPillarV38:STUDY_PILLAR_VERSION};
     const targetSource=record?.sourceData||documentData;
     const targetName=record?.fileName||fileName;
@@ -1263,13 +1285,24 @@ export default function AppV14() {
         setStatus(quotaDisplayV36(pause)+' · Nessuna richiesta inviata. Checkpoint conservati.');
         return;
       }
+      let checkpointTail=Promise.resolve(),savedVerified=0;
       const snapshot=await runGeminiWithSafeRestart(current,(update)=>{
         draft={...current,editionsV36:update,
           engine:update.complete?'ai':(update.verifiedChunks>0?'misto':current.engine)};
         setStudyBook(draft);
         setProgress({done:update.verifiedChunkVariants||0,total:update.totalChunkVariants||1});
         setStatus('Ripresa Gemini · '+(update.verifiedChunkVariants||0)+'/'+(update.totalChunkVariants||0)+' parti IA verificate');
+        const count=update.verifiedChunkVariants||0;
+        if(targetId&&count>savedVerified&&(savedVerified<8||count-savedVerified>=6)){
+          savedVerified=count;
+          const copy=draft;
+          checkpointTail=checkpointTail.then(()=>saveLibraryBook({
+            id:targetId,fileName:targetName,sourceData:targetSource,studyBook:copy,
+            dsaMode:true,profileId:activeProfileId,originalFile:record?.originalFile||sourceFile,
+          })).catch(()=>null);
+        }
       });
+      await checkpointTail;
       draft={...current,editionsV36:snapshot,
         engine:snapshot.complete?'ai':(snapshot.verifiedChunks>0?'misto':current.engine)};
       setStudyBook(draft);
@@ -1290,7 +1323,7 @@ export default function AppV14() {
     }
   }
 
-  async function resumeFromHome(){
+  async function resumeFromHome({auto=false}={}){
     if(generating){
       // Opening the processing page is safe; aborting an active request is not.
       if(studyBook)navigateTo('studio');
@@ -1317,7 +1350,7 @@ export default function AppV14() {
       setStudyBook(record.studyBook);
       setProgress({done:record.studyBook.editionsV36.verifiedChunkVariants||0,
         total:record.studyBook.editionsV36.totalChunkVariants||1});
-      navigateTo('studio');
+      if(!auto)navigateTo('studio');
       // Recupero in corso must describe ONLY the IndexedDB read. The long
       // Gemini run owns generating/workPhase independently, so the button
       // cannot cycle between two labels while a request is pending.
@@ -1992,6 +2025,7 @@ export default function AppV14() {
           onOpenOriginal={item => openLibraryItem(item.id, { original:true, openReader:false })}
           documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
           scanContent={scannerPanel} workPhase={workPhase} homeAction={homeAction}
+          currentBookId={libraryId} acquisitionProgress={importAcquisition}
           resumeCandidate={resumeCandidate} resumeBusy={resumeBusy}
           onResumeProcessing={()=>void resumeFromHome()}
         />
@@ -1999,7 +2033,7 @@ export default function AppV14() {
 
       {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} onRenameCollection={renameScannerArchiveCollection} onRenamePhoto={renameScannerArchivePhoto} />}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onReprocessBook={reprocessLibraryItem} onRecoverOriginal={recoverSourceFromLibrary} processingStatus={status} processingProgress={progress} onSetCoverFile={chooseLibraryCover} onGenerateCover={findAndApplyLibraryCover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onReprocessBook={reprocessLibraryItem} onRecoverOriginal={recoverSourceFromLibrary} processingStatus={status} processingProgress={progress} acquisitionProgress={importAcquisition} onSetCoverFile={chooseLibraryCover} onGenerateCover={findAndApplyLibraryCover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
       {activeScreen === 'studio' && (
         <StudioScreen
