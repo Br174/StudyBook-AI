@@ -494,6 +494,11 @@ export async function generateGeminiEditionsV36(book,options={}){
       onProgress:(snapshot,done,total)=>options.onProgress?.({...snapshot,activeLevel:level},done,total),
     });
     last.activeLevel=level;
+    if(last.checkpointPersistent===false){
+      last.status='local-storage-error';
+      last.execution={...(last.execution||{}),haltedOn:'AI_CHECKPOINT_UNAVAILABLE'};
+      return last;
+    }
     if(last.complete||last.quota||last.execution?.haltedOn||
        ['source-review-needed','provider-blocked','quota-paused','quota-review','ai-unavailable','interrupted'].includes(last.status))
       return last;
