@@ -101,19 +101,63 @@ export function buildConceptInventory(source) {
   }));
 }
 
-function protectedCovered(item, target) {
+// LAB56: narrow Italian deontic equivalence. "non permette" and "vieta"
+// may express the SAME prohibition, but only in the SAME anchored proposition.
+// "non è" in general, dates, articles and conditional exceptions are never
+// silently treated as equivalents. This remains the ONE fidelity owner.
+const NEGATED_PERMISSION_V56=/\bnon\s+(?:(?:è|sono|era|erano)\s+)?(?:permett(?:e|ono|eva|evano)|consent(?:e|ono|iva|ivano)|permess[oaie]|consentit[oaie]|ammess[oaie])\b/iu;
+const EXPLICIT_PROHIBITION_V56=/\b(?:vieta|vietano|vietat[oaie]|proibisce|proibiscono|proibit[oaie])\b/iu;
+const PERMISSION_VERBS_V56=/^(?:permett\w*|consent\w*|permess\w*|consentit\w*|ammess\w*|vieta\w*|vietat\w*|proibisc\w*|proibit\w*)$/iu;
+function meaningAnchorsV56(value){
+  return [...new Set(contentWords(value).filter(x=>!PERMISSION_VERBS_V56.test(x)))];
+}
+function sameProtectedScopeV56(sourceUnit,targetUnit){
+  const sourceTerms=meaningAnchorsV56(sourceUnit),targetTerms=new Set(meaningAnchorsV56(targetUnit));
+  const overlap=sourceTerms.filter(x=>targetTerms.has(x)).length;
+  return overlap>=2 && overlap/Math.max(1,sourceTerms.length)>=0.58;
+}
+function matchedProhibitionV56(sourceUnit,targetUnits){
+  if(!NEGATED_PERMISSION_V56.test(sourceUnit))return false;
+  // A contradictory clause that fits the topic better wins, never fall back
+  // to an unrelated clause with the word "vietato" elsewhere in the book.
+  const ranked=targetUnits.map(text=>{
+    const sourceTerms=meaningAnchorsV56(sourceUnit),targetTerms=new Set(meaningAnchorsV56(text));
+    return {text,hits:sourceTerms.filter(x=>targetTerms.has(x)).length,
+      coverage:sourceTerms.filter(x=>targetTerms.has(x)).length/Math.max(1,sourceTerms.length)};
+  }).sort((a,b)=>b.hits-a.hits||b.coverage-a.coverage);
+  const best=ranked[0];
+  return Boolean(best && sameProtectedScopeV56(sourceUnit,best.text) &&
+    (EXPLICIT_PROHIBITION_V56.test(best.text)||NEGATED_PERMISSION_V56.test(best.text)));
+}
+function scopedNegationCoveredV56(source,target){
+  const units=splitSemanticUnits(source).filter(u=>/\bnon\b/iu.test(u));
+  if(!units.length)return false;
+  const targets=splitSemanticUnits(target);
+  return units.every(u=>matchedProhibitionV56(u,targets));
+}
+function protectedCovered(item, target, source='') {
   const haystack = normalizeFidelityText(target).toLocaleLowerCase('it-IT');
   const needle = item.value.toLocaleLowerCase('it-IT');
-  if (item.kind === 'qualifier') return haystack.includes(needle);
-  return haystack.includes(needle);
+  if(haystack.includes(needle))return true;
+  // No global keyword whitelist. Only a narrowly scoped equivalent
+  // prohibition allows the literal "non" to disappear in paraphrase.
+  if(item.kind==='qualifier' && needle==='non')
+    return scopedNegationCoveredV56(source,target);
+  return false;
 }
 
 
 // Qualifiers are scoped to their factual assertion, not merely counted globally.
 // "A non è B; C è D" and "A è B; C non è D" are NOT equivalent.
 function qualifierSet(value) {
-  return new Set((normalizeFidelityText(value).toLocaleLowerCase('it-IT')
+  const set=new Set((normalizeFidelityText(value).toLocaleLowerCase('it-IT')
     .match(/\b(?:non|salvo|eccetto|tranne|purché|purche|solo se|a condizione che|esclusivamente|di regola)\b/g) || []));
+  if(NEGATED_PERMISSION_V56.test(value)){
+    set.delete('non');
+    set.add('scope-prohibition');
+  }
+  if(EXPLICIT_PROHIBITION_V56.test(value))set.add('scope-prohibition');
+  return set;
 }
 function qualifierMismatches(source, target) {
   const outputs = splitSemanticUnits(target);
@@ -139,7 +183,7 @@ export function auditFidelity(source, studyText) {
   const protectedItems = extractProtectedItems(original);
   const missingConcepts = inventory.filter((unit) => !unitCovered(unit.text, generated));
   const missingHighValue = missingConcepts.filter((unit) => unit.protected);
-  const missingProtected = protectedItems.filter((item) => !protectedCovered(item, generated));
+  const missingProtected = protectedItems.filter((item) => !protectedCovered(item, generated, original));
   const bindingErrors = qualifierMismatches(original, generated);
 
   const covered = inventory.length - missingConcepts.length;
