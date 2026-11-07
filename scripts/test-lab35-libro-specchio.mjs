@@ -101,7 +101,10 @@ const imageMap=buildCanonicalBookMap({pages:[
   {pageNumber:1,status:'verified',text:''},{pageNumber:2,status:'verified',text:''},
   {pageNumber:3,status:'verified',text:longText},{pageNumber:4,status:'verified',text:'pagina quattro'},
 ],chapters:twoCh,visualAnchors:figures,originalFingerprint:'b'.repeat(64),pdfPageCount:4});
-const imageLayout=composeMirrorPages(imageMap,longBook,{maxLines:300});
+const studyImageLayout=composeMirrorPages(imageMap,longBook,{variant:'study',maxLines:300});
+assert.equal(studyImageLayout.pages.filter(x=>x.kind==='image').length,0,
+  'LAB51: no photos in the processed study book');
+const imageLayout=composeMirrorPages(imageMap,longBook,{variant:'reference',maxLines:300});
 assert.equal(imageLayout.pages.filter(x=>x.kind==='image'&&x.sourcePage===3).length,100);
 assert.equal(imageLayout.pages.find(x=>x.kind==='image').label,'3/1');
 assert.equal(imageLayout.pages.filter(x=>x.kind==='image').at(-1).label,'3/100');
