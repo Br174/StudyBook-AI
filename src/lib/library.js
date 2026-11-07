@@ -158,7 +158,11 @@ export async function saveLibraryBook({
       paragraphs: (studyBook?.chapters || sourceData?.chapters || []).reduce(
         (total, chapter) => total + (chapter.paragraphs?.length || 0), 0,
       ),
-      pages: sourceData?.structure?.pageCount || sourceData?.pages?.length || 0,
+      // A stored original PDF and its parsed pages are distinct from AI chunks.
+      pages: sourceData?.structure?.pageCount || sourceData?.pages?.length
+        || previous?.metadata?.pages || 0,
+      pagesAcquired: (sourceData?.structure?.pageCount || sourceData?.pages?.length)
+        || previous?.metadata?.pagesAcquired || 0,
       level: studyBook?.level || 'studio',
       engine: studyBook?.engine || 'locale',
       hasOriginal: Boolean(originalFile || previous?.originalFile),
