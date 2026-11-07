@@ -191,7 +191,7 @@ function makeSnapshot(book,chapterJobs,state,fingerprint,checkpointPersistent,di
     diagnostics:diagnostics?{...diagnostics,errorsByCode:{...diagnostics.errorsByCode}}:null,
     checkpointPersistent,complete,status:complete?'complete':'partial',updatedAt:new Date().toISOString()};
 }
-export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivity=()=>{},maxConcurrency=1,paceMs=6500,signal=null}={}){
+async function generateGeminiEditionsPassV46(book,{onProgress=()=>{},onActivity=()=>{},maxConcurrency=1,paceMs=6500,signal=null,focusLevel=null}={}){
   if(!book?.chapters?.length)throw new Error('Libro o capitoli assenti');
   const fingerprint=book.canonicalBookMap?.originalFingerprint||runtimeHash(
     book.chapters.map(c=>(c.paragraphs||[]).map(originalOf).join('|')).join('||'));
@@ -266,7 +266,9 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     }
   }
   // Incomplete checkpoints must be repaired, not treated as permanently finished.
-  const pending=jobs.filter(j=>!GEMINI_LEVELS.every(id=>state.get(j.key)?.verified?.[id]===true));
+  const pending=jobs.filter(j=>focusLevel
+    ?state.get(j.key)?.verified?.[focusLevel]!==true
+    :!GEMINI_LEVELS.every(id=>state.get(j.key)?.verified?.[id]===true));
   // Resume clean work first: a single previously malformed Gemini response must
   // not block the other chapters on every restart. Keyed verified data is reused.
   pending.sort((a,b)=>Number(Boolean(state.get(a.key)?.lastFailure))-
@@ -316,7 +318,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
         lastFailure:previous?.lastFailure||null};
       let semanticFailure=false;
       // Prioritize the student's starting point: summary first, then progressively deeper editions.
-      const generationOrder=pillar?['summary','50','40','30','20','10']:GEMINI_LEVELS;
+      const generationOrder=focusLevel?[focusLevel]:(pillar?['summary','50','40','30','20','10']:GEMINI_LEVELS);
       for(const id of generationOrder){
         if(record.verified[id]===true)continue;
         try{
@@ -424,7 +426,7 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
           return {job,record,providerDiagnostic:error?.diagnostic||null,aiFailure:code};
         }
       }
-      const valid=GEMINI_LEVELS.every(id=>record.verified[id]===true);
+      const valid=focusLevel?record.verified[focusLevel]===true:GEMINI_LEVELS.every(id=>record.verified[id]===true);
       if(valid){consecutiveFormatFailures=0;consecutiveNetworkFailures=0;
         consecutiveQualityFailures=0;record.lastFailure=null;}
       return {job,record,aiSuccess:valid,aiFailure:valid?null:
@@ -476,4 +478,35 @@ export async function generateGeminiEditionsV36(book,{onProgress=()=>{},onActivi
     final.status='source-review-needed';
   onProgress(final,final.verifiedVariants,final.totalVariants);
   return final;
+}
+
+// LAB46: ONE shared source/context model, ONE original-based edition level at a time.
+// Every verified chunk keeps the existing content-addressed durable checkpoint.
+// A whole completed reduction is available before any request for the next.
+export async function generateGeminiEditionsV36(book,options={}){
+  const pillar=book?.studyPillarV38===STUDY_PILLAR_VERSION;
+  if(!pillar)return generateGeminiEditionsPassV46(book,options);
+  const levels=['summary','50','40','30','20','10'];
+  let last=null;
+  for(const level of levels){
+    last=await generateGeminiEditionsPassV46(book,{
+      ...options,focusLevel:level,
+      onProgress:(snapshot,done,total)=>options.onProgress?.({...snapshot,activeLevel:level},done,total),
+    });
+    last.activeLevel=level;
+    if(last.complete||last.quota||last.execution?.haltedOn||
+       ['source-review-needed','provider-blocked','quota-paused','quota-review','ai-unavailable','interrupted'].includes(last.status))
+      return last;
+    const verified=last.rows?.length>0&&last.rows.every(chapter=>
+      chapter.every(paragraph=>paragraph?.verified?.[level]===true));
+    if(!verified){
+      // Never silently start 50/40/... while a summary fragment is unverified.
+      // The existing Recovery owner decides whether another bounded attempt is safe.
+      last.status='quality-review';
+      last.execution={...(last.execution||{}),
+        haltedOn:'AI_QUALITY_REVIEW_REQUIRED',remainingBatches:1};
+      return last;
+    }
+  }
+  return last;
 }
