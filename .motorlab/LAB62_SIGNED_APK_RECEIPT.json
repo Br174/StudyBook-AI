@@ -1,0 +1,21 @@
+{
+  "source_sha": "a9174d12eb2dfb2aa2509a3d2c869fb184b92ba0",
+  "run_id": 42422749469,
+  "artifact_id": 13594262874,
+  "artifact_name": "StudyBook-AI-LAB-62-AGGIORNAMENTO-APK",
+  "application_id": "it.studybook.ai.lab",
+  "version_code": 2026100415,
+  "version_name": "0.3.415",
+  "apk_sha256": "591732edda0c05fabca30f59abdfb67ef1d4e979ceaf3f347bfb79407339b33e",
+  "zip_sha256": "f9f3fbba7ae6c702ac730c53d8526ce47afedced091a13a4e82c90dd52893162",
+  "certificate_sha256": "D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC",
+  "build_status": "SUCCESS",
+  "scudo360_status": "SUCCESS",
+  "lab62_tests": "PASS",
+  "android_workflow_conclusion": "FAILURE_AFTER_ARTIFACT_UPLOAD_DURING_ACTIVE_REF_CONFIRMATION",
+  "active_ref_readback": "VERIFIED_MATCH_SOURCE_SHA",
+  "extra_general_workflow": "LEGACY_LAB38_TEST_FAIL",
+  "device_test": "PENDING",
+  "notes": "Metadata-only record from independently checked uploaded ZIP/APK. The runtime test used fake Gemini responses; live provider recovery not yet verified. No personal PDF contents stored.",
+  "safety_ref": "lab/safety-studybook-core-android-01-update-62"
+}
