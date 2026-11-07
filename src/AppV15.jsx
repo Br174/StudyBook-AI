@@ -30,6 +30,7 @@ import {studyHomeAction,sameStoredDocument} from './lib/studyHomeFlowV38.js';
 import {progressDiagnostic} from './lib/geminiRecoveryV39.js';
 import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
 import { planStudyAutoResumeV45 } from './lib/studyAutoResumeV45.js';
+import { studyPageProgressV48 } from './lib/studyPageProgressV48.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
 import { reacquireFromSavedPdf } from './lib/sourceRecoveryV34.js';
@@ -2054,6 +2055,7 @@ export default function AppV14() {
           scanContent={scannerPanel} workPhase={workPhase} homeAction={homeAction}
           currentBookId={libraryId} acquisitionProgress={importAcquisition}
           resumeCandidate={resumeCandidate} resumeBusy={resumeBusy} geminiStalled={geminiStalled}
+          studyPageProgress={studyBook?.editionsV36 ? studyPageProgressV48(studyBook,studyBook.editionsV36.activeLevel||'summary') : null}
           iaProgress={generating&&workPhase==='gemini' ? progress : studyBook?.editionsV36
             ? {done:studyBook.editionsV36.verifiedChunkVariants,total:studyBook.editionsV36.totalChunkVariants}
             : resumeCandidate ? {done:resumeCandidate.done,total:resumeCandidate.total} : null}
