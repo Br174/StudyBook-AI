@@ -20,17 +20,37 @@ const clean=v=>String(v||'').trim();
 const signature=block=>runtimeHash(JSON.stringify(block.map(u=>[u.id,u.source,u.pageStart,u.pageEnd])));
 const recordKey=(fingerprint,level,block)=>'mlr:'+CACHE_VERSION+':'+fingerprint+':'+level+':'+signature(block);
 
-function checkSourcePages(book,units){
-  const map=book.canonicalBookMap;
-  if(!map?.pages?.length)return null;
-  if((map.uncertain||[]).length)return 'SOURCE_REVIEW';
-  const byPage=new Map(map.pages.map(p=>[Number(p.physicalPage),p]));
-  for(const u of units){
-    for(let p=u.pageStart;p<=u.pageEnd;p++){
-      if(byPage.get(p)?.sourceStatus!=='verified')return 'SOURCE_REVIEW';
+// LAB52: an outline/printed-numbering warning is NOT missing source content.
+// The original fingerprint and every physical page's verified text remain hard gates.
+export function classifySourceReadinessV52(book,units=[]){
+  const map=book?.canonicalBookMap;
+  if(!map)return {ok:true,blocking:[],warnings:[],reason:null};
+  const warnings=Array.isArray(map.uncertain)?[...new Set(map.uncertain)]:[];
+  const blocking=[];
+  const pages=Array.isArray(map.pages)?map.pages:[];
+  if(!pages.length||!Number.isInteger(Number(map.pageCount))||
+     Number(map.pageCount)!==pages.length)
+    blocking.push('source-page-count-mismatch');
+  // Do not replace source integrity with an editable chapter/title heuristic.
+  if(!/^[a-f0-9]{64}$/i.test(String(map.originalFingerprint||''))||
+     warnings.includes('original-sha256-not-verified'))
+    blocking.push('original-sha256-not-verified');
+  const byPage=new Map(pages.map(p=>[Number(p.physicalPage),p]));
+  const unavailable=[];
+  for(let i=1;i<=Number(map.pageCount||0);i++){
+    if(byPage.get(i)?.sourceStatus!=='verified')unavailable.push(i);
+  }
+  for(const unit of units){
+    for(let page=unit.pageStart;page<=unit.pageEnd;page++){
+      if(byPage.get(page)?.sourceStatus!=='verified')unavailable.push(page);
     }
   }
-  return null;
+  if(unavailable.length)blocking.push('source-pages-not-verified');
+  return {ok:blocking.length===0,blocking:[...new Set(blocking)],
+    blockingPages:[...new Set(unavailable)].sort((a,b)=>a-b),
+    // Printed PDF labels, outline confidence and section headings are advisory.
+    // They remain visible to the source reviewer without stopping Gemini.
+    warnings,reason:blocking[0]||null};
 }
 function newGrid(book,previous,fingerprint){
   const validPrior=previous?.sourceFingerprint===fingerprint&&previous.rows?.length===book.chapters.length;
@@ -55,7 +75,7 @@ function snapshot(book,grid,fingerprint,checkpointPersistent,diagnostics,activeL
   const verifiedVariants=flat.reduce((n,row)=>n+LEVELS.filter(id=>row.verified[id]).length,0);
   const verifiedCells=flat.filter(row=>LEVELS.every(id=>row.verified[id])).length;
   const complete=totalCells>0&&verifiedCells===totalCells&&checkpointPersistent
-    &&!(book.canonicalBookMap?.uncertain||[]).length;
+    &&classifySourceReadinessV52(book).ok;
   return {version:VERSION,sourceFingerprint:fingerprint,rows,stagedRows:grid,
     publishedThroughPage:through,integralInputLimit:diagnostics.inputLimit,
     verifiedCells,totalCells,blockedCells:totalCells-verifiedCells,
@@ -136,8 +156,10 @@ export async function generateIntegralEditionsV51(book,{
   let checkpointPersistent=true;
   const initial=snapshot(book,grid,fingerprint,true,diagnostics,LEVELS[0]);
   onProgress(initial,initial.verifiedVariants,initial.totalVariants);
-  if(checkSourcePages(book,units)){
+  const sourceReadiness=classifySourceReadinessV52(book,units);
+  if(!sourceReadiness.ok){
     const blocked={...initial,status:'source-review-needed',
+      sourceReview:sourceReadiness,
       execution:{haltedOn:'SOURCE_REVIEW',remainingBatches:units.length}};
     onProgress(blocked,blocked.verifiedVariants,blocked.totalVariants);
     return blocked;
