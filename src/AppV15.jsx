@@ -256,7 +256,7 @@ export default function AppV14() {
     const activeEdition=studyBook?.editionsV36?.complete===false?studyBook.editionsV36:null;
     if(studyBook?.editionsV36?.complete===true&&libraryId===resumeCandidate?.id)return;
     const editions=activeEdition||resumeCandidate?.edition;
-    if(generating||resumeExecutionRef.current||!editions||editions.complete)return;
+    if(generating||resumeExecutionRef.current||resumeBusy||!editions||editions.complete)return;
     const currentKey=activeEdition?libraryId:resumeCandidate?.id;
     const verified=Number(editions.verifiedChunkVariants)||0;
     const fingerprint=String(currentKey||'')+':'+String(editions.sourceFingerprint||'');
@@ -282,6 +282,7 @@ export default function AppV14() {
       const decision=autoResumeWakeDecisionV54(plan,{
         now:Date.now(),visible,inFlight:resumeExecutionRef.current
       });
+      if(resumeBusy||generating){schedule();return;}
       if(decision==='too-early'||decision==='in-flight'){schedule();return;}
       if(decision==='foreground-required')return; // Resume on visibility/focus/pageshow.
       if(decision!=='ready')return;
@@ -305,7 +306,7 @@ export default function AppV14() {
         window.removeEventListener('pageshow',tryResume);
       }
     };
-  },[generating,libraryId,documentData,studyBook?.editionsV36?.updatedAt,
+  },[generating,resumeBusy,libraryId,documentData,studyBook?.editionsV36?.updatedAt,
     studyBook?.editionsV36?.status,studyBook?.editionsV36?.verifiedChunkVariants,
     studyBook?.editionsV36?.quota?.retryAt,resumeCandidate?.id,
     resumeCandidate?.edition?.updatedAt,resumeCandidate?.edition?.status,
@@ -1334,7 +1335,8 @@ export default function AppV14() {
         draft={...current,editionsV36:paused};
         setStudyBook(draft);
         await persistBook(draft,targetSource,targetName,targetId);
-        setStatus(quotaDisplayV36(pause)+' · Nessuna richiesta inviata. Checkpoint conservati.');
+        setStatus(quotaDisplayV36(pause)+
+          ' · Nessuna richiesta inviata. Ripresa automatica quando il telefono torna in primo piano e termina la pausa. Checkpoint conservati.');
         return;
       }
       let checkpointTail=Promise.resolve(),savedVerified=0;
@@ -2065,6 +2067,8 @@ export default function AppV14() {
           scanContent={scannerPanel} workPhase={workPhase} homeAction={homeAction}
           currentBookId={libraryId} acquisitionProgress={importAcquisition}
           resumeCandidate={resumeCandidate} resumeBusy={resumeBusy} geminiStalled={geminiStalled}
+          resumeEdition={studyBook?.editionsV36?.complete===false
+            ?studyBook.editionsV36:resumeCandidate?.edition||null}
           studyPageProgress={studyBook?.editionsV36 ? studyPageProgressV48(studyBook,studyBook.editionsV36.activeLevel||'summary') : null}
           iaProgress={generating&&workPhase==='gemini' ? progress : studyBook?.editionsV36
             ? {done:studyBook.editionsV36.verifiedChunkVariants,total:studyBook.editionsV36.totalChunkVariants}
