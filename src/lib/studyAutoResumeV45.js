@@ -50,3 +50,24 @@ export function autoResumeNextWakeMsV54(plan,now=Date.now()){
   const remaining=Math.max(0,Number(plan.at)-now);
   return Math.max(40,Math.min(60_000,remaining+80));
 }
+
+
+// LAB55: one read-only presentation of the SAME cooldown state used by LAB45.
+// No new scheduler, no new storage, and no action that bypasses the provider.
+export function geminiResumeDisplayV55(snapshot,now=Date.now()){
+  const quota=snapshot?.quota;
+  if(!quota||!quota.automatic)return {waiting:false,expired:false,label:'',button:'↻ Verifica e riprendi'};
+  const at=Date.parse(String(quota.retryAt||''));
+  if(!Number.isFinite(at))return {waiting:false,expired:false,
+    label:'Attesa Gemini: orario non verificabile; controlla lo stato del provider.',
+    button:'↻ Verifica attesa Gemini'};
+  const waiting=now<at;
+  const time=new Date(at).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'});
+  const reason=quota.kind==='overload'?'Gemini occupato (HTTP 503)':quota.kind==='daily'?'Quota giornaliera Gemini':'Pausa Gemini';
+  return {waiting,expired:!waiting,retryAt:at,
+    label:waiting?
+      reason+' · prossima verifica '+time+(quota.estimated?' (stima locale).':' (indicazione provider).')+
+      ' I checkpoint restano salvati; ripresa automatica quando l’app è attiva.':
+      'Attesa Gemini conclusa · verifica e riprendi dai checkpoint salvati.',
+    button:waiting?'↻ Gemini in attesa · controlla orario':'↻ Verifica e riprendi'};
+}
