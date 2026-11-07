@@ -37,7 +37,7 @@ assert.ok(a.largestWholePage<a.inputLimit);
 const planned=planNaturalBlocksV51(units,'summary',{maxInputTokens:a.inputLimit});
 assert.ok(planned.length>1,'after overload generate fewer full-page blocks');
 for(const section of planned){
-  const end=section.at(-1),lastIndex=units.indexOf(end);
+  const end=section.at(-1),lastIndex=units.findIndex(u=>u.id===end.id);
   const next=units[lastIndex+1];
   assert.ok(!next||end.pageEnd<next.pageStart||end.ci!==next.ci,
     'never split in the middle of a PDF page');
