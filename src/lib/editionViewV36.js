@@ -1,6 +1,5 @@
 // LAB36: a view of one genuinely generated edition, never an additional compression.
 import { countWords, countLetters } from './studyQualityGuard.js';
-import { explainInSimpleWords } from './simpleLanguage.js';
 import { normalizeStudyParagraphFlow } from './readingFlowV36.js';
 import { buildVerifiedFragmentPreviewV45 } from './studyPreviewV45.js';
 
@@ -32,7 +31,7 @@ export function buildGeminiEditionViewV36(book,reduction){
       }
       return {
         ...p,summary:text,dsaSummary:text,
-        simpleSummary:verified?explainInSimpleWords(text):(fragmentPreview?.text||PENDING),
+        simpleSummary:undefined, // LAB50: do not precompute In parole semplici
         editionPending:!verified,
         editionPreviewOnly:!verified,
         editionPreviewFragments:fragmentPreview?.verifiedFragments||0,

@@ -1849,20 +1849,6 @@ export default function AppV14() {
     if (format === 'print') return printStudyBook(precisionBook, fileName, options);
     if (format === 'json') return exportJson(precisionBook, fileName);
     if (format === 'txt') {
-      if (variant === 'simple') {
-        const simpleBook = {
-          ...precisionBook,
-          chapters: (precisionBook.chapters || []).map((chapter) => ({
-            ...chapter,
-            paragraphs: (chapter.paragraphs || []).map((paragraph) => ({
-              ...paragraph,
-              summary: paragraph.simpleSummary || paragraph.summary,
-              dsaSummary: paragraph.simpleSummary || paragraph.summary,
-            })),
-          })),
-        };
-        return exportTxt(simpleBook, fileName, false);
-      }
       return exportTxt(precisionBook, fileName, dsaMode);
     }
     return undefined;
@@ -2125,7 +2111,7 @@ export default function AppV14() {
 
       {studyModeOpen && precisionBook && (
         <StudyMode
-          book={precisionBook} sourceBook={studyBook} originalFile={sourceFile} bookTitle={fileName} initialMode={studyEntryMode}
+          book={precisionBook} sourceBook={studyBook} originalFile={sourceFile} bookTitle={fileName} bookId={libraryId} initialMode={studyEntryMode}
           chapterIndex={selectedChapter} onChapterChange={setSelectedChapter}
           dsaMode={dsaMode} accessibility={accessibility} onClose={() => setStudyModeOpen(false)}
         />

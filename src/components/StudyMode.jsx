@@ -80,7 +80,7 @@ function EmptyTool({ children }) {
   return <div className="study-tool-empty">{children}</div>;
 }
 
-export default function StudyMode({ book, sourceBook = book, originalFile = null, bookTitle, initialMode = 'reader', chapterIndex, onChapterChange, dsaMode, accessibility, onClose }) {
+export default function StudyMode({ book, sourceBook = book, originalFile = null, bookTitle, bookId='', initialMode = 'reader', chapterIndex, onChapterChange, dsaMode, accessibility, onClose }) {
   const [target, setTarget] = useState(null);
   const [answer, setAnswer] = useState(null);
   const [assistantBusy, setAssistantBusy] = useState(false);
@@ -337,7 +337,7 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
           <div className="study-mode-tip">
             {readingVariant === 'study'
               ? 'Versione rigorosa e concentrata: conserva le informazioni utili allo studio.'
-              : 'Gemini spiega ora questa pagina con parole comuni, senza ridurla ulteriormente. Non modifica il libro né il PDF stampato.'}
+              : 'La spiegazione resta su questa pagina. Solo una nuova richiesta la sostituisce dopo il salvataggio.'}
           </div>
         </>
       )}
@@ -345,7 +345,7 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
       {isReader && book?.canonicalBookMap && (
         <MirrorReaderV35 book={book} originalFile={originalFile} chapterIndex={chapterIndex}
           variant={readingVariant} simpleRequestToken={simpleRequestToken}
-          bookTitle={bookTitle} onPageChange={()=>setReadingVariant('study')}/>
+          bookTitle={bookTitle} bookId={bookId}/>
       )}
       {isReader && !book?.canonicalBookMap && (
         <main className="study-mode-pages" onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>

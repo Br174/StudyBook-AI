@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {indexedDB,IDBKeyRange} from 'fake-indexeddb';
+globalThis.indexedDB=indexedDB;globalThis.IDBKeyRange=IDBKeyRange;
+const {readSimplePageV50,saveSimplePageV50,listSimplePagesV50,deleteSimplePagesForBookV50}
+  =await import('../src/lib/simplePagesStoreV50.js');
+assert.equal(await readSimplePageV50('one','1'),null);
+await saveSimplePageV50({bookId:'one',label:'1',text:'Prima versione'});
+await saveSimplePageV50({bookId:'one',label:'2',text:'Pagina due'});
+await saveSimplePageV50({bookId:'two',label:'1',text:'Altro libro'});
+await saveSimplePageV50({bookId:'one',label:'1',text:'Ultima versione'});
+assert.equal((await listSimplePagesV50('one')).length,2);
+assert.equal((await readSimplePageV50('one','1')).text,'Ultima versione');
+await assert.rejects(()=>saveSimplePageV50({bookId:'one',label:'1',text:''}));
+assert.equal((await readSimplePageV50('one','1')).text,'Ultima versione');
+await deleteSimplePagesForBookV50('one');
+assert.equal((await listSimplePagesV50('one')).length,0);
+assert.equal((await listSimplePagesV50('two')).length,1);
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const reader=read('src/components/MirrorReaderV35.jsx');
+assert.ok(reader.includes('saveSimplePageV50')&&reader.includes('readSimplePageV50'));
+assert.ok(reader.includes("variant:'study'")&&reader.includes('onPageChange?.()'));
+assert.ok(!reader.includes('setSimpleLive(null);\n  },[index,book]'));
+assert.ok(read('src/components/StudyMode.jsx').includes('setSimpleRequestToken(n=>n+1)'));
+assert.ok(!read('src/components/StudyMode.jsx').includes("onPageChange={()=>setReadingVariant('study')}"));
+assert.ok(read('src/components/AppScreens.jsx').includes('SimplePagesLibraryV50'));
+assert.ok(!read('src/lib/editionViewV36.js').includes('explainInSimpleWords(text)'));
+console.log('LAB50 PASS: one persistent explanation per page, replacement, failure preservation and archive.');

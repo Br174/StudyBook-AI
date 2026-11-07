@@ -235,6 +235,13 @@ jobs:
           node scripts/test-lab48-page-faithful.mjs
           node scripts/test-lab49-live-simple-page.mjs
 
+      - name: LAB50 one explanation per page, persistent library and PDF
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-50-')
+        run: |
+          node scripts/test-lab48-page-faithful.mjs
+          node scripts/test-lab49-live-simple-page.mjs
+          node scripts/test-lab50-simple-persistent.mjs
+
       - name: Resolve monotonic Android version
         shell: bash
         run: |

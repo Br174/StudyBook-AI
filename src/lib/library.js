@@ -1,3 +1,4 @@
+import {deleteSimplePagesForBookV50} from './simplePagesStoreV50.js';
 const DB_NAME = 'studybook-ai';
 const DB_VERSION = 2;
 const BOOKS_STORE = 'books';
@@ -223,6 +224,7 @@ export async function getLibraryBook(id) {
 
 export async function deleteLibraryBook(id) {
   await withStore(BOOKS_STORE, 'readwrite', (store) => store.delete(id));
+  await deleteSimplePagesForBookV50(id).catch(()=>null);
 }
 
 

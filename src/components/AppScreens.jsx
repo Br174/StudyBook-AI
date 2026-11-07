@@ -3,6 +3,7 @@ import { ACCESSIBILITY_PRESETS, readerCssVariables } from '../lib/accessibility.
 import { StudyIcon } from './StudyUiIcons.jsx';
 import RenameTitleDialog from './RenameTitleDialog.jsx';
 import ScannerArchive from './ScannerArchive.jsx';
+import SimplePagesLibraryV50 from './SimplePagesLibraryV50.jsx';
 import {progressDiagnostic} from '../lib/geminiRecoveryV39.js';
 import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
 import {studyPageProgressV48} from '../lib/studyPageProgressV48.js';
@@ -224,7 +225,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
 
       <div className="sb-segmented sb-library-categories" aria-label="Categorie della Libreria">
         {[
-          ['scans', 'Scannerizzati'], ['processed', 'Modificati'], ['original', 'Originali'], ['all', 'Tutti'],
+          ['scans', 'Scannerizzati'], ['processed', 'Modificati'], ['original', 'Originali'], ['all', 'Tutti'], ['simple','In parole semplici'],
         ].map(([key, label]) => (
           <button key={key} type="button" className={view === key ? 'active' : ''}
             aria-pressed={view === key} onClick={() => { setView(key); if (key === 'scans') void onRefreshScans?.(); }}>
@@ -232,7 +233,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
           </button>
         ))}
       </div>
-      {view === 'scans' ? <ScannerArchive {...scannerProps} onBack={() => setView('all')} backLabel="← Torna alla Libreria" /> : <>
+      {view === 'simple' ? <SimplePagesLibraryV50 items={items} /> : view === 'scans' ? <ScannerArchive {...scannerProps} onBack={() => setView('all')} backLabel="← Torna alla Libreria" /> : <>
       <div className="sb-library-modes">
         {[
           ['all','Tutti'],['subjects','Materie'],['collections','Raccolte'],['favorites','Preferiti'],['recent','Recenti'],
@@ -611,12 +612,6 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         <article className="sb-export-card">
           <div className="sb-export-head">
             <div><small>ESPORTA</small><h2>Scarica libro</h2><p className="sb-export-description">{isOriginalOnly ? 'Scegli il formato: il file importato rimane invariato.' : 'Scegli la versione del libro e il formato da scaricare o stampare.'}</p></div>
-            {!isOriginalOnly && <div className="sb-export-variant">
-              <button type="button" className={exportVariant === 'study' ? 'active' : ''} onClick={() => setExportVariant('study')}>Testo di studio</button>
-              <button type="button" className={exportVariant === 'simple' ? 'active' : ''} onClick={() => setExportVariant('simple')}>In parole semplici</button>
-              <button type="button" className={exportVariant === 'both' ? 'active' : ''} onClick={() => setExportVariant('both')}>Due versioni complete</button>
-            </div>}
-          </div>
           <div className="sb-export-formats">
             {isOriginalOnly && <button type="button" onClick={() => onExport('original', 'original')}>Formato originale</button>}
             <button type="button" onClick={() => onExport('pdf', isOriginalOnly ? 'original' : exportVariant)}>PDF</button>
@@ -630,7 +625,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             <button type="button" onClick={() => onExport('txt', isOriginalOnly ? 'original' : exportVariant)} disabled={!isOriginalOnly && exportVariant === 'both'}>TXT</button>
             {!isOriginalOnly && <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>}
           </div>
-          {!isOriginalOnly && <p>«Due versioni complete» include prima tutto il testo di studio, poi tutto il libro in parole semplici nello stesso documento. L’originale resta separato nella Libreria.</p>}
+          {!isOriginalOnly && <p>Le spiegazioni «In parole semplici» si esportano dalla nuova sezione della Libreria.</p>}
         </article>
       )}
 
