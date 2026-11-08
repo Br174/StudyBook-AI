@@ -24,11 +24,11 @@ const units=[{id:'0:0',source:partA,pageStart:1,pageEnd:1},
  {id:'0:1',source:partB,pageStart:2,pageEnd:2}];
 const levels=['50','20'];
 const protocol=STUDY_DRAFT_PROTOCOL_V74;
-async function call(level,phase,prior=[]){
- const originals=units.reduce((n,u)=>n+studyLetters(u.source),0);
+async function call(level,phase,prior=[],activeUnits=units){
+ const originals=activeUnits.reduce((n,u)=>n+studyLetters(u.source),0);
  const body={phase,draftProtocol:protocol,level,bookTitle:'Prova sintetica LAB74',
-  units,pageBudgetsV74:pageLetterBudgetsV74(units,level),
-  unitBudgets:buildUnitBudgetsV71(units,level),
+  units:activeUnits,pageBudgetsV74:pageLetterBudgetsV74(activeUnits,level),
+  unitBudgets:buildUnitBudgetsV71(activeUnits,level),
   targetLetters:Math.round(originals*(1-Number(level)/100)),
   maxOutputTokens:8500,timeoutMs:100000,
   ...(prior.length?{repairDrafts:prior.map(p=>({id:p.id,text:p.text}))}:{})};
@@ -45,7 +45,7 @@ async function call(level,phase,prior=[]){
   outputLetters:data.lengthReview?.observedLetters??null};
  console.log('LAB74_LIVE_RECALIBRATION',JSON.stringify(report));
  return {ok:response.ok&&Array.isArray(data.parts)&&
-  data.parts.length===units.length,parts:data.parts||[],report};
+  data.parts.length===activeUnits.length,parts:data.parts||[],report};
 }
 let ready=false,lastStatus=null,lastProtocol=null;
 for(let attempt=0;attempt<12;attempt++){
@@ -62,17 +62,37 @@ for(let attempt=0;attempt<12;attempt++){
 if(!ready)throw Error('WRONG_QA_WORKER after bounded propagation: status='+lastStatus+
  ' protocol='+lastProtocol);
 console.log('LAB74_QA_WORKER_READY',JSON.stringify({protocol,lastStatus}));
-let finalGood=0;
+let finalGood=0,requests=0;
 for(const level of levels){
- const first=await call(level,'draft-v74');
+ const first=await call(level,'draft-v74');requests++;
  if(!first.ok){console.log('LAB74_LIVE_STOP',level,'initial failed');break;}
  if(first.report.compliant){finalGood++;continue;}
- const second=await call(level,'recalibrate-v74',first.parts);
- if(second.report.compliant)finalGood++;
- if(!second.ok)break;
+ const draftById=new Map(first.parts.map(p=>[p.id,p.text]));
+ // ONLY out-of-band pages are requested again. Already conforming page
+ // text must be kept byte-for-byte unchanged, as in the LAB74 app.
+ for(const wrongPage of first.report.pages.filter(p=>!p.within)){
+  if(requests>=6)break;
+  const sourcePage=units.find(u=>u.pageStart===wrongPage.id);
+  if(!sourcePage)throw Error('UNKNOWN_SOURCE_PAGE');
+  const saved=draftById.get(sourcePage.id);
+  if(!saved)throw Error('MISSING_SAVED_DRAFT');
+  const second=await call(level,'recalibrate-v74',
+   [{id:sourcePage.id,text:saved}],[sourcePage]);requests++;
+  if(!second.ok){console.log('LAB74_LIVE_SECOND_PASS_FAIL',level);break;}
+  if(second.report.compliant)draftById.set(sourcePage.id,second.parts[0].text);
+ }
+ const finalPages=pageLetterBudgetsV74(units,level).map(g=>{
+  const total=g.unitIds.reduce((n,id)=>n+studyLetters(draftById.get(id)||''),0);
+  return {page:g.pageStart,output:total,target:g.targetLetters,
+   conforms:total>=g.minLetters&&total<=g.maxLetters};
+ });
+ const allGood=finalPages.every(p=>p.conforms);
+ if(allGood)finalGood++;
+ console.log('LAB74_LIVE_SELECTIVE_FINAL',JSON.stringify({
+  level,allGood,finalPages,requests,source:'synthetic-only'}));
 }
 console.log('LAB74_LIVE_SECOND_PASS_SUMMARY',JSON.stringify({
  testedLevels:levels.length,globallyCompliant:finalGood,
- boundedRequests:true,syntheticOnly:true,noPaidModel:true,
+ requests,boundedRequests:requests<=6,syntheticOnly:true,noPaidModel:true,
  meaningfulOnlyWhenEveryPageConforms:true
 }));
