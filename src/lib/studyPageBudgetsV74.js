@@ -81,3 +81,20 @@ export function pageLetterReviewV74(units,parts,level){
    Array.from({length:g.pageEnd-g.pageStart+1},(_,i)=>g.pageStart+i)))]
     .sort((a,b)=>a-b)};
 }
+
+// LAB74: during SECOND PHASE, never send an already conforming page back to
+// Gemini just because its neighboring page missed the letter budget. Group
+// overlapping original-page units atomically and preserve successful text.
+export function selectPageRepairUnitsV74(units,parts,level){
+ const review=pageLetterReviewV74(units,parts,level);
+ const wrongIds=new Set(review.groups.filter(g=>!g.withinBand)
+  .flatMap(g=>g.unitIds));
+ return {review,
+  repairUnits:units.filter(u=>wrongIds.has(u.id)),
+  untouchedUnits:units.filter(u=>!wrongIds.has(u.id)),
+  wrongPages:review.groups.filter(g=>!g.withinBand)
+   .map(g=>({pageStart:g.pageStart,pageEnd:g.pageEnd,
+    missing:g.missing,achievedReduction:g.achievedReduction,
+    target:g.targetLetters,min:g.minLetters,max:g.maxLetters})),
+ };
+}
