@@ -19,6 +19,8 @@ jobs:
         with:
           node-version: '22'
       - name: Isolated MotorLab Pac-Man source, branch and consistency preflight
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           test "$GITHUB_REF_NAME" = "lab/studybook-core-android-01-update-72-targeted-repair-20261108"
           node scripts/motorlab-active-guard.mjs --self-test
