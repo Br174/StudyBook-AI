@@ -47,8 +47,21 @@ async function call(level,phase,prior=[]){
  return {ok:response.ok&&Array.isArray(data.parts)&&
   data.parts.length===units.length,parts:data.parts||[],report};
 }
-const head=await fetch(url,{method:'GET',signal:AbortSignal.timeout(12000)});
-if(head.headers.get('X-StudyBook-Draft-Protocol')!==protocol)throw Error('WRONG_QA_WORKER');
+let ready=false,lastStatus=null,lastProtocol=null;
+for(let attempt=0;attempt<12;attempt++){
+ try{
+  const head=await fetch(url,{method:'GET',
+   headers:{'Cache-Control':'no-cache'},
+   signal:AbortSignal.timeout(12000)});
+  lastStatus=head.status;
+  lastProtocol=head.headers.get('X-StudyBook-Draft-Protocol');
+  if(lastStatus===405&&lastProtocol===protocol){ready=true;break;}
+ }catch(error){lastStatus=String(error?.name||'NetworkFailure')}
+ await new Promise(resolve=>setTimeout(resolve,2000));
+}
+if(!ready)throw Error('WRONG_QA_WORKER after bounded propagation: status='+lastStatus+
+ ' protocol='+lastProtocol);
+console.log('LAB74_QA_WORKER_READY',JSON.stringify({protocol,lastStatus}));
 let finalGood=0;
 for(const level of levels){
  const first=await call(level,'draft-v74');
