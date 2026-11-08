@@ -22,6 +22,7 @@ import {finalizeStudyQualityV66} from './studyQualityV66.js';
 import {repairFocusForUnitV62} from './editionRepairV53.js';
 import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 import {STUDY_DRAFT_PROTOCOL_V71,verifyStudyDraftResponseV71,buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
+import {measureEditionLengthV72} from './studyRebalancePolicyV67.js';
 
 const LEVELS=['summary','50','40','30','20','10'];
 const CACHE='integral-v57-draft-first',VERSION='lab38-progressive-editions-v1';
@@ -342,6 +343,9 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
    repairAttempts:previous?.sourceFingerprint===fp
      ?{...(previous?.repairAttemptsV57||{})}:{},phase:'draft',
    remainingBatches:0,lastCode:null,
+   // Observability only, never a creation gate or extra provider request.
+   lengthChecksV72:previous?.sourceFingerprint===fp
+     ?{...(previous?.diagnostics?.lengthChecksV72||{})}:{},
    // Persist proof of a one-off legacy recovery in every subsequent snapshot.
    qualityRecoveryV62:previous?.sourceFingerprint===fp
      ?previous?.diagnostics?.qualityRecoveryV62||null:null};
@@ -409,6 +413,32 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
          pageEnd:block.at(-1).pageEnd});
        const response=await request(block,level,{bookTitle:book.title||'',signal,
          phase:'draft',onWait:data=>onActivity({phase:'pacing',level,...data})});
+       // LAB72: measure each actual provider response, not just the ideal
+       // length of simulated answers used in unit tests.
+       const originalLetters=block.reduce((n,u)=>n+studyLetters(u.source),0);
+       const responseLetters=(response.parts||[]).reduce((n,p)=>n+studyLetters(p.text),0);
+       const observed=measureEditionLengthV72({
+         level,originalLetters,outputLetters:responseLetters,
+         completeParts:response.completeParts===true,
+         finishReason:response.finishReason||null
+       });
+       const priorAudit=diagnostics.lengthChecksV72[level]||{
+         blocks:0,withinBand:0,outOfBand:0,truncated:0};
+       diagnostics.lengthChecksV72[level]={
+         blocks:priorAudit.blocks+1,
+         withinBand:priorAudit.withinBand+(observed.compliant?1:0),
+         outOfBand:priorAudit.outOfBand+(!observed.compliant?1:0),
+         truncated:priorAudit.truncated+(observed.suspectedTruncation?1:0),
+         last:{sourceLetters,outputLetters:responseLetters,
+           reduction:observed.achievedReduction,target:observed.targetReduction,
+           min:observed.minLetters,max:observed.maxLetters,
+           finishReason:response.finishReason||null,
+           providerModel:response.model||null,
+           inputTokens:response.inputTokens??null,
+           outputTokensUsed:response.outputTokensUsed??null,
+           outputTokenLimit:response.outputTokenLimit??null,
+           protocol:response.draftProtocol||null}
+       };
        const indexed=new Map();
        for(const item of response.parts||[])if(typeof item?.id==='string'&&clean(item.text))
          indexed.set(item.id,clean(item.text));
@@ -420,7 +450,17 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        }
        if(newEntries.length){
          const ok=await saveRuntimeUnitResults(newEntries.map(x=>({key:x.key,result:{
-           kind:'draft-v57',id:x.u.id,signature:signature(x.u),text:x.text}})));
+           kind:'draft-v57',id:x.u.id,signature:signature(x.u),text:x.text,
+           draftEvidenceV72:{
+             protocol:response.draftProtocol||null,model:response.model||null,
+             sourceLetters:studyLetters(x.u.source),
+             resultingLetters:studyLetters(x.text),
+             achievedReduction:percentReduced(studyLetters(x.u.source),studyLetters(x.text)),
+             finishReason:response.finishReason||null,
+             generationStoppedEarly:response.generationStoppedEarly===true,
+             generatedAt:new Date().toISOString(),
+             bookFingerprint:fp,level
+           }}})));
          if(!ok)return halt(onProgress,book,units,rows,drafts,fp,diagnostics,
            'draft','local-storage-error','AI_CHECKPOINT_UNAVAILABLE',false);
          for(const item of newEntries)saveDraftToGrid(drafts,item.u,level,item.text);
