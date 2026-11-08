@@ -467,7 +467,7 @@ export default async function handler(req,res){
         const unit=byOriginalId.get(part.id);
         if(!unit?.previousDraft)continue;
         const localEdit=unit.targetedRepairV72?.localEdit;
-        if(!localEdit){part.text=unit.previousDraft;continue;}
+        if(!localEdit){part.text=unit.previousDraft;delete part.patchCandidatesV72;continue;}
         try{
           const variants=[],oldMissing=auditFidelity(unit.source,unit.previousDraft)
             .missingProtected?.length||0;
