@@ -2,13 +2,14 @@
 // No images, no OCR changes, no silent fallback, no paid-model routing.
 import {studyLetters} from '../src/lib/studyPillarV38.js';
 import {STUDY_TARGET_V67} from '../src/lib/studyRebalancePolicyV67.js';
+import {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {immutableFragmentsV67} from '../src/lib/immutableFragmentsV67.js';
 import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const DEFAULT_MODEL='gemini-3.5-flash-lite';
 const ENDPOINT='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 const OUTPUT_LIMIT=50000,INPUT_LIMIT=900000;
-export const STUDY_DRAFT_PROTOCOL_V70='lab70-draft-length-v1';
+
 const EDITIONS=new Set(['summary','10','20','30','40','50']);
 const SCHEMA={type:'json_schema',json_schema:{
   name:'studybook_integral_pages',strict:true,
