@@ -6,6 +6,8 @@ import {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {STUDY_DRAFT_PROTOCOL_V71,buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
 import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
 import {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
+import {MARKER_MODES_V78,MARKER_PROBE_PROTOCOL_V78,validCheckpointV78,
+ markerInstructionV78} from '../src/lib/studyMarkerExperimentsV78.js';
 import {EXPERIMENT_MODES_V77,NUMBERING_EXPERIMENT_PROTOCOL_V77,
  markInstructionV77} from '../src/lib/studyNumberingExperimentV77.js';
 import {STUDY_DRAFT_PROTOCOL_V75,PLANNING_MAX_UNITS_V75,
@@ -313,6 +315,8 @@ async function countOfficialTokens(model,key,messages,signal){
 }
 export default async function handler(req,res){
   res.setHeader('X-StudyBook-Draft-Protocol',STUDY_DRAFT_PROTOCOL_V74);
+  if(req.env?.STUDYBOOK_MARKER_PROBE_V78==='enabled')
+    res.setHeader('X-StudyBook-Marker-Probe',MARKER_PROBE_PROTOCOL_V78);
   if(req.env?.STUDYBOOK_COUNTING_EXPERIMENT_V77==='enabled')
     res.setHeader('X-StudyBook-Counting-Experiment',NUMBERING_EXPERIMENT_PROTOCOL_V77);
   // Separate opt-in staging protocol; existing LAB74 devices continue as-is.
@@ -323,6 +327,11 @@ export default async function handler(req,res){
   if(!key)return fail(res,503,'AI_NOT_CONFIGURED','Gemini non configurato.');
   const selected=env.STUDYBOOK_PREFERRED_EDITION_MODEL||env.AI_MODEL||DEFAULT_MODEL;
   if(!FREE_MODELS.has(selected))return fail(res,503,'AI_MODEL_NOT_ALLOWLISTED','Modello gratuito non verificato.');
+  const requestedMarkerModeV78=req.body?.markerModeV78;
+  const isolatedMarkersV78=req.env?.STUDYBOOK_MARKER_PROBE_V78==='enabled';
+  if(requestedMarkerModeV78!==undefined &&
+    (!isolatedMarkersV78||!MARKER_MODES_V78.includes(requestedMarkerModeV78)))
+    return fail(res,403,'AI_MARKER_PROBE_DISABLED','Marcatori di prova non disponibili.');
   const requestedCountingModeV77=req.body?.countingModeV77;
   const isolatedCountingV77=req.env?.STUDYBOOK_COUNTING_EXPERIMENT_V77==='enabled';
   // This audit-only feature is never exposed by deployed StudyBook Workers
@@ -420,6 +429,14 @@ export default async function handler(req,res){
   if(protocolV75&&safe.length>PLANNING_MAX_UNITS_V75)
     return fail(res,400,'AI_PLANNING_TOO_MANY_UNITS',
       'Esperimento di pianificazione limitato a 8 unità complete.');
+  if(requestedMarkerModeV78&&
+    (safe.length!==1||req.body?.phase!=='draft-v74'||chars>9000))
+    return fail(res,400,'AI_MARKER_PROBE_INVALID','Richiesta di prova limitata a una pagina sintetica.');
+  const checkedCheckpointV78=requestedMarkerModeV78
+    ?validCheckpointV78(req.body?.checkpointV78,requestedMarkerModeV78)
+    :null;
+  if(requestedMarkerModeV78&&!checkedCheckpointV78?.ok)
+    return fail(res,400,'AI_MARKER_CHECKPOINT_INVALID','Conteggio intermedio non verificato.');
   const originalLetters=safe.reduce((n,u)=>n+studyLetters(u.source),0);
   if(protocolV75||protocolV74||protocolV72||protocolV71){
     // One coordinator for global percentages; individual block rounding may
@@ -488,6 +505,7 @@ export default async function handler(req,res){
     units:safe,repair:byId.size>0,
     ...(protocolV75||protocolV74?{pageBudgetsV74:verifiedPageBudgetsV74}: {}),
     ...(plansV75?{plansV75}: {}),
+    ...(checkedCheckpointV78?.previous?{checkedPreviousV78:checkedCheckpointV78.previous}:{}),
     ...(pageFeedbackV74?{pageFeedbackV74}: {})});
   const observed=safe.reduce((n,u)=>n+studyLetters(u.previousDraft||''),0);
   const desired=level==='summary'?Math.round(originalLetters*.40):target;
@@ -506,8 +524,14 @@ export default async function handler(req,res){
       Math.ceil(originalLetters*(1-STUDY_TARGET_V67[level].max/100)),
       Math.floor(originalLetters*(1-STUDY_TARGET_V67[level].min/100)),
       originalLetters):null;
-  const messages=[{role:'system',content:numberingInstructionV77||
-    stageInstruction},
+  const markerInstruction=requestedMarkerModeV78
+    ?markerInstructionV78(requestedMarkerModeV78,originalLetters,
+        Math.round(originalLetters*(1-STUDY_TARGET_V67[level].target/100)),
+        Math.ceil(originalLetters*(1-STUDY_TARGET_V67[level].max/100)),
+        Math.floor(originalLetters*(1-STUDY_TARGET_V67[level].min/100)),
+        checkedCheckpointV78):null;
+  const messages=[{role:'system',content:markerInstruction||
+    numberingInstructionV77||stageInstruction},
     {role:'user',content:user}];
   const outputTokens=bounded(req.body?.maxOutputTokens,4096,OUTPUT_LIMIT,OUTPUT_LIMIT);
   const controller=new AbortController();
