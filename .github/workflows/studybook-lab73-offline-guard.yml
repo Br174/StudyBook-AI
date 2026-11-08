@@ -2,7 +2,11 @@ name: StudyBook LAB73 network recovery offline guard
 on:
   push:
     branches: ['audit/studybook-lab73-network-preflight-*']
-    paths: ['.github/workflows/studybook-lab73-offline-guard.yml']
+    paths:
+      - '.github/workflows/studybook-lab73-offline-guard.yml'
+      - 'scripts/test-lab73-network-recovery.mjs'
+      - 'src/lib/studyNetworkRecoveryV73.js'
+      - 'src/lib/draftFirstV57.js'
 permissions:
   contents: read
 jobs:
