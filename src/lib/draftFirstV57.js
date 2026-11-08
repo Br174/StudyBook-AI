@@ -502,7 +502,9 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        }
        queue.unshift({block,attempt:1});
      }catch(error){
-       const code=signal?.aborted?'AI_MANUAL_RESTART':error?.code||'AI_PROVIDER_NETWORK';
+       if(globalThis.__studybookLab73Probe===true)
+        console.error('LAB73_FIRST_PASS_EXCEPTION',String(error?.stack||error?.message||error).slice(0,900));
+       const code=signal?.aborted?'AI_MANUAL_RESTART':error?.code||'AI_GENERATION_RUNTIME';
        diagnostics.lastCode=code;diagnostics.providerErrors++;
        diagnostics.errorsByCode[code]=(diagnostics.errorsByCode[code]||0)+1;
        diagnostics.lastProviderDiagnostic={
