@@ -11,6 +11,30 @@ export const STUDY_TARGET_V67=Object.freeze({
  '20':{target:20,min:18,max:22},
  '10':{target:10,min:8,max:12}
 });
+// LAB72: THE canonical numeric assessment for generator, QA and reader.
+// Never infer quality from an upper-bound-only summary or a complete JSON envelope.
+export function measureEditionLengthV72({level,originalLetters,outputLetters,
+ completeParts=true,finishReason=null}={}){
+ const policy=STUDY_TARGET_V67[String(level)];
+ if(!policy||!Number.isInteger(originalLetters)||originalLetters<=0||
+    !Number.isInteger(outputLetters)||outputLetters<0)
+   throw Object.assign(new Error('Dati originali o variante non validi'),{code:'STUDY_LENGTH_INPUT_INVALID'});
+ const targetLetters=Math.round(originalLetters*(1-policy.target/100));
+ const minLetters=Math.ceil(originalLetters*(1-policy.max/100));
+ const maxLetters=Math.floor(originalLetters*(1-policy.min/100));
+ const achievedReduction=percentReduced(originalLetters,outputLetters);
+ const withinBand=achievedReduction!==null&&
+   achievedReduction>=policy.min&&achievedReduction<=policy.max;
+ const result={level:String(level),originalLetters,outputLetters,
+   targetReduction:policy.target,targetLetters,minLetters,maxLetters,
+   achievedReduction,exact:outputLetters===targetLetters,
+   withinBand,completeParts:Boolean(completeParts),
+   finishReason:finishReason||null,
+   suspectedTruncation:finishReason==='length',
+   compliant:Boolean(completeParts)&&withinBand&&finishReason!=='length'};
+ return result;
+}
+
 export function editionReductionV67(units,drafts,level){
  const original=units.reduce((n,u)=>n+studyLetters(u.source),0);
  let output=0,missing=0;
