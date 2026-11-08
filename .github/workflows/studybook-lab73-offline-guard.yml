@@ -7,6 +7,8 @@ on:
       - 'scripts/test-lab73-network-recovery.mjs'
       - 'src/lib/studyNetworkRecoveryV73.js'
       - 'src/lib/draftFirstV57.js'
+      - 'scripts/test-lab57-draft-first.mjs'
+      - 'scripts/test-lab58-large-block-cadence.mjs'
 permissions:
   contents: read
 jobs:
