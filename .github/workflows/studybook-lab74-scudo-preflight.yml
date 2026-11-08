@@ -2,7 +2,11 @@ name: StudyBook LAB74 MotorLab Scudo360 pre-release audit
 on:
   push:
     branches: ['lab/studybook-core-android-01-update-74-*']
-    paths: ['.github/workflows/studybook-lab74-scudo-preflight.yml']
+    paths:
+      - '.github/workflows/studybook-lab74-scudo-preflight.yml'
+      - 'scripts/test-lab71-unit-budgets.mjs'
+      - 'scripts/test-lab72-protocol.mjs'
+      - 'scripts/test-lab67-simplified-precise-rebalance.mjs'
 permissions:
   contents: read
 jobs:
