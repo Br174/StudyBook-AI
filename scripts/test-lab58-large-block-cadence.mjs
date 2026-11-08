@@ -3,7 +3,8 @@
 import assert from 'node:assert/strict';
 import {indexedDB as fakeIndexedDB} from 'fake-indexeddb';
 import {generateDraftFirstV57} from '../src/lib/draftFirstV57.js';
-import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
+import {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
+import {pageLetterReviewV74} from '../src/lib/studyPageBudgetsV74.js';
 import {studyLetters} from '../src/lib/studyPillarV38.js';
 import {clearGeminiPause} from '../src/lib/geminiQuotaControllerV36.js';
 import {
@@ -32,9 +33,10 @@ const makeReply=p=>{
  const sourceLetters=p.units.reduce((n,u)=>n+studyLetters(u.source),0);
  const observedLetters=parts.reduce((n,x)=>n+studyLetters(x.text),0);
  return {engine:'ai',version:'integral-v51',level:p.level,parts,
-  completeParts:true,draftProtocol:STUDY_DRAFT_PROTOCOL_V72,
+  completeParts:true,draftProtocol:STUDY_DRAFT_PROTOCOL_V74,
   outputTokenLimit:6000,finishReason:'stop',
-  lengthReview:{sourceLetters,observedLetters,withinBand:true,compliant:true}};
+  lengthReview:{sourceLetters,observedLetters,withinBand:true,compliant:true,
+   pageReviewV74:pageLetterReviewV74(p.units,parts,p.level)}};
 };
 function simulate({limitRpm=3,latencyMs=5000,total=6,pauseOn429Ms=120000,gapMs=0}={}){
  let now=0,rejections=0,requestCount=0,success=0,rolling=[];
