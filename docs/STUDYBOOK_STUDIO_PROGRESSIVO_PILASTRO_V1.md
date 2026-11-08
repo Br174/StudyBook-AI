@@ -8,49 +8,59 @@ L'app serve a **studiare lo stesso argomento per approfondimenti successivi**. L
 
 Ogni edizione trae origine **direttamente dal PDF originale immutabile** (non dalla riduzione precedente) e conserva tutte le **idee/definizioni/temi fondamentali**, il senso delle negazioni, le condizioni e i riferimenti necessari. Il riassunto e il 50% si possono presentare come elenco dei concetti con brevissime spiegazioni; i livelli successivi aggiungono gradualmente ragionamenti, collegamenti, contesto e dettagli. Non significa che tutte le parole e tutti gli esempi debbano comparire in tutte le edizioni.
 
-### Riduzioni percentuali VINCOLANTI · consolidamento approvato 7–8 novembre 2026
+### Budget preventivo VINCOLANTE · approvazione 8 novembre 2026 · LAB74
 
-Questo aggiornamento esplicito **sostituisce** i due vecchi criteri incompatibili:
-«lettere esatte per ciascun blocco» e «Riassunto senza percentuale fissa».
-Resta invariato il principio fondante: studiare lo stesso argomento con
-spiegazioni sempre più approfondite ricavate dal PDF originale immutabile.
+Questa regola più recente **sostituisce i vecchi margini ±2 punti**
+e il vecchio criterio "solo globale" per le nuove generazioni.
+È stata approvata esplicitamente dal fondatore con l'esempio:
+100 lettere originali, riduzione 50%, risultato centrale 50,
+minimo 45 e massimo 55.
 
-La percentuale è la **quantità di lettere Unicode alfabetiche eliminate**
-rispetto all'originale dell'INTERO LIBRO, non la quota rimasta.
-Spazi, cifre e punteggiatura non entrano nel conteggio.
+**Prima di chiamare Gemini** StudyBook conta le lettere alfabetiche Unicode
+dell'originale di ogni pagina. Spazi, cifre e punteggiatura non contano.
+Calcola per ciascuna delle sei varianti la quantità di LETTERE DA
+CONSERVARE, non la percentuale di lettere da tenere confusa con la riduzione.
+Comunica a Gemini l'originale, l'obiettivo centrale, il minimo e il massimo.
+Una quota massima NON sostituisce l'obiettivo centrale: il modello non può
+scambiare il limite 55 con il permesso di produrre 10 lettere.
 
-Obiettivi richiesti:
-- Riassunto circa 60% di riduzione: **55–65%**
-- 50%: **48–52%**
-- 40%: **38–42%**
-- 30%: **28–32%**
-- 20%: **18–22%**
-- 10%: **8–12%**
-- Originale: immutabile, nessuna riduzione.
+| Versione | Lettere centrali su 100 | Fascia consentita su 100 |
+| --- | ---: | ---: |
+| Riassunto (riduzione 60%) | 40 | 35–45 |
+| 50% | 50 | 45–55 |
+| 40% | 60 | 55–65 |
+| 30% | 70 | 65–75 |
+| 20% | 80 | 75–85 |
+| 10% | 90 | 85–95 |
+| Originale | 100 | identico al PDF |
 
-Le quote per i singoli paragrafi o blocchi sono **indicative** per distribuire
-la lunghezza, non limiti duri che autorizzano omissioni semantiche.
-Una versione completa è conforme solo quando la sua percentuale GLOBALE
-rientra nella fascia; va inoltre mantenuta la fedeltà al testo, senza
-inventare dati, alterare formule o mutilare citazioni necessarie.
-Le righe risparmiate sono una statistica separata, mai usata come sinonimo
-del conteggio delle lettere.
+Il margine è **±5 punti percentuali delle lettere ORIGINALI**, non ±5%
+delle lettere già ridotte: per una pagina di 2.000 lettere e riduzione 50%,
+obiettivo 1.000, minimo 900, massimo 1.100.
 
-**Ordine della lavorazione approvato:** prima si generano e salvano tutte le
-bozze; POI si effettua il controllo di completezza, precisione, chiarezza e
-percentuali; la correzione è mirata, limitata e non blocca la prima generazione.
-Il pulsante «Migliora percentuali e chiarezza» avvia una ricalibrazione
-esplicita, preservando i risultati e i checkpoint già salvati.
-Nessuna etichetta «verificata», dato inventato o sostituzione silenziosa
-può dichiarare conforme una versione fuori fascia.
+StudyBook organizza prima i testi per pagina originale e fa rispettare il
+budget delle lettere della pagina, oltre al totale del libro. Se un paragrafo
+originale attraversa più pagine, il gruppo di pagine sovrapposte è
+**indivisibile**: nessun taglio di paragrafo soltanto per far tornare il conto.
+Se la pagina è così breve che nessun numero intero di lettere può cadere
+nella fascia, segnala il caso, senza una falsa certificazione.
 
-La **sola autorità numerica attiva** è
-`src/lib/studyRebalancePolicyV67.js`, con valutazione condivisa
-`measureEditionLengthV72`. `studyPillarV38.js` conserva i propri
-controlli storici per i libri non ancora migrati, ma NON governa i
-target numerici delle nuove elaborazioni LAB72.
-`studyQualityV66.js`, il backend generativo e il lettore devono
-applicare gli stessi margini globali. Nessuna seconda fonte di verità.
+**Prima crea, poi controlla e corregge**: nessun confronto pesante o Gemini
+aggiuntivo durante la generazione delle bozze; tutte le bozze e i checkpoint
+vanno salvati in ordine. Il successivo audit valuta dimensione per pagina,
+dimensione globale e fedeltà di significato. Una riduzione fuori margine
+resta leggibile soltanto come provvisoria, senza essere dichiarata conforme.
+Le correzioni recuperano contenuti dall'originale, non inseriscono frasi
+ripetitive; non cancellano negazioni, condizioni, citazioni normative,
+formule, dettagli indispensabili né inventano esempi.
+
+Autorità numerica unica: `src/lib/studyRebalancePolicyV67.js`;
+calcolo per pagine: `src/lib/studyPageBudgetsV74.js`;
+backend di controllo dell'originale: `api/editionsBulkV51.js`;
+protocollo aggiornamento app/Worker: `src/lib/studyDraftProtocolV74.js`.
+Le regole dei blocchi di codice LAB38–LAB73 valgono soltanto per
+compatibilità storica, non scavalcano la LAB74. Le righe risparmiate sono
+una statistica separata, mai usata per misurare le lettere.
 
 ### Ordine didattico, fedeltà e protezioni
 - Sequenza dello studio: Riassunto, 50, 40, 30, 20, 10, originale.
