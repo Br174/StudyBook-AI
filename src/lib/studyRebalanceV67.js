@@ -51,10 +51,10 @@ export async function rebalanceSavedStudyBookV67(book,{
  // A paused current attempt can resume with the same stable checkpoints.
  const prior=start.rebalanceV67;
  const resumable=prior?.sourceFingerprint===fp&&
-   prior?.version==='lab69-strict-range-v1'&&
+   prior?.version==='lab72-targeted-source-v1'&&
    ['running','interrupted','waiting-provider'].includes(prior?.status);
  const stage=resumable?clone(prior):{
-   version:'lab69-strict-range-v1',sourceFingerprint:fp,
+   version:'lab72-targeted-source-v1',sourceFingerprint:fp,
    begunAt:stamp(),completed:{},buffers:{},errors:{},attempted:{},
    requests:0,accepted:0,originalSaved:true,
    status:'running'
@@ -93,7 +93,11 @@ export async function rebalanceSavedStudyBookV67(book,{
    const chars=block.reduce((n,u)=>n+u.source.length,0);
    const maxOutputTokens=Math.min(BULK_OUTPUT_TOKEN_CEILING,
     Math.max(4096,Math.ceil(chars*ratio/1.5)+block.length*115+1800));
-   let previousParts=null;
+   // Phase two starts FROM the existing saved draft (not a fresh global
+   // rewrite). All content is provisional until the complete edition passes.
+   let previousParts=block.map(u=>({
+     id:u.id,text:clean(current.draftRowsV57?.[u.ci]?.[u.pi]?.editions?.[level])
+   })).filter(p=>p.text);
    let blockValidated=false;
    for(let trial=0;trial<2;trial++){
     if(signal?.aborted){await notify('interrupted');return current;}
@@ -104,7 +108,7 @@ export async function rebalanceSavedStudyBookV67(book,{
      return current;
     }
     const body={
-      phase:trial===0?'recalibrate-v72':'repair-v72',
+      phase:previousParts.length?'repair-v72':'recalibrate-v72',
       draftProtocol:STUDY_DRAFT_PROTOCOL_V72,
       level,bookTitle:String(book.title||'').slice(0,140),
       targetLetters:level==='summary'?null:limit,
@@ -114,16 +118,16 @@ export async function rebalanceSavedStudyBookV67(book,{
        chapterTitle:u.chapterTitle,sectionTitle:u.sectionTitle,
        pageStart:u.pageStart,pageEnd:u.pageEnd}))
     };
-    if(trial>0&&previousParts){
+    if(previousParts.length){
       // Existing LAB67 worker supports this bounded second-pass input.
       // Never change the base source nor launch a background repair cycle.
       body.repairDrafts=previousParts.map(p=>({
        id:p.id,text:p.text,repairFocus:{
         targetLetters:unitBudgets[p.id]?.targetLetters??null,
         maxSummaryLetters:unitBudgets[p.id]?.summaryTargetLetters??null,
-        note:'La versione precedente ha una riduzione fuori margine. '+
-         'Riscrivi dal testo originale con riduzione '+policy.target+
-         '% (margine '+policy.min+'-'+policy.max+'%), prosa semplice e precisa.'
+        note:'Revisione mirata della bozza precedente; la fonte originale è unica autorità. '+
+         'Mira a '+policy.target+'% (fascia '+policy.min+'-'+policy.max+'%). '+
+         'Recupera soltanto informazioni presenti nella fonte, elimina soltanto ridondanze.'
        }
       }));
     }
@@ -168,6 +172,21 @@ export async function rebalanceSavedStudyBookV67(book,{
       previousParts=candidates;
       const outputLetters=candidates.reduce((sum,p)=>sum+studyLetters(p.text),0);
       const reduction=percentReduced(originals,outputLetters);
+      stage.diagnosticsV72={...(stage.diagnosticsV72||{}),
+        [level]:{trial:trial+1,sourceLetters:originals,outputLetters,
+          reduction,finishReason:reply.finishReason??null,
+          outputTokensUsed:reply.outputTokensUsed??null,
+          outputTokenLimit:reply.outputTokenLimit??null,
+          lastProtocol:reply.draftProtocol||null,
+          adjustedFromSavedDraft:true}};
+      // A token-limited response cannot be trusted as a complete revision,
+      // even when it happens to fit the numerical target.
+      if(reply.generationStoppedEarly===true||reply.finishReason==='length'){
+        stage.errors[level]='GEMINI_OUTPUT_TRUNCATED';
+        await notify('running');
+        // Don't resend a token-limited result as "complete" material.
+        break;
+      }
       // Strict acceptance BEFORE buffering: a 10% request can never
       // publish a 72% version, even if it is closer than the old draft.
       if(reduction!==null&&reduction>=policy.min&&reduction<=policy.max){
