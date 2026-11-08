@@ -1,12 +1,14 @@
 // LAB51: one bounded Gemini call for a contiguous run of COMPLETE source pages.
 // No images, no OCR changes, no silent fallback, no paid-model routing.
 import {studyLetters} from '../src/lib/studyPillarV38.js';
+import {STUDY_TARGET_V67} from '../src/lib/studyRebalancePolicyV67.js';
 import {immutableFragmentsV67} from '../src/lib/immutableFragmentsV67.js';
 import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const DEFAULT_MODEL='gemini-3.5-flash-lite';
 const ENDPOINT='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 const OUTPUT_LIMIT=50000,INPUT_LIMIT=900000;
+export const STUDY_DRAFT_PROTOCOL_V70='lab70-draft-length-v1';
 const EDITIONS=new Set(['summary','10','20','30','40','50']);
 const SCHEMA={type:'json_schema',json_schema:{
   name:'studybook_integral_pages',strict:true,
@@ -108,7 +110,40 @@ export function editionRewriteInstructionV67(level,phase,target,cap,sourceLetter
   'Produci SOLO JSON conforme: {parts:[{id,text}, ...]}.'
  ].join('\\n');
 }
+// LAB70: single shared strict numerical contract; source-first rewrite, never
+// interpret the level as the percentage of original content to RETAIN.
+export function editionDraftInstructionV70(level,phase,target,cap,sourceLetters){
+ const band=STUDY_TARGET_V67[level];
+ if(!band||!Number.isFinite(sourceLetters)||sourceLetters<=0)
+   throw Error('LAB70: source or target range unavailable');
+ const desired=level==='summary'?Math.round(sourceLetters*.40):target;
+ const minimum=Math.floor(sourceLetters*(1-band.max/100));
+ const maximum=Math.ceil(sourceLetters*(1-band.min/100));
+ const isSummary=level==='summary';
+ return [
+  'StudyBook AI LAB70: crea una RISCRITTURA DIDATTICA COMPLETA basata esclusivamente sul testo originale ricevuto.',
+  'NON creare una sintesi generica o un elenco minimo. Ogni versione richiede una QUANTITÀ DIVERSA di testo originale conservato.',
+  'Il numero di livello indica LETTERE DA ELIMINARE, non lettere da conservare.',
+  'FONTE: '+sourceLetters+' lettere alfabetiche Unicode. OBIETTIVO DI RIDUZIONE: '+band.target+'%.',
+  'RISULTATO RICHIESTO: circa '+desired+' lettere alfabetiche Unicode; intervallo consentito da '+minimum+' a '+maximum+' lettere.',
+  'Attenzione: per 1000 lettere originali la riduzione del 10% lascia circa 900 lettere; 20% lascia 800; 30% lascia 700; 40% lascia 600; 50% lascia 500.',
+  'Se una risposta contiene meno di '+minimum+' lettere significa che hai RIASSUNTO TROPPO. Devi sviluppare maggiormente le spiegazioni usando soltanto dati presenti nella fonte.',
+  'Prima di terminare, controlla mentalmente che la risposta sia abbastanza lunga: non fermarti dopo pochi concetti introduttivi.',
+  isSummary
+   ?'Il RIASSUNTO è una panoramica completa dei concetti principali con microspiegazioni, non uno slogan. Non superare '+cap+' lettere alfabetiche.'
+   :'Conserva il grado di approfondimento del '+(100-band.target)+'% del testo originale in prosa discorsiva semplice e fedele.',
+  'Riformula in italiano più chiaro e comprensibile, MA NON semplificare le idee cancellando condizioni, passaggi logici, definizioni, ragionamenti o esempi indispensabili.',
+  'Preserva tutte le negazioni, eccezioni, date, cifre, formulazioni normative citate, riferimenti tecnici e formule esattamente quando necessari.',
+  'Non inventare informazioni, non usare parole ripetute o frasi di riempimento per raggiungere la lunghezza. Se la fedeltà è incompatibile con il numero, conserva il significato: il controllo locale segnalerà la mancata conformità.',
+  'Ogni unità di ingresso deve riapparire con lo stesso id, nello stesso ordine; nessuna unità deve essere omessa, fusa o spezzata.',
+  phase==='recalibrate'?'RICALIBRAZIONE: riscrivi dalle FONTI ORIGINALI, senza dipendere dalla vecchia bozza.':'GENERAZIONE PRIMA FASE: produci soltanto le bozze, senza aprire cicli di verifica o correzione.',
+  'Rispondi esclusivamente con JSON valido: {parts:[{id,text},...]}.'
+ ].join('\n');
+}
+
 function instructions(level,target,cap,phase='repair',sourceLetters=0){
+  if(phase==='draft-v70'||phase==='recalibrate'||phase==='repair-v70')
+    return editionDraftInstructionV70(level,phase,target,cap,sourceLetters);
   const creation=phase==='draft';
   const limit=level==='summary'
     ?'La somma delle lettere alfabetiche dei testi restituiti deve essere AL MASSIMO '+cap+'. Il riassunto deve essere più breve dell’edizione al 50%.'
@@ -163,6 +198,7 @@ async function countOfficialTokens(model,key,messages,signal){
   }catch{return null;}
 }
 export default async function handler(req,res){
+  res.setHeader('X-StudyBook-Draft-Protocol',STUDY_DRAFT_PROTOCOL_V70);
   if(req.method!=='POST'){res.setHeader('Allow','POST');return fail(res,405,'METHOD_NOT_ALLOWED','Usare POST.');}
   const env=req.env||{};
   const key=env.AI_API_KEY||env.GEMINI_API_KEY||process.env.AI_API_KEY||process.env.GEMINI_API_KEY;
@@ -231,9 +267,14 @@ export default async function handler(req,res){
   }
   const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),
     units:safe,repair:byId.size>0});
-  const phase=req.body?.phase==='draft'?'draft':
+  const phase=req.body?.phase==='draft-v70'?'draft-v70':
+    req.body?.phase==='repair-v70'?'repair-v70':
+    req.body?.phase==='draft'?'draft':
     req.body?.phase==='rewrite'?'rewrite':
     req.body?.phase==='recalibrate'?'recalibrate':'repair';
+  const protocolRequested=phase==='draft-v70'||phase==='repair-v70';
+  if(protocolRequested&&req.body?.draftProtocol!==STUDY_DRAFT_PROTOCOL_V70)
+    return fail(res,409,'AI_DRAFT_PROTOCOL_MISMATCH','Versione motore Gemini non corrispondente alla LAB70.');
   const originalLetters=safe.reduce((n,u)=>n+studyLetters(u.source),0);
   const messages=[{role:'system',content:instructions(level,target,cap,phase,originalLetters)},
     {role:'user',content:user}];
@@ -300,8 +341,12 @@ export default async function handler(req,res){
       level,parts,completeParts:parts.length===safe.length,
       expectedParts:safe.length,inputTokens,outputTokensUsed:payload?.usage?.completion_tokens||null,
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
+      draftProtocol:protocolRequested?STUDY_DRAFT_PROTOCOL_V70:null,
       lengthReview:{exact:hasExactLength,targetLetters:level==='summary'?cap:target,
-        observedLetters:totalLetters,delta:totalLetters-(level==='summary'?cap:target)},
+        observedLetters:totalLetters,delta:totalLetters-(level==='summary'?cap:target),
+        sourceLetters:originalLetters,
+        achievedReduction:originalLetters?Math.round((1-totalLetters/originalLetters)*1000)/10:null,
+        range:STUDY_TARGET_V67[level]?{min:STUDY_TARGET_V67[level].min,max:STUDY_TARGET_V67[level].max}:null},
       model:selected,elapsedMs});
   }catch(error){
     return fail(res,controller.signal.aborted?504:502,
