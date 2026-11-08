@@ -6,6 +6,7 @@ on:
     paths:
       - 'scripts/test-lab72-negative-baseline.mjs'
       - 'scripts/test-lab72-negative-closure.mjs'
+      - 'scripts/test-lab72-protocol.mjs'
       - 'scripts/test-lab72-real-provider-probe.mjs'
       - 'scripts/test-lab72-real-repair-probe.mjs'
       - 'api/**'
@@ -31,6 +32,7 @@ jobs:
       - name: No-secret no-Gemini reproducible negative baseline
         run: |
           node scripts/test-lab72-negative-closure.mjs
+          node scripts/test-lab72-protocol.mjs
           node scripts/test-lab71-unit-budgets.mjs
           node scripts/test-lab69-strict-bands.mjs
           node scripts/test-lab67-simplified-precise-rebalance.mjs
