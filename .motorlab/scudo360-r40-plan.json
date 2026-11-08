@@ -7,6 +7,12 @@
       "contractIds": [
         "studybook.cloudflare-worker-requests-and-recovery"
       ]
+    },
+    {
+      "id": "lab72-targeted-percentage-correction",
+      "contractIds": [
+        "studybook.lab72-strict-percentage-and-source-fidelity"
+      ]
     }
   ],
   "baselineCommit": "3e4569bd865b7a69f0e6b4dc831661ad3ac63c9b",
