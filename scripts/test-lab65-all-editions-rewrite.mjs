@@ -48,7 +48,7 @@ try{
   verified:Object.fromEntries(levels.map(level=>[level,
     level==='summary'&&approvedPages.has(i+1)]))
  }))];
- const fp='x'.repeat(64);
+ const fp='a'.repeat(64);
  const previous={sourceFingerprint:fp,phase:'review',
   status:'quality-review',draftComplete:true,
   draftRowsV57,stagedRows,
