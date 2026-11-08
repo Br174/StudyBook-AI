@@ -13,6 +13,9 @@ on:
       - 'src/lib/studyDraftProtocolV71.js'
       - 'api/editionsBulkV51.js'
       - 'scripts/test-lab74-*.mjs'
+      - 'scripts/test-lab73-network-recovery.mjs'
+      - 'scripts/test-lab57-draft-first.mjs'
+      - 'scripts/test-lab58-large-block-cadence.mjs'
       - '.github/workflows/studybook-lab74-page-preflight.yml'
 permissions:
   contents: read
@@ -32,5 +35,11 @@ jobs:
         run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
       - name: LAB74 six-page targets and Worker verification
         run: node scripts/test-lab74-page-letter-budgets.mjs
+      - name: LAB74 44-page / 674-unit checkpoint, full-page recoveries and old fast-path regressions
+        run: |
+          node scripts/test-lab73-network-recovery.mjs
+          node scripts/test-lab57-draft-first.mjs
+          node scripts/test-lab58-large-block-cadence.mjs
+          node scripts/test-lab72-targeted-repair.mjs
       - name: Web package compiles
         run: npm run build
