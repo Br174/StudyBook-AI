@@ -43,10 +43,15 @@ try{
      id:u.id,outline:'Preservare definizioni, condizioni, limiti, eccezioni e cause originali; spiegare in ordine.'
     }))})}}],usage:{completion_tokens:105}}),{status:200});
   }
-  writingCalls++;
-  assert.match(req.messages[0].content,/SECONDO PROMPT/);
-  assert.equal(input.plansV75.length,2);
-  assert.equal(input.plansV75[0].id,'0:0');
+  if(input.plansV75){
+   writingCalls++;
+   assert.match(req.messages[0].content,/SECONDO PROMPT/);
+   assert.equal(input.plansV75.length,2);
+   assert.equal(input.plansV75[0].id,'0:0');
+  }else{
+   // The LAB74 legacy route must remain operational without a planning stage.
+   assert.ok(!req.messages[0].content.includes('SECONDO PROMPT'));
+  }
   assert.equal(input.pageBudgetsV74[0].originalLetters,studyLetters(units[0].source));
   assert.equal(input.units[1].source,units[1].source);
   const parts=units.map((u,i)=>{
