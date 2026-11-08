@@ -102,9 +102,9 @@ try{
  const app=readFileSync(new URL('../src/lib/draftFirstV57.js',import.meta.url),'utf8');
  const repair=readFileSync(new URL('../src/lib/studyRebalanceV67.js',import.meta.url),'utf8');
  const workflow=readFileSync(new URL('../.github/workflows/android-apk.yml',import.meta.url),'utf8');
- assert.match(app,/phase:isNewDraft\?'draft-v71'/);
+ assert.match(app,/phase:isNewDraft\?'draft-v72'/);
  assert.match(app,/buildUnitBudgetsV71\(block,level\)/);
- assert.match(repair,/phase:trial===0\?'recalibrate-v71':'repair-v71'/);
+ assert.match(repair,/phase:trial===0\?'recalibrate-v72':'repair-v72'/);
  assert.match(workflow,/studybook-ai-lab71\.brunoverlezza\.workers\.dev/);
  console.log('LAB71 PASS: 44 physical pages x 6 editions; per-unit length budget; numerical tolerance; source intact; protocol rejection; targeted length feedback; 0 real Gemini requests');
 }finally{globalThis.fetch=originalFetch}
