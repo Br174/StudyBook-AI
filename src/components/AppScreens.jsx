@@ -551,8 +551,19 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
                     ?reductionMeta.achievedLettersPercent.toLocaleString('it-IT',{
                       minimumFractionDigits:1,maximumFractionDigits:1})+'%'
                     :'In elaborazione'}</strong>
-                  <small>{reduction==='summary'?'Versione Riassunto':
+                  <small>{reduction==='summary'?'Obiettivo del Riassunto: circa 60%':
                     'Obiettivo: '+reduction+'%'}</small>
+                  {Number.isFinite(reductionMeta?.achievedLettersPercent)&&
+                    reductionMeta?.targetBand&&
+                    <small role="status" className={
+                      reductionMeta?.reductionCompliant?
+                      'sb-reduction-within-v69':'sb-reduction-outside-v69'}>
+                      {reductionMeta?.reductionCompliant
+                        ?'✓ Riduzione nel margine previsto'
+                        :'⚠ Fuori obiettivo: testo da ricalibrare'}
+                      {' · Margine '+reductionMeta.targetBand.min+
+                        '–'+reductionMeta.targetBand.max+'%'}
+                    </small>}
                 </>}
             </div>
           </div>

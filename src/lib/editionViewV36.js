@@ -2,6 +2,7 @@
 import { countWords, countLetters } from './studyQualityGuard.js';
 import { normalizeStudyParagraphFlow } from './readingFlowV36.js';
 import { buildVerifiedFragmentPreviewV45 } from './studyPreviewV45.js';
+import {STUDY_TARGET_V67} from './studyRebalancePolicyV67.js';
 
 const PENDING='Testo rielaborato non ancora verificato per questa pagina.';
 const labels={10:'Pulizia leggera',20:'Testo diretto',30:'Studio sintetico',
@@ -54,6 +55,10 @@ export function buildGeminiEditionViewV36(book,reduction){
   const achievedLettersPercent=sourceLetters&&complete
     ?Math.round((1-outputLetters/sourceLetters)*1000)/10:null;
   const targetPercent=id==='summary'?null:Number(id);
+  const targetBand=STUDY_TARGET_V67[id]||null;
+  const withinBand=complete&&Number.isFinite(achievedLettersPercent)&&
+    !!targetBand&&achievedLettersPercent>=targetBand.min&&
+    achievedLettersPercent<=targetBand.max;
   const editionReadiness={
     complete,partial:!complete,verifiedParagraphs:valid,totalParagraphs:total,
     readableParagraphs:valid+readablePartialParagraphs,
@@ -68,11 +73,10 @@ export function buildGeminiEditionViewV36(book,reduction){
       achievedLettersPercent,
       achievedWordsPercent:complete&&sourceWords?Math.round((1-outputWords/sourceWords)*1000)/10:null,
       originalLetters:sourceLetters,resultingLetters:complete?outputLetters:null,
-      targetReached:complete&&(targetPercent===null||(
-        // The generator has certified EACH integer chunk budget. A book with
-        // N letters can differ by at most half a letter from the ideal real value.
-        Math.abs(outputLetters-Math.round(sourceLetters*(1-targetPercent/100)))===0
-      )),
+      targetReached:Boolean(withinBand),
+      targetBand:targetBand?{min:targetBand.min,max:targetBand.max}:null,
+      // Availability (all pages present) and numeric compliance are different.
+      reductionCompliant:Boolean(withinBand),
       qualityGuard:{status:complete
           ?(qualityOnly?'generated-quality-not-certified':'ai-generated-verified')
           :'preview-only',

@@ -7,7 +7,7 @@ import {bookUnitsV51,planNaturalBlocksV51,
   BULK_OUTPUT_TOKEN_CEILING} from './integralPlannerV51.js';
 import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 import {classifySourceReadinessV52} from './generativeIntegralV51.js';
-import {studyLetters,exactRetained} from './studyPillarV38.js';
+import {studyLetters,exactRetained,percentReduced} from './studyPillarV38.js';
 import {planRebalanceV67,editionReductionV67,betterReductionV67,
   STUDY_TARGET_V67} from './studyRebalancePolicyV67.js';
 import {readGeminiPause,registerGeminiPause,clearGeminiPause}
@@ -44,9 +44,15 @@ export async function rebalanceSavedStudyBookV67(book,{
  const start=book.editionsV36;
  const fp=originalFingerprint(book);
  let current=start;
- const stage=start.rebalanceV67?.sourceFingerprint===fp?
-  clone(start.rebalanceV67):{
-   version:'lab67-source-based-v1',sourceFingerprint:fp,
+ // LAB69: legacy LAB67 retries/acceptances are NOT proof of strict precision.
+ // A finished old attempt must be reconsidered, but preserve all saved drafts.
+ // A paused current attempt can resume with the same stable checkpoints.
+ const prior=start.rebalanceV67;
+ const resumable=prior?.sourceFingerprint===fp&&
+   prior?.version==='lab69-strict-range-v1'&&
+   ['running','interrupted','waiting-provider'].includes(prior?.status);
+ const stage=resumable?clone(prior):{
+   version:'lab69-strict-range-v1',sourceFingerprint:fp,
    begunAt:stamp(),completed:{},buffers:{},errors:{},attempted:{},
    requests:0,accepted:0,originalSaved:true,
    status:'running'
@@ -70,20 +76,16 @@ export async function rebalanceSavedStudyBookV67(book,{
   const blocks=planNaturalBlocksV51(units,level);
   const buffered=stage.buffers[level]||{};
   stage.buffers[level]=buffered;
+  // Two requests maximum per natural block. The second uses the first
+  // candidate ONLY as a negative length example; the original remains the
+  // sole source of meaning. No unbounded retry, no Gemini during QA.
+  let levelRejected=false;
   for(const block of blocks){
    if(block.every(u=>clean(buffered[u.id])))continue;
    if(signal?.aborted){await notify('interrupted');return current;}
-   const pause=await readGeminiPause();
-   if(pause){
-    stage.lastQuota=pause;
-    await notify('waiting-provider');
-    return current;
-   }
    const originals=block.reduce((n,u)=>n+studyLetters(u.source),0);
    const policy=STUDY_TARGET_V67[level];
-   const limit=level==='summary'
-    ?Math.max(0,exactRetained(originals,policy.target))
-    :exactRetained(originals,Number(level));
+   const limit=exactRetained(originals,policy.target);
    const unitBudgets=Object.fromEntries(block.map(u=>[
     u.id,level==='summary'
       ?{summaryCapLetters:exactRetained(studyLetters(u.source),60)}
@@ -93,58 +95,115 @@ export async function rebalanceSavedStudyBookV67(book,{
    const chars=block.reduce((n,u)=>n+u.source.length,0);
    const maxOutputTokens=Math.min(BULK_OUTPUT_TOKEN_CEILING,
     Math.max(4096,Math.ceil(chars*ratio/1.5)+block.length*115+1800));
-   const body={
-    phase:'recalibrate',level,bookTitle:String(book.title||'').slice(0,140),
-    targetLetters:level==='summary'?null:limit,
-    summaryCapLetters:level==='summary'?limit:null,
-    unitBudgets,maxOutputTokens,timeoutMs:190000,
-    units:block.map(u=>({id:u.id,source:u.source,
-     chapterTitle:u.chapterTitle,sectionTitle:u.sectionTitle,
-     pageStart:u.pageStart,pageEnd:u.pageEnd}))
-   };
-   const began=Date.now();
-   try{
-    onActivity({phase:'recalibrate',level,pageStart:block[0].pageStart,
-      pageEnd:block.at(-1).pageEnd});
-    await waitForGeminiCadenceV58({signal,onWait:note=>
-      onActivity({phase:'pacing',level,...note})});
-    const response=await fetch(apiEndpoint('/api/editions/bulk/v51'),{
-     method:'POST',headers:{'Content-Type':'application/json'},
-     signal,body:JSON.stringify(body)});
-    const reply=await response.json().catch(()=>null);
-    if(!response.ok){
-     const code=reply?.code||'HTTP_'+response.status;
-     if((response.status===429||response.status===503)&&reply?.quota)
-      await registerGeminiPause(reply.quota);
-     stage.errors[level]=code;stage.lastQuota=reply?.quota||null;
+   let previousParts=null;
+   let blockValidated=false;
+   for(let trial=0;trial<2;trial++){
+    if(signal?.aborted){await notify('interrupted');return current;}
+    const pause=await readGeminiPause();
+    if(pause){
+     stage.lastQuota=pause;
      await notify('waiting-provider');
      return current;
     }
-    if(reply?.engine!=='ai'||reply?.version!=='integral-v51'||
-        reply?.level!==level)throw Error('Risposta Gemini non autentica.');
-    const ids=new Set(block.map(u=>u.id));
-    const rows=new Map();
-    for(const p of reply.parts||[]){
-     if(!ids.has(p?.id)||rows.has(p.id)||!clean(p.text))continue;
-     rows.set(p.id,clean(p.text));
+    const body={
+      phase:trial===0?'recalibrate':'repair',
+      level,bookTitle:String(book.title||'').slice(0,140),
+      targetLetters:level==='summary'?null:limit,
+      summaryCapLetters:level==='summary'?limit:null,
+      unitBudgets,maxOutputTokens,timeoutMs:190000,
+      units:block.map(u=>({id:u.id,source:u.source,
+       chapterTitle:u.chapterTitle,sectionTitle:u.sectionTitle,
+       pageStart:u.pageStart,pageEnd:u.pageEnd}))
+    };
+    if(trial>0&&previousParts){
+      // Existing LAB67 worker supports this bounded second-pass input.
+      // Never change the base source nor launch a background repair cycle.
+      body.repairDrafts=previousParts.map(p=>({
+       id:p.id,text:p.text,repairFocus:{
+        targetLetters:unitBudgets[p.id]?.targetLetters??null,
+        maxSummaryLetters:unitBudgets[p.id]?.summaryCapLetters??null,
+        note:'La versione precedente ha una riduzione fuori margine. '+
+         'Riscrivi dal testo originale con riduzione '+policy.target+
+         '% (margine '+policy.min+'-'+policy.max+'%), prosa semplice e precisa.'
+       }
+      }));
     }
-    if(rows.size!==block.length){
-     stage.errors[level]='PARTIAL_BLOCK';
-     await notify('waiting-provider');
-     return current;
+    const began=Date.now();
+    try{
+      onActivity({phase:'recalibrate',level,pageStart:block[0].pageStart,
+        pageEnd:block.at(-1).pageEnd,trial:trial+1,maxTrials:2});
+      await waitForGeminiCadenceV58({signal,onWait:note=>
+        onActivity({phase:'pacing',level,...note})});
+      const response=await fetch(apiEndpoint('/api/editions/bulk/v51'),{
+       method:'POST',headers:{'Content-Type':'application/json'},
+       signal,body:JSON.stringify(body)});
+      const reply=await response.json().catch(()=>null);
+      if(!response.ok){
+       const code=reply?.code||'HTTP_'+response.status;
+       if((response.status===429||response.status===503)&&reply?.quota)
+        await registerGeminiPause(reply.quota);
+       stage.errors[level]=code;stage.lastQuota=reply?.quota||null;
+       await notify('waiting-provider');
+       return current;
+      }
+      if(reply?.engine!=='ai'||reply?.version!=='integral-v51'||
+          reply?.level!==level)throw Error('Risposta Gemini non autentica.');
+      const ids=new Set(block.map(u=>u.id));
+      const rows=new Map();
+      for(const p of reply.parts||[]){
+       if(!ids.has(p?.id)||rows.has(p.id)||!clean(p.text))continue;
+       rows.set(p.id,clean(p.text));
+      }
+      if(rows.size!==block.length){
+       stage.errors[level]='PARTIAL_BLOCK';
+       await notify('waiting-provider');
+       return current;
+      }
+      stage.requests++;
+      await markGeminiCadenceSuccessV58({
+        requestStartedAt:began,inputTokens:reply.inputTokens||0});
+      await clearGeminiPause();
+      const candidates=block.map(u=>({id:u.id,text:rows.get(u.id)}));
+      previousParts=candidates;
+      const outputLetters=candidates.reduce((sum,p)=>sum+studyLetters(p.text),0);
+      const reduction=percentReduced(originals,outputLetters);
+      // Strict acceptance BEFORE buffering: a 10% request can never
+      // publish a 72% version, even if it is closer than the old draft.
+      if(reduction!==null&&reduction>=policy.min&&reduction<=policy.max){
+       for(const p of candidates)buffered[p.id]=p.text;
+       blockValidated=true;
+       stage.errors[level]=null;
+       await notify('running');
+       break;
+      }
+      stage.errors[level]='RIDUZIONE_FUORI_RANGE: '+reduction+
+        '% · richiesto '+policy.min+'-'+policy.max+'%';
+      // The first attempt is NOT stored as a completed replacement.
+      // One extra provider call is allowed only inside this manual action.
+      await notify('running');
+    }catch(error){
+      stage.errors[level]=error?.code||error?.message||'NETWORK_ERROR';
+      await notify(signal?.aborted?'interrupted':'waiting-provider');
+      return current;
     }
-    for(const [id,value] of rows)buffered[id]=value;
-    stage.requests++;
-    await markGeminiCadenceSuccessV58({
-     requestStartedAt:began,inputTokens:reply.inputTokens||0});
-    await clearGeminiPause();
-    await notify('running'); // Durable checkpoint: no published text changes.
-   }catch(error){
-    stage.errors[level]=error?.code||error?.message||'NETWORK_ERROR';
-    await notify(signal?.aborted?'interrupted':'waiting-provider');
-    return current;
+   }
+   if(!blockValidated){
+    // Reject this entire edition, preserve every old page and checkpoint.
+    stage.attempted[level]=true;
+    stage.completed[level]={
+      accepted:false,withinTolerance:false,
+      reason:stage.errors[level]||'RIDUZIONE_FUORI_RANGE',
+      measured:previousParts?percentReduced(
+       originals,previousParts.reduce((n,p)=>n+studyLetters(p.text),0)):null,
+      finishedAt:stamp()
+    };
+    levelRejected=true;
+    delete stage.buffers[level];
+    await notify('running');
+    break;
    }
   }
+  if(levelRejected)continue;
   if(!units.every(u=>clean(buffered[u.id]))){
    stage.errors[level]='MISSING_RECALIBRATION_UNITS';
    await notify('waiting-provider');
