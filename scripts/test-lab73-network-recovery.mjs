@@ -66,6 +66,11 @@ try{
  const result=await generateDraftFirstV57(dense,{onProgress:s=>{
   if(s.draftUnitsSaved>0)progress.push(s.draftUnitsSaved);
  }});
+ console.log('LAB73_FIRST_RUN',JSON.stringify({status:result.status,
+   haltedOn:result.execution?.haltedOn,saved:result.draftUnitsSaved,
+   expected:result.draftUnitsTotal,networkSplits:result.diagnostics?.networkSplitsV73,
+   last:result.diagnostics?.lastCode,provider:result.diagnostics?.lastProviderDiagnostic,
+   requests:calls.length,firstCalls:calls.slice(0,4)}));
  assert.equal(result.draftComplete,true,'All 674x6 unverified drafts created');
  assert.equal(result.draftUnitsSaved,4044);
  assert.ok(result.diagnostics.networkSplitsV73>=1,'Retry uses full-page split');
