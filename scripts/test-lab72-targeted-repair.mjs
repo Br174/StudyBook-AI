@@ -60,8 +60,12 @@ try{
   assert.equal(payload.units[0].targetedRepairV72.observedLetters,studyLetters(draft));
   assert.ok(payload.units[0].targetedRepairV72.sourceContexts.length>0);
   assert.ok(payload.units[0].targetedRepairV72.sourceContexts.every(t=>source.includes(t)));
+  const plan=payload.units[0].targetedRepairV72;
+  assert.equal(plan.localEdit.action,'expand');
+  assert.ok(draft.includes(plan.localEdit.originalSpan));
   const matches=[...source.matchAll(/\p{L}/gu)];
-  const text=source.slice(0,matches[Math.max(0,wanted-1)].index+1);
+  const needed=plan.localEdit.desiredReplacementLetters;
+  const text=source.slice(0,matches[Math.max(0,needed-1)].index+1);
   return new Response(JSON.stringify({choices:[{finish_reason:'stop',
    message:{content:JSON.stringify({parts:[{id:'0:0',text}]})}}],
    usage:{completion_tokens:350}}),{status:200});
@@ -76,6 +80,8 @@ try{
  assert.equal(response.statusCode,200);
  assert.equal(response.payload.draftProtocol,STUDY_DRAFT_PROTOCOL_V72);
  assert.equal(response.payload.lengthReview.withinBand,true);
+ assert.notEqual(response.payload.parts[0].text,draft);
+ assert.ok(response.payload.parts[0].text.endsWith(draft.slice(draft.indexOf(' '+source.split('\n\n')[1]))));
  assert.equal(actualModelCalls,1);
  console.log('LAB72 TARGETED REPAIR PASS: source-only omitted contexts, draft preserved, both length directions, one bounded repair, no real Gemini tokens');
 }finally{globalThis.fetch=originalFetch}
