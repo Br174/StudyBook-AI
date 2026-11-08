@@ -66,8 +66,14 @@ try{
   const matches=[...source.matchAll(/\p{L}/gu)];
   const needed=plan.localEdit.desiredReplacementLetters;
   const text=source.slice(0,matches[Math.max(0,needed-1)].index+1);
+  const sourceLetters=[...source.matchAll(/\p{L}/gu)];
+  const shorten=n=>source.slice(0,sourceLetters[Math.max(0,n-1)].index+1);
   return new Response(JSON.stringify({choices:[{finish_reason:'stop',
-   message:{content:JSON.stringify({parts:[{id:'0:0',text}]})}}],
+   message:{content:JSON.stringify({parts:[{id:'0:0',
+     short:shorten(Math.max(1,needed-24)),
+     balanced:text,
+     detailed:shorten(Math.min(sourceLetters.length,needed+24))
+   }]})}}],
    usage:{completion_tokens:350}}),{status:200});
  };
  const response=fake();
