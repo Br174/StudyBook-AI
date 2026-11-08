@@ -1307,6 +1307,7 @@ jobs:
           node scripts/test-lab72-negative-closure.mjs
           node scripts/test-lab72-protocol.mjs
           node scripts/test-lab72-targeted-repair.mjs
+          node scripts/test-lab72-release-readiness.mjs
           node scripts/test-lab71-unit-budgets.mjs
           node scripts/test-lab69-strict-bands.mjs
           node scripts/test-lab67-simplified-precise-rebalance.mjs
