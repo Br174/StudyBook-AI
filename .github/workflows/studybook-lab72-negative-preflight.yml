@@ -7,6 +7,7 @@ on:
       - 'scripts/test-lab72-negative-baseline.mjs'
       - 'scripts/test-lab72-negative-closure.mjs'
       - 'scripts/test-lab72-real-provider-probe.mjs'
+      - 'scripts/test-lab72-real-repair-probe.mjs'
       - 'api/**'
       - 'src/lib/**'
       - 'docs/STUDYBOOK_STUDIO_PROGRESSIVO_PILASTRO_V1.md'
@@ -39,3 +40,8 @@ jobs:
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: node scripts/test-lab72-real-provider-probe.mjs
+      - name: LAB72 one more real measured-repair Gemini probe
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab72-real-repair-probe.mjs
