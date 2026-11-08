@@ -84,8 +84,8 @@ try{
   onProgress:async state=>snapshots.push(state)
  });
  assert.equal(calls.length,2,'one extra attempt, then stop');
- assert.deepEqual(calls.map(c=>c.phase),['recalibrate-v72','repair-v72']);
- assert.equal(result.rebalanceV67.version,'lab69-strict-range-v1');
+ assert.deepEqual(calls.map(c=>c.phase),['repair-v72','repair-v72']);
+ assert.equal(result.rebalanceV67.version,'lab72-targeted-source-v1');
  assert.equal(result.rebalanceV67.accepted,1);
  assert.equal(result.rebalanceV67.remaining.length,0);
  assert.equal(result.rebalanceV67.completed['10'].withinTolerance,true);
@@ -127,7 +127,7 @@ try{
   'Never publish a 60% result as 10% or remove original checkpoint');
  // Next explicit tap must be possible despite legacy accepted/out-of-range status.
  const second=await rebalanceSavedStudyBookV67({...badBook,editionsV36:rejected});
- assert.equal(second.rebalanceV67.version,'lab69-strict-range-v1');
+ assert.equal(second.rebalanceV67.version,'lab72-targeted-source-v1');
  assert.equal(badRequests,4,'two additional calls only after a second user action');
  const ui=readFileSync(new URL('../src/components/AppScreens.jsx',import.meta.url),'utf8');
  assert.ok(ui.includes('Fuori obiettivo: testo da ricalibrare'));
