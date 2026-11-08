@@ -38,6 +38,30 @@ export function writingInstructionV75(level,sourceLetters,policy){
   'Rispondi ESCLUSIVAMENTE con JSON {parts:[{id,text},...]} e nessun commento esterno.'
  ].join('\n');
 }
+// Experimental variant: the SECOND model call returns three complete
+// pedagogical rewrites in ONE structured response, not three network calls.
+// Only the deterministic program may pick the closest numerically valid and
+// source-safe candidate. This remains isolated, never an auto APK upgrade.
+export const PAGE_CHOICES_SCHEMA_V75={type:'json_schema',json_schema:{
+ name:'studybook_page_choices_v75',strict:true,
+ schema:{type:'object',additionalProperties:false,
+  properties:{parts:{type:'array',items:{type:'object',additionalProperties:false,
+   properties:{id:{type:'string'},short:{type:'string'},
+    balanced:{type:'string'},detailed:{type:'string'}},
+   required:['id','short','balanced','detailed']}}},
+  required:['parts']}
+}};
+export function writingChoicesInstructionV75(level,sourceLetters,policy){
+ return writingInstructionV75(level,sourceLetters,policy)+'\n'+[
+  'Variabile sperimentale LAB75: genera TRE RISCRITTURE COMPLETE per ogni id in UNA SOLA risposta JSON.',
+  'short: punta al limite INFERIORE minLetters della pagina (testo più corto, più riduzione); balanced: punta al valore centrale targetLetters; detailed: punta al limite SUPERIORE maxLetters (testo più lungo, meno riduzione).',
+  'La differenza di lunghezza deve essere naturale: ciascuna alternativa deve rimanere un testo didattico autonomo completo con le distinzioni essenziali, senza ripetizioni o riempitivi.',
+  'Non confondere minLetters con percentuale eliminata: minLetters/targetLetters/maxLetters sono sempre LETTERE DA CONSERVARE.',
+  'Non inviare semplici frammenti o patch: short, balanced e detailed contengono ciascuno una pagina interamente riscritta.',
+  'Il programma conterà le lettere effettive e sceglierà l’alternativa più vicina al budget, esclusivamente quando non peggiora le informazioni protette.',
+  'Solo JSON {parts:[{id,short,balanced,detailed},...]} nello stesso ordine delle unità ORIGINALI.'
+ ].join('\n');
+}
 export function verifiedPlansV75(plans,ids){
  if(!Array.isArray(plans)||!Array.isArray(ids)||plans.length!==ids.length||
     plans.length===0||plans.length>PLANNING_MAX_UNITS_V75) return null;
