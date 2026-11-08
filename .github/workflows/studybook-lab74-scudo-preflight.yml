@@ -20,6 +20,12 @@ jobs:
         run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
       - name: Build StudyBook core
         run: npm run build
+      - name: Individual native contracts, diagnostic only, no skipped failures
+        run: |
+          for SCRIPT in scripts/StudyBookCloudflare.mjs scripts/StudyBookLab72Targeted.mjs scripts/StudyBookLab73Network.mjs scripts/StudyBookLab74PageBudget.mjs; do
+            echo "LAB74_CHECKING $SCRIPT"
+            node "$SCRIPT" || echo "LAB74_CONTRACT_FAILED $SCRIPT"
+          done
       - name: Mandatory Scudo360 P1 native classes
         run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-lab74-report.json
       - name: MotorLab r40 source-line trace quality proof
