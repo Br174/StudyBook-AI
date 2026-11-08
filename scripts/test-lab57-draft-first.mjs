@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {indexedDB as fakeIndexedDB} from 'fake-indexeddb';
 import {generateDraftFirstV57} from '../src/lib/draftFirstV57.js';
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
+import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
 import {clearGeminiPause,readGeminiPause} from '../src/lib/geminiQuotaControllerV36.js';
 import {clearGeminiCadenceForTestV58} from '../src/lib/geminiCadenceV58.js';
 import {planStudyAutoResumeV45} from '../src/lib/studyAutoResumeV45.js';
@@ -24,9 +25,14 @@ const oldDb=globalThis.indexedDB,oldFetch=globalThis.fetch;
 globalThis.indexedDB=fakeIndexedDB;
 const generateBody=(payload,wrong=false)=>{
  const reps=payload.level==='summary'?8:20*(1-Number(payload.level)/100);
- return {engine:'ai',version:'integral-v51',level:payload.level,
-  parts:payload.units.map(u=>({id:u.id,text:wrong&&u.id==='0:0'&&payload.level==='summary'?
-     'testo completamente inventato':'argomento '.repeat(reps).trim()}))};
+ const parts=payload.units.map(u=>({id:u.id,text:wrong&&u.id==='0:0'&&payload.level==='summary'?
+  'testo completamente inventato':'argomento '.repeat(reps).trim()}));
+ const sourceLetters=payload.units.reduce((n,u)=>n+studyLetters(u.source),0);
+ const observedLetters=parts.reduce((n,p)=>n+studyLetters(p.text),0);
+ return {engine:'ai',version:'integral-v51',level:payload.level,parts,
+  draftProtocol:STUDY_DRAFT_PROTOCOL_V72,completeParts:true,finishReason:'stop',
+  outputTokenLimit:6000,lengthReview:{sourceLetters,observedLetters,
+   withinBand:true,compliant:true}};
 };
 let calls=[],events=[];
 try{
