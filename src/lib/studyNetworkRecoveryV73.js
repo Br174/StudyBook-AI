@@ -1,4 +1,5 @@
 // LAB73: single-owner, page-safe Gemini network recovery.
+// Signed experimental update source: P0 defined-letter-counter fix, Scudo P1 preflight passed.
 // These helpers NEVER call Gemini or modify a source/draft.
 // Small books preserve LAB58's efficient large blocks. Dense books start with
 // a safer bounded output envelope; measured transport faults split only at
