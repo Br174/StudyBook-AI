@@ -4,6 +4,7 @@
 import {studyLetters,percentReduced,exactRetained} from './studyPillarV38.js';
 import {extractProtectedItems} from './fidelityEngine.js';
 import {rewriteQualityV65} from './rewriteQualityV65.js';
+import {measureEditionLengthV72} from './studyRebalancePolicyV67.js';
 export const STUDY_LEVELS_V66=['summary','50','40','30','20','10'];
 const hasText=s=>typeof s==='string'&&s.trim().length>0;
 const text=s=>hasText(s)?s.trim():null;
@@ -81,9 +82,9 @@ export function studyQualityInspectionV66(book,units,stagedRows,drafts,{persiste
   const expectedLetters=level==='summary'?null:
     exactRetained(sourceLetters,Number(level));
   const exact=expectedLetters===null?null:expectedLetters===outputLetters;
-  const reductionWarning=level==='summary'
-   ?actualReduction!==null&&actualReduction<=50
-   :actualReduction!==null&&Math.abs(actualReduction-Number(level))>2;
+  const numericReview=measureEditionLengthV72({level,originalLetters:sourceLetters,
+    outputLetters,completeParts:checkedPages===pageCount&&pageCount>0});
+  const reductionWarning=!numericReview.compliant;
   const advisory=[
    ...(reductionWarning?['global-reduction-off-target']:[]),
    ...(!persistent?['checkpoint-not-persisted']:[])
@@ -94,6 +95,8 @@ export function studyQualityInspectionV66(book,units,stagedRows,drafts,{persiste
    warnings:alerts,advisory,
    originalLetters:sourceLetters,outputLetters,actualReduction,
    expectedLetters,exactLength:exact,
+   reductionCompliant:numericReview.compliant,
+   reductionBand:{min:numericReview.minLetters,max:numericReview.maxLetters},
    semanticCertification:false,
    state:checkedPages===pageCount&&persistent?'checked-with-notes':'incomplete'
   };
