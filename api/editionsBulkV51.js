@@ -195,6 +195,7 @@ export function editionTargetedRepairInstructionV72(level,sourceLetters){
   'Ogni units[].previousDraft è una bozza NON verificata, non una fonte di fatti. L\'unica fonte autorevole è units[].source.',
   'Per ogni unità con units[].targetedRepairV72.localEdit, restituisci SOLO la riscrittura del frammento localEdit.originalSpan, NON tutto il testo. StudyBook manterrà IDENTICO il testo esterno a questo frammento.',
   'Per ciascuna localEdit mira a localEdit.desiredReplacementLetters lettere alfabetiche, preservando la fedeltà al frammento e aggiungendo soltanto dettagli realmente presenti nella FONTE ORIGINALE.',
+  'Il sottobersaglio editoriale units[].targetedRepairV72.aimedReduction può essere 1 punto dentro la fascia desiderata, per compensare una tendenza misurata a comprimere troppo o troppo poco; non altera la fascia globale di accettazione.',
   'Crea TRE alternative distintamente formulate per ogni id: short circa 90% della quota localEdit.desiredReplacementLetters, balanced circa 100%, detailed circa 110%. Non fare riempitivi né perdere concetti per differenziarle.',
   'Se localEdit è null, restituisci un breve testo non vuoto: StudyBook conserverà la bozza precedente senza alcuna modifica. Se non esiste previousDraft, restituisci invece il testo completo dell’unità.',
   'Riduzione richiesta rispetto a tutte le lettere originali del blocco: '+band.target+'%. Obiettivo indicativo '+target+' lettere, fascia di riduzione '+band.min+'–'+band.max+'%.',
