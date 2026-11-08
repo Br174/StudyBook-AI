@@ -17,7 +17,7 @@ import {waitForGeminiCadenceV58,markGeminiCadenceSuccessV58}
 import {auditFidelity} from './fidelityEngine.js';
 import {immutableViolationsV67} from './immutableFragmentsV67.js';
 import {finalizeStudyQualityV66} from './studyQualityV66.js';
-import {STUDY_DRAFT_PROTOCOL_V70,verifyStudyDraftResponseV70} from './studyDraftProtocolV70.js';
+import {STUDY_DRAFT_PROTOCOL_V71,verifyStudyDraftResponseV71,buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
 const clean=x=>typeof x==='string'?x.trim():'';
 const clone=x=>JSON.parse(JSON.stringify(x));
 const stamp=()=>new Date().toISOString();
@@ -87,11 +87,7 @@ export async function rebalanceSavedStudyBookV67(book,{
    const originals=block.reduce((n,u)=>n+studyLetters(u.source),0);
    const policy=STUDY_TARGET_V67[level];
    const limit=exactRetained(originals,policy.target);
-   const unitBudgets=Object.fromEntries(block.map(u=>[
-    u.id,level==='summary'
-      ?{summaryCapLetters:exactRetained(studyLetters(u.source),60)}
-      :{targetLetters:exactRetained(studyLetters(u.source),Number(level))}
-   ]));
+   const unitBudgets=buildUnitBudgetsV71(block,level);
    const ratio=1-policy.target/100;
    const chars=block.reduce((n,u)=>n+u.source.length,0);
    const maxOutputTokens=Math.min(BULK_OUTPUT_TOKEN_CEILING,
@@ -107,8 +103,8 @@ export async function rebalanceSavedStudyBookV67(book,{
      return current;
     }
     const body={
-      phase:trial===0?'recalibrate-v70':'repair-v70',
-      draftProtocol:STUDY_DRAFT_PROTOCOL_V70,
+      phase:trial===0?'recalibrate-v71':'repair-v71',
+      draftProtocol:STUDY_DRAFT_PROTOCOL_V71,
       level,bookTitle:String(book.title||'').slice(0,140),
       targetLetters:level==='summary'?null:limit,
       summaryCapLetters:level==='summary'?limit:null,
@@ -123,7 +119,7 @@ export async function rebalanceSavedStudyBookV67(book,{
       body.repairDrafts=previousParts.map(p=>({
        id:p.id,text:p.text,repairFocus:{
         targetLetters:unitBudgets[p.id]?.targetLetters??null,
-        maxSummaryLetters:unitBudgets[p.id]?.summaryCapLetters??null,
+        maxSummaryLetters:unitBudgets[p.id]?.summaryTargetLetters??null,
         note:'La versione precedente ha una riduzione fuori margine. '+
          'Riscrivi dal testo originale con riduzione '+policy.target+
          '% (margine '+policy.min+'-'+policy.max+'%), prosa semplice e precisa.'
@@ -150,7 +146,7 @@ export async function rebalanceSavedStudyBookV67(book,{
       }
       if(reply?.engine!=='ai'||reply?.version!=='integral-v51'||
           reply?.level!==level)throw Error('Risposta Gemini non autentica.');
-      const version=verifyStudyDraftResponseV70(reply,originals,level);
+      const version=verifyStudyDraftResponseV71(reply,originals,level);
       if(!version.ok)throw Object.assign(new Error(version.message),{code:version.code});
       const ids=new Set(block.map(u=>u.id));
       const rows=new Map();
