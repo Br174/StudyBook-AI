@@ -14,6 +14,20 @@
       ],
       "junitDir": ".motorlab/scudo360-test-results",
       "timeoutMs": 300000
+    },
+    {
+      "id": "lab72-targeted-quality",
+      "command": [
+        "node",
+        "scripts/StudyBookLab72Targeted.mjs"
+      ],
+      "paths": [
+        "scripts/StudyBookLab72Targeted.mjs",
+        "scripts/test-lab72-targeted-repair.mjs",
+        "scripts/test-lab72-negative-closure.mjs"
+      ],
+      "junitDir": ".motorlab/scudo360-test-results",
+      "timeoutMs": 240000
     }
   ],
   "contracts": [
@@ -25,6 +39,20 @@
       ],
       "junitClasses": [
         "studybook.StudyBookCloudflare"
+      ],
+      "requiredAt": [
+        "lab",
+        "promotion"
+      ]
+    },
+    {
+      "id": "studybook.lab72-strict-percentage-and-source-fidelity",
+      "priority": "P1",
+      "suites": [
+        "lab72-targeted-quality"
+      ],
+      "junitClasses": [
+        "studybook.StudyBookLab72Targeted"
       ],
       "requiredAt": [
         "lab",
