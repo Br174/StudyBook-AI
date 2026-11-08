@@ -2,7 +2,9 @@ name: StudyBook LAB74 targeted Gemini page recalibration proof
 on:
   push:
     branches: ['lab/studybook-core-android-01-update-74-*']
-    paths: ['.github/workflows/studybook-lab74-targeted-real-proof.yml']
+    paths:
+      - '.github/workflows/studybook-lab74-targeted-real-proof.yml'
+      - 'scripts/test-lab74-real-targeted-recalibration.mjs'
 permissions:
   contents: read
 jobs:
