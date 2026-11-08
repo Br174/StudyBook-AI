@@ -3,6 +3,7 @@
 import {studyLetters} from '../src/lib/studyPillarV38.js';
 import {STUDY_TARGET_V67} from '../src/lib/studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
+export {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {immutableFragmentsV67} from '../src/lib/immutableFragmentsV67.js';
 import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
