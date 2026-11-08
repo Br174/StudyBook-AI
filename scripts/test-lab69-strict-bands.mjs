@@ -51,6 +51,12 @@ const makeBook=()=>({
    attempted:{'10':true},accepted:1}
  }
 });
+function mockLengthProof(request,percent){
+ const sourceLetters=request.units.reduce((n,u)=>n+studyLetters(u.source),0);
+ const outputLetters=request.units.reduce((n,u)=>n+studyLetters(trimTo(u.source,percent)),0);
+ const within=percent>=8&&percent<=12;
+ return {sourceLetters,observedLetters:outputLetters,withinBand:within,compliant:within};
+}
 const oldFetch=globalThis.fetch;
 try{
  await clearGeminiPause();await clearGeminiCadenceForTestV58();
@@ -68,7 +74,7 @@ try{
   const percent=calls.length===1?40:10;
   return new Response(JSON.stringify({engine:'ai',version:'integral-v51',level:'10',
    inputTokens:1200,draftProtocol:'lab72-canonical-range-observability-v1',finishReason:'stop',outputTokenLimit:6000,
-   lengthReview:{sourceLetters:request.units.reduce((n,u)=>n+studyLetters(u.source),0)},
+   lengthReview:mockLengthProof(request,percent),
    parts:request.units.map(u=>({id:u.id,text:trimTo(u.source,percent)}))}),{
     status:200,headers:{'Content-Type':'application/json'}
    });
@@ -106,7 +112,7 @@ try{
   badRequests++;
   return new Response(JSON.stringify({engine:'ai',version:'integral-v51',
    level:'10',inputTokens:1200,draftProtocol:'lab72-canonical-range-observability-v1',finishReason:'stop',outputTokenLimit:6000,
-   lengthReview:{sourceLetters:request.units.reduce((n,u)=>n+studyLetters(u.source),0)},
+   lengthReview:mockLengthProof(request,60),
    parts:request.units.map(u=>({id:u.id,text:trimTo(u.source,60)}))}),{
     status:200,headers:{'Content-Type':'application/json'}
    });
