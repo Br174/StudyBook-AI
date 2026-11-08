@@ -19,9 +19,9 @@ export function measureEditionLengthV72({level,originalLetters,outputLetters,
  if(!policy||!Number.isInteger(originalLetters)||originalLetters<=0||
     !Number.isInteger(outputLetters)||outputLetters<0)
    throw Object.assign(new Error('Dati originali o variante non validi'),{code:'STUDY_LENGTH_INPUT_INVALID'});
- const targetLetters=Math.round(originalLetters*(1-policy.target/100));
- const minLetters=Math.ceil(originalLetters*(1-policy.max/100));
- const maxLetters=Math.floor(originalLetters*(1-policy.min/100));
+ const targetLetters=Math.round(originalLetters*(100-policy.target)/100);
+ const minLetters=Math.ceil(originalLetters*(100-policy.max)/100);
+ const maxLetters=Math.floor(originalLetters*(100-policy.min)/100);
  const achievedReduction=percentReduced(originalLetters,outputLetters);
  // Compare actual integer letter counts, not the rounded one-decimal UI.
  const withinBand=minLetters<=maxLetters&&outputLetters>=minLetters&&
@@ -50,8 +50,8 @@ export function editionReductionV67(units,drafts,level){
  return {level,originalLetters:original,outputLetters:output,
   measured,missing,goal:policy.target,
   min:policy.min,max:policy.max,within:
-   missing===0&&output>=Math.ceil(original*(1-policy.max/100))&&
-   output<=Math.floor(original*(1-policy.min/100)),
+   missing===0&&output>=Math.ceil(original*(100-policy.max)/100)&&
+   output<=Math.floor(original*(100-policy.min)/100),
   distance:measured===null?Infinity:Math.abs(measured-policy.target)};
 }
 export function planRebalanceV67(units,drafts){
