@@ -40,6 +40,7 @@ const networkFail=()=>new Response(JSON.stringify({
 }),{status:502,headers:{'Content-Type':'application/json'}});
 const oldFetch=globalThis.fetch,oldDb=globalThis.indexedDB;
 globalThis.indexedDB=fakeIndexedDB;
+globalThis.__studybookLab73Probe=true;
 try{
  await clearGeminiPause();await clearGeminiCadenceForTestV58();
  const dense=makeBook('a'),ordered=dense.chapters[0].paragraphs.map((p,i)=>({
@@ -105,6 +106,7 @@ try{
   preservedDrafts:true,automaticRecovery:'bounded-foreground-only'}));
 }finally{
  globalThis.fetch=oldFetch;
+ delete globalThis.__studybookLab73Probe;
  await clearGeminiPause();await clearGeminiCadenceForTestV58();
  if(oldDb===undefined)delete globalThis.indexedDB;else globalThis.indexedDB=oldDb;
 }
