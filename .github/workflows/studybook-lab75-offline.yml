@@ -1,0 +1,32 @@
+name: StudyBook LAB75 two-prompt isolated offline comparison
+on:
+  push:
+    branches:
+      - 'lab/studybook-core-android-01-update-75-*'
+    paths:
+      - '.github/workflows/studybook-lab75-offline.yml'
+      - 'scripts/test-lab75-two-prompt-offline.mjs'
+      - 'src/lib/studyTwoPromptV75.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  two-prompt-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing dependencies
+        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: Validate actual sequential prompt handoff and unchanged LAB74
+        run: |
+          node scripts/test-lab75-two-prompt-offline.mjs
+          node scripts/test-lab74-page-letter-budgets.mjs
+          node scripts/test-lab74-selective-pages.mjs
+          node scripts/test-lab74-recalibration-feedback.mjs
+          node scripts/test-lab72-negative-closure.mjs
+      - name: Build web app, no Android package, no Worker deployment
+        run: npm run build
