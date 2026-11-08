@@ -67,7 +67,8 @@ try{
   assert.equal(request.targetLetters>0,true);
   const percent=calls.length===1?40:10;
   return new Response(JSON.stringify({engine:'ai',version:'integral-v51',level:'10',
-   inputTokens:1200,
+   inputTokens:1200,draftProtocol:'lab70-draft-length-v1',
+   lengthReview:{sourceLetters:request.units.reduce((n,u)=>n+studyLetters(u.source),0)},
    parts:request.units.map(u=>({id:u.id,text:trimTo(u.source,percent)}))}),{
     status:200,headers:{'Content-Type':'application/json'}
    });
@@ -77,7 +78,7 @@ try{
   onProgress:async state=>snapshots.push(state)
  });
  assert.equal(calls.length,2,'one extra attempt, then stop');
- assert.deepEqual(calls.map(c=>c.phase),['recalibrate','repair']);
+ assert.deepEqual(calls.map(c=>c.phase),['recalibrate-v70','repair-v70']);
  assert.equal(result.rebalanceV67.version,'lab69-strict-range-v1');
  assert.equal(result.rebalanceV67.accepted,1);
  assert.equal(result.rebalanceV67.remaining.length,0);
@@ -104,7 +105,8 @@ try{
   const request=JSON.parse(opts.body);
   badRequests++;
   return new Response(JSON.stringify({engine:'ai',version:'integral-v51',
-   level:'10',inputTokens:1200,
+   level:'10',inputTokens:1200,draftProtocol:'lab70-draft-length-v1',
+   lengthReview:{sourceLetters:request.units.reduce((n,u)=>n+studyLetters(u.source),0)},
    parts:request.units.map(u=>({id:u.id,text:trimTo(u.source,60)}))}),{
     status:200,headers:{'Content-Type':'application/json'}
    });
