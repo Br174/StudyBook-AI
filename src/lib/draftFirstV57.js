@@ -21,6 +21,7 @@ import {rewriteQualityV65} from './rewriteQualityV65.js';
 import {finalizeStudyQualityV66} from './studyQualityV66.js';
 import {repairFocusForUnitV62} from './editionRepairV53.js';
 import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
+import {STUDY_DRAFT_PROTOCOL_V70,verifyStudyDraftResponseV70} from './studyDraftProtocolV70.js';
 
 const LEVELS=['summary','50','40','30','20','10'];
 const CACHE='integral-v57-draft-first',VERSION='lab38-progressive-editions-v1';
@@ -161,7 +162,10 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
    Math.max(4096,Math.ceil(chars*ratio/1.5)+block.length*115+1800));
  const expected=targetOverride===null?(level==='summary'?target.summaryCapLetters:target.targetLetters):
    Math.max(0,Math.floor(Number(targetOverride)));
- const body={phase,bookTitle,level,
+ const isNewDraft=phase==='draft';
+ const body={phase:isNewDraft?'draft-v70':phase,
+   ...(isNewDraft?{draftProtocol:STUDY_DRAFT_PROTOCOL_V70}:{}),
+   bookTitle,level,
    targetLetters:level==='summary'?null:expected,
    summaryCapLetters:level==='summary'?expected:null,
    maxOutputTokens:tokenBudget,timeoutMs:190000,repairDrafts,
@@ -190,6 +194,13 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
  }
  if(data?.engine!=='ai'||data?.version!=='integral-v51'||data?.level!==level)
    throw Object.assign(new Error('Provenienza risposta Gemini non verificata'),{code:'INVALID_EDITION_RESPONSE'});
+ // LAB70: reject stale LAB67 Worker deployments before storing new drafts.
+ // Incorrect reduction itself is saved as a draft and checked only in phase 2.
+ if(isNewDraft){
+   const verified=verifyStudyDraftResponseV70(data,
+     block.reduce((n,u)=>n+studyLetters(u.source),0),level);
+   if(!verified.ok)throw Object.assign(new Error(verified.message),{code:verified.code});
+ }
  await markGeminiCadenceSuccessV58({requestStartedAt:startedAt,
    inputTokens:data?.inputTokens||0});
  return data;
