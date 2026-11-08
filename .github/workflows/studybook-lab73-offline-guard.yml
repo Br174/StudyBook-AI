@@ -1,0 +1,28 @@
+name: StudyBook LAB73 network recovery offline guard
+on:
+  push:
+    branches: ['audit/studybook-lab73-network-preflight-*']
+    paths: ['.github/workflows/studybook-lab73-offline-guard.yml']
+permissions:
+  contents: read
+jobs:
+  network-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install deps without modifying lockfile
+        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: LAB73 44-page network failure, persistence and bounded retry
+        run: node scripts/test-lab73-network-recovery.mjs
+      - name: No regression in six editions and recovery checkpoint
+        run: |
+          node scripts/test-lab57-draft-first.mjs
+          node scripts/test-lab58-large-block-cadence.mjs
+          node scripts/test-lab72-negative-closure.mjs
+          node scripts/test-lab72-targeted-repair.mjs
+      - name: Compile web/Capacitor payload without Android APK yet
+        run: npm run build
