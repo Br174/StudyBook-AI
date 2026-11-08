@@ -18,6 +18,7 @@ import {publishSequentialPagesV51} from './pagePublicationV51.js';
 import {studyLetters,percentReduced,exactRetained} from './studyPillarV38.js';
 import {auditFidelity,auditProgressiveConcepts} from './fidelityEngine.js';
 import {rewriteQualityV65} from './rewriteQualityV65.js';
+import {finalizeStudyQualityV66} from './studyQualityV66.js';
 import {repairFocusForUnitV62} from './editionRepairV53.js';
 import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 
@@ -317,7 +318,7 @@ function restoreExhaustedQualityV62(previous,fp,units,rows,reviews,attempts){
  for(const page of pages)attempts[attemptKeyV61(level,page)]=0;
  return evidence;
 }
-export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=()=>{},signal=null}={}){
+export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=()=>{},signal=null,qualityOnly=false}={}){
  const units=orderSourceUnitsV59(bookUnitsV51(book)),fp=fingerprint(book),previous=book.editionsV36;
  const {rows,drafts}=gridFrom(book,previous,fp);
  const diagnostics={mode:'draft-first-v57',requestsSent:0,draftRequests:0,
@@ -446,6 +447,10 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
  let state=emit(onProgress,book,units,rows,drafts,fp,diagnostics,'review');
  if(!state.draftComplete)return halt(onProgress,book,units,rows,drafts,fp,diagnostics,
    'draft','draft-incomplete','AI_INCOMPLETE_BLOCK',persisted);
+ // LAB66: once every saved draft exists, perform ONLY a local advisory audit.
+ // No provider call, no automatic corrections, no discarded approvals.
+ if(qualityOnly)return finalizeStudyQualityV66(book,units,rows,drafts,
+   {...state,checkpointPersistent:persisted},onProgress);
  const reviews={};
  for(const level of LEVELS)reviews[level]=reviewEdition(units,drafts,level);
  if(!diagnostics.qualityRecoveryV62)
