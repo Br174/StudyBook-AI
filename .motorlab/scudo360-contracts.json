@@ -28,6 +28,19 @@
       ],
       "junitDir": ".motorlab/scudo360-test-results",
       "timeoutMs": 240000
+    },
+    {
+      "id": "lab73-network-recovery",
+      "command": [
+        "node",
+        "scripts/StudyBookLab73Network.mjs"
+      ],
+      "paths": [
+        "scripts/StudyBookLab73Network.mjs",
+        "scripts/test-lab73-network-recovery.mjs"
+      ],
+      "junitDir": ".motorlab/scudo360-test-results",
+      "timeoutMs": 180000
     }
   ],
   "contracts": [
@@ -53,6 +66,20 @@
       ],
       "junitClasses": [
         "studybook.StudyBookLab72Targeted"
+      ],
+      "requiredAt": [
+        "lab",
+        "promotion"
+      ]
+    },
+    {
+      "id": "studybook.lab73-first-draft-fidelity-and-network-recovery",
+      "priority": "P1",
+      "suites": [
+        "lab73-network-recovery"
+      ],
+      "junitClasses": [
+        "studybook.StudyBookLab73Network"
       ],
       "requiredAt": [
         "lab",
