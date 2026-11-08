@@ -8,7 +8,7 @@ export function verifyStudyDraftResponseV72(response,sourceLetters,level){
    Number.isFinite(response?.lengthReview?.observedLetters)&&
    typeof response?.lengthReview?.withinBand==='boolean'&&
    typeof response?.lengthReview?.compliant==='boolean'&&
-   Object.hasOwn(response||{},'finishReason')&&
+   (typeof response?.finishReason==='string'||response?.finishReason===null)&&
    Number.isFinite(response?.outputTokenLimit);
  if(!ok)return {ok:false,code:'AI_DRAFT_BACKEND_VERSION_MISMATCH',
    message:'Il servizio Gemini non corrisponde al protocollo diagnostico LAB72; bozze e origine preservate.'};
