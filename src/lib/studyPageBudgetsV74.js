@@ -1,4 +1,5 @@
 // LAB74: one SOURCE-derived page/range letter budget before Gemini writes.
+// Release candidate: strict original-page ±5 count; Scudo360 P1=4/4, device acceptance still required.
 // Tolerance is ±5 percentage points of the ORIGINAL alphabetical letters:
 // 100 original, 50% reduction => target 50 retained, minimum 45, maximum 55.
 // Multi-page original paragraphs remain indivisible: an overlapping page
