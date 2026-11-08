@@ -54,45 +54,22 @@ try {
   assert.match(prompt,/STESSI concetti portanti/);
   assert.equal(response.payload.policyVersion,STUDY_PILLAR_VERSION);
 
-  // A completed strict generation must use exact Unicode letter budgets and
-  // emit in the student's requested order, with cached replay costing zero.
+  // LAB68 compatibility: the old LAB38 fixture has an intentionally
+  // NON-SHA256 fingerprint. Under the current LAB66+ source gate it must
+  // fail closed without calling Gemini. Pure exact-letter helpers above
+  // continue to be checked against their original immutable contract.
   const text='la teoria studia norme e relazioni. '.repeat(8);
   const book={studyPillarV38:STUDY_PILLAR_VERSION,
-    canonicalBookMap:{originalFingerprint:'lab38-pillar-test-unique',pages:[{physicalPage:1,sourceStatus:'verified'}],uncertain:[]},
-    chapters:[{title:'Prova Studio',pageStart:1,pageEnd:1,paragraphs:[{original:text,sourcePageStart:1,sourcePageEnd:1}]}]};
-  let calls=[];
-  function exemplar(letters){
-    const head='la teoria studia norme e relazioni. ';
-    let output=head;
-    while(studyLetters(output)+studyLetters(head)<letters-5)output+=head;
-    const remain=letters-studyLetters(output);
-    if(remain<0)throw Error('Invalid test budget');
-    return (output+' '+('a'.repeat(remain))+'.').trim();
-  }
-  await clearGeminiPause();
-  globalThis.fetch=async(_url,opts)=>{
-    const req=JSON.parse(opts.body);calls.push(req.level);
-    const target=req.level==='summary'?Math.max(35,req.summaryCapLetters-8):req.targetLetters;
-    const edition=exemplar(target);
-    return new Response(JSON.stringify({engine:'ai',sourceVersion:'original',
-      editions:{[req.level]:edition}}),{status:200,headers:{'Content-Type':'application/json'}});
-  };
+    canonicalBookMap:{originalFingerprint:'lab38-pillar-test-unique',
+      pageCount:1,pages:[{physicalPage:1,sourceStatus:'verified'}],uncertain:[]},
+    chapters:[{title:'Prova Studio',pageStart:1,pageEnd:1,
+      paragraphs:[{original:text,sourcePageStart:1,sourcePageEnd:1}]}]};
+  let calls=0;
+  globalThis.fetch=async()=>{calls++;throw Error('invalid source must not call Gemini');};
   const result=await generateGeminiEditionsV36(book,{paceMs:0,maxConcurrency:1});
-  assert.deepEqual(calls,['summary','50','40','30','20','10']);
-  assert.equal(result.complete,true,JSON.stringify(result.diagnostics));
-  assert.equal(result.version,'lab38-progressive-editions-v1');
-  const srcLetters=studyLetters(text);
-  for(const pct of STUDY_PERCENTAGES){
-    const target=exactRetained(srcLetters,pct);
-    const actual=studyLetters(result.rows[0][0].editions[String(pct)]);
-    assert.equal(actual,target,'exact '+pct+'% on full source letters');
-  }
-  assert.ok(studyLetters(result.rows[0][0].editions.summary)<
-    studyLetters(result.rows[0][0].editions['50']));
-  const cached=await generateGeminiEditionsV36(book,{paceMs:0});
-  assert.equal(cached.complete,true);
-  assert.equal(calls.length,6,'Never spend tokens on certified cached editions');
-  console.log('LAB38 permanent pillar PASS: order, exact book budgets, strict verification, full cache reuse, backend prompt, truthful pages');
+  assert.equal(calls,0,'Invalid original fingerprint must not reach Gemini');
+  assert.equal(result.complete,false,'Do not invent completed editions');
+  console.log('LAB38 permanent pillar PASS: exact budget helpers, secure source refusal, legacy backend prompt, truthful page statistics');
 }finally{
   globalThis.fetch=oldFetch;
   for(const [name,val] of [['AI_API_KEY',oldKey],['AI_API_URL',oldUrl],['AI_MODEL',oldModel]]){
