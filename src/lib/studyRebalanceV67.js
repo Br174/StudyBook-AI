@@ -9,7 +9,7 @@ import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 import {classifySourceReadinessV52} from './generativeIntegralV51.js';
 import {studyLetters,exactRetained,percentReduced} from './studyPillarV38.js';
 import {planRebalanceV67,editionReductionV67,betterReductionV67,
-  STUDY_TARGET_V67} from './studyRebalancePolicyV67.js';
+  STUDY_TARGET_V67,measureEditionLengthV72} from './studyRebalancePolicyV67.js';
 import {readGeminiPause,registerGeminiPause,clearGeminiPause}
  from './geminiQuotaControllerV36.js';
 import {waitForGeminiCadenceV58,markGeminiCadenceSuccessV58}
