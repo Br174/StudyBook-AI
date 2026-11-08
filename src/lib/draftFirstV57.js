@@ -453,7 +453,7 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
          withinBand:priorAudit.withinBand+(observed.compliant?1:0),
          outOfBand:priorAudit.outOfBand+(!observed.compliant?1:0),
          truncated:priorAudit.truncated+(observed.suspectedTruncation?1:0),
-         last:{sourceLetters,outputLetters:responseLetters,
+         last:{sourceLetters:originalLetters,outputLetters:responseLetters,
            reduction:observed.achievedReduction,target:observed.targetReduction,
            min:observed.minLetters,max:observed.maxLetters,
            finishReason:response.finishReason||null,
