@@ -227,6 +227,11 @@ export function editionPageBudgetInstructionV74(level,sourceLetters,phase='draft
   'StudyBook LAB74: PRIMA CONTA LE LETTERE, POI RISCRIVI. La percentuale indica LETTERE ELIMINATE, non il testo da tenere.',
   'Originale di questo blocco: '+sourceLetters+' lettere alfabetiche. Riduzione richiesta '+policy.target+'%. Scrivi circa '+target+' lettere alfabetiche, minimo '+lower+', massimo '+upper+'.',
   'Per OGNI PAGINA originale o intervallo inseparabile ricevi pageBudgetsV74 con originalLetters, targetLetters, minLetters e maxLetters.',
+  'In fase di RICALIBRAZIONE ricevi anche pageFeedbackV74. È un CONTEGGIO VERIFICATO DAL SERVER delle lettere della bozza precedente per ogni pagina: previousLetters, gapLetters, direction e targetLetters.',
+  'Se direction=expand e gapLetters è positivo, RIPRISTINA spiegazioni, condizioni e relazioni realmente presenti nelle frasi originali ma abbreviate nella bozza. Non ripetere la stessa frase e non aggiungere fatti non presenti nella fonte.',
+  'Se direction=condense e gapLetters è negativo, RISCRIVI con meno parole gli stessi concetti, eliminando solamente formulazioni ripetitive o superflue. Per un 20% di riduzione il nuovo testo deve restare vicino all 80% dell originale, non tornare al 100%.',
+  'Prima di scrivere ciascun id, pianifica mentalmente la lunghezza del gruppo di pagina con budget e feedback ricevuti. Scegli prima i passaggi originali da mantenere, poi riscrivili in frasi naturali.',
+  'Se la pagina era fuori soglia, la tua nuova versione deve realmente CAMBIARE la sua lunghezza nella direzione del gapLetters. Non restituire una copia invariata né un breve elenco sommario al posto di una spiegazione.'
   'Il numero targetLetters è il punto verso cui devi scrivere, NON soltanto un limite massimo. Per esempio 100 lettere originali al 50% = 50 conservate, intervallo 45–55. Al 10% = 90 conservate, intervallo 85–95.',
   'La singola pagina deve stare entro i propri limiti, salvo casi dove un unico paragrafo originale attraversa più pagine: in tal caso usa il budget del gruppo completo; NON spezzare la fonte arbitrariamente.',
   'Le quote per paragrafi sotto la pagina aiutano a suddividere il testo; le soglie vincolanti sono per pagina/gruppo e per il libro completo, come da budget.',
@@ -432,10 +437,25 @@ export default async function handler(req,res){
         directionInstruction:targetedRepairSummaryV72(focused)};
     }
   }
+  // LAB74 phase-two feedback is measured from the immutable originals and
+  // last saved candidate, never from a client-supplied invented percentage.
+  // Creation stays one pass: feedback is computed only during recalibration.
+  const pageFeedbackV74=(protocolV74&&phase==='recalibrate-v74'&&byId.size>0)
+    ?pageLetterReviewV74(safe,safe.map(u=>({id:u.id,
+      text:byId.get(u.id)||''})),level).groups.map(g=>({
+      pageStart:g.pageStart,pageEnd:g.pageEnd,originalLetters:g.originalLetters,
+      previousLetters:g.outputLetters,targetLetters:g.targetLetters,
+      minLetters:g.minLetters,maxLetters:g.maxLetters,
+      gapLetters:g.targetLetters-g.outputLetters,
+      direction:g.outputLetters<g.minLetters?'expand':
+        g.outputLetters>g.maxLetters?'condense':'review',
+      priorWithinBand:g.withinBand
+    })):null;
   // Serialize only AFTER source-based unit budgets are validated and attached.
   const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),
     units:safe,repair:byId.size>0,
-    ...(protocolV74?{pageBudgetsV74:verifiedPageBudgetsV74}: {})});
+    ...(protocolV74?{pageBudgetsV74:verifiedPageBudgetsV74}: {}),
+    ...(pageFeedbackV74?{pageFeedbackV74}: {})});
   const observed=safe.reduce((n,u)=>n+studyLetters(u.previousDraft||''),0);
   const desired=level==='summary'?Math.round(originalLetters*.40):target;
   const feedback=(protocolV72&&phase==='repair-v72'||protocolV71&&phase==='repair-v71')&&observed>0
