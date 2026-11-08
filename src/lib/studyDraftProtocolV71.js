@@ -17,8 +17,8 @@ export function unitLengthBudgetV71(source,level){
   sourceLetters:letters,
   targetLetters:level==='summary'?null:targetLetters,
   summaryTargetLetters:level==='summary'?targetLetters:null,
-  minLetters:Math.max(0,Math.floor(letters*(1-band.max/100))),
-  maxLetters:Math.ceil(letters*(1-band.min/100))
+  minLetters:Math.max(0,Math.ceil(letters*(1-band.max/100))),
+  maxLetters:Math.floor(letters*(1-band.min/100))
  };
 }
 
