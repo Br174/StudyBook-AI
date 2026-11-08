@@ -55,7 +55,7 @@ try{
  assert.equal(perfect.verifiedChunkVariants,714);
  assert.equal(perfect.publishedThroughPage.summary,44);
  assert.equal(calls.length,6,'one giant request per version for small book');
- assert.deepEqual(calls.map(x=>x.phase),Array(6).fill('draft'));
+ assert.deepEqual(calls.map(x=>x.phase),Array(6).fill('draft-v72'));
  const completedDraft=events.find(x=>x.drafts===714);
  assert.ok(completedDraft,'all drafts are checkpointed before review');
  assert.equal(completedDraft.ready,0,'zero *new* units are falsely verified during creation');
@@ -89,7 +89,7 @@ try{
   'the unverified first page is still stored in complete draft');
  const firstRepair=calls.findIndex(c=>c.phase==='repair');
  assert.ok(firstRepair>=6,'all six draft calls complete before first correction call');
- assert.ok(calls.slice(0,firstRepair).every(c=>c.phase==='draft'));
+ assert.ok(calls.slice(0,firstRepair).every(c=>c.phase==='draft-v72'));
  assert.equal(calls.slice(0,firstRepair).length,6);
  assert.ok(calls.slice(firstRepair).every(c=>c.phase==='repair'));
  assert.ok(calls.slice(firstRepair).every(c=>c.pages[0]===1&&c.pages[1]===1),
