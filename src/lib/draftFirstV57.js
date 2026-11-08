@@ -24,6 +24,8 @@ import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 import {STUDY_DRAFT_PROTOCOL_V71,verifyStudyDraftResponseV71,buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
 import {measureEditionLengthV72} from './studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from './studyDraftProtocolV72.js';
+import {initialStudyOutputLimitV73,safeNetworkSplitV73,isRecoverableNetworkV73}
+ from './studyNetworkRecoveryV73.js';
 
 const LEVELS=['summary','50','40','30','20','10'];
 const CACHE='integral-v57-draft-first',VERSION='lab38-progressive-editions-v1';
@@ -84,7 +86,9 @@ function stats(book,units,rows,drafts,fp,diag,phase,checkpointPersistent=true){
  return {version:VERSION,sourceFingerprint:fp,rows:published.rows,stagedRows:rows,
    draftRowsV57:drafts,draftUnitsSaved,draftUnitsTotal:total,
    draftComplete:draftUnitsSaved===total,phase:complete?'complete':phase,
-   integralInputLimit:diag.inputLimit,repairAttemptsV57:diag.repairAttempts,
+   integralInputLimit:diag.inputLimit,
+   providerBlockOutputLimitV73:diag.providerBlockOutputLimitV73,
+   repairAttemptsV57:diag.repairAttempts,
    publishedThroughPage:published.through,verifiedCells:ready,
    totalCells:units.length,blockedCells:units.length-ready,verifiedChunks:ready,
    verifiedVariants:count,totalVariants:total,
@@ -113,7 +117,7 @@ function pageSets(units){
  }
  return pages;
 }
-function blocksForMissing(units,drafts,rows,level,inputLimit){
+function blocksForMissing(units,drafts,rows,level,inputLimit,outputLimit){
  const missingPages=new Set();
  for(const u of units)if(!draftOf(drafts,u,level)&&!rows[u.ci][u.pi].verified[level])
    for(let page=u.pageStart;page<=u.pageEnd;page++)missingPages.add(page);
@@ -121,7 +125,8 @@ function blocksForMissing(units,drafts,rows,level,inputLimit){
  const completePages=units.filter(u=>
    Array.from({length:u.pageEnd-u.pageStart+1},(_,i)=>u.pageStart+i)
      .some(page=>missingPages.has(page)));
- return planNaturalBlocksV51(completePages,level,{maxInputTokens:inputLimit});
+ return planNaturalBlocksV51(completePages,level,{maxInputTokens:inputLimit,
+  maxOutputTokens:outputLimit});
 }
 function reviewEdition(units,drafts,level){
  const violations=[],missing=[],texts=[];
@@ -182,9 +187,21 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
  if(cooling)throw Object.assign(new Error('Quota Gemini in attesa'),{
    code:'AI_QUOTA_LIMIT',quota:cooling});
  const startedAt=Date.now();
- const response=await fetch(apiEndpoint('/api/editions/bulk/v51'),{
-   method:'POST',headers:{'Content-Type':'application/json'},signal,body:JSON.stringify(body)
- });
+ let response;
+ try{
+  response=await fetch(apiEndpoint('/api/editions/bulk/v51'),{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   signal,body:JSON.stringify(body)});
+ }catch(error){
+  if(signal?.aborted)throw error;
+  // Differentiate Android->Worker transport from Worker->Gemini upstream.
+  // Only sanitized codes/stages are retained, never API keys or original text.
+  throw Object.assign(new Error('Connessione al servizio Gemini interrotta'),{
+   code:'AI_CLIENT_NETWORK',diagnostic:{reason:'android-worker-fetch',
+    elapsedMs:Date.now()-startedAt,stage:'client-fetch',
+    transportType:String(error?.name||'TypeError').slice(0,40)}
+  });
+ }
  const data=await response.json().catch(()=>null);
  if(!response.ok){
    const code=data?.code||(response.status===404?'AI_BULK_ENDPOINT_MISSING':'HTTP_'+response.status);
@@ -341,6 +358,11 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
    // A previous 503 can no longer permanently shrink a whole-book plan.
    // Provider hard 413 still splits safely at complete page boundaries.
    inputLimit:restoredLargeBlockLimitV58(previous),
+   providerBlockOutputLimitV73:initialStudyOutputLimitV73(units,
+     previous?.sourceFingerprint===fp?previous:null),
+   networkSplitsV73:0,networkFailuresV73:0,
+   lastProviderDiagnostic:previous?.sourceFingerprint===fp?
+     previous?.diagnostics?.lastProviderDiagnostic||null:null,
    repairAttempts:previous?.sourceFingerprint===fp
      ?{...(previous?.repairAttemptsV57||{})}:{},phase:'draft',
    remainingBatches:0,lastCode:null,
@@ -396,7 +418,8 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
  emit(onProgress,book,units,rows,drafts,fp,diagnostics,'draft');
  // FIRST PHASE: finish every required draft, no pedagogical evaluation here.
  for(const level of LEVELS){
-   const pending=blocksForMissing(units,drafts,rows,level,diagnostics.inputLimit);
+   const pending=blocksForMissing(units,drafts,rows,level,
+     diagnostics.inputLimit,diagnostics.providerBlockOutputLimitV73);
    const queue=pending.map(block=>({block,attempt:0}));
    while(queue.length){
      diagnostics.remainingBatches=queue.length;
@@ -482,6 +505,15 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        const code=signal?.aborted?'AI_MANUAL_RESTART':error?.code||'AI_PROVIDER_NETWORK';
        diagnostics.lastCode=code;diagnostics.providerErrors++;
        diagnostics.errorsByCode[code]=(diagnostics.errorsByCode[code]||0)+1;
+       diagnostics.lastProviderDiagnostic={
+         reason:String(error?.diagnostic?.stage||error?.diagnostic?.reason||
+           (code==='AI_CLIENT_NETWORK'?'android-worker':'worker-gemini')).slice(0,60),
+         httpStatus:Number(error?.diagnostic?.httpStatus||
+           error?.diagnostic?.status)||null,
+         elapsedMs:Number(error?.diagnostic?.elapsedMs)||null,
+         code,level,pageStart:block[0].pageStart,pageEnd:block.at(-1).pageEnd
+       };
+       if(isRecoverableNetworkV73(code))diagnostics.networkFailuresV73++;
        const pause=await readGeminiPause();
        // A 503 means server overload, not proof the source block is too big.
        // Keep the large-block plan unchanged; a genuine hard 413 may split.
@@ -489,9 +521,26 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
          pause.automatic?'quota-paused':'quota-review',code,persisted,pause);
        if(code==='AI_MANUAL_RESTART')return halt(onProgress,book,units,rows,drafts,fp,diagnostics,
          'draft','interrupted',code,persisted);
+       const networkPlan=safeNetworkSplitV73(block,level,{
+         code,used:diagnostics.networkSplitsV73,
+         currentOutputLimit:diagnostics.providerBlockOutputLimitV73
+       });
+       if(networkPlan){
+         diagnostics.splits++;diagnostics.networkSplitsV73++;
+         diagnostics.providerBlockOutputLimitV73=networkPlan.nextOutputLimit;
+         diagnostics.lastNetworkStrategyV73=networkPlan.strategy;
+         // Full original pages only, no repeated identical failing request.
+         queue.unshift(...networkPlan.halves.map(b=>({block:b,attempt:0})));
+         emit(onProgress,book,units,rows,drafts,fp,diagnostics,'draft',persisted);
+         continue;
+       }
        const splittable=['AI_BLOCK_TOO_LARGE','AI_INCOMPLETE_BLOCK'].includes(code);
        const halves=splittable?bisectAtNaturalBoundaryV51(block):null;
-       if(halves){diagnostics.splits++;queue.unshift(...halves.map(b=>({block:b,attempt:0})));continue;}
+       if(halves){
+         diagnostics.splits++;
+         queue.unshift(...halves.map(b=>({block:b,attempt:0})));
+         continue;
+       }
        return halt(onProgress,book,units,rows,drafts,fp,diagnostics,'draft',
          'provider-blocked',code,persisted);
      }
