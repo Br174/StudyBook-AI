@@ -20,7 +20,7 @@ import {finalizeStudyQualityV66} from './studyQualityV66.js';
 import {buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
 import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from './studyDraftProtocolV72.js';
 import {STUDY_DRAFT_PROTOCOL_V74,verifyStudyDraftResponseV74} from './studyDraftProtocolV74.js';
-import {pageLetterBudgetsV74,pageLetterReviewV74} from './studyPageBudgetsV74.js';
+import {pageLetterBudgetsV74,pageLetterReviewV74,selectPageRepairUnitsV74} from './studyPageBudgetsV74.js';
 const clean=x=>typeof x==='string'?x.trim():'';
 const clone=x=>JSON.parse(JSON.stringify(x));
 const stamp=()=>new Date().toISOString();
@@ -77,9 +77,20 @@ export async function rebalanceSavedStudyBookV67(book,{
   if(stage.completed[level]?.accepted||stage.attempted[level]&&!stage.buffers[level])
    continue;
   if(signal?.aborted){await notify('interrupted');return current;}
-  const blocks=planNaturalBlocksV51(units,level);
   const buffered=stage.buffers[level]||{};
   stage.buffers[level]=buffered;
+  // LAB74: page-level repair, not a complete-book rewrite. A page already
+  // within its approved letter interval is reused without being sent to
+  // Gemini. An original paragraph spanning multiple pages remains atomic.
+  const currentParts=units.map(u=>({id:u.id,
+   text:clean(buffered[u.id])||
+    clean(current.draftRowsV57?.[u.ci]?.[u.pi]?.editions?.[level])}));
+  const pageSelection=selectPageRepairUnitsV74(units,currentParts,level);
+  for(const u of pageSelection.untouchedUnits){
+   const original=currentParts.find(p=>p.id===u.id);
+   if(original?.text)buffered[u.id]=original.text;
+  }
+  const blocks=planNaturalBlocksV51(pageSelection.repairUnits,level);
   // Two requests maximum per natural block. The second uses the first
   // candidate ONLY as a negative length example; the original remains the
   // sole source of meaning. No unbounded retry, no Gemini during QA.
