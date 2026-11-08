@@ -10,6 +10,8 @@ Ogni edizione trae origine **direttamente dal PDF originale immutabile** (non da
 
 ### Budget preventivo VINCOLANTE · approvazione 8 novembre 2026 · LAB74
 
+Le **percentuali VINCOLANTI** sono obiettivi di riduzione rispetto alle lettere dell'originale, con margine ±5 punti percentuali approvato per ciascuna delle sei versioni. La conformità non è garantita dalla sola risposta HTTP 200: si verifica la lunghezza reale delle pagine e la fedeltà alla fonte.
+
 Questa regola più recente **sostituisce i vecchi margini ±2 punti**
 e il vecchio criterio "solo globale" per le nuove generazioni.
 È stata approvata esplicitamente dal fondatore con l'esempio:
