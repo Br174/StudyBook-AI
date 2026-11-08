@@ -46,7 +46,7 @@ try{
  const dense=makeBook('a'),ordered=dense.chapters[0].paragraphs.map((p,i)=>({
   id:'0:'+i,source:p.original,pageStart:p.sourcePageStart,pageEnd:p.sourcePageEnd
  }));
- assert.equal(initialStudyOutputLimitV73(ordered),14000);
+ assert.equal(initialStudyOutputLimitV73(ordered),50000);
  assert.equal(initialStudyOutputLimitV73(ordered.slice(0,20)),50000);
  assert.equal(safeNetworkSplitV73([ordered[0]],'summary',{
   code:'AI_PROVIDER_NETWORK',used:0}),null);
@@ -76,7 +76,7 @@ try{
  assert.equal(result.draftUnitsSaved,4044);
  assert.ok(result.diagnostics.networkSplitsV73>=1,'Retry uses full-page split');
  assert.ok(result.diagnostics.networkSplitsV73<=STUDY_NETWORK_SPLIT_LIMIT_V73);
- assert.ok(result.providerBlockOutputLimitV73<=14000);
+ assert.ok(result.providerBlockOutputLimitV73<50000,'Only an actual network fault reduces subsequent block sizes');
  assert.ok(calls[1].count<calls[0].count,'No identical retry after first failed request');
  assert.equal(calls[1].from,calls[0].from);
  assert.ok(calls[1].to<calls[0].to,'Network split ends on earlier whole page');
