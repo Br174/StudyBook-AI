@@ -108,7 +108,7 @@ export async function rebalanceSavedStudyBookV67(book,{
      return current;
     }
     const body={
-      phase:previousParts.length?'repair-v72':'recalibrate-v72',
+      phase:previousParts.length===block.length?'repair-v72':'recalibrate-v72',
       draftProtocol:STUDY_DRAFT_PROTOCOL_V72,
       level,bookTitle:String(book.title||'').slice(0,140),
       targetLetters:level==='summary'?null:limit,
