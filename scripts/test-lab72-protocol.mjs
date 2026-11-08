@@ -36,7 +36,7 @@ try{
  assert.equal(out.payload.generationStoppedEarly,true);
  assert.equal(verified.finishReason,'length');
  assert.equal(verifyStudyDraftResponseV72({...out.payload,draftProtocol:'lab71-unit-length-budget-v1'},letters,'10').ok,false);
- assert.equal(verifyStudyDraftResponseV72({...out.payload,finishReason:undefined},letters,'10').ok,true);
+ assert.equal(verifyStudyDraftResponseV72({...out.payload,finishReason:undefined},letters,'10').ok,false);
  assert.equal(verifyStudyDraftResponseV72({...out.payload,lengthReview:{...out.payload.lengthReview,sourceLetters:letters+1}},letters,'10').ok,false);
  const app=readFileSync(new URL('../src/lib/draftFirstV57.js',import.meta.url),'utf8');
  const improve=readFileSync(new URL('../src/lib/studyRebalanceV67.js',import.meta.url),'utf8');
