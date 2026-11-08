@@ -7,6 +7,11 @@ on:
       - 'scripts/test-lab71-unit-budgets.mjs'
       - 'scripts/test-lab72-protocol.mjs'
       - 'scripts/test-lab67-simplified-precise-rebalance.mjs'
+      - 'src/lib/studyPageBudgetsV74.js'
+      - 'src/lib/studyRebalanceV67.js'
+      - 'scripts/test-lab74-selective-pages.mjs'
+      - 'scripts/test-lab74-recalibration-feedback.mjs'
+      - 'scripts/test-lab38-home-flow.mjs'
 permissions:
   contents: read
 jobs:
