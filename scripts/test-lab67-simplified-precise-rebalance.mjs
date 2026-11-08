@@ -88,10 +88,11 @@ try{
  globalThis.fetch=async(_url,options)=>{
   const body=JSON.parse(options.body);
   calls.push(body);
-  assert.equal(body.phase,'recalibrate');
+  assert.equal(body.phase,'recalibrate-v70');
   assert.equal(body.level,'40');
   return new Response(JSON.stringify({engine:'ai',version:'integral-v51',
-   level:'40',inputTokens:2100,
+   level:'40',inputTokens:2100,draftProtocol:'lab70-draft-length-v1',
+   lengthReview:{sourceLetters:body.units.reduce((n,u)=>n+studyLetters(u.source),0)},
    parts:body.units.map(u=>({id:u.id,text:trimTo(u.source,.60)}))}),
    {status:200,headers:{'Content-Type':'application/json'}});
  };
