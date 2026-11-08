@@ -1,10 +1,11 @@
 // LAB72: exactly one additional free-model probe with measured repair focus.
 // The preceding text is synthetic (not user data). Results are DIAGNOSTIC.
 import handler from '../api/editionsBulkV51.js';
-import {buildUnitBudgetsV71,STUDY_DRAFT_PROTOCOL_V71} from '../src/lib/studyDraftProtocolV71.js';
+import {buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
+import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
 const key=process.env.AI_API_KEY||process.env.GEMINI_API_KEY||'';
-if(!key){console.log('LAB72_REAL_REPAIR_UNVERIFIED: No existing key');process.exit(0)}
+if(!key){console.log('LAB72_REAL_TARGETED_UNVERIFIED: No existing key');process.exit(0)}
 const assertions=[
  'La Luna è un satellite naturale della Terra e non emette luce propria: riflette quella solare.',
  'Le sue fasi dipendono dalla geometria fra Sole, Terra e Luna nel corso del mese.',
@@ -32,7 +33,7 @@ const previousText=source.slice(0,(m[priorLetters-1]?.index??0)+1);
 const units=[{id:'0:0',source,pageStart:1,pageEnd:1}];
 const target=exactRetained(original,10);
 const reply={method:'POST',env:{AI_API_KEY:key,AI_MODEL:'gemini-3.5-flash-lite'},
- body:{phase:'repair-v71',draftProtocol:STUDY_DRAFT_PROTOCOL_V71,
+ body:{phase:'repair-v72',draftProtocol:STUDY_DRAFT_PROTOCOL_V72,
  level:'10',bookTitle:'Prova sintentica ricalibrazione',
  targetLetters:target,summaryCapLetters:null,
  unitBudgets:buildUnitBudgetsV71(units,'10'),
@@ -44,9 +45,9 @@ const res={statusCode:200,payload:null,
  setHeader(){return this},status(s){this.statusCode=s;return this},
  json(p){this.payload=p;return this}};
 await handler(reply,res);
-if(res.statusCode!==200)console.log('LAB72_REAL_REPAIR_UNVERIFIED',JSON.stringify({
+if(res.statusCode!==200)console.log('LAB72_REAL_TARGETED_UNVERIFIED',JSON.stringify({
  status:res.statusCode,code:res.payload?.code||'UNKNOWN'}));
-else console.log('LAB72_REAL_REPAIR_OBSERVED',JSON.stringify({
+else console.log('LAB72_REAL_TARGETED_OBSERVED',JSON.stringify({
  originalLetters:original,syntheticPreviousLetters:priorLetters,
  targetLetters:target,outputLetters:res.payload.lengthReview.observedLetters,
  reduction:res.payload.lengthReview.achievedReduction,
