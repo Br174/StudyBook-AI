@@ -93,7 +93,7 @@ try{
  globalThis.fetch=async(_url,options)=>{
   const body=JSON.parse(options.body);
   calls.push(body);
-  assert.equal(body.phase,'recalibrate-v72');
+  assert.equal(body.phase,'repair-v72');
   assert.equal(body.level,'40');
   return new Response(JSON.stringify({engine:'ai',version:'integral-v51',
    level:'40',inputTokens:2100,draftProtocol:'lab72-canonical-range-observability-v1',finishReason:'stop',outputTokenLimit:6000,
