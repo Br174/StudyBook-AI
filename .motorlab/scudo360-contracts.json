@@ -41,6 +41,19 @@
       ],
       "junitDir": ".motorlab/scudo360-test-results",
       "timeoutMs": 180000
+    },
+    {
+      "id": "lab74-original-page-letter-budget",
+      "command": [
+        "node",
+        "scripts/StudyBookLab74PageBudget.mjs"
+      ],
+      "paths": [
+        "scripts/StudyBookLab74PageBudget.mjs",
+        "scripts/test-lab74-page-letter-budgets.mjs"
+      ],
+      "junitDir": ".motorlab/scudo360-test-results",
+      "timeoutMs": 180000
     }
   ],
   "contracts": [
@@ -80,6 +93,20 @@
       ],
       "junitClasses": [
         "studybook.StudyBookLab73Network"
+      ],
+      "requiredAt": [
+        "lab",
+        "promotion"
+      ]
+    },
+    {
+      "id": "studybook.lab74-original-page-budget-six-levels",
+      "priority": "P1",
+      "suites": [
+        "lab74-original-page-letter-budget"
+      ],
+      "junitClasses": [
+        "studybook.StudyBookLab74PageLetters"
       ],
       "requiredAt": [
         "lab",
