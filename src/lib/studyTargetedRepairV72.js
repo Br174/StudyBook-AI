@@ -50,15 +50,66 @@ export function planTargetedRepairV72(source,draft,level,{maxContexts=8}={}){
   .slice(0,Math.max(0,Math.min(8,maxContexts)))
   .sort((a,b)=>a.index-b.index)
   .map(x=>x.sentence.slice(0,340));
+ const basic={originalLetters,observedLetters,desiredLetters,minLetters,maxLetters,
+  gapLetters,direction};
+ const localEdit=selectLocalEditV72(source,draft,basic);
  return {
-  originalLetters,observedLetters,desiredLetters,minLetters,maxLetters,
-  gapLetters,direction,
+  ...basic,localEdit,
   sourceContexts:direction==='expand'?omitted:[],
   repeatedDraftContexts:direction==='condense'?duplicates(draft):[],
   // The model decides whether a hint is truly absent by comparing meanings.
   evidenceStatus:'lexical-clues-only-not-semantic-proof'
  };
 }
+
+// Pick a bounded grammatical span to edit. Everything outside this span
+// is byte-for-byte preserved. If no safe local span exists, do not improvise.
+export function selectLocalEditV72(source,draft,plan){
+ if(plan.direction==='review')return null;
+ const text=String(draft||'');
+ if(!text.trim())return null;
+ const total=studyLetters(text);
+ const need=Math.abs(plan.gapLetters);
+ const desiredSpanLetters=plan.direction==='condense'
+   ?Math.min(total,Math.max(need*3,Math.ceil(total*.25)))
+   :Math.min(total,Math.max(45,Math.ceil(total*.22)));
+ const sentences=text.split(/(?<=[.!?])\s+/u).filter(Boolean);
+ if(!sentences.length)return null;
+ let start=0,end=0,size=0,offset=0;
+ for(const sentence of sentences){
+  const index=text.indexOf(sentence,offset);
+  if(index<0)break;
+  end=index+sentence.length;
+  size=studyLetters(text.slice(start,end));
+  offset=end;
+  if(size>=desiredSpanLetters)break;
+ }
+ if(end<=start||!size)return null;
+ const originalSpan=text.slice(start,end);
+ const desiredReplacementLetters=Math.max(1,size+plan.gapLetters);
+ return {start,end,originalSpan,
+  originalSpanLetters:size,desiredReplacementLetters,
+  action:plan.direction,
+  // This is an EDIT, not an authority to delete or invent concepts.
+  spanIsCompleteDraft:end-start===text.length};
+}
+
+export function mergeLocalEditV72(draft,patch,replacement){
+ const text=String(draft||'');
+ if(!patch||typeof replacement!=='string'||!replacement.trim())
+  throw Object.assign(new Error('Patch incompleta'),{code:'AI_LOCAL_PATCH_INVALID'});
+ if(text.slice(patch.start,patch.end)!==patch.originalSpan)
+  throw Object.assign(new Error('Ancora locale variata'),{code:'AI_LOCAL_PATCH_ANCHOR_CHANGED'});
+ // Never accept a whole-book dump as a local replacement unless the
+ // chosen span really was the whole draft; no invisible trimming.
+ const replacementLetters=studyLetters(replacement);
+ const maxExpected=Math.max(patch.desiredReplacementLetters*2,
+  patch.originalSpanLetters+Math.abs(patch.desiredReplacementLetters-patch.originalSpanLetters)+100);
+ if(replacementLetters>maxExpected)
+  throw Object.assign(new Error('Patch più lunga del margine massimo'),{code:'AI_LOCAL_PATCH_TOO_LARGE'});
+ return text.slice(0,patch.start)+replacement.trim()+text.slice(patch.end);
+}
+
 export function targetedRepairSummaryV72(plan){
  if(plan.direction==='expand')return 'La bozza ha '+plan.observedLetters+
    ' lettere; occorrono circa '+plan.desiredLetters+' (mancano '+plan.gapLetters+
