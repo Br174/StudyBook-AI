@@ -9,7 +9,8 @@ import {clearGeminiCadenceForTestV58} from '../src/lib/geminiCadenceV58.js';
 import {initialStudyOutputLimitV73,safeNetworkSplitV73,
  STUDY_NETWORK_SPLIT_LIMIT_V73} from '../src/lib/studyNetworkRecoveryV73.js';
 import {planStudyAutoResumeV45} from '../src/lib/studyAutoResumeV45.js';
-import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
+import {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
+import {pageLetterReviewV74} from '../src/lib/studyPageBudgetsV74.js';
 
 const source='argomento '.repeat(20).trim();
 const makeBook=(fp,count=674)=>({
@@ -28,8 +29,9 @@ const makeResponse=body=>{
  const sourceLetters=body.units.reduce((n,u)=>n+studyLetters(u.source),0);
  const observedLetters=parts.reduce((n,p)=>n+studyLetters(p.text),0);
  return {engine:'ai',version:'integral-v51',level:body.level,parts,
-  completeParts:true,draftProtocol:STUDY_DRAFT_PROTOCOL_V72,
-  lengthReview:{sourceLetters,observedLetters,withinBand:true,compliant:true},
+  completeParts:true,draftProtocol:STUDY_DRAFT_PROTOCOL_V74,
+  lengthReview:{sourceLetters,observedLetters,withinBand:true,compliant:true,
+   pageReviewV74:pageLetterReviewV74(body.units,parts,body.level)},
   finishReason:'stop',outputTokenLimit:body.maxOutputTokens,inputTokens:200};
 };
 const response=body=>new Response(JSON.stringify(makeResponse(body)),{
