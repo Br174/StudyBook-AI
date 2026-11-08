@@ -6,6 +6,9 @@ import {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {STUDY_DRAFT_PROTOCOL_V71,buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
 import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
 import {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
+import {STUDY_DRAFT_PROTOCOL_V75,PLANNING_MAX_UNITS_V75,
+ PLANNING_SCHEMA_V75,planningInstructionV75,writingInstructionV75,
+ verifiedPlansV75} from '../src/lib/studyTwoPromptV75.js';
 import {pageLetterBudgetsV74,pageLetterReviewV74}
  from '../src/lib/studyPageBudgetsV74.js';
 export {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
@@ -308,6 +311,8 @@ async function countOfficialTokens(model,key,messages,signal){
 }
 export default async function handler(req,res){
   res.setHeader('X-StudyBook-Draft-Protocol',STUDY_DRAFT_PROTOCOL_V74);
+  // Separate opt-in staging protocol; existing LAB74 devices continue as-is.
+  res.setHeader('X-StudyBook-Planning-Protocol',STUDY_DRAFT_PROTOCOL_V75);
   if(req.method!=='POST'){res.setHeader('Allow','POST');return fail(res,405,'METHOD_NOT_ALLOWED','Usare POST.');}
   const env=req.env||{};
   const key=env.AI_API_KEY||env.GEMINI_API_KEY||process.env.AI_API_KEY||process.env.GEMINI_API_KEY;
@@ -374,7 +379,9 @@ export default async function handler(req,res){
       };
     }
   }
-  const phase=req.body?.phase==='draft-v74'?'draft-v74':
+  const phase=req.body?.phase==='plan-v75'?'plan-v75':
+    req.body?.phase==='draft-v75'?'draft-v75':
+    req.body?.phase==='draft-v74'?'draft-v74':
     req.body?.phase==='recalibrate-v74'?'recalibrate-v74':
     req.body?.phase==='draft-v72'?'draft-v72':
     req.body?.phase==='recalibrate-v72'?'recalibrate-v72':
@@ -388,15 +395,21 @@ export default async function handler(req,res){
     req.body?.phase==='draft'?'draft':
     req.body?.phase==='rewrite'?'rewrite':
     req.body?.phase==='recalibrate'?'recalibrate':'repair';
+  const protocolV75=['plan-v75','draft-v75'].includes(phase);
   const protocolV74=['draft-v74','recalibrate-v74'].includes(phase);
   const protocolV72=['draft-v72','repair-v72','recalibrate-v72'].includes(phase);
   const protocolV71=['draft-v71','repair-v71','recalibrate-v71'].includes(phase);
   const protocolV70=['draft-v70','repair-v70','recalibrate-v70'].includes(phase);
-  const protocolRequested=protocolV74||protocolV72||protocolV71||protocolV70;
-  if(protocolRequested&&req.body?.draftProtocol!==(protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:STUDY_DRAFT_PROTOCOL_V70))
+  const protocolRequested=protocolV75||protocolV74||protocolV72||protocolV71||protocolV70;
+  if(protocolRequested&&req.body?.draftProtocol!==(protocolV75?STUDY_DRAFT_PROTOCOL_V75:protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:STUDY_DRAFT_PROTOCOL_V70))
     return fail(res,409,'AI_DRAFT_PROTOCOL_MISMATCH','Versione motore Gemini non corrispondente alla LAB70.');
+  // Experiment budget: one original page group per planning operation where
+  // possible. Never multiply 674 source paragraphs by two model calls.
+  if(protocolV75&&safe.length>PLANNING_MAX_UNITS_V75)
+    return fail(res,400,'AI_PLANNING_TOO_MANY_UNITS',
+      'Esperimento di pianificazione limitato a 8 unità complete.');
   const originalLetters=safe.reduce((n,u)=>n+studyLetters(u.source),0);
-  if(protocolV74||protocolV72||protocolV71){
+  if(protocolV75||protocolV74||protocolV72||protocolV71){
     // One coordinator for global percentages; individual block rounding may
     // differ by at most its source-unit count, never by dozens of percent.
     const desired=Math.round(originalLetters*(1-STUDY_TARGET_V67[level].target/100));
@@ -423,7 +436,7 @@ export default async function handler(req,res){
   // LAB74: independently recompute EVERY page budget from the actual source.
   // An old Worker/client or a falsified quota must never silently proceed.
   let verifiedPageBudgetsV74=null;
-  if(protocolV74){
+  if(protocolV75||protocolV74){
     verifiedPageBudgetsV74=pageLetterBudgetsV74(safe,level);
     if(JSON.stringify(req.body?.pageBudgetsV74)!==JSON.stringify(verifiedPageBudgetsV74))
       return fail(res,409,'AI_PAGE_BUDGET_MISMATCH',
@@ -451,16 +464,29 @@ export default async function handler(req,res){
         g.outputLetters>g.maxLetters?'condense':'review',
       priorWithinBand:g.withinBand
     })):null;
+  // The writer consumes a completed plan from a previous, separate request.
+  // Validate every id and length before making another free-tier Gemini call.
+  const plansV75=protocolV75&&phase==='draft-v75'
+    ?verifiedPlansV75(req.body?.plansV75,safe.map(u=>u.id)):null;
+  if(protocolV75&&phase==='draft-v75'&&!plansV75)
+    return fail(res,400,'AI_PLANNING_MISMATCH',
+      'Pianificazione per pagina assente, duplicata o non valida.');
   // Serialize only AFTER source-based unit budgets are validated and attached.
   const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),
     units:safe,repair:byId.size>0,
-    ...(protocolV74?{pageBudgetsV74:verifiedPageBudgetsV74}: {}),
+    ...(protocolV75||protocolV74?{pageBudgetsV74:verifiedPageBudgetsV74}: {}),
+    ...(plansV75?{plansV75}: {}),
     ...(pageFeedbackV74?{pageFeedbackV74}: {})});
   const observed=safe.reduce((n,u)=>n+studyLetters(u.previousDraft||''),0);
   const desired=level==='summary'?Math.round(originalLetters*.40):target;
   const feedback=(protocolV72&&phase==='repair-v72'||protocolV71&&phase==='repair-v71')&&observed>0
     ?{observedLetters:observed,desiredLetters:desired,gapLetters:desired-observed}:null;
-  const messages=[{role:'system',content:instructions(level,target,cap,phase,originalLetters,feedback)},
+  const stageInstruction=protocolV75
+    ?phase==='plan-v75'
+      ?planningInstructionV75(level,originalLetters,STUDY_TARGET_V67[level])
+      :writingInstructionV75(level,originalLetters,STUDY_TARGET_V67[level])
+    :instructions(level,target,cap,phase,originalLetters,feedback);
+  const messages=[{role:'system',content:stageInstruction},
     {role:'user',content:user}];
   const outputTokens=bounded(req.body?.maxOutputTokens,4096,OUTPUT_LIMIT,OUTPUT_LIMIT);
   const controller=new AbortController();
@@ -481,7 +507,8 @@ export default async function handler(req,res){
     const upstream=await fetch(url,{method:'POST',signal:controller.signal,
       headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},
       body:JSON.stringify({model:selected,temperature:0.1,reasoning_effort:'low',
-        max_tokens:outputTokens,response_format:protocolV72&&phase==='repair-v72'?PATCH_SCHEMA_V72:SCHEMA,messages})});
+        max_tokens:outputTokens,response_format:protocolV75&&phase==='plan-v75'
+          ?PLANNING_SCHEMA_V75:protocolV72&&phase==='repair-v72'?PATCH_SCHEMA_V72:SCHEMA,messages})});
     providerStageV73='gemini-response-body';
     const payload=await upstream.json().catch(()=>null);
     providerStageV73='gemini-response-parse';
@@ -502,6 +529,24 @@ export default async function handler(req,res){
       {diagnostic:{status:upstream.status,elapsedMs,model:selected}});
     const answer=payload?.choices?.[0]?.message?.content;
     const parsed=parseReply(answer);
+    // First Gemini call returns only a source-grounded outline, not an edition.
+    // Never count it as a saved draft, verified page or final PDF text.
+    if(protocolV75&&phase==='plan-v75'){
+      const plans=verifiedPlansV75(parsed?.plans,safe.map(u=>u.id));
+      const finishReason=payload?.choices?.[0]?.finish_reason||null;
+      if(!plans||finishReason==='length')
+        return fail(res,422,'AI_PLANNING_INCOMPLETE',
+          'Piano didattico incompleto o interrotto: nessuna bozza modificata.',
+          {diagnostic:{received:Array.isArray(parsed?.plans)?parsed.plans.length:0,
+            expected:safe.length,finishReason,elapsedMs,model:selected}});
+      return res.status(200).json({
+        engine:'ai',version:'plan-v75',
+        draftProtocol:STUDY_DRAFT_PROTOCOL_V75,
+        sourceLetters:originalLetters,
+        plans,finishReason,model:selected,elapsedMs,
+        outputTokensUsed:payload?.usage?.completion_tokens||null
+      });
+    }
     const rawParts=parsed?.parts;
     // Salvage only structurally identifiable pieces. NEVER infer a missing id,
     // and never call an incomplete response "verified".
@@ -563,7 +608,7 @@ export default async function handler(req,res){
     }
     const totalLetters=parts.reduce((n,p)=>n+studyLetters(p.text),0);
     const finishReason=payload?.choices?.[0]?.finish_reason||null;
-    const pageReviewV74=protocolV74?pageLetterReviewV74(safe,parts,level):null;
+    const pageReviewV74=protocolV75||protocolV74?pageLetterReviewV74(safe,parts,level):null;
     const numericAudit=measureEditionLengthV72({
       level,originalLetters,outputLetters:totalLetters,
       completeParts:parts.length===safe.length,finishReason
@@ -581,7 +626,7 @@ export default async function handler(req,res){
       finishReason,outputTokenLimit:outputTokens,
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
-      draftProtocol:protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:protocolV70?STUDY_DRAFT_PROTOCOL_V70:null,
+      draftProtocol:protocolV75?STUDY_DRAFT_PROTOCOL_V75:protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:protocolV70?STUDY_DRAFT_PROTOCOL_V70:null,
       lengthReview:{exact:hasExactLength,
         withinBand:numericAudit.withinBand,
         compliant:numericAudit.compliant&&(!pageReviewV74||pageReviewV74.withinBand),
