@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import {indexedDB as fakeIndexedDB} from 'fake-indexeddb';
 import {generateDraftFirstV57} from '../src/lib/draftFirstV57.js';
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
-import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
+import {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
+import {pageLetterReviewV74} from '../src/lib/studyPageBudgetsV74.js';
 import {clearGeminiPause,readGeminiPause} from '../src/lib/geminiQuotaControllerV36.js';
 import {clearGeminiCadenceForTestV58} from '../src/lib/geminiCadenceV58.js';
 import {planStudyAutoResumeV45} from '../src/lib/studyAutoResumeV45.js';
@@ -30,9 +31,10 @@ const generateBody=(payload,wrong=false)=>{
  const sourceLetters=payload.units.reduce((n,u)=>n+studyLetters(u.source),0);
  const observedLetters=parts.reduce((n,p)=>n+studyLetters(p.text),0);
  return {engine:'ai',version:'integral-v51',level:payload.level,parts,
-  draftProtocol:STUDY_DRAFT_PROTOCOL_V72,completeParts:true,finishReason:'stop',
+  draftProtocol:STUDY_DRAFT_PROTOCOL_V74,completeParts:true,finishReason:'stop',
   outputTokenLimit:6000,lengthReview:{sourceLetters,observedLetters,
-   withinBand:true,compliant:true}};
+   withinBand:true,compliant:true,
+   pageReviewV74:pageLetterReviewV74(payload.units,parts,payload.level)}};
 };
 let calls=[],events=[];
 try{
@@ -55,7 +57,7 @@ try{
  assert.equal(perfect.verifiedChunkVariants,714);
  assert.equal(perfect.publishedThroughPage.summary,44);
  assert.equal(calls.length,6,'one giant request per version for small book');
- assert.deepEqual(calls.map(x=>x.phase),Array(6).fill('draft-v72'));
+ assert.deepEqual(calls.map(x=>x.phase),Array(6).fill('draft-v74'));
  const completedDraft=events.find(x=>x.drafts===714);
  assert.ok(completedDraft,'all drafts are checkpointed before review');
  assert.equal(completedDraft.ready,0,'zero *new* units are falsely verified during creation');
@@ -87,11 +89,11 @@ try{
  assert.equal(faulty.status,'quality-review');
  assert.ok(faulty.draftRowsV57[0][0].editions.summary,
   'the unverified first page is still stored in complete draft');
- const firstRepair=calls.findIndex(c=>c.phase==='repair');
+ const firstRepair=calls.findIndex(c=>c.phase==='recalibrate-v74');
  assert.ok(firstRepair>=6,'all six draft calls complete before first correction call');
- assert.ok(calls.slice(0,firstRepair).every(c=>c.phase==='draft-v72'));
+ assert.ok(calls.slice(0,firstRepair).every(c=>c.phase==='draft-v74'));
  assert.equal(calls.slice(0,firstRepair).length,6);
- assert.ok(calls.slice(firstRepair).every(c=>c.phase==='repair'));
+ assert.ok(calls.slice(firstRepair).every(c=>c.phase==='recalibrate-v74'));
  assert.ok(calls.slice(firstRepair).every(c=>c.pages[0]===1&&c.pages[1]===1),
   'only original complete PAGE 1 is retried, never the 44-page book');
  assert.ok(calls.length<=8,'single targeted correction, not repeated large blocks');
