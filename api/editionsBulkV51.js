@@ -298,8 +298,6 @@ export default async function handler(req,res){
       };
     }
   }
-  const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),
-    units:safe,repair:byId.size>0});
   const phase=req.body?.phase==='draft-v71'?'draft-v71':
     req.body?.phase==='recalibrate-v71'?'recalibrate-v71':
     req.body?.phase==='repair-v71'?'repair-v71':
@@ -331,6 +329,9 @@ export default async function handler(req,res){
       unit.maxLetters=b.maxLetters;
     }
   }
+  // Serialize only AFTER source-based unit budgets are validated and attached.
+  const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),
+    units:safe,repair:byId.size>0});
   const observed=safe.reduce((n,u)=>n+studyLetters(u.previousDraft||''),0);
   const desired=level==='summary'?Math.round(originalLetters*.40):target;
   const feedback=protocolV71&&phase==='repair-v71'&&observed>0
