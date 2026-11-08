@@ -71,15 +71,25 @@ for(const level of levels){
  // ONLY out-of-band pages are requested again. Already conforming page
  // text must be kept byte-for-byte unchanged, as in the LAB74 app.
  for(const wrongPage of first.report.pages.filter(p=>!p.within)){
-  if(requests>=6)break;
+  if(requests>=8)break;
   const sourcePage=units.find(u=>u.pageStart===wrongPage.id);
   if(!sourcePage)throw Error('UNKNOWN_SOURCE_PAGE');
-  const saved=draftById.get(sourcePage.id);
-  if(!saved)throw Error('MISSING_SAVED_DRAFT');
-  const second=await call(level,'recalibrate-v74',
-   [{id:sourcePage.id,text:saved}],[sourcePage]);requests++;
-  if(!second.ok){console.log('LAB74_LIVE_SECOND_PASS_FAIL',level);break;}
-  if(second.report.compliant)draftById.set(sourcePage.id,second.parts[0].text);
+  let previous=draftById.get(sourcePage.id);
+  if(!previous)throw Error('MISSING_SAVED_DRAFT');
+  // Two BOUNDED trials per invalid page. Retain the original saved draft
+  // until a numerically valid candidate is produced from the original.
+  for(let trial=1;trial<=2&&requests<8;trial++){
+   const second=await call(level,'recalibrate-v74',
+    [{id:sourcePage.id,text:previous}],[sourcePage]);requests++;
+   if(!second.ok){console.log('LAB74_LIVE_SECOND_PASS_FAIL',level);break;}
+   previous=second.parts[0].text;
+   if(second.report.compliant){
+    draftById.set(sourcePage.id,previous);
+    console.log('LAB74_LIVE_PAGE_ACCEPTED',JSON.stringify({level,
+     page:wrongPage.id,trial,actual:studyLetters(previous)}));
+    break;
+   }
+  }
  }
  const finalPages=pageLetterBudgetsV74(units,level).map(g=>{
   const total=g.unitIds.reduce((n,id)=>n+studyLetters(draftById.get(id)||''),0);
@@ -93,6 +103,6 @@ for(const level of levels){
 }
 console.log('LAB74_LIVE_SECOND_PASS_SUMMARY',JSON.stringify({
  testedLevels:levels.length,globallyCompliant:finalGood,
- requests,boundedRequests:requests<=6,syntheticOnly:true,noPaidModel:true,
+ requests,boundedRequests:requests<=8,syntheticOnly:true,noPaidModel:true,
  meaningfulOnlyWhenEveryPageConforms:true
 }));
