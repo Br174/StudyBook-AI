@@ -34,8 +34,11 @@ jobs:
           node-version: '22'
       - name: Install existing project dependencies without project lockfile changes
         run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
-      - name: LAB74 six-page targets and Worker verification
-        run: node scripts/test-lab74-page-letter-budgets.mjs
+      - name: LAB74 six-page targets, selective repair and Worker verification
+        run: |
+          node scripts/test-lab74-page-letter-budgets.mjs
+          node scripts/test-lab74-recalibration-feedback.mjs
+          node scripts/test-lab74-selective-pages.mjs
       - name: LAB74 44-page / 674-unit checkpoint, full-page recoveries and old fast-path regressions
         run: |
           node scripts/test-lab73-network-recovery.mjs
