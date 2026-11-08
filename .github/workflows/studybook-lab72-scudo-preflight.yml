@@ -1,0 +1,57 @@
+name: StudyBook LAB72 MotorLab Scudo360 native preflight
+on:
+  push:
+    branches:
+      - 'lab/studybook-core-android-01-update-72-*'
+    paths:
+      - '.motorlab/**'
+      - 'scripts/StudyBookLab72Targeted.mjs'
+      - '.github/workflows/studybook-lab72-scudo-preflight.yml'
+permissions:
+  contents: read
+jobs:
+  native-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Isolated MotorLab Pac-Man source, branch and consistency preflight
+        run: |
+          test "$GITHUB_REF_NAME" = "lab/studybook-core-android-01-update-72-targeted-repair-20261108"
+          node scripts/motorlab-active-guard.mjs --self-test
+          node scripts/motorlab-active-guard.mjs
+      - name: Install existing project dependencies
+        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: Build web assets for native Worker evidence
+        run: npm run build
+      - name: Run mandatory Scudo360 P1 native contract classes
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-lab72-report.json
+      - name: Scudo360 R40 actual commit-pinned evidence quality review
+        run: node .motorlab/regression/scudo360-quality-r40.mjs .motorlab/scudo360-contracts.json .motorlab/scudo360-lab72-report.json .motorlab/scudo360-r40-plan.json .motorlab/scudo360-lab72-quality.json
+      - name: Evidence summary and no fake device certification
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const r=JSON.parse(readFileSync('.motorlab/scudo360-lab72-report.json','utf8'));
+          assert.equal(r.passed,true);
+          const ids=new Set(r.contracts.map(x=>x.id));
+          assert.ok(ids.has('studybook.lab72-strict-percentage-and-source-fidelity'));
+          const qa=JSON.parse(readFileSync('.motorlab/scudo360-lab72-quality.json','utf8'));
+          assert.notEqual(qa.status,'BLOCKED');
+          console.log('LAB72_SCUDO360_P1_NATIVE',JSON.stringify({
+            sha:r.commit,requiredContracts:r.contracts.filter(c=>c.required).length,
+            status:r.passed,qualityStatus:qa.status,device:'PENDING_REAL_ANDROID'}));
+          NODE
+      - name: Save Scudo360 evidence (not an Android APK)
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB72-Scudo360-P1-Evidence
+          path: |
+            .motorlab/scudo360-lab72-report.json
+            .motorlab/scudo360-lab72-quality.json
+            .motorlab/scudo360-test-results/TEST-*.xml
+          retention-days: 30
