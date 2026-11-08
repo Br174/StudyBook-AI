@@ -8,10 +8,49 @@ L'app serve a **studiare lo stesso argomento per approfondimenti successivi**. L
 
 Ogni edizione trae origine **direttamente dal PDF originale immutabile** (non dalla riduzione precedente) e conserva tutte le **idee/definizioni/temi fondamentali**, il senso delle negazioni, le condizioni e i riferimenti necessari. Il riassunto e il 50% si possono presentare come elenco dei concetti con brevissime spiegazioni; i livelli successivi aggiungono gradualmente ragionamenti, collegamenti, contesto e dettagli. Non significa che tutte le parole e tutti gli esempi debbano comparire in tutte le edizioni.
 
-### Riduzioni percentuali VINCOLANTI
-Per il 10/20/30/40/50% la percentuale è la **quantità di lettere Unicode alfabetiche eliminate rispetto al testo originale** dell'intero libro. Spazi, cifre e segni non contano. L'obiettivo totale in lettere è round(lettere_originali * (1 - percentuale/100)); le quote sono assegnate senza perdita o creazione di lettere tramite l'algoritmo dei maggiori resti sui blocchi. Per un blocco verificato il numero di lettere deve coincidere esattamente con la quota intera assegnata. Zero scorciatoie, arrotondamenti apparenti, etichette fittizie o tagli a metà parola. Se non è possibile avere contemporaneamente esattezza e significato, quella variante resta **NON VERIFICATA**, con diagnostica e ripresa mirata; non pubblicare/mostrare come verificata una versione sostitutiva.
+### Riduzioni percentuali VINCOLANTI · consolidamento approvato 7–8 novembre 2026
 
-Il **Riassunto** è più breve del 50%, è una prima infarinatura che nomina **tutti i concetti principali**, prevalentemente in forma di elenco con microspiegazioni. Nessuna percentuale fissa è stata richiesta per esso; ne va misurata la lunghezza, non spacciata per «percentuale garantita».
+Questo aggiornamento esplicito **sostituisce** i due vecchi criteri incompatibili:
+«lettere esatte per ciascun blocco» e «Riassunto senza percentuale fissa».
+Resta invariato il principio fondante: studiare lo stesso argomento con
+spiegazioni sempre più approfondite ricavate dal PDF originale immutabile.
+
+La percentuale è la **quantità di lettere Unicode alfabetiche eliminate**
+rispetto all'originale dell'INTERO LIBRO, non la quota rimasta.
+Spazi, cifre e punteggiatura non entrano nel conteggio.
+
+Obiettivi richiesti:
+- Riassunto circa 60% di riduzione: **55–65%**
+- 50%: **48–52%**
+- 40%: **38–42%**
+- 30%: **28–32%**
+- 20%: **18–22%**
+- 10%: **8–12%**
+- Originale: immutabile, nessuna riduzione.
+
+Le quote per i singoli paragrafi o blocchi sono **indicative** per distribuire
+la lunghezza, non limiti duri che autorizzano omissioni semantiche.
+Una versione completa è conforme solo quando la sua percentuale GLOBALE
+rientra nella fascia; va inoltre mantenuta la fedeltà al testo, senza
+inventare dati, alterare formule o mutilare citazioni necessarie.
+Le righe risparmiate sono una statistica separata, mai usata come sinonimo
+del conteggio delle lettere.
+
+**Ordine della lavorazione approvato:** prima si generano e salvano tutte le
+bozze; POI si effettua il controllo di completezza, precisione, chiarezza e
+percentuali; la correzione è mirata, limitata e non blocca la prima generazione.
+Il pulsante «Migliora percentuali e chiarezza» avvia una ricalibrazione
+esplicita, preservando i risultati e i checkpoint già salvati.
+Nessuna etichetta «verificata», dato inventato o sostituzione silenziosa
+può dichiarare conforme una versione fuori fascia.
+
+La **sola autorità numerica attiva** è
+`src/lib/studyRebalancePolicyV67.js`, con valutazione condivisa
+`measureEditionLengthV72`. `studyPillarV38.js` conserva i propri
+controlli storici per i libri non ancora migrati, ma NON governa i
+target numerici delle nuove elaborazioni LAB72.
+`studyQualityV66.js`, il backend generativo e il lettore devono
+applicare gli stessi margini globali. Nessuna seconda fonte di verità.
 
 ### Ordine didattico, fedeltà e protezioni
 - Sequenza dello studio: Riassunto, 50, 40, 30, 20, 10, originale.
@@ -25,6 +64,6 @@ Il **Riassunto** è più breve del 50%, è una prima infarinatura che nomina **t
 
 ## Proprietà, change guard e verifica
 Ownership: StudyBook AI native generative engine, in Br174/StudyBook-AI.
-Canonical code: `src/lib/studyPillarV38.js`; backend: `api/editionsV36.js` in servizio staging LAB38 isolato.
+Canonical source/pedagogia: `src/lib/studyPillarV38.js` (legacy incluso). Autorità delle percentuali attuali: `src/lib/studyRebalancePolicyV67.js`. Backend attivo: `api/editionsBulkV51.js` su Worker isolato. `api/editionsV36.js` resta solo per compatibilità con i percorsi storici.
 Test: `scripts/test-lab38-pillar.mjs`.
 Un eventuale cambio di questo contratto richiede una richiesta esplicita dell'utente, analisi di compatibilità MotorLab e test del comportamento originale rispetto al nuovo.
