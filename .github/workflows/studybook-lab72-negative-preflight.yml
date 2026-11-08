@@ -4,6 +4,7 @@ on:
     branches:
       - 'audit/studybook-lab72-negative-preflight-*'
     paths:
+      - 'scripts/**'
       - 'scripts/test-lab72-negative-baseline.mjs'
       - 'scripts/test-lab72-negative-closure.mjs'
       - 'scripts/test-lab72-protocol.mjs'
@@ -37,13 +38,3 @@ jobs:
           node scripts/test-lab69-strict-bands.mjs
           node scripts/test-lab67-simplified-precise-rebalance.mjs
           node scripts/test-lab66-nonblocking-quality.mjs
-      - name: LAB72 one real Gemini diagnostic probe on existing free key
-        env:
-          AI_API_KEY: ${{ secrets.AI_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: node scripts/test-lab72-real-provider-probe.mjs
-      - name: LAB72 one more real measured-repair Gemini probe
-        env:
-          AI_API_KEY: ${{ secrets.AI_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: node scripts/test-lab72-real-repair-probe.mjs
