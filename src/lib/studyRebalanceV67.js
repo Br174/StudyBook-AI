@@ -19,6 +19,8 @@ import {immutableViolationsV67} from './immutableFragmentsV67.js';
 import {finalizeStudyQualityV66} from './studyQualityV66.js';
 import {buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
 import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from './studyDraftProtocolV72.js';
+import {STUDY_DRAFT_PROTOCOL_V74,verifyStudyDraftResponseV74} from './studyDraftProtocolV74.js';
+import {pageLetterBudgetsV74,pageLetterReviewV74} from './studyPageBudgetsV74.js';
 const clean=x=>typeof x==='string'?x.trim():'';
 const clone=x=>JSON.parse(JSON.stringify(x));
 const stamp=()=>new Date().toISOString();
@@ -89,6 +91,12 @@ export async function rebalanceSavedStudyBookV67(book,{
    const policy=STUDY_TARGET_V67[level];
    const limit=exactRetained(originals,policy.target);
    const unitBudgets=buildUnitBudgetsV71(block,level);
+   const pageBudgetsV74=pageLetterBudgetsV74(block,level);
+   // If a saved draft misses tens of percentage points, local patches
+   // cannot reconstruct the missing material safely. Use a source-grounded
+   // rewrite of the full *original page group*, never artificial filler.
+   const needsSourceRebuild=measure.measured===null||
+     Math.abs(measure.measured-policy.target)>15;
    const ratio=1-policy.target/100;
    const chars=block.reduce((n,u)=>n+u.source.length,0);
    const maxOutputTokens=Math.min(BULK_OUTPUT_TOKEN_CEILING,
@@ -107,9 +115,11 @@ export async function rebalanceSavedStudyBookV67(book,{
      await notify('waiting-provider');
      return current;
     }
+    const fullPageRebuild=needsSourceRebuild||previousParts.length!==block.length;
     const body={
-      phase:previousParts.length===block.length?'repair-v72':'recalibrate-v72',
-      draftProtocol:STUDY_DRAFT_PROTOCOL_V72,
+      phase:fullPageRebuild?'recalibrate-v74':'repair-v72',
+      draftProtocol:fullPageRebuild?STUDY_DRAFT_PROTOCOL_V74:STUDY_DRAFT_PROTOCOL_V72,
+      ...(fullPageRebuild?{pageBudgetsV74}:{}),
       level,bookTitle:String(book.title||'').slice(0,140),
       targetLetters:level==='summary'?null:limit,
       summaryCapLetters:level==='summary'?limit:null,
@@ -151,7 +161,9 @@ export async function rebalanceSavedStudyBookV67(book,{
       }
       if(reply?.engine!=='ai'||reply?.version!=='integral-v51'||
           reply?.level!==level)throw Error('Risposta Gemini non autentica.');
-      const version=verifyStudyDraftResponseV72(reply,originals,level);
+      const version=fullPageRebuild?
+       verifyStudyDraftResponseV74(reply,originals,level):
+       verifyStudyDraftResponseV72(reply,originals,level);
       if(!version.ok)throw Object.assign(new Error(version.message),{code:version.code});
       const ids=new Set(block.map(u=>u.id));
       const rows=new Map();
@@ -189,14 +201,17 @@ export async function rebalanceSavedStudyBookV67(book,{
       }
       // Strict acceptance BEFORE buffering: a 10% request can never
       // publish a 72% version, even if it is closer than the old draft.
-      if(reduction!==null&&reduction>=policy.min&&reduction<=policy.max){
+      const pageNumeric=pageLetterReviewV74(block,candidates,level);
+      const blockNumeric=measureEditionLengthV72({level,originalLetters:originals,
+       outputLetters,completeParts:true,finishReason:reply.finishReason||null});
+      if(blockNumeric.compliant&&pageNumeric.withinBand){
        for(const p of candidates)buffered[p.id]=p.text;
        blockValidated=true;
        stage.errors[level]=null;
        await notify('running');
        break;
       }
-      stage.errors[level]='RIDUZIONE_FUORI_RANGE: '+reduction+
+      stage.errors[level]='RIDUZIONE_FUORI_RANGE_O_PAGINA: '+reduction+
         '% · richiesto '+policy.min+'-'+policy.max+'%';
       // The first attempt is NOT stored as a completed replacement.
       // One extra provider call is allowed only inside this manual action.
@@ -247,11 +262,16 @@ export async function rebalanceSavedStudyBookV67(book,{
   }
   const before=editionReductionV67(units,current.draftRowsV57,level);
   const after=editionReductionV67(units,nextDrafts,level);
-  const accepts=moreProtectedLoss===0&&immutableDefects===0&&betterReductionV67(before,after);
+  const afterPages=pageLetterReviewV74(units,units.map(u=>({
+    id:u.id,text:nextDrafts?.[u.ci]?.[u.pi]?.editions?.[level]})),level);
+  const accepts=moreProtectedLoss===0&&immutableDefects===0&&
+    afterPages.withinBand&&betterReductionV67(before,after);
   stage.attempted[level]=true;
   stage.completed[level]={
    accepted:accepts,previous:before.measured,measured:after.measured,
-   withinTolerance:after.within,protectedWarnings:moreProtectedLoss,
+   withinTolerance:after.within&&afterPages.withinBand,
+   pageBudgetsWithinToleranceV74:afterPages.withinBand,
+   protectedWarnings:moreProtectedLoss,
    immutableDefects,
    finishedAt:stamp()
   };
