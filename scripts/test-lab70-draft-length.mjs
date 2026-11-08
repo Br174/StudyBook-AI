@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import handler,{editionDraftInstructionV70,STUDY_DRAFT_PROTOCOL_V70 as protocolFromApi} from '../api/editionsBulkV51.js';
-import {STUDY_TARGET_V67} from '../src/lib/studyRebalancePolicyV67.js';
+import {STUDY_TARGET_V67,editionReductionV67} from '../src/lib/studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V70,verifyStudyDraftResponseV70} from '../src/lib/studyDraftProtocolV70.js';
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
 
@@ -89,5 +89,19 @@ try{
  assert.ok(requestSource.includes('verifyStudyDraftResponseV70'));
  assert.ok(rebalanceSource.includes("'recalibrate-v70':'repair-v70'"));
  assert.ok(workflow.includes('studybook-ai-lab70.brunoverlezza.workers.dev'));
- console.log('LAB70 PASS: 6/6 source-length bands, 6 isolated model-call mocks, stale-worker rejection, versioned repairs, original text unchanged. '+outputs.join(', '));
+ // Full synthetic 44-page contract: every original page remains in place,
+ // while all six complete edition totals fall within the configured margins.
+ const units44=Array.from({length:44},(_,i)=>({ci:0,pi:i,id:'0:'+i,source,
+   pageStart:i+1,pageEnd:i+1}));
+ const drafts44=[units44.map(()=>({editions:Object.fromEntries(levels.map(l=>[
+   l,trimLetters(source,l==='summary'?Math.round(sourceLetters*.4):
+     exactRetained(sourceLetters,Number(l)))
+ ]))}))];
+ for(const level of levels){
+  const report=editionReductionV67(units44,drafts44,level);
+  assert.equal(report.missing,0);
+  assert.equal(report.within,true,'44-page percentage drift: '+level);
+ }
+ assert.equal(units44.length,44);
+ console.log('LAB70 PASS: 44 pages x 6 levels, source-length bands, 6 isolated model-call mocks, stale-worker rejection, versioned repairs, original text unchanged. '+outputs.join(', '));
 }finally{globalThis.fetch=originalFetch;}
