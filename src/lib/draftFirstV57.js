@@ -24,7 +24,8 @@ import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 import {STUDY_DRAFT_PROTOCOL_V71,verifyStudyDraftResponseV71,buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
 import {measureEditionLengthV72} from './studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from './studyDraftProtocolV72.js';
-import {initialStudyOutputLimitV73,safeNetworkSplitV73,isRecoverableNetworkV73}
+import {initialStudyOutputLimitV73,safeNetworkSplitV73,isRecoverableNetworkV73,
+ minimumFullPageOutputV73}
  from './studyNetworkRecoveryV73.js';
 
 const LEVELS=['summary','50','40','30','20','10'];
@@ -489,6 +490,9 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
            'draft','local-storage-error','AI_CHECKPOINT_UNAVAILABLE',false);
          for(const item of newEntries)saveDraftToGrid(drafts,item.u,level,item.text);
          diagnostics.rawDraftsSaved+=newEntries.length;
+         // A successful, durably saved Gemini response closes any old network
+         // warning; do not keep displaying a stale failure on the completed book.
+         diagnostics.lastCode=null;diagnostics.lastProviderDiagnostic=null;
          await clearGeminiPause();
        }
        emit(onProgress,book,units,rows,drafts,fp,diagnostics,'draft');
@@ -502,8 +506,6 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        }
        queue.unshift({block,attempt:1});
      }catch(error){
-       if(globalThis.__studybookLab73Probe===true)
-        console.error('LAB73_FIRST_PASS_EXCEPTION',String(error?.stack||error?.message||error).slice(0,900));
        const code=signal?.aborted?'AI_MANUAL_RESTART':error?.code||'AI_GENERATION_RUNTIME';
        diagnostics.lastCode=code;diagnostics.providerErrors++;
        diagnostics.errorsByCode[code]=(diagnostics.errorsByCode[code]||0)+1;
@@ -529,7 +531,9 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        });
        if(networkPlan){
          diagnostics.splits++;diagnostics.networkSplitsV73++;
-         diagnostics.providerBlockOutputLimitV73=networkPlan.nextOutputLimit;
+         diagnostics.providerBlockOutputLimitV73=Math.min(BULK_OUTPUT_TOKEN_CEILING,
+           Math.max(networkPlan.nextOutputLimit,
+             minimumFullPageOutputV73(units,'10')+256));
          diagnostics.lastNetworkStrategyV73=networkPlan.strategy;
          // Full original pages only, no repeated identical failing request.
          queue.unshift(...networkPlan.halves.map(b=>({block:b,attempt:0})));
