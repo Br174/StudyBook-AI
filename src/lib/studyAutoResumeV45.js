@@ -5,6 +5,12 @@ const TRANSIENT=['AI_TIMEOUT_OR_NETWORK','AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETW
   'AI_NETWORK_REVIEW_REQUIRED','INVALID_EDITION_RESPONSE','AI_FORMAT_REVIEW_REQUIRED'];
 export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0){
   if(!snapshot||snapshot.complete)return null;
+  // LAB66: old books stuck after finishing ALL drafts migrate locally with
+  // zero provider traffic. This runs even if Gemini has a provider cooldown.
+  if(snapshot.draftComplete&&snapshot.draftRowsV57&&
+     snapshot.publicationModeV66!=='generated-text-quality-not-certified'){
+    return {reason:'local-quality-audit',at:now+1200};
+  }
   const quota=snapshot.quota;
   if(quota){
     if(!quota.automatic)return null;

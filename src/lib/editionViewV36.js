@@ -11,6 +11,7 @@ export function buildGeminiEditionViewV36(book,reduction){
   const id=String(reduction);
   if(!Object.hasOwn(labels,id))return null;
   const source=book.editionsV36;
+  const qualityOnly=source.publicationModeV66==='generated-text-quality-not-certified';
   let sourceLetters=0,outputLetters=0,sourceWords=0,outputWords=0,valid=0,total=0;
   let readablePartialParagraphs=0,verifiedPreviewFragments=0;
   const chapters=(book.chapters||[]).map((chapter,ci)=>({
@@ -37,8 +38,12 @@ export function buildGeminiEditionViewV36(book,reduction){
         editionPreviewFragments:fragmentPreview?.verifiedFragments||0,
         editionSource:'gemini-v36-original',
         precisionAudit:{...(p.precisionAudit||{}),sourceNeedsReview:!verified,
-          coherent:Boolean(verified),fallbackOriginal:false,
-          reasons:verified?[]:(paragraph?.issues?.[id]||['not-verified'])},
+          coherent:!qualityOnly&&Boolean(verified),fallbackOriginal:false,
+          reasons:qualityOnly
+            ?(source.qualityV66?.levels?.[id]?.pages?.filter(x=>
+               x.page>=p.sourcePageStart&&x.page<=p.sourcePageEnd)
+               .flatMap(x=>x.warnings)||[])
+            :verified?[]:(paragraph?.issues?.[id]||['not-verified'])},
       };
     }),
   }));
@@ -54,7 +59,7 @@ export function buildGeminiEditionViewV36(book,reduction){
     readableParagraphs:valid+readablePartialParagraphs,
     verifiedPreviewFragments,
     source:'gemini-v36',level:id,
-    status:complete?'complete':'preview-only',
+    status:complete?(qualityOnly?'available-with-quality-notes':'complete'):'preview-only',
   };
   return {...book,chapters,editionReadiness,
     precisionEdition:{
@@ -68,8 +73,12 @@ export function buildGeminiEditionViewV36(book,reduction){
         // N letters can differ by at most half a letter from the ideal real value.
         Math.abs(outputLetters-Math.round(sourceLetters*(1-targetPercent/100)))===0
       )),
-      qualityGuard:{status:complete?'ai-generated-verified':'preview-only',
-        issueCount:total-valid,semanticCertification:false,
+      qualityGuard:{status:complete
+          ?(qualityOnly?'generated-quality-not-certified':'ai-generated-verified')
+          :'preview-only',
+        issueCount:qualityOnly
+          ?(source.qualityV66?.levels?.[id]?.warnings||0):total-valid,
+        semanticCertification:false,
         originalFallbackParagraphs:0},
     }};
 }

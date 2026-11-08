@@ -486,6 +486,6 @@ async function generateGeminiEditionsPassV46(book,{onProgress=()=>{},onActivity=
 // The old small-chunk runner is retained ONLY for unversioned legacy books.
 export async function generateGeminiEditionsV36(book,options={}){
   if(book?.studyPillarV38===STUDY_PILLAR_VERSION)
-    return generateDraftFirstV57(book,options);
+    return generateDraftFirstV57(book,{...options,qualityOnly:true});
   return generateGeminiEditionsPassV46(book,options);
 }

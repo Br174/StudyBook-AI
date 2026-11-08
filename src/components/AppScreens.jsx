@@ -483,7 +483,9 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
 
       {editionStages.length>0 && <div className="sb-edition-stages" aria-label="Versioni indipendenti di studio">
         {editionStages.map(item=><span key={item.id} className={item.ready?'sb-edition-ready':'sb-edition-pending'}>
-          {item.label}: {item.ready?'Studiabile':'In lavorazione'}
+          {item.label}: {item.ready
+            ?(studyBook?.editionsV36?.qualityV66?'Disponibile':'Studiabile')
+            :'In lavorazione'}
         </span>)}
       </div>}
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
@@ -552,7 +554,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
                 Riduzione effettiva (lettere): {Number.isFinite(reductionMeta.achievedLettersPercent) ? reductionMeta.achievedLettersPercent + '%' : 'in elaborazione'}.
                 {v36Partial ? ' Dati progressivi, nessuna percentuale definitiva. ' : reductionMeta.targetReached ? ' ' : ' Obiettivo ' + (reductionMeta.targetPercent ?? 'riassunto') + '% non raggiunto: conservate informazioni essenziali o parti da verificare. '}
                 {reductionMeta.qualityGuard?.originalFallbackParagraphs > 0 ? ' Alcuni paragrafi richiedono controllo della fonte originale. ' : ''}
-                Il file originale resta invariato; il telefono mostra questa versione, la stampa richiede il completamento.
+                Il file originale resta invariato. La stampa è disponibile quando tutte le pagine di questa versione sono presenti; il controllo qualità non certifica la correttezza del significato.
               </p>
             )}
           </div>

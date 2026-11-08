@@ -331,34 +331,39 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
    // Persist proof of a one-off legacy recovery in every subsequent snapshot.
    qualityRecoveryV62:previous?.sourceFingerprint===fp
      ?previous?.diagnostics?.qualityRecoveryV62||null:null};
- // LAB65: change the correction STRATEGY once, across all six levels.
- // Never reset attempts every time the user reopens the app.
- const migrationPrevious=previous?.sourceFingerprint===fp
-   ?previous?.diagnostics?.rewritePolicyV65:null;
- if(migrationPrevious?.policy==='semantic-rewrite-v65'){
-   diagnostics.rewritePolicyV65=migrationPrevious;
- }else{
-   const touched=[];
-   if(previous?.sourceFingerprint===fp&&previous?.draftComplete){
-     for(const level of LEVELS){
-       for(const [page,members] of pageSets(units)){
-         if(!members.some(u=>rewriteQualityV65(u.source,
-             clean(previous?.draftRowsV57?.[u.ci]?.[u.pi]?.editions?.[level])||
-             clean(previous?.stagedRows?.[u.ci]?.[u.pi]?.editions?.[level]),
-             level).needsRewrite))continue;
-         const attempt=attemptKeyV61(level,page);
-         if(Number(diagnostics.repairAttempts[attempt])>0){
-           diagnostics.repairAttempts[attempt]=0;touched.push(attempt);
-         }
-       }
-     }
-   }
-   diagnostics.rewritePolicyV65={policy:'semantic-rewrite-v65',
-     sourceFingerprint:fp,rearmedPages:touched.length,
-     migrationFromLegacy:Boolean(previous?.sourceFingerprint===fp)};
+ // LAB66: local quality mode must not reset or consume historical repair
+ // attempts, even if the LAB65 semantic-rewrite migration was not completed.
+ if(!qualityOnly){
+  // LAB65: change the correction STRATEGY once, across all six levels.
+  // Never reset attempts every time the user reopens the app.
+  const migrationPrevious=previous?.sourceFingerprint===fp
+    ?previous?.diagnostics?.rewritePolicyV65:null;
+  if(migrationPrevious?.policy==='semantic-rewrite-v65'){
+    diagnostics.rewritePolicyV65=migrationPrevious;
+  }else{
+    const touched=[];
+    if(previous?.sourceFingerprint===fp&&previous?.draftComplete){
+      for(const level of LEVELS){
+        for(const [page,members] of pageSets(units)){
+          if(!members.some(u=>rewriteQualityV65(u.source,
+              clean(previous?.draftRowsV57?.[u.ci]?.[u.pi]?.editions?.[level])||
+              clean(previous?.stagedRows?.[u.ci]?.[u.pi]?.editions?.[level]),
+              level).needsRewrite))continue;
+          const attempt=attemptKeyV61(level,page);
+          if(Number(diagnostics.repairAttempts[attempt])>0){
+            diagnostics.repairAttempts[attempt]=0;touched.push(attempt);
+          }
+        }
+      }
+    }
+    diagnostics.rewritePolicyV65={policy:'semantic-rewrite-v65',
+      sourceFingerprint:fp,rearmedPages:touched.length,
+      migrationFromLegacy:Boolean(previous?.sourceFingerprint===fp)};
+  }
+  diagnostics.recoveredLegacyRepairV60=previous?.sourceFingerprint===fp
+    ?recoverLegacyTransientRepairV60(previous,diagnostics.repairAttempts):null;
+
  }
- diagnostics.recoveredLegacyRepairV60=previous?.sourceFingerprint===fp
-   ?recoverLegacyTransientRepairV60(previous,diagnostics.repairAttempts):null;
  let persisted=true;
  const source=classifySourceReadinessV52(book,units);
  if(!source.ok)return halt(onProgress,book,units,rows,drafts,fp,diagnostics,

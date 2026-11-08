@@ -1215,10 +1215,10 @@ export default function AppV14() {
           setStudyBook(generatedDraft);
           setProgress({done:snapshot.verifiedChunkVariants||0,total:snapshot.totalChunkVariants||1});
           setStatus(snapshot.phase==='draft'
-            ?'Compressione delle sei versioni · bozze salvate man mano, verifica successiva'
-            :snapshot.phase==='repair'
-              ?'Verifica e correzione mirata delle pagine'
-              :'Verifica del libro · controllo di qualità delle sei versioni');
+            ?'Compressione delle sei versioni · bozze salvate man mano, controllo qualità successivo'
+            :snapshot.phase==='quality'
+              ?'Controllo qualità locale · nessuna correzione automatica'
+              :'Controllo qualità delle sei versioni');
           // Save progress occasionally, never let concurrent IndexedDB writers race.
           const repairMarker=JSON.stringify(snapshot.repairAttemptsV57||{});
           if(lab36BookId && (
@@ -1278,7 +1278,7 @@ export default function AppV14() {
       setStatus(!result.editionsV36?.complete
         ? completionInfo.description+' · '+completionInfo.base+' · originale conservato'
         : sourceIntegrity.passed
-        ? `Sei edizioni pronte · Gemini verificato${speedLabel}${saved ? ' · salvate in Libreria' : ''}`
+        ? `Sei edizioni generate · controllo qualità locale completato${speedLabel}${saved ? ' · salvate in Libreria' : ''}`
         : `Libro da verificare · ${sourceIntegrity.issueCount} possibili anomalie di completezza · originale conservato`);
       navigateTo('studio');
       return result;
@@ -1341,7 +1341,11 @@ export default function AppV14() {
     setProgress({done:current.editionsV36.verifiedChunkVariants||0,
       total:current.editionsV36.totalChunkVariants||1});
     try{
-      const pause=await readGeminiPause();
+      // LAB66 local quality finalization is permitted during Gemini cooldown;
+      // all six drafts already exist, therefore no provider call is needed.
+      const localAudit=Boolean(current.editionsV36?.draftComplete&&
+        current.editionsV36?.draftRowsV57);
+      const pause=localAudit?null:await readGeminiPause();
       if(pause){
         const paused={...current.editionsV36,quota:pause,status:pause.automatic?'quota-paused':'quota-review'};
         draft={...current,editionsV36:paused};
@@ -1361,9 +1365,9 @@ export default function AppV14() {
         setProgress({done:update.verifiedChunkVariants||0,total:update.totalChunkVariants||1});
         setStatus(update.phase==='draft'
           ?'Compressione delle sei versioni · bozze conservate'
-          :update.phase==='repair'
-            ?'Verifica e correzione mirata · bozze complete conservate'
-            :'Verifica del libro completo · pagine approvate per versione');
+          :update.phase==='quality'
+            ?'Controllo qualità locale · pagine disponibili con eventuali avvisi'
+            :'Controllo qualità delle sei versioni');
         const count=update.verifiedChunkVariants||0;
         const repairMarker=JSON.stringify(update.repairAttemptsV57||{});
         if(targetId&&(count>savedVerified||(update.draftUnitsSaved||0)>savedDrafts||
@@ -1384,7 +1388,7 @@ export default function AppV14() {
       setStudyBook(draft);
       await persistBook(draft,targetSource,targetName,targetId);
       const outcome=progressDiagnostic(snapshot);
-      setStatus(snapshot.complete?'Sei edizioni Gemini completate e salvate':
+      setStatus(snapshot.complete?'Sei edizioni disponibili · controllo qualità terminato · avvisi consultabili':
         outcome.description+' · originale conservato');
     }catch(error){
       setStudyBook(draft);

@@ -88,7 +88,9 @@ export default function StudyDraftInspectorV63({book,onClose}){
     </div>}
    </>:<p>Nessuna pagina corrisponde a questo filtro.</p>}
   <p className="sb-draft-inspector-note-v63">
-   «Approvata» significa che il checkpoint registra testo e verifica, non che
+   «Approvata» riguarda i vecchi checkpoint di verifica. Nella LAB66 il nuovo
+   controllo qualità non blocca i testi completi e non conferisce nuove approvazioni.
+   L’approvazione precedente significa che il checkpoint registra testo e verifica, non che
    sia stata ripetuta una verifica didattica con i controlli più recenti.
    I vecchi checkpoint non registrano da quale LAB proviene ogni pagina.
    {report.persisted?'':' La persistenza del checkpoint corrente non è confermata.'}

@@ -23,9 +23,11 @@ export function studyPhaseProgressV59(book,{acquisition=null}={}){
    return {phase:'acquisition',title:'Acquisizione',pageCount,
      acquired,levels:[]};
  }
- const phase=(snapshot.draftComplete===true &&
-   (['review','repair','complete'].includes(snapshot.phase)||snapshot.complete===true))
-   ?'correction':'compression';
+ const qualityMode=snapshot?.publicationModeV66==='generated-text-quality-not-certified';
+ const phase=qualityMode?'quality':
+   (snapshot.draftComplete===true &&
+     (['review','repair','complete'].includes(snapshot.phase)||snapshot.complete===true))
+     ?'correction':'compression';
  const pages=new Map();
  const chapters=book?.chapters||[];
  const drafts=snapshot.draftRowsV57||[];
@@ -61,10 +63,17 @@ export function studyPhaseProgressV59(book,{acquisition=null}={}){
      if(completeDraft)compressed++;
      if(completeReview)corrected++;
    }
+   const audited=qualityMode?snapshot.qualityV66?.levels?.[id]:null;
    return {id,label:studyLevelLabelV59(id),
-     completed:phase==='correction'?corrected:compressed,
-     compressed,corrected,total:pageCount};
+     completed:phase==='quality'?Number(audited?.checked)||0:
+       phase==='correction'?corrected:compressed,
+     compressed,corrected,total:pageCount,
+     warnings:qualityMode?Number(audited?.warnings)||0:null,
+     available:qualityMode?Number(audited?.available)||0:null,
+     actualReduction:qualityMode?audited?.actualReduction:null,
+     exactLength:qualityMode?audited?.exactLength:null};
  });
- return {phase,title:phase==='compression'?'Compressione':'Verifica e correzione',
+ return {phase,title:phase==='compression'?'Compressione':
+     phase==='quality'?'Controllo qualità':'Verifica e correzione',
    pageCount,acquired:pageCount,levels};
 }
