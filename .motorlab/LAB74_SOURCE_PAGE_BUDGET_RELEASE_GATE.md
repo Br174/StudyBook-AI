@@ -16,3 +16,14 @@
 
 Questo documento autorizza l'unico gate di build sperimentale previsto dal codice, senza
 sostenere falsamente che Gemini rispetti sempre il budget alla prima risposta.
+
+## Riesame reale MotorLab · 8 novembre 2026, ripresa rapida ⚡
+
+- Ultima sorgente applicativa verificata Scudo360: `6f6231153fd3fe6dbacad93558f79cd840500116`; 4 contratti P1 su 4, run `42517894660`, esito SUCCESS.
+- Test numerici sul codice migliorato: SUCCESS `42517630778`, incluse selezione pagine fuori margine, persistenza e non rigenerazione delle pagine conformi.
+- Gemini reale, primo test su 6 varianti: run `42513535694`, **0/6 edizioni completamente conformi** per controllo singole pagine; il job Android firmato era su commit precedente `a4a407609e92d55e49b582bc09f5725a088efdeb`, NON contiene le correzioni aggiunte successivamente.
+- Test reale con 50% e 20%, feedback letterale a livello di pagina su Worker QA isolato: run `42517037347`, 0/2 conformi.
+- Secondo test reale con correzioni SOLO alle pagine fuori fascia, massimo due tentativi per pagina: run `42517630745`, 0/2 livelli completamente conformi; singola pagina del 50% rientrata (374 lettere su 706, fascia 318–388).
+- Conclusione empirica: il conteggio delle lettere e la selezione delle pagine funzionano, ma il modello Gemini NON garantisce i target nonostante i feedback e due tentativi. NON PROMUOVERE LA LAB74 a LAST_GOOD o consegnarla come risolutiva.
+- UAB-CORE legacy conserva una regressione di test separata `source-review-needed` versus `quality-review`, NON attribuire stato verde globale. Verificare il test originario senza disattivare la protezione della fonte.
+- Prossimo confine sicuro: sviluppare una selezione di alternative che preservi il significato e rispetti l'intervallo numerico; non tagliare o aggiungere testo automaticamente. Eseguire prova con Gemini reale prima di firmare una NUOVA APK. Nessun upgrade o modello a pagamento.
