@@ -258,7 +258,9 @@ export default function AppV14() {
     const editions=activeEdition||resumeCandidate?.edition;
     if(generating||resumeExecutionRef.current||resumeBusy||!editions||editions.complete)return;
     const currentKey=activeEdition?libraryId:resumeCandidate?.id;
-    const verified=Number(editions.verifiedChunkVariants)||0;
+    // LAB73: saving full-page drafts is actual progress even before final certification.
+    const verified=(Number(editions.verifiedChunkVariants)||0)+
+      (Number(editions.draftUnitsSaved)||0);
     const fingerprint=String(currentKey||'')+':'+String(editions.sourceFingerprint||'');
     const state=qualityAutoResumeRef.current;
     if(state.fingerprint!==fingerprint||verified>state.verified){
