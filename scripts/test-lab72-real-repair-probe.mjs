@@ -24,10 +24,10 @@ const assertions=[
  'I campioni riportati sulla Terra vengono studiati con misure chimiche e mineralogiche per chiarire la storia geologica.'
 ];
 
-const source=assertions.join('\\n\\n');
+const source=assertions.join('\n\n');
 const original=studyLetters(source);
 const priorLetters=Math.round(original*.818);
-const m=[...source.matchAll(/\\p{L}/gu)];
+const m=[...source.matchAll(/\p{L}/gu)];
 const previousText=source.slice(0,(m[priorLetters-1]?.index??0)+1);
 const units=[{id:'0:0',source,pageStart:1,pageEnd:1}];
 const target=exactRetained(original,10);
