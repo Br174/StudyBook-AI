@@ -78,6 +78,11 @@ book.editionsV36={
  qualityV66:{},
 };
 const before=JSON.stringify(book.editionsV36.draftRowsV57);
+const mockLengthProof=request=>{
+ const sourceLetters=request.units.reduce((n,u)=>n+studyLetters(u.source),0);
+ const outputLetters=request.units.reduce((n,u)=>n+studyLetters(trimTo(u.source,.60)),0);
+ return {sourceLetters,observedLetters:outputLetters,withinBand:true,compliant:true};
+};
 const units=bookUnitsV51(book);
 const targets=planRebalanceV67(units,drafts);
 assert.deepEqual(targets.map(x=>x.level),['40']);
@@ -92,7 +97,7 @@ try{
   assert.equal(body.level,'40');
   return new Response(JSON.stringify({engine:'ai',version:'integral-v51',
    level:'40',inputTokens:2100,draftProtocol:'lab72-canonical-range-observability-v1',finishReason:'stop',outputTokenLimit:6000,
-   lengthReview:{sourceLetters:body.units.reduce((n,u)=>n+studyLetters(u.source),0)},
+   lengthReview:mockLengthProof(body),
    parts:body.units.map(u=>({id:u.id,text:trimTo(u.source,.60)}))}),
    {status:200,headers:{'Content-Type':'application/json'}});
  };
