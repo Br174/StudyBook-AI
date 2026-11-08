@@ -24,6 +24,8 @@ import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 import {STUDY_DRAFT_PROTOCOL_V71,verifyStudyDraftResponseV71,buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
 import {measureEditionLengthV72} from './studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from './studyDraftProtocolV72.js';
+import {STUDY_DRAFT_PROTOCOL_V74,verifyStudyDraftResponseV74} from './studyDraftProtocolV74.js';
+import {pageLetterBudgetsV74,pageLetterReviewV74} from './studyPageBudgetsV74.js';
 import {initialStudyOutputLimitV73,safeNetworkSplitV73,isRecoverableNetworkV73,
  minimumFullPageOutputV73}
  from './studyNetworkRecoveryV73.js';
@@ -147,11 +149,25 @@ function reviewEdition(units,drafts,level){
  }
  const letters=units.reduce((n,u,i)=>n+studyLetters(texts[i]),0);
  const original=units.reduce((n,u)=>n+studyLetters(u.source),0);
- const target=level==='summary'?Math.max(0,exactRetained(original,50)-1):
-   exactRetained(original,Number(level));
- const delta=level==='summary'?Math.max(0,letters-target):letters-target;
- const exact=level==='summary'?letters<=target:letters===target;
- return {level,missing,violations,letters,target,delta,exact,
+ const numeric=measureEditionLengthV72({
+   level,originalLetters:original,outputLetters:letters,
+   completeParts:missing.length===0});
+ const pageReview=pageLetterReviewV74(units,units.map((u,i)=>({
+   id:u.id,text:texts[i]})),level);
+ for(const group of pageReview.groups)if(!group.withinBand){
+   for(const u of units)if(group.unitIds.includes(u.id)){
+     const item=violations.find(v=>v.u.id===u.id);
+     if(item){if(!item.reasons.includes('page-letter-budget-v74'))
+       item.reasons.push('page-letter-budget-v74')}
+     else violations.push({u,reasons:['page-letter-budget-v74']});
+   }
+ }
+ const target=numeric.targetLetters;
+ const delta=letters-target;
+ // "exact" is the legacy check flag; LAB74 it means within the
+ // approved integer range, never an impossible exact letter count.
+ const exact=numeric.withinBand&&pageReview.withinBand;
+ return {level,missing,violations,letters,target,delta,exact,pageReview,
    verified:missing.length===0&&violations.length===0&&exact};
 }
 function publishEdition(rows,units,drafts,level){
@@ -171,13 +187,17 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
  const expected=targetOverride===null?(level==='summary'?target.summaryCapLetters:target.targetLetters):
    Math.max(0,Math.floor(Number(targetOverride)));
  const isNewDraft=phase==='draft';
- const body={phase:isNewDraft?'draft-v72':phase,
-   ...(isNewDraft?{draftProtocol:STUDY_DRAFT_PROTOCOL_V72}:{}),
+ const usePageBudgetV74=isNewDraft||phase==='repair'||phase==='rewrite';
+ const body={phase:usePageBudgetV74?(isNewDraft?'draft-v74':'recalibrate-v74'):phase,
+   ...(usePageBudgetV74?{draftProtocol:STUDY_DRAFT_PROTOCOL_V74}:{}),
+   ...(usePageBudgetV74?{pageBudgetsV74:pageLetterBudgetsV74(block,level)}:{}),
    // Approximate individual targets guide Gemini without interrupting first-pass creation.
    unitBudgets:buildUnitBudgetsV71(block,level),
    bookTitle,level,
-   targetLetters:level==='summary'?null:expected,
-   summaryCapLetters:level==='summary'?expected:null,
+   targetLetters:level==='summary'?null:
+     usePageBudgetV74?target.targetLetters:expected,
+   summaryCapLetters:level==='summary'?
+     (usePageBudgetV74?target.summaryCapLetters:expected):null,
    maxOutputTokens:tokenBudget,timeoutMs:190000,repairDrafts,
    units:block.map(u=>({id:u.id,source:u.source,chapterTitle:u.chapterTitle,
      sectionTitle:u.sectionTitle,pageStart:u.pageStart,pageEnd:u.pageEnd}))};
@@ -219,7 +239,7 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
  // LAB70: reject stale LAB67 Worker deployments before storing new drafts.
  // Incorrect reduction itself is saved as a draft and checked only in phase 2.
  if(isNewDraft){
-   const verified=verifyStudyDraftResponseV72(data,
+   const verified=verifyStudyDraftResponseV74(data,
      block.reduce((n,u)=>n+studyLetters(u.source),0),level);
    if(!verified.ok)throw Object.assign(new Error(verified.message),{code:verified.code});
  }
@@ -477,7 +497,7 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
          const ok=await saveRuntimeUnitResults(newEntries.map(x=>({key:x.key,result:{
            kind:'draft-v57',id:x.u.id,signature:signature(x.u),text:x.text,
            draftEvidenceV72:{
-             protocol:response.draftProtocol||null,model:response.model||null,
+             protocol:response.draftProtocol||null,pageBudgetPolicyV74:response.lengthReview?.pageReviewV74?.policy||null,model:response.model||null,
              sourceLetters:studyLetters(x.u.source),
              resultingLetters:studyLetters(x.text),
              achievedReduction:percentReduced(studyLetters(x.u.source),studyLetters(x.text)),
