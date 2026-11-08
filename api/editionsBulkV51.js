@@ -4,6 +4,8 @@ import {studyLetters} from '../src/lib/studyPillarV38.js';
 import {STUDY_TARGET_V67,measureEditionLengthV72} from '../src/lib/studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {STUDY_DRAFT_PROTOCOL_V71,buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
+import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
+export {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
 export {STUDY_DRAFT_PROTOCOL_V71} from '../src/lib/studyDraftProtocolV71.js';
 export {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {immutableFragmentsV67} from '../src/lib/immutableFragmentsV67.js';
@@ -173,7 +175,8 @@ export function editionDraftInstructionV71(level,phase,target,cap,sourceLetters,
 }
 
 function instructions(level,target,cap,phase='repair',sourceLetters=0,feedback=null){
-  if(phase==='draft-v71'||phase==='recalibrate-v71'||phase==='repair-v71')
+  if(phase==='draft-v72'||phase==='recalibrate-v72'||phase==='repair-v72'||
+     phase==='draft-v71'||phase==='recalibrate-v71'||phase==='repair-v71')
     return editionDraftInstructionV71(level,phase,target,cap,sourceLetters,feedback);
   if(phase==='draft-v70'||phase==='recalibrate-v70'||phase==='recalibrate'||phase==='repair-v70')
     return editionDraftInstructionV70(level,phase,target,cap,sourceLetters);
@@ -231,7 +234,7 @@ async function countOfficialTokens(model,key,messages,signal){
   }catch{return null;}
 }
 export default async function handler(req,res){
-  res.setHeader('X-StudyBook-Draft-Protocol',STUDY_DRAFT_PROTOCOL_V71);
+  res.setHeader('X-StudyBook-Draft-Protocol',STUDY_DRAFT_PROTOCOL_V72);
   if(req.method!=='POST'){res.setHeader('Allow','POST');return fail(res,405,'METHOD_NOT_ALLOWED','Usare POST.');}
   const env=req.env||{};
   const key=env.AI_API_KEY||env.GEMINI_API_KEY||process.env.AI_API_KEY||process.env.GEMINI_API_KEY;
@@ -298,7 +301,10 @@ export default async function handler(req,res){
       };
     }
   }
-  const phase=req.body?.phase==='draft-v71'?'draft-v71':
+  const phase=req.body?.phase==='draft-v72'?'draft-v72':
+    req.body?.phase==='recalibrate-v72'?'recalibrate-v72':
+    req.body?.phase==='repair-v72'?'repair-v72':
+    req.body?.phase==='draft-v71'?'draft-v71':
     req.body?.phase==='recalibrate-v71'?'recalibrate-v71':
     req.body?.phase==='repair-v71'?'repair-v71':
     req.body?.phase==='recalibrate-v70'?'recalibrate-v70':
@@ -307,13 +313,14 @@ export default async function handler(req,res){
     req.body?.phase==='draft'?'draft':
     req.body?.phase==='rewrite'?'rewrite':
     req.body?.phase==='recalibrate'?'recalibrate':'repair';
+  const protocolV72=['draft-v72','repair-v72','recalibrate-v72'].includes(phase);
   const protocolV71=['draft-v71','repair-v71','recalibrate-v71'].includes(phase);
   const protocolV70=['draft-v70','repair-v70','recalibrate-v70'].includes(phase);
-  const protocolRequested=protocolV71||protocolV70;
-  if(protocolRequested&&req.body?.draftProtocol!==(protocolV71?STUDY_DRAFT_PROTOCOL_V71:STUDY_DRAFT_PROTOCOL_V70))
+  const protocolRequested=protocolV72||protocolV71||protocolV70;
+  if(protocolRequested&&req.body?.draftProtocol!==(protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:STUDY_DRAFT_PROTOCOL_V70))
     return fail(res,409,'AI_DRAFT_PROTOCOL_MISMATCH','Versione motore Gemini non corrispondente alla LAB70.');
   const originalLetters=safe.reduce((n,u)=>n+studyLetters(u.source),0);
-  if(protocolV71){
+  if(protocolV72||protocolV71){
     // One coordinator for global percentages; individual block rounding may
     // differ by at most its source-unit count, never by dozens of percent.
     const desired=Math.round(originalLetters*(1-STUDY_TARGET_V67[level].target/100));
@@ -342,7 +349,7 @@ export default async function handler(req,res){
     units:safe,repair:byId.size>0});
   const observed=safe.reduce((n,u)=>n+studyLetters(u.previousDraft||''),0);
   const desired=level==='summary'?Math.round(originalLetters*.40):target;
-  const feedback=protocolV71&&phase==='repair-v71'&&observed>0
+  const feedback=(protocolV72&&phase==='repair-v72'||protocolV71&&phase==='repair-v71')&&observed>0
     ?{observedLetters:observed,desiredLetters:desired,gapLetters:desired-observed}:null;
   const messages=[{role:'system',content:instructions(level,target,cap,phase,originalLetters,feedback)},
     {role:'user',content:user}];
@@ -418,7 +425,7 @@ export default async function handler(req,res){
       finishReason,outputTokenLimit:outputTokens,
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
-      draftProtocol:protocolV71?STUDY_DRAFT_PROTOCOL_V71:protocolV70?STUDY_DRAFT_PROTOCOL_V70:null,
+      draftProtocol:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:protocolV70?STUDY_DRAFT_PROTOCOL_V70:null,
       lengthReview:{exact:hasExactLength,
         withinBand:numericAudit.withinBand,
         compliant:numericAudit.compliant,
