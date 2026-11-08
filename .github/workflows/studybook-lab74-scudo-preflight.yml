@@ -43,7 +43,7 @@ jobs:
           assert.equal(r.passed,true);
           const c=r.contracts.find(x=>x.id==='studybook.lab74-original-page-budget-six-levels');
           assert.equal(c?.status,'passed');
-          assert.ok(c.classEvidence?.some(x=>x.name==='studybook.StudyBookLab74PageLetters'&&x.passed));
+          assert.ok(c.classEvidence?.some(x=>x.name==='studybook.StudyBookLab74PageBudget'&&x.passed));
           console.log('LAB74_SCUDO360_P1_PASS',JSON.stringify({
             commit:r.commit,required:r.contracts.filter(c=>c.required).length}));
           NODE
