@@ -17,6 +17,7 @@ import {classifySourceReadinessV52} from './generativeIntegralV51.js';
 import {publishSequentialPagesV51} from './pagePublicationV51.js';
 import {studyLetters,percentReduced,exactRetained} from './studyPillarV38.js';
 import {auditFidelity,auditProgressiveConcepts} from './fidelityEngine.js';
+import {rewriteQualityV65} from './rewriteQualityV65.js';
 import {repairFocusForUnitV62} from './editionRepairV53.js';
 import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 
@@ -50,8 +51,14 @@ function gridFrom(book,previous,fp){
  const drafts=(book.chapters||[]).map((ch,ci)=>(ch.paragraphs||[]).map((p,pi)=>{
    const editions={};
    for(const level of LEVELS){
-     editions[level]=clean(rows[ci][pi].editions[level]||
-       prevDraft?.[ci]?.[pi]?.editions?.[level])||null;
+     // LAB65: keep a newer unverified rewrite candidate even if an earlier
+     // LAB approved an old text. The old approved copy remains in stagedRows
+     // until a genuinely new variant passes review.
+     const pending=prevDraft?.[ci]?.[pi]?.editions?.[level];
+     const verifiedOld=rows[ci][pi].editions[level];
+     editions[level]=clean(
+       previous?.diagnostics?.rewritePolicyV65?.policy==='semantic-rewrite-v65'
+       ?pending||verifiedOld:verifiedOld||pending)||null;
    }
    return {editions};
  }));
@@ -124,6 +131,8 @@ function reviewEdition(units,drafts,level){
    if(semantic.missingProtected.length)reasons.push('missing-protected');
    if(semantic.qualifierMismatches.length)reasons.push('scoped-qualifier');
    if(concepts.issues.length)reasons.push(...concepts.issues);
+   if(rewriteQualityV65(u.source,output,level).needsRewrite)
+     reasons.push('mechanical-copy-v65');
    if(reasons.length)violations.push({u,reasons:[...new Set(reasons)]});
  }
  const letters=units.reduce((n,u,i)=>n+studyLetters(texts[i]),0);
@@ -322,6 +331,32 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
    // Persist proof of a one-off legacy recovery in every subsequent snapshot.
    qualityRecoveryV62:previous?.sourceFingerprint===fp
      ?previous?.diagnostics?.qualityRecoveryV62||null:null};
+ // LAB65: change the correction STRATEGY once, across all six levels.
+ // Never reset attempts every time the user reopens the app.
+ const migrationPrevious=previous?.sourceFingerprint===fp
+   ?previous?.diagnostics?.rewritePolicyV65:null;
+ if(migrationPrevious?.policy==='semantic-rewrite-v65'){
+   diagnostics.rewritePolicyV65=migrationPrevious;
+ }else{
+   const touched=[];
+   if(previous?.sourceFingerprint===fp&&previous?.draftComplete){
+     for(const level of LEVELS){
+       for(const [page,members] of pageSets(units)){
+         if(!members.some(u=>rewriteQualityV65(u.source,
+             clean(previous?.draftRowsV57?.[u.ci]?.[u.pi]?.editions?.[level])||
+             clean(previous?.stagedRows?.[u.ci]?.[u.pi]?.editions?.[level]),
+             level).needsRewrite))continue;
+         const attempt=attemptKeyV61(level,page);
+         if(Number(diagnostics.repairAttempts[attempt])>0){
+           diagnostics.repairAttempts[attempt]=0;touched.push(attempt);
+         }
+       }
+     }
+   }
+   diagnostics.rewritePolicyV65={policy:'semantic-rewrite-v65',
+     sourceFingerprint:fp,rearmedPages:touched.length,
+     migrationFromLegacy:Boolean(previous?.sourceFingerprint===fp)};
+ }
  diagnostics.recoveredLegacyRepairV60=previous?.sourceFingerprint===fp
    ?recoverLegacyTransientRepairV60(previous,diagnostics.repairAttempts):null;
  let persisted=true;
@@ -448,23 +483,30 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
      const maxAdjustment=Math.max(6,Math.floor(sourceLetters*.55));
      const boundedGap=Math.max(-maxAdjustment,Math.min(maxAdjustment,gap));
      const desired=Math.max(1,lengthBefore+boundedGap);
-     const repairDrafts=group.map(u=>({
+     const issueIds=new Set(review.violations.filter(v=>
+       v.reasons.includes('mechanical-copy-v65')).map(v=>v.u.id));
+     const rewriteGroup=group.some(u=>issueIds.has(u.id));
+     // For legacy near-copies the model must REWRITE from the authentic
+     // original, not merely correct a few words from previousDraft.
+     const repairDrafts=rewriteGroup?[]:group.map(u=>({
        id:u.id,text:draftOf(drafts,u,level),
        repairFocus:repairFocusForUnitV62(u,level,draftOf(drafts,u,level),
          review.violations.find(v=>v.u.id===u.id)?.reasons||[])
      }));
      diagnostics.requestsSent++;diagnostics.repairRequests++;repairCalls++;
+     if(rewriteGroup)diagnostics.rewriteRequestsV65=
+       (diagnostics.rewriteRequestsV65||0)+1;
      emit(onProgress,book,units,rows,drafts,fp,diagnostics,'repair');
      try{
        onActivity({phase:'repair',level,pageStart:group[0].pageStart,
          pageEnd:group.at(-1).pageEnd});
        const response=await request(group,level,{bookTitle:book.title||'',signal,
-         phase:'repair',repairDrafts,targetOverride:desired,
+         phase:rewriteGroup?'rewrite':'repair',repairDrafts,targetOverride:desired,
          onWait:data=>onActivity({phase:'pacing',level,...data})});
        const indexed=new Map((response.parts||[]).filter(x=>clean(x?.text))
          .map(x=>[x.id,clean(x.text)]));
        const changes=group.filter(u=>indexed.has(u.id)&&
-         !rows[u.ci][u.pi].verified[level]&&
+         (!rows[u.ci][u.pi].verified[level]||issueIds.has(u.id))&&
          indexed.get(u.id)!==draftOf(drafts,u,level)).map(u=>({
            u,text:indexed.get(u.id),key:key(fp,level,u)
          }));

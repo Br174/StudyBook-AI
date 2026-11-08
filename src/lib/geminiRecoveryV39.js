@@ -53,6 +53,7 @@ export function progressDiagnostic(snapshot){
   'source-topic-support-insufficient':'argomento non sufficientemente fedele',
   'missing-ordered-paragraphs':'paragrafo non restituito da Gemini',
   'draft-missing':'bozza da completare',
+  'mechanical-copy-v65':'bozza troppo simile al testo originale, serve una riscrittura autentica',
   'new-protected-fact-not-in-source':'riferimento o dato aggiunto non presente nel libro',
   'source-topic-support-insufficient':'concetti del testo originale non sufficientemente presenti'
  };
