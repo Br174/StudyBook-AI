@@ -1,0 +1,36 @@
+name: StudyBook LAB74 page letter budget preflight
+on:
+  push:
+    branches:
+      - 'lab/studybook-core-android-01-update-74-*'
+    paths:
+      - 'src/lib/studyPageBudgetsV74.js'
+      - 'src/lib/studyDraftProtocolV74.js'
+      - 'src/lib/studyRebalancePolicyV67.js'
+      - 'src/lib/studyRebalanceV67.js'
+      - 'src/lib/studyQualityV66.js'
+      - 'src/lib/draftFirstV57.js'
+      - 'src/lib/studyDraftProtocolV71.js'
+      - 'api/editionsBulkV51.js'
+      - 'scripts/test-lab74-*.mjs'
+      - '.github/workflows/studybook-lab74-page-preflight.yml'
+permissions:
+  contents: read
+concurrency:
+  group: lab74-page-preflight
+  cancel-in-progress: true
+jobs:
+  numeric-source-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing project dependencies without project lockfile changes
+        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: LAB74 six-page targets and Worker verification
+        run: node scripts/test-lab74-page-letter-budgets.mjs
+      - name: Web package compiles
+        run: npm run build
