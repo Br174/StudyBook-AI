@@ -5,6 +5,10 @@ on:
       - 'audit/studybook-lab72-negative-preflight-*'
     paths:
       - 'scripts/test-lab72-negative-baseline.mjs'
+      - 'scripts/test-lab72-negative-closure.mjs'
+      - 'api/**'
+      - 'src/lib/**'
+      - 'docs/STUDYBOOK_STUDIO_PROGRESSIVO_PILASTRO_V1.md'
       - '.github/workflows/studybook-lab72-negative-preflight.yml'
   workflow_dispatch:
 permissions:
@@ -21,4 +25,9 @@ jobs:
         with:
           node-version: '22'
       - name: No-secret no-Gemini reproducible negative baseline
-        run: node scripts/test-lab72-negative-baseline.mjs
+        run: |
+          node scripts/test-lab72-negative-closure.mjs
+          node scripts/test-lab71-unit-budgets.mjs
+          node scripts/test-lab69-strict-bands.mjs
+          node scripts/test-lab67-simplified-precise-rebalance.mjs
+          node scripts/test-lab66-nonblocking-quality.mjs
