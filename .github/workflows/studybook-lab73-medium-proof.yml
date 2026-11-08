@@ -1,0 +1,20 @@
+name: StudyBook LAB73 medium synthetic Gemini size proof
+on:
+  push:
+    branches: ['audit/studybook-lab73-network-preflight-*']
+    paths: ['.github/workflows/studybook-lab73-medium-proof.yml']
+permissions:
+  contents: read
+jobs:
+  measure-size:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Bounded tests against isolated LAB72 Worker, no real user book
+        env:
+          LAB73_TEST_MEDIUM: 'yes'
+        run: node scripts/test-lab73-live-worker-network.mjs
