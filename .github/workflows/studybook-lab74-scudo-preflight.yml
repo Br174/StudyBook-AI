@@ -1,0 +1,47 @@
+name: StudyBook LAB74 MotorLab Scudo360 pre-release audit
+on:
+  push:
+    branches: ['lab/studybook-core-android-01-update-74-*']
+    paths: ['.github/workflows/studybook-lab74-scudo-preflight.yml']
+permissions:
+  contents: read
+jobs:
+  scudo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pac-Man current-branch guard self-test
+        run: node scripts/motorlab-active-guard.mjs --self-test
+      - name: Install existing dependencies
+        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: Build StudyBook core
+        run: npm run build
+      - name: Mandatory Scudo360 P1 native classes
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-lab74-report.json
+      - name: MotorLab r40 source-line trace quality proof
+        run: node .motorlab/regression/scudo360-quality-r40.mjs .motorlab/scudo360-contracts.json .motorlab/scudo360-lab74-report.json .motorlab/scudo360-r40-plan.json .motorlab/scudo360-lab74-quality.json
+      - name: Verify LAB74 per-page budget evidence
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const r=JSON.parse(readFileSync('.motorlab/scudo360-lab74-report.json','utf8'));
+          assert.equal(r.passed,true);
+          const c=r.contracts.find(x=>x.id==='studybook.lab74-original-page-budget-six-levels');
+          assert.equal(c?.status,'passed');
+          assert.ok(c.classEvidence?.some(x=>x.name==='studybook.StudyBookLab74PageLetters'&&x.passed));
+          console.log('LAB74_SCUDO360_P1_PASS',JSON.stringify({
+            commit:r.commit,required:r.contracts.filter(c=>c.required).length}));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB74-MotorLab-Scudo360
+          path: |
+            .motorlab/scudo360-lab74-report.json
+            .motorlab/scudo360-lab74-quality.json
+            .motorlab/scudo360-test-results/TEST-*.xml
+          retention-days: 30
