@@ -5,7 +5,8 @@ export const RECOVERY_KINDS={
  'AI_QUOTA_MANUAL_REVIEW':'CONFIGURAZIONE','AI_NOT_CONFIGURED':'CONFIGURAZIONE',
  'AI_PROVIDER_REJECTED':'PROVIDER','AI_SERVICE_ERROR':'PROVIDER',
  'AI_PROVIDER_TIMEOUT':'CONNESSIONE','AI_PROVIDER_NETWORK':'CONNESSIONE','AI_CLIENT_NETWORK':'CONNESSIONE','AI_NETWORK_REVIEW_REQUIRED':'CONNESSIONE',
- 'AI_TIMEOUT_OR_NETWORK':'CONNESSIONE','INVALID_EDITION_RESPONSE':'RISPOSTA_NON_VALIDA',
+ 'AI_TIMEOUT_OR_NETWORK':'CONNESSIONE','AI_GENERATION_RUNTIME':'ERRORE_INTERNO',
+ 'INVALID_EDITION_RESPONSE':'RISPOSTA_NON_VALIDA',
  'INVALID_GENERATIVE_RESPONSE':'RISPOSTA_NON_VALIDA','AI_FORMAT_REVIEW_REQUIRED':'RISPOSTA_NON_VALIDA',
  'SOURCE_REVIEW':'SORGENTE_DA_VERIFICARE',
  'AI_QUALITY_REVIEW':'QUALITA','AI_QUALITY_REVIEW_REQUIRED':'QUALITA',
@@ -39,6 +40,7 @@ export function progressDiagnostic(snapshot){
   QUALITA:snapshot?.diagnostics?.pendingQualityV61?.attentionRequired
     ?'Verifica non ancora superata. Le correzioni automatiche sono state limitate per evitare richieste ripetute senza miglioramenti; controllare le pagine indicate. Bozze e risultati approvati conservati.'
     :'Verifica didattica in corso sulle pagine ancora problematiche. Le bozze complete restano salvate, le pagine già approvate vengono conservate e la ripresa mirata è programmata senza rigenerare il libro.',
+  ERRORE_INTERNO:'Errore interno dell’elaborazione, diverso da un problema di rete. I checkpoint sono conservati e va verificata la versione dell’app.',
   INTERROTTO:'Elaborazione interrotta: i checkpoint precedenti restano validi.',
   ATTESA:'Stato di elaborazione non conclusivo: verifica i dettagli.'
  };
