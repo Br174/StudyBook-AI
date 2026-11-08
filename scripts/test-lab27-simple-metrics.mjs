@@ -36,7 +36,9 @@ assert.equal(countLetters('Caffè 123'),5);
 const reader=readFileSync(new URL('../src/components/StudyMode.jsx',import.meta.url),'utf8');
 assert.ok(!reader.includes('study-quality-table'));
 assert.ok(reader.includes('study-chapter-letter-count')&&!reader.includes('study-paragraph-letter-count'));
-assert.ok(reader.includes('Originale:')&&reader.includes('Rielaborato:')&&reader.includes('Risparmiate:'));
+assert.ok(reader.includes('Lettere risparmiate:')&&reader.includes('Righe risparmiate:'));
+assert.ok(!reader.includes('Rielaborato:')&&!reader.includes('Parole risparmiate:'),
+  'LAB68 shows only two reader savings counters');
 const pdf=readFileSync(new URL('../src/lib/exportersV12.js',import.meta.url),'utf8');
 assert.ok(pdf.includes('pageLetterStats')&&pdf.includes('addPageLetters'));
 assert.ok(pdf.includes('Originale:')&&pdf.includes('Rielaborato:')&&pdf.includes('Risparmiate:'));
