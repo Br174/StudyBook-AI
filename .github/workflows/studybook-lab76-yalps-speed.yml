@@ -1,0 +1,23 @@
+name: StudyBook LAB76 isolated YALPS time benchmark
+on:
+  push:
+    branches:
+      - 'audit/studybook-yalps-speed-*'
+    paths:
+      - '.github/workflows/studybook-lab76-yalps-speed.yml'
+      - 'scripts/test-lab76-yalps-speed.mjs'
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install only YALPS lightweight dependency without project lock mutations
+        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund yalps@0.6.4
+      - name: Benchmark 44 synthetic pages x 6 reduction levels
+        run: node scripts/test-lab76-yalps-speed.mjs
