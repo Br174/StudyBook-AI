@@ -1,7 +1,7 @@
 // LAB46: the original single recovery owner. One foreground retry plan, no
 // second scheduler, no immediate retry storm and no bypass of Gemini cooldown.
 const QUALITY=['AI_QUALITY_REVIEW_REQUIRED','AI_QUALITY_REVIEW'];
-const TRANSIENT=['AI_TIMEOUT_OR_NETWORK','AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETWORK',
+const TRANSIENT=['AI_TIMEOUT_OR_NETWORK','AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETWORK','AI_CLIENT_NETWORK',
   'AI_NETWORK_REVIEW_REQUIRED','INVALID_EDITION_RESPONSE','AI_FORMAT_REVIEW_REQUIRED'];
 export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0){
   if(!snapshot||snapshot.complete)return null;
