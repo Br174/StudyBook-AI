@@ -9,11 +9,11 @@ const xmlSafe=s=>String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;')
  .replaceAll('>','&gt;').replaceAll('"','&quot;');
 const dir='.motorlab/scudo360-test-results';
 mkdirSync(dir,{recursive:true});
-writeFileSync(dir+'/TEST-studybook.StudyBookLab74PageLetters.xml',
+writeFileSync(dir+'/TEST-studybook.StudyBookLab74PageBudget.xml',
  '<?xml version="1.0" encoding="UTF-8"?>\n'+
- '<testsuite name="studybook.StudyBookLab74PageLetters" tests="2" failures="'+(passed?0:1)+'" errors="0" skipped="0">'+
- '<testcase classname="studybook.StudyBookLab74PageLetters" name="SixOriginalPageTargetsAndTolerance"/>'+
- '<testcase classname="studybook.StudyBookLab74PageLetters" name="WorkerRejectsFalsePageBudget">'+
+ '<testsuite name="studybook.StudyBookLab74PageBudget" tests="2" failures="'+(passed?0:1)+'" errors="0" skipped="0">'+
+ '<testcase classname="studybook.StudyBookLab74PageBudget" name="SixOriginalPageTargetsAndTolerance"/>'+
+ '<testcase classname="studybook.StudyBookLab74PageBudget" name="WorkerRejectsFalsePageBudget">'+
  (passed?'':'<failure message="LAB74 source-page budget regression">'+
  xmlSafe((r.stderr||r.stdout||'').slice(-1600))+'</failure>')+
  '</testcase></testsuite>\n');
