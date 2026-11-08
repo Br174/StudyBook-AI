@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import handler from '../api/editionsBulkV51.js';
 import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from '../src/lib/studyDraftProtocolV72.js';
+import {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
 import {buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
 import {readFileSync} from 'node:fs';
@@ -27,7 +28,7 @@ try{
  const out=res();
  await handler(req,out);
  assert.equal(out.statusCode,200);
- assert.equal(out.headers.get('X-StudyBook-Draft-Protocol'),STUDY_DRAFT_PROTOCOL_V72);
+ assert.equal(out.headers.get('X-StudyBook-Draft-Protocol'),STUDY_DRAFT_PROTOCOL_V74);
  assert.equal(out.payload.draftProtocol,STUDY_DRAFT_PROTOCOL_V72);
  const verified=verifyStudyDraftResponseV72(out.payload,letters,'10');
  assert.equal(verified.ok,true);
@@ -40,8 +41,8 @@ try{
  assert.equal(verifyStudyDraftResponseV72({...out.payload,lengthReview:{...out.payload.lengthReview,sourceLetters:letters+1}},letters,'10').ok,false);
  const app=readFileSync(new URL('../src/lib/draftFirstV57.js',import.meta.url),'utf8');
  const improve=readFileSync(new URL('../src/lib/studyRebalanceV67.js',import.meta.url),'utf8');
- assert.match(app,/phase:isNewDraft\?'draft-v72'/);
- assert.match(improve,/recalibrate-v72/);
+ assert.match(app,/isNewDraft\?'draft-v74'/);
+ assert.match(improve,/recalibrate-v74/);
  assert.match(improve,/repair-v72/);
  assert.match(app,/draftEvidenceV72/);
  console.log('LAB72 PROTOCOL PASS: fail-closed Worker identity and source measurement; source unchanged; bounded response diagnostics');
