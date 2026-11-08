@@ -46,11 +46,13 @@ function estimatedTokens(units,level){
 }
 export function assignBudgetsV51(units,level){
   const sources=units.map(x=>x.source);
-  const caps=allocateExactLetterBudgets(sources,50);
+  // LAB72: Riassunto now targets 60% reduction under the canonical policy,
+  // not the old legacy 50%-retention upper bound.
+  const caps=allocateExactLetterBudgets(sources,level==='summary'?60:50);
   const targets=level==='summary'?caps:
     allocateExactLetterBudgets(sources,Number(level));
   return units.map((u,i)=>({...u,targetLetters:level==='summary'?null:targets[i],
-    summaryCapLetters:Math.max(0,caps[i]-(level==='summary'&&i===0?1:0))}));
+    summaryCapLetters:caps[i]}));
 }
 export function minimumCompletePageInputV55(units,level){
   // Recompute across the WHOLE book, not just the block that returned 503.
