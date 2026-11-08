@@ -18,12 +18,11 @@ export function initialStudyOutputLimitV73(units,previous=null){
    previous?.diagnostics?.providerBlockOutputLimitV73);
  if(saved>=4800&&saved<=BULK_OUTPUT_TOKEN_CEILING)
   return Math.floor(saved);
- const list=Array.isArray(units)?units:[];
- const totalChars=list.reduce((n,u)=>n+String(u?.source||'').length,0);
- // Only dense/long books are initially grouped in fewer full-page blocks.
- // NOT one request per paragraph; no arbitrary delay or second scheduler.
- return list.length>=400||totalChars>=170000?14000:
-   list.length>=220||totalChars>=95000?24000:BULK_OUTPUT_TOKEN_CEILING;
+ // P0 diagnosis: LAB72 first-pass ReferenceError, not proven oversized
+ // network requests. Preserve the approved LAB58 large-block fast path.
+ // Only shrink after an actual explicit network fault, not merely due to
+ // 44 pages or 674 concepts. No extra calls for healthy books.
+ return BULK_OUTPUT_TOKEN_CEILING;
 }
 export function minimumFullPageOutputV73(block,level){
  const ratio=level==='summary'?.44:1-Number(level)/100;
