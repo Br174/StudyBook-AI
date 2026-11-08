@@ -1,0 +1,18 @@
+name: StudyBook LAB73 live network diagnosis (isolated LAB72)
+on:
+  push:
+    branches: ['audit/studybook-lab73-network-preflight-*']
+    paths: ['.github/workflows/studybook-lab73-network-diagnosis.yml']
+permissions:
+  contents: read
+jobs:
+  diagnose-network:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Diagnosi diretta HTTP-CORS e una richiesta Gemini sintetica
+        run: node scripts/test-lab73-live-worker-network.mjs
