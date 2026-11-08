@@ -16,6 +16,7 @@ on:
       - 'scripts/test-lab73-network-recovery.mjs'
       - 'scripts/test-lab57-draft-first.mjs'
       - 'scripts/test-lab58-large-block-cadence.mjs'
+      - 'scripts/test-lab69-strict-bands.mjs'
       - '.github/workflows/studybook-lab74-page-preflight.yml'
 permissions:
   contents: read
@@ -40,6 +41,7 @@ jobs:
           node scripts/test-lab73-network-recovery.mjs
           node scripts/test-lab57-draft-first.mjs
           node scripts/test-lab58-large-block-cadence.mjs
+          node scripts/test-lab69-strict-bands.mjs
           node scripts/test-lab72-targeted-repair.mjs
       - name: Web package compiles
         run: npm run build
