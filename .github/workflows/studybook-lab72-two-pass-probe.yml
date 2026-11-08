@@ -1,0 +1,29 @@
+name: StudyBook LAB72 final two-pass Gemini proof
+on:
+  push:
+    branches:
+      - 'lab/studybook-core-android-01-update-72-*'
+    paths:
+      - '.github/workflows/studybook-lab72-two-pass-probe.yml'
+permissions:
+  contents: read
+jobs:
+  two-passes-max:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies without altering project files
+        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: Zero-cost source and percentage gates
+        run: |
+          node scripts/test-lab72-targeted-repair.mjs
+          node scripts/test-lab72-negative-closure.mjs
+      - name: Two bounded real Gemini patch calls maximum
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab72-real-two-pass.mjs
