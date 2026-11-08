@@ -1,0 +1,38 @@
+name: StudyBook LAB72 targeted offline gate
+on:
+  push:
+    branches:
+      - 'lab/studybook-core-android-01-update-72-*'
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'scripts/**'
+      - '.github/workflows/studybook-lab72-targeted-gate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: studybook-lab72-targeted-offline
+  cancel-in-progress: true
+jobs:
+  targeted-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing dependency set, no lockfile mutations
+        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: User screenshots negative cases and targeted-repair regressions
+        run: |
+          node scripts/test-lab72-negative-closure.mjs
+          node scripts/test-lab72-protocol.mjs
+          node scripts/test-lab72-targeted-repair.mjs
+          node scripts/test-lab71-unit-budgets.mjs
+          node scripts/test-lab69-strict-bands.mjs
+          node scripts/test-lab67-simplified-precise-rebalance.mjs
+          node scripts/test-lab66-nonblocking-quality.mjs
+      - name: Build browser core, without deployment
+        run: npm run build
