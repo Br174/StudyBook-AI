@@ -106,7 +106,7 @@
         "lab74-original-page-letter-budget"
       ],
       "junitClasses": [
-        "studybook.StudyBookLab74PageLetters"
+        "studybook.StudyBookLab74PageBudget"
       ],
       "requiredAt": [
         "lab",
