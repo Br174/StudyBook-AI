@@ -35,12 +35,20 @@ export function planTargetedRepairV72(source,draft,level,{maxContexts=8}={}){
  if(!policy||originalLetters<=0||observedLetters<=0)
   throw Object.assign(new Error('Bozza o fonte non disponibile per la correzione mirata'),
    {code:'TARGETED_REPAIR_SOURCE_MISSING'});
- const desiredLetters=Math.round(originalLetters*(1-policy.target/100));
  const minLetters=Math.ceil(originalLetters*(1-policy.max/100));
  const maxLetters=Math.floor(originalLetters*(1-policy.min/100));
- const gapLetters=desiredLetters-observedLetters;
  const direction=observedLetters<minLetters?'expand':
   observedLetters>maxLetters?'condense':'review';
+ // LAB72: aim one point INSIDE the tolerance toward the safer side of the
+ // measured error, instead of asking an overcompressing model for the same
+ // center again. It changes the editorial instruction, NEVER the acceptance
+ // range or the displayed achieved percentage.
+ const aimedReduction=direction==='expand'
+   ?Math.max(policy.min+.5,policy.target-1)
+   :direction==='condense'
+    ?Math.min(policy.max-.5,policy.target+1):policy.target;
+ const desiredLetters=Math.round(originalLetters*(1-aimedReduction/100));
+ const gapLetters=desiredLetters-observedLetters;
  const vocabulary=new Set(words(draft));
  const omitted=pieces(source)
   .map((sentence,index)=>({sentence,index,...completenessHint(sentence,vocabulary)}))
@@ -50,7 +58,7 @@ export function planTargetedRepairV72(source,draft,level,{maxContexts=8}={}){
   .slice(0,Math.max(0,Math.min(8,maxContexts)))
   .sort((a,b)=>a.index-b.index)
   .map(x=>x.sentence.slice(0,340));
- const basic={originalLetters,observedLetters,desiredLetters,minLetters,maxLetters,
+ const basic={originalLetters,observedLetters,desiredLetters,aimedReduction,minLetters,maxLetters,
   gapLetters,direction};
  const localEdit=selectLocalEditV72(source,draft,basic);
  return {
