@@ -17,6 +17,7 @@ import {waitForGeminiCadenceV58,markGeminiCadenceSuccessV58}
 import {auditFidelity} from './fidelityEngine.js';
 import {immutableViolationsV67} from './immutableFragmentsV67.js';
 import {finalizeStudyQualityV66} from './studyQualityV66.js';
+import {STUDY_DRAFT_PROTOCOL_V70,verifyStudyDraftResponseV70} from './studyDraftProtocolV70.js';
 const clean=x=>typeof x==='string'?x.trim():'';
 const clone=x=>JSON.parse(JSON.stringify(x));
 const stamp=()=>new Date().toISOString();
@@ -106,7 +107,8 @@ export async function rebalanceSavedStudyBookV67(book,{
      return current;
     }
     const body={
-      phase:trial===0?'recalibrate':'repair',
+      phase:trial===0?'recalibrate-v70':'repair-v70',
+      draftProtocol:STUDY_DRAFT_PROTOCOL_V70,
       level,bookTitle:String(book.title||'').slice(0,140),
       targetLetters:level==='summary'?null:limit,
       summaryCapLetters:level==='summary'?limit:null,
@@ -148,6 +150,8 @@ export async function rebalanceSavedStudyBookV67(book,{
       }
       if(reply?.engine!=='ai'||reply?.version!=='integral-v51'||
           reply?.level!==level)throw Error('Risposta Gemini non autentica.');
+      const version=verifyStudyDraftResponseV70(reply,originals,level);
+      if(!version.ok)throw Object.assign(new Error(version.message),{code:version.code});
       const ids=new Set(block.map(u=>u.id));
       const rows=new Map();
       for(const p of reply.parts||[]){
