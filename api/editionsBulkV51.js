@@ -404,6 +404,8 @@ export default async function handler(req,res){
   const timeoutMs=bounded(req.body?.timeoutMs,55000,220000,180000);
   const timer=setTimeout(()=>controller.abort(),timeoutMs);
   const started=Date.now();
+  // LAB73: no source text, model prompts or API keys in diagnostic metadata.
+  let providerStageV73='token-count';
   try{
     const counted=await countOfficialTokens(selected,key,messages,controller.signal);
     const safeEstimate=Math.ceil(JSON.stringify(messages).length/2)+1200;
@@ -412,11 +414,14 @@ export default async function handler(req,res){
       'Il blocco supera il margine di token in ingresso.',{inputTokens,
         countedBy:counted===null?'conservative-estimate':'google-countTokens'});
     const url=env.AI_API_URL||process.env.AI_API_URL||ENDPOINT;
+    providerStageV73='gemini-request';
     const upstream=await fetch(url,{method:'POST',signal:controller.signal,
       headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},
       body:JSON.stringify({model:selected,temperature:0.1,reasoning_effort:'low',
         max_tokens:outputTokens,response_format:protocolV72&&phase==='repair-v72'?PATCH_SCHEMA_V72:SCHEMA,messages})});
+    providerStageV73='gemini-response-body';
     const payload=await upstream.json().catch(()=>null);
+    providerStageV73='gemini-response-parse';
     const elapsedMs=Date.now()-started;
     if(upstream.status===429||upstream.status===503){
       const quota=diagnoseGeminiQuota({status:upstream.status,body:payload,
@@ -529,6 +534,13 @@ export default async function handler(req,res){
     return fail(res,controller.signal.aborted?504:502,
       controller.signal.aborted?'AI_PROVIDER_TIMEOUT':'AI_PROVIDER_NETWORK',
       controller.signal.aborted?'Risposta Gemini troppo lenta, blocco recuperabile.':
-        'Connessione Gemini non disponibile.',{diagnostic:{elapsedMs:Date.now()-started,model:selected}});
+        'Connessione Gemini non disponibile.',{
+          diagnostic:{elapsedMs:Date.now()-started,model:selected,
+            stage:providerStageV73,
+            failureType:String(error?.name||'UnknownError').slice(0,40),
+            // Never store prompt, book text, secrets or raw exception messages.
+            sourceChars:chars,sourceUnits:safe.length,
+            outputTokenLimit:outputTokens}
+        });
   }finally{clearTimeout(timer);}
 }
