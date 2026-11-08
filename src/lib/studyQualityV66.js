@@ -5,6 +5,7 @@ import {studyLetters,percentReduced,exactRetained} from './studyPillarV38.js';
 import {extractProtectedItems} from './fidelityEngine.js';
 import {rewriteQualityV65} from './rewriteQualityV65.js';
 import {measureEditionLengthV72} from './studyRebalancePolicyV67.js';
+import {pageLetterReviewV74} from './studyPageBudgetsV74.js';
 export const STUDY_LEVELS_V66=['summary','50','40','30','20','10'];
 const hasText=s=>typeof s==='string'&&s.trim().length>0;
 const text=s=>hasText(s)?s.trim():null;
@@ -84,9 +85,14 @@ export function studyQualityInspectionV66(book,units,stagedRows,drafts,{persiste
   const exact=expectedLetters===null?null:expectedLetters===outputLetters;
   const numericReview=measureEditionLengthV72({level,originalLetters:sourceLetters,
     outputLetters,completeParts:checkedPages===pageCount&&pageCount>0});
-  const reductionWarning=!numericReview.compliant;
+  const perPage=pageLetterReviewV74(units,units.map(u=>({
+    id:u.id,text:publicRows?.[u.ci]?.[u.pi]?.editions?.[level]})),level);
+  // No text is generated or modified by QA. Page budgets are a numeric
+  // observation after the first complete draft, not a creation gate.
+  const reductionWarning=!numericReview.compliant||!perPage.withinBand;
   const advisory=[
    ...(reductionWarning?['global-reduction-off-target']:[]),
+   ...(!perPage.withinBand?['source-page-letter-budget-off-target']:[]),
    ...(!persistent?['checkpoint-not-persisted']:[])
   ];
   const alerts=pages.reduce((n,p)=>n+p.warnings.length,0)+advisory.length;
@@ -95,7 +101,13 @@ export function studyQualityInspectionV66(book,units,stagedRows,drafts,{persiste
    warnings:alerts,advisory,
    originalLetters:sourceLetters,outputLetters,actualReduction,
    expectedLetters,exactLength:exact,
-   reductionCompliant:numericReview.compliant,
+   reductionCompliant:numericReview.compliant&&perPage.withinBand,
+   originalPageLetterBudgetsV74:perPage.groups.map(g=>({
+     pageStart:g.pageStart,pageEnd:g.pageEnd,
+     originalLetters:g.originalLetters,targetLetters:g.targetLetters,
+     minLetters:g.minLetters,maxLetters:g.maxLetters,
+     outputLetters:g.outputLetters,withinBand:g.withinBand
+   })),
    reductionBand:{min:numericReview.minLetters,max:numericReview.maxLetters},
    semanticCertification:false,
    state:checkedPages===pageCount&&persistent?'checked-with-notes':'incomplete'
