@@ -15,9 +15,9 @@ export function sourceLetterBudgetV74(sourceLetters,level){
  if(!policy||!Number.isSafeInteger(n)||n<=0)
   throw Object.assign(new Error('Fonte o livello mancante per il budget lettere'),
    {code:'PAGE_LETTER_BUDGET_INVALID'});
- const targetLetters=Math.round(n*(1-policy.target/100));
- const minLetters=Math.ceil(n*(1-policy.max/100));
- const maxLetters=Math.floor(n*(1-policy.min/100));
+ const targetLetters=Math.round(n*(100-policy.target)/100);
+ const minLetters=Math.ceil(n*(100-policy.max)/100);
+ const maxLetters=Math.floor(n*(100-policy.min)/100);
  // On a 1- or 2-letter physical page the interval may have no integer.
  // Keep the true interval and mark it impossible, never silently fabricate
  // a passing result or cut/fill a word.
