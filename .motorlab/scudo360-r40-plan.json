@@ -13,6 +13,12 @@
       "contractIds": [
         "studybook.lab72-strict-percentage-and-source-fidelity"
       ]
+    },
+    {
+      "id": "lab73-first-draft-referror-network-recovery",
+      "contractIds": [
+        "studybook.lab73-first-draft-fidelity-and-network-recovery"
+      ]
     }
   ],
   "baselineCommit": "3e4569bd865b7a69f0e6b4dc831661ad3ac63c9b",
