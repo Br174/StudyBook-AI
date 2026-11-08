@@ -72,7 +72,8 @@ try{
  assert.equal(paused.repairAttemptsV57['summary:25-25'],1,
   'HTTP 503 must NOT count a second failed attempt');
  assert.equal(paused.repairAttemptsV57['summary:38-38'],1);
- assert.equal(planStudyAutoResumeV45(paused)?.reason,'provider-cooldown');
+ assert.equal(planStudyAutoResumeV45(paused)?.reason,'local-quality-audit',
+   'LAB66 full drafts do not need provider cooldown to audit locally');
  assert.ok(await readGeminiPause());
  const before=calls.length;
  await generateDraftFirstV57({...b,editionsV36:paused});
@@ -111,7 +112,7 @@ try{
  assert.equal(state.verifiedChunkVariants,16);
  assert.equal(state.repairAttemptsV57['summary:17-17'],1);
  const auto=planStudyAutoResumeV45(state,Date.now(),0);
- assert.equal(auto?.reason,'quality-continue');
+ assert.equal(auto?.reason,'local-quality-audit');
  assert.equal(autoResumeWakeDecisionV54(auto,{now:auto.at-1}),'too-early');
  assert.equal(autoResumeWakeDecisionV54(auto,{now:auto.at+1}),'ready');
  for(let i=2;i<=3;i++){
@@ -122,8 +123,8 @@ try{
  assert.equal(badCalls,3,'three total attempts, no infinite loop');
  assert.equal(state.execution.remainingBatches,0);
  assert.equal(state.diagnostics.pendingQualityV61.attentionRequired,true);
- assert.equal(planStudyAutoResumeV45(state),null,
-   'no auto-loop after exhausting bounded attempts');
+ assert.equal(planStudyAutoResumeV45(state)?.reason,'local-quality-audit',
+   'LAB66 offers one local terminal audit; no repeated Gemini corrections');
  // LAB62 grants ONE recovery on the old exhausted LAB61 checkpoint
  // after the repair strategy changes, never an unbounded rearm.
  state=await generateDraftFirstV57({...q,editionsV36:state});

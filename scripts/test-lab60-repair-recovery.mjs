@@ -84,8 +84,8 @@ try {
    assert.equal(visible.levels[0].completed,16);
    assert.deepEqual(visible.levels.slice(1).map(x=>x.completed),[0,0,0,0,0]);
    const wait=planStudyAutoResumeV45(paused);
-   assert.equal(wait?.reason,'provider-cooldown',
-     'existing ONE foreground owner must schedule provider recovery');
+   assert.equal(wait?.reason,'local-quality-audit',
+     'the one foreground owner finalizes locally when drafts are complete');
    assert.equal(autoResumeWakeDecisionV54(wait,{now:wait.at-1,visible:true}),
      'too-early','retry must not bypass cooldown');
    assert.equal(autoResumeWakeDecisionV54(wait,{now:wait.at+1,visible:false}),

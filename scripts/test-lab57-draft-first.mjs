@@ -100,8 +100,8 @@ try{
  assert.equal(resumed.stagedRows[0][1].verified['10'],false,
   'later versions are never certified before the Riassunto is complete');
  const qualityPlan=planStudyAutoResumeV45(faulty);
- assert.equal(qualityPlan?.reason,'quality-continue',
-   'LAB61 uses the existing foreground recovery owner with bounded attempts');
+ assert.equal(qualityPlan?.reason,'local-quality-audit',
+   'LAB66 uses the existing foreground owner for zero-provider audit');
  
  calls=[];events=[];
  let failedOnce=false;

@@ -88,8 +88,8 @@ try{
  assert.deepEqual(counts(book,stopped),[16,0,0,0,0,0]);
  assert.equal(stopped.repairAttemptsV57['summary:17-17'],3);
  assert.equal(stopped.diagnostics.pendingQualityV61.attentionRequired,true);
- assert.equal(planStudyAutoResumeV45(stopped),null,
-   'old LAB61 cap prevents further quality recovery');
+ assert.equal(planStudyAutoResumeV45(stopped)?.reason,'local-quality-audit',
+   'LAB66 schedules only local quality on saved full drafts, no Gemini retry');
  assert.deepEqual(requests.filter(x=>x.phase==='draft').map(x=>x.level),levels);
 
  await clearGeminiPause();await clearGeminiCadenceForTestV58();
@@ -175,7 +175,8 @@ try{
  assert.equal(retryCalls,3,'only three bounded attempts after a strategy change');
  assert.equal(extraDrafts,0,'no replay of 264 completed drafts');
  assert.equal(refusing.diagnostics.pendingQualityV62.needsManualReview,true);
- assert.equal(planStudyAutoResumeV45(refusing),null);
+ assert.equal(planStudyAutoResumeV45(refusing)?.reason,'local-quality-audit',
+   'LAB66 nonblocking finalization remains available with exhausted repairs');
  assert.deepEqual(counts(blockedBook,refusing),[16,0,0,0,0,0]);
  console.log('LAB62 PASS: 7 chapters 44 pages, 264 saved drafts, strict 16/44 quality gate, authentic legal/negation/reference hints sent using existing Worker schema, one-time LAB61 rearm only page17, recovery to 44/44, bad provider bounded 3 attempts, no false approval, page-specific explanation.');
 }finally{
