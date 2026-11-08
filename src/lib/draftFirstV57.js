@@ -23,6 +23,7 @@ import {repairFocusForUnitV62} from './editionRepairV53.js';
 import {orderSourceUnitsV59} from './studyPhaseProgressV59.js';
 import {STUDY_DRAFT_PROTOCOL_V71,verifyStudyDraftResponseV71,buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
 import {measureEditionLengthV72} from './studyRebalancePolicyV67.js';
+import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from './studyDraftProtocolV72.js';
 
 const LEVELS=['summary','50','40','30','20','10'];
 const CACHE='integral-v57-draft-first',VERSION='lab38-progressive-editions-v1';
@@ -164,8 +165,8 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
  const expected=targetOverride===null?(level==='summary'?target.summaryCapLetters:target.targetLetters):
    Math.max(0,Math.floor(Number(targetOverride)));
  const isNewDraft=phase==='draft';
- const body={phase:isNewDraft?'draft-v71':phase,
-   ...(isNewDraft?{draftProtocol:STUDY_DRAFT_PROTOCOL_V71}:{}),
+ const body={phase:isNewDraft?'draft-v72':phase,
+   ...(isNewDraft?{draftProtocol:STUDY_DRAFT_PROTOCOL_V72}:{}),
    // Approximate individual targets guide Gemini without interrupting first-pass creation.
    unitBudgets:buildUnitBudgetsV71(block,level),
    bookTitle,level,
@@ -200,7 +201,7 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
  // LAB70: reject stale LAB67 Worker deployments before storing new drafts.
  // Incorrect reduction itself is saved as a draft and checked only in phase 2.
  if(isNewDraft){
-   const verified=verifyStudyDraftResponseV71(data,
+   const verified=verifyStudyDraftResponseV72(data,
      block.reduce((n,u)=>n+studyLetters(u.source),0),level);
    if(!verified.ok)throw Object.assign(new Error(verified.message),{code:verified.code});
  }
