@@ -1,0 +1,45 @@
+// LAB68 UI-only regression: no Gemini or acquisition changes.
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {approximateStudyLinesV68,actualMirrorPageStatistics}
+ from '../src/lib/libroSpecchioV35.js';
+import {studyLetters} from '../src/lib/studyPillarV38.js';
+const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
+const screen=read('src/components/AppScreens.jsx');
+const reader=read('src/components/MirrorReaderV35.jsx');
+const flow=read('src/components/StudyMode.jsx');
+const styles=read('src/appShellV16.css');
+const source='La filosofia del diritto studia come il diritto può essere giusto. '.repeat(8);
+const condensed='La filosofia del diritto riflette sul diritto giusto. '.repeat(5);
+const originalMap={pages:[{physicalPage:1,text:source}]};
+const book={chapters:[{paragraphs:[{original:source,sourcePageStart:1}]}]};
+const pages=[{kind:'text',sourcePage:1,blocks:[{kind:'paragraph',text:condensed}]}];
+const m=actualMirrorPageStatistics(originalMap,book,pages,1);
+assert.equal(m.measured,true);
+assert.equal(m.lettersSaved,studyLetters(source)-studyLetters(condensed));
+assert.equal(m.linesSaved,approximateStudyLinesV68(source)-approximateStudyLinesV68(condensed));
+assert.ok(m.linesSaved>0);
+assert.equal(approximateStudyLinesV68(''),0);
+assert.equal(approximateStudyLinesV68('Breve testo'),1);
+assert.equal(approximateStudyLinesV68('Breve\n\ntesto'),2);
+assert.ok(!/Parole: \{pageTotals/.test(reader),'NO word-count on page');
+assert.ok(!/Riduzione effettiva: \{pageTotals/.test(reader),'page footer ONLY two savings');
+assert.ok(reader.includes('Lettere risparmiate:'));
+assert.ok(reader.includes('Righe risparmiate:'));
+assert.ok(flow.includes('Lettere risparmiate:'));
+assert.ok(flow.includes('Righe risparmiate:'));
+assert.ok(!flow.includes('Originale: {numberIt(chapterLetterStats.original)}'));
+assert.ok(screen.includes("Riduzione realmente ottenuta:"));
+assert.ok(screen.includes("sb-edition-switcher-options-v68"));
+assert.ok(screen.includes("aria-pressed={reduction===option.value}"));
+assert.ok(!screen.includes('sb-precision-slider'));
+assert.ok(!screen.includes('sb-edition-stages'),'no obsolete green status badges');
+assert.ok(screen.includes('!editionState?.complete'),'hide progress once finished');
+assert.ok(screen.indexOf('sb-edition-switcher-v68') <
+          screen.indexOf('sb-book-quick-actions'),'selector BEFORE reading buttons');
+assert.ok(styles.includes('sb-edition-switcher-options-v68'));
+assert.ok(styles.includes('grid-template-columns:repeat(4,minmax(0,1fr))'));
+assert.ok(screen.includes('onReductionChange?.(option.value)'),'selection remains interactive');
+const workflow=read('.github/workflows/android-apk.yml');
+assert.ok(workflow.includes('LAB68'));
+console.log('LAB68 PASS: page footer letters + fixed-layout lines only; precise seven-position selector above reading; completed progress hidden; old green badges gone; original and Gemini untouched.');

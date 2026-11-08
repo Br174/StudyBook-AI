@@ -1168,3 +1168,42 @@
   .sb-home-v16 .sb-download-book-cover img{height:94px}
   .sb-studio-inline-progress{padding:8px}
 }
+
+/* LAB68: Study screen, visual-only layout. Never affects generation or data. */
+.sb-studio-screen .sb-open-book-overview{
+  display:grid;grid-template-columns:minmax(110px,32%) minmax(0,1fr);
+  gap:14px;align-items:center;
+}
+.sb-studio-screen .sb-open-book-copy{min-width:0}
+.sb-studio-screen .sb-studio-inline-progress-v68{
+  margin:2px 0 8px;width:100%;min-width:0;
+}
+.sb-edition-switcher-v68{
+  display:flex;flex-direction:column;gap:10px;border:1px solid #d5e3f0;
+  background:#f8fbff;border-radius:16px;padding:12px;margin:6px 0 12px;
+}
+.sb-edition-switcher-heading-v68{display:flex;gap:10px;justify-content:space-between;align-items:center}
+.sb-edition-switcher-heading-v68>strong{font-size:.97rem}
+.sb-edition-switcher-heading-v68>span{color:#176caf;font-weight:800}
+.sb-edition-switcher-options-v68{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.sb-edition-switcher-options-v68 button{
+  border:1px solid #c8d9e8;background:#fff;color:#31516d;border-radius:10px;
+  padding:9px 3px;min-height:42px;font-size:.81rem;font-weight:700;
+  cursor:pointer;white-space:normal;overflow-wrap:anywhere;
+}
+.sb-edition-switcher-options-v68 button.selected{
+  border-color:#217ac5;background:#e5f1fc;color:#075c9d;
+  box-shadow:inset 0 0 0 1px #217ac5;
+}
+.sb-edition-switcher-options-v68 button:focus-visible{outline:3px solid #1677c8;outline-offset:1px}
+.sb-edition-switcher-result-v68{
+  display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;
+  color:#344b63;font-size:.85rem;
+}
+.sb-edition-switcher-result-v68 strong{font-size:1.13rem;color:#176caf;white-space:nowrap}
+.sb-edition-switcher-result-v68 small{color:#63748a;font-size:.75rem}
+@media(max-width:420px){
+  .sb-studio-screen .sb-open-book-overview{grid-template-columns:minmax(92px,34%) minmax(0,1fr);gap:10px}
+  .sb-edition-switcher-v68{padding:10px}
+  .sb-edition-switcher-options-v68 button{font-size:.77rem;min-height:40px}
+}

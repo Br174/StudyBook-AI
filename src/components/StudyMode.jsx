@@ -5,6 +5,7 @@ import { buildConceptMap, buildFlashcards, buildOralQuestions, buildQuiz } from 
 import { readerCssVariables } from '../lib/accessibility.js';
 import { editorialParagraphText } from '../lib/editorialModel.js';
 import { countLetters } from '../lib/studyQualityGuard.js';
+import {approximateStudyLinesV68} from '../lib/libroSpecchioV35.js';
 import { filterGlossaryEntries } from '../lib/glossaryQuality.js';
 import { buildUniversalGlossary, splitUniversalText } from '../lib/universalGlossary.js';
 import { speakStudyText, stopStudySpeech, installItalianSpeechVoice } from '../lib/studySpeech.js';
@@ -128,8 +129,13 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
     const original=paragraphs.reduce((sum,p)=>sum+countLetters(p.original || ''),0);
     const current=paragraphs.reduce((sum,p)=>
       sum+countLetters(editorialParagraphText(p,{variant:readingVariant,dsaMode})),0);
+    const originalText=paragraphs.map(p=>p.original||'').join('\n');
+    const currentText=paragraphs.map(p=>
+      editorialParagraphText(p,{variant:readingVariant,dsaMode})).join('\n');
     return {
       original, current,
+      linesSaved:approximateStudyLinesV68(originalText)-
+        approximateStudyLinesV68(currentText),
       achieved:original?Math.round((1-current/original)*1000)/10:0,
       sourceWarnings:paragraphs.filter(p=>p.precisionAudit?.sourceNeedsReview).length,
       sourceReady:chapter?.precisionChapter?.sourceReady !== false,
@@ -390,12 +396,8 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
                 ));
               })()}
               <footer className="study-chapter-letter-count" aria-label="Conteggio lettere del capitolo">
-                <span>Originale: {numberIt(chapterLetterStats.original)}</span>
-                <span>Rielaborato: {numberIt(chapterLetterStats.current)}</span>
-                <span>Risparmiate: {numberIt(chapterLetterStats.original - chapterLetterStats.current)}</span>
-                <span className="study-chapter-reduction-status">
-                  Riduzione reale di questo capitolo: {chapterLetterStats.achieved}%{chapterLetterStats.target===null ? '' : ' · Obiettivo: '+chapterLetterStats.target+'%'}
-                </span>
+                <span>Lettere risparmiate: {numberIt(chapterLetterStats.original - chapterLetterStats.current)}</span>
+                <span>Righe risparmiate: {numberIt(chapterLetterStats.linesSaved)}</span>
                 {!chapterLetterStats.sourceReady ? (
                   <p className="study-source-review-warning" role="alert">
                     Capitolo non pronto per lo studio: il controllo ha rilevato frasi interrotte, un confine incerto o una parte senza contesto. La versione ridotta è stata sospesa e il testo sorgente disponibile è stato mantenuto. Verificare le pagine originali e usare «Rielabora libro» se la fonte è completa. Nessuna parte mancante è stata inventata.

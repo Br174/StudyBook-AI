@@ -337,7 +337,16 @@ export function actualMirrorPageStatistics(sourceMap,book,pages,physicalPage){
   if(!hasSource||!hasOutput)return {measured:false,reason:'misurazione-non-disponibile'};
   const originalWords=countWords(sourceText),resultWords=countWords(studyText);
   const originalLetters=countLetters(sourceText),resultLetters=countLetters(studyText);
+  const originalLines=approximateStudyLinesV68(sourceText);
+  const resultLines=approximateStudyLinesV68(studyText);
   return {measured:true,originalWords,resultWords,wordsSaved:originalWords-resultWords,
     originalLetters,resultLetters,lettersSaved:originalLetters-resultLetters,
+    originalLines,resultLines,linesSaved:originalLines-resultLines,
     achievedPercent:Math.round((1-resultLetters/originalLetters)*1000)/10};
+}
+// A fixed, screen-independent line width makes comparisons reproducible.
+// These are equivalent study lines, not Android screen rows or scanned PDF geometry.
+export function approximateStudyLinesV68(text){
+  if(!String(text||'').trim())return 0;
+  return wrapApprox(text,92).filter(line=>line.trim().length>0).length;
 }

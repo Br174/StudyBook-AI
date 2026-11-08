@@ -30,3 +30,7 @@
   color:#174d72;line-height:1.5;overflow-wrap:anywhere}
 .sb-simple-live-error{background:#fff8ed;border-color:#ead3a0;color:#77510e}
 .sb-mirror-content{min-height:0}
+
+/* LAB68: only two savings metrics, at the bottom of each study page. */
+.sb-mirror-statistics>span{font-size:11px;line-height:1.4;color:#253954}
+.sb-mirror-statistics>span b{font-weight:800;color:#176caf}

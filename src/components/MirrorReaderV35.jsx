@@ -127,10 +127,9 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
           {variant==='simple' ? <small>Spiegazione Gemini su richiesta, non e una nuova riduzione.
             Il PDF stampato e il testo di studio rimangono invariati.</small> : <>
           {pageTotals.measured ? <>
-            <span>Parole: {pageTotals.originalWords} → {pageTotals.resultWords} · Risparmiate: {pageTotals.wordsSaved}</span>
-            <span>Lettere: {pageTotals.originalLetters} → {pageTotals.resultLetters} · Risparmiate: {pageTotals.lettersSaved}</span>
-            <span>Riduzione effettiva: {pageTotals.achievedPercent}%</span>
-            <small>Confronto delle lettere realmente presenti nella pagina originale e nel testo visualizzato.</small>
+            <span>Lettere risparmiate: <b>{pageTotals.lettersSaved.toLocaleString('it-IT')}</b></span>
+            <span>Righe risparmiate: <b>{pageTotals.linesSaved.toLocaleString('it-IT')}</b></span>
+            <small>Righe equivalenti stimate con impaginazione fissa.</small>
           </> : <span>Statistiche non disponibili: verificare la corrispondenza con la pagina originale.</span>}</>}
         </footer>
       </>}

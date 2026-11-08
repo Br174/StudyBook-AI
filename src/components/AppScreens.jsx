@@ -477,12 +477,6 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   }).map(([id])=>id);
   const rebalanceCurrent=editionState?.rebalanceV67;
   const improvementLeft=outsideTarget.length>0;
-  const editionStages=studyBook?.editionsV36?.rows?.length
-    ? ['summary','50','40','30','20','10'].map(id=>({
-        id,label:id==='summary'?'Riassunto':id+'%',
-        ready:studyBook.editionsV36.checkpointPersistent!==false
-          &&studyBook.editionsV36.rows.every(ch=>ch.every(p=>p?.verified?.[id]===true)),
-      })) : [];
   const sourceChapters = sourceData?.chapters || [];
   const canPrepare = sourceChapters.some(chapter => chapter.paragraphs?.length);
   return (
@@ -494,13 +488,6 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         </div>
       </header>
 
-      {editionStages.length>0 && <div className="sb-edition-stages" aria-label="Versioni indipendenti di studio">
-        {editionStages.map(item=><span key={item.id} className={item.ready?'sb-edition-ready':'sb-edition-pending'}>
-          {item.label}: {item.ready
-            ?(studyBook?.editionsV36?.qualityV66?'Disponibile':'Studiabile')
-            :'In lavorazione'}
-        </span>)}
-      </div>}
       {renameOpen && <RenameTitleDialog key={fileName} label="Rinomina libro di studio" current={stripExtension(fileName)} onClose={()=>setRenameOpen(false)} onSave={name=>onRenameBook(name)} />}
       <section className="sb-open-book-workspace" aria-label="Libro aperto">
         <div className="sb-open-book-overview">
@@ -514,20 +501,62 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             <small>STAI LAVORANDO SU</small>
             <h2>{stripExtension(fileName)}</h2>
             <button type="button" className="sb-studio-rename" onClick={()=>setRenameOpen(true)}>✎ Rinomina libro</button>
-            {!isOriginalOnly && studyBook && <div className="sb-studio-inline-progress" aria-label="Avanzamento per pagine fisiche">
-              <StudyPhaseProgressV59 book={studyBook} acquisition={{done:sourceData?.structure?.pageCount||studyBook?.canonicalBookMap?.pageCount||0,total:sourceData?.structure?.pageCount||studyBook?.canonicalBookMap?.pageCount||0}} />
-              {v36Partial && resumeWait.label &&
-                <small className="sb-gemini-wait-note" role="status">{resumeWait.label}</small>}
-              {v36Partial && <button type="button" className="sb-resume-manual"
-                onClick={onResumeGemini}>
-                {geminiStalled?'↻ Recupera richiesta bloccata':
-                 generating?'↻ Verifica richiesta Gemini':
-                 resumeWait.label?resumeWait.button:'↻ Riprendi elaborazione dal checkpoint'}
-              </button>}
-            </div>}
             <p>{isOriginalOnly ? 'Scegli come utilizzare il libro. Il file originale resta invariato; potrai decidere se creare un testo di studio.' : 'Leggi, studia o porta con te il contenuto elaborato di questo libro.'}</p>
           </div>
         </div>
+        {!isOriginalOnly && studyBook && !editionState?.complete && (
+          <div className="sb-studio-inline-progress sb-studio-inline-progress-v68"
+            aria-label="Avanzamento del libro in preparazione">
+            <StudyPhaseProgressV59 book={studyBook}
+              acquisition={{done:sourceData?.structure?.pageCount||
+                studyBook?.canonicalBookMap?.pageCount||0,
+                total:sourceData?.structure?.pageCount||
+                studyBook?.canonicalBookMap?.pageCount||0}}/>
+            {v36Partial&&resumeWait.label&&
+              <small className="sb-gemini-wait-note" role="status">{resumeWait.label}</small>}
+            {v36Partial&&<button type="button" className="sb-resume-manual"
+              onClick={onResumeGemini}>
+              {geminiStalled?'↻ Recupera richiesta bloccata':
+                generating?'↻ Verifica richiesta Gemini':
+                resumeWait.label?resumeWait.button:'↻ Riprendi elaborazione dal checkpoint'}
+            </button>}
+          </div>
+        )}
+        {!isOriginalOnly && studyBook && (
+          <div className="sb-edition-switcher-v68" role="group"
+            aria-label="Scegli la riduzione del libro">
+            <div className="sb-edition-switcher-heading-v68">
+              <strong>Versione di studio</strong>
+              <span>{reduction==='summary'?'Riassunto':
+                reduction===0?'Originale':reduction+'%'}</span>
+            </div>
+            <div className="sb-edition-switcher-options-v68">
+              {[
+                {value:'summary',label:'Riassunto'},
+                {value:50,label:'50%'},{value:40,label:'40%'},
+                {value:30,label:'30%'},{value:20,label:'20%'},
+                {value:10,label:'10%'},{value:0,label:'Originale'}
+              ].map(option=>
+                <button key={String(option.value)} type="button"
+                  className={reduction===option.value?'selected':''}
+                  aria-pressed={reduction===option.value}
+                  onClick={()=>onReductionChange?.(option.value)}>
+                  {option.label}
+                </button>)}
+            </div>
+            <div className="sb-edition-switcher-result-v68" aria-live="polite">
+              {reduction===0 ? <span>Testo originale senza riduzione.</span> :
+                <><span>Riduzione realmente ottenuta:</span>
+                  <strong>{Number.isFinite(reductionMeta?.achievedLettersPercent)
+                    ?reductionMeta.achievedLettersPercent.toLocaleString('it-IT',{
+                      minimumFractionDigits:1,maximumFractionDigits:1})+'%'
+                    :'In elaborazione'}</strong>
+                  <small>{reduction==='summary'?'Versione Riassunto':
+                    'Obiettivo: '+reduction+'%'}</small>
+                </>}
+            </div>
+          </div>
+        )}
         <div className="sb-book-quick-actions">
           <button type="button" onClick={onRead}><span className="sb-action-icon"><StudyIcon name="book" size={25} /></span><strong>Leggi sul telefono</strong></button>
           <button type="button" disabled={v36Partial&&!isOriginalOnly} onClick={() => isOriginalOnly ? onExport('pdf', 'original') : onExport('pdf', 'study')}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>Leggi in PDF</strong></button>
@@ -564,32 +593,6 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
           {draftInspectorOpen && <StudyDraftInspectorV63
             book={studyBook} onClose={()=>setDraftInspectorOpen(false)}/>}
         </>}
-        {!isOriginalOnly && studyBook && (
-          <div className="sb-precision-control" style={{ padding: '14px 16px', marginTop: 10, border: '1px solid #dce6f1', borderRadius: 14 }}>
-            <label htmlFor="sb-precision-slider" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontWeight: 700 }}>
-              <span>Studio progressivo</span>
-              <span>{reduction === 'summary' ? 'Riassunto' : reduction + '%'}</span>
-            </label>
-            <input
-              id="sb-precision-slider" type="range" min="0" max="6" step="1"
-              value={Math.max(0, ['summary', 50, 40, 30, 20, 10, 0].indexOf(reduction))}
-              onChange={(event) => onReductionChange?.(['summary', 50, 40, 30, 20, 10, 0][Number(event.target.value)])}
-              aria-label="Regola la riduzione del contenuto"
-              style={{ width: '100%', margin: '13px 0 5px' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748b' }}>
-              <span>Riassunto</span><span>50 · 40 · 30 · 20 · 10%</span><span>Originale</span>
-            </div>
-            {reductionMeta && (
-              <p style={{ fontSize: 12, margin: '9px 0 0', color: '#64748b' }}>
-                Riduzione effettiva (lettere): {Number.isFinite(reductionMeta.achievedLettersPercent) ? reductionMeta.achievedLettersPercent + '%' : 'in elaborazione'}.
-                {v36Partial ? ' Dati progressivi, nessuna percentuale definitiva. ' : reductionMeta.targetReached ? ' ' : ' Obiettivo ' + (reductionMeta.targetPercent ?? 'riassunto') + '% non raggiunto: conservate informazioni essenziali o parti da verificare. '}
-                {reductionMeta.qualityGuard?.originalFallbackParagraphs > 0 ? ' Alcuni paragrafi richiedono controllo della fonte originale. ' : ''}
-                Il file originale resta invariato. La stampa è disponibile quando tutte le pagine di questa versione sono presenti; il controllo qualità non certifica la correttezza del significato.
-              </p>
-            )}
-          </div>
-        )}
       </section>
 
       {v36Partial && <div className="sb-mirror-warning" role="status">
