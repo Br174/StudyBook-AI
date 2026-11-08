@@ -137,13 +137,15 @@ export function editionDraftInstructionV70(level,phase,target,cap,sourceLetters)
   'Preserva tutte le negazioni, eccezioni, date, cifre, formulazioni normative citate, riferimenti tecnici e formule esattamente quando necessari.',
   'Non inventare informazioni, non usare parole ripetute o frasi di riempimento per raggiungere la lunghezza. Se la fedeltà è incompatibile con il numero, conserva il significato: il controllo locale segnalerà la mancata conformità.',
   'Ogni unità di ingresso deve riapparire con lo stesso id, nello stesso ordine; nessuna unità deve essere omessa, fusa o spezzata.',
-  phase==='recalibrate'?'RICALIBRAZIONE: riscrivi dalle FONTI ORIGINALI, senza dipendere dalla vecchia bozza.':'GENERAZIONE PRIMA FASE: produci soltanto le bozze, senza aprire cicli di verifica o correzione.',
+  phase.includes('recalibrate')?'RICALIBRAZIONE: riscrivi dalle FONTI ORIGINALI, senza dipendere dalla vecchia bozza.':
+   phase==='repair-v70'?'SECONDA PROVA: la vecchia bozza era fuori fascia. Usa il testo ORIGINALE come unica fonte; la bozza precedente serve solo per capire la lunghezza sbagliata.':
+   'GENERAZIONE PRIMA FASE: produci soltanto le bozze, senza aprire cicli di verifica o correzione.',
   'Rispondi esclusivamente con JSON valido: {parts:[{id,text},...]}.'
  ].join('\n');
 }
 
 function instructions(level,target,cap,phase='repair',sourceLetters=0){
-  if(phase==='draft-v70'||phase==='recalibrate'||phase==='repair-v70')
+  if(phase==='draft-v70'||phase==='recalibrate-v70'||phase==='recalibrate'||phase==='repair-v70')
     return editionDraftInstructionV70(level,phase,target,cap,sourceLetters);
   const creation=phase==='draft';
   const limit=level==='summary'
@@ -268,12 +270,13 @@ export default async function handler(req,res){
   }
   const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),
     units:safe,repair:byId.size>0});
-  const phase=req.body?.phase==='draft-v70'?'draft-v70':
+  const phase=req.body?.phase==='recalibrate-v70'?'recalibrate-v70':
+    req.body?.phase==='draft-v70'?'draft-v70':
     req.body?.phase==='repair-v70'?'repair-v70':
     req.body?.phase==='draft'?'draft':
     req.body?.phase==='rewrite'?'rewrite':
     req.body?.phase==='recalibrate'?'recalibrate':'repair';
-  const protocolRequested=phase==='draft-v70'||phase==='repair-v70';
+  const protocolRequested=phase==='draft-v70'||phase==='repair-v70'||phase==='recalibrate-v70';
   if(protocolRequested&&req.body?.draftProtocol!==STUDY_DRAFT_PROTOCOL_V70)
     return fail(res,409,'AI_DRAFT_PROTOCOL_MISMATCH','Versione motore Gemini non corrispondente alla LAB70.');
   const originalLetters=safe.reduce((n,u)=>n+studyLetters(u.source),0);
