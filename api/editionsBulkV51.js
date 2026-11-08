@@ -6,6 +6,7 @@ import {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {STUDY_DRAFT_PROTOCOL_V71,buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
 import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
 import {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
+import {FAIR_CONTROL_PROTOCOL_V79,matchedControlInstructionV79} from '../src/lib/studyMarkerControlV79.js';
 import {MARKER_MODES_V78,MARKER_PROBE_PROTOCOL_V78,validCheckpointV78,
  markerInstructionV78} from '../src/lib/studyMarkerExperimentsV78.js';
 import {EXPERIMENT_MODES_V77,NUMBERING_EXPERIMENT_PROTOCOL_V77,
@@ -317,6 +318,8 @@ export default async function handler(req,res){
   res.setHeader('X-StudyBook-Draft-Protocol',STUDY_DRAFT_PROTOCOL_V74);
   if(req.env?.STUDYBOOK_MARKER_PROBE_V78==='enabled')
     res.setHeader('X-StudyBook-Marker-Probe',MARKER_PROBE_PROTOCOL_V78);
+  if(req.env?.STUDYBOOK_FIXED20_REPEAT_V79==='enabled')
+    res.setHeader('X-StudyBook-Fixed20-Matched-Protocol',FAIR_CONTROL_PROTOCOL_V79);
   if(req.env?.STUDYBOOK_COUNTING_EXPERIMENT_V77==='enabled')
     res.setHeader('X-StudyBook-Counting-Experiment',NUMBERING_EXPERIMENT_PROTOCOL_V77);
   // Separate opt-in staging protocol; existing LAB74 devices continue as-is.
@@ -327,6 +330,11 @@ export default async function handler(req,res){
   if(!key)return fail(res,503,'AI_NOT_CONFIGURED','Gemini non configurato.');
   const selected=env.STUDYBOOK_PREFERRED_EDITION_MODEL||env.AI_MODEL||DEFAULT_MODEL;
   if(!FREE_MODELS.has(selected))return fail(res,503,'AI_MODEL_NOT_ALLOWLISTED','Modello gratuito non verificato.');
+  const requestedMatchedControlV79=req.body?.matchedControlV79;
+  const isolatedControlV79=req.env?.STUDYBOOK_FIXED20_REPEAT_V79==='enabled';
+  if(requestedMatchedControlV79!==undefined &&
+     (requestedMatchedControlV79!=='control' || !isolatedControlV79))
+    return fail(res,403,'AI_MATCHED_CONTROL_DISABLED','Controllo sperimentale non disponibile.');
   const requestedMarkerModeV78=req.body?.markerModeV78;
   const isolatedMarkersV78=req.env?.STUDYBOOK_MARKER_PROBE_V78==='enabled';
   if(requestedMarkerModeV78!==undefined &&
@@ -429,7 +437,7 @@ export default async function handler(req,res){
   if(protocolV75&&safe.length>PLANNING_MAX_UNITS_V75)
     return fail(res,400,'AI_PLANNING_TOO_MANY_UNITS',
       'Esperimento di pianificazione limitato a 8 unità complete.');
-  if(requestedMarkerModeV78&&
+  if((requestedMarkerModeV78||requestedMatchedControlV79)&&
     (safe.length!==1||req.body?.phase!=='draft-v74'||chars>9000))
     return fail(res,400,'AI_MARKER_PROBE_INVALID','Richiesta di prova limitata a una pagina sintetica.');
   const checkedCheckpointV78=requestedMarkerModeV78
@@ -530,8 +538,18 @@ export default async function handler(req,res){
         Math.ceil(originalLetters*(1-STUDY_TARGET_V67[level].max/100)),
         Math.floor(originalLetters*(1-STUDY_TARGET_V67[level].min/100)),
         checkedCheckpointV78):null;
-  const messages=[{role:'system',content:markerInstruction||
-    numberingInstructionV77||stageInstruction},
+  // LAB79 fair baseline receives all the same source/target instructions
+  // as fixed20 but no numeric tags. Never allow simultaneous test modes.
+  if(requestedMatchedControlV79&&(requestedMarkerModeV78||requestedCountingModeV77))
+    return fail(res,400,'AI_EXPERIMENT_MODE_CONFLICT','Usare un solo metodo sperimentale.');
+  const matchedInstructionV79=requestedMatchedControlV79
+    ?matchedControlInstructionV79(originalLetters,
+       Math.round(originalLetters*(1-STUDY_TARGET_V67[level].target/100)),
+       Math.ceil(originalLetters*(1-STUDY_TARGET_V67[level].max/100)),
+       Math.floor(originalLetters*(1-STUDY_TARGET_V67[level].min/100)))
+    :null;
+  const messages=[{role:'system',content:matchedInstructionV79||
+    markerInstruction||numberingInstructionV77||stageInstruction},
     {role:'user',content:user}];
   const outputTokens=bounded(req.body?.maxOutputTokens,4096,OUTPUT_LIMIT,OUTPUT_LIMIT);
   const controller=new AbortController();
