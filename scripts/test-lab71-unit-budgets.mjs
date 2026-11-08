@@ -66,7 +66,7 @@ try{
   const result=mockRes();
   await handler(request,result);
   assert.equal(result.statusCode,200,'LAB71 draft '+level);
-  assert.equal(result.headers.get('X-StudyBook-Draft-Protocol'),STUDY_DRAFT_PROTOCOL_V71);
+  assert.equal(result.headers.get('X-StudyBook-Draft-Protocol'),'lab72-canonical-range-observability-v1');
   assert.equal(result.data.parts.length,44);
   assert.equal(result.data.draftProtocol,STUDY_DRAFT_PROTOCOL_V71);
   assert.equal(result.data.lengthReview.sourceLetters,sourceLetters);
