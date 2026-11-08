@@ -1,7 +1,7 @@
 // LAB51: one bounded Gemini call for a contiguous run of COMPLETE source pages.
 // No images, no OCR changes, no silent fallback, no paid-model routing.
 import {studyLetters} from '../src/lib/studyPillarV38.js';
-import {STUDY_TARGET_V67} from '../src/lib/studyRebalancePolicyV67.js';
+import {STUDY_TARGET_V67,measureEditionLengthV72} from '../src/lib/studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {STUDY_DRAFT_PROTOCOL_V71,buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
 export {STUDY_DRAFT_PROTOCOL_V71} from '../src/lib/studyDraftProtocolV71.js';
@@ -314,6 +314,14 @@ export default async function handler(req,res){
     return fail(res,409,'AI_DRAFT_PROTOCOL_MISMATCH','Versione motore Gemini non corrispondente alla LAB70.');
   const originalLetters=safe.reduce((n,u)=>n+studyLetters(u.source),0);
   if(protocolV71){
+    // One coordinator for global percentages; individual block rounding may
+    // differ by at most its source-unit count, never by dozens of percent.
+    const desired=Math.round(originalLetters*(1-STUDY_TARGET_V67[level].target/100));
+    const claimed=level==='summary'?cap:target;
+    if(Math.abs(claimed-desired)>safe.length+1)
+      return fail(res,400,'AI_LENGTH_TARGET_CONFLICT',
+        'Obiettivo di lettere incoerente con la percentuale approvata.');
+
     const budgetMap=buildUnitBudgetsV71(safe,level);
     for(const unit of safe){
       const b=budgetMap[unit.id];
@@ -392,7 +400,14 @@ export default async function handler(req,res){
         elapsedMs,model:selected}});
     parts.sort((x,y)=>safe.findIndex(u=>u.id===x.id)-safe.findIndex(u=>u.id===y.id));
     const totalLetters=parts.reduce((n,p)=>n+studyLetters(p.text),0);
-    const hasExactLength=level==='summary'?totalLetters<=cap:totalLetters===target;
+    const finishReason=payload?.choices?.[0]?.finish_reason||null;
+    const numericAudit=measureEditionLengthV72({
+      level,originalLetters,outputLetters:totalLetters,
+      completeParts:parts.length===safe.length,finishReason
+    });
+    // A complete JSON envelope is NOT proof the model completed naturally.
+    // In particular, finish_reason='length' can indicate truncated content.
+    const hasExactLength=numericAudit.exact&&finishReason!=='length';
     // LAB53: DO NOT discard 100+ complete paragraphs solely because Gemini
     // missed a numeric letter budget. Only the client may mark a unit verified
     // after its own exact-length and fidelity review; otherwise store as draft.
@@ -400,12 +415,20 @@ export default async function handler(req,res){
     return res.status(200).json({engine:'ai',version:'integral-v51',sourceVersion:'original',
       level,parts,completeParts:parts.length===safe.length,
       expectedParts:safe.length,inputTokens,outputTokensUsed:payload?.usage?.completion_tokens||null,
+      finishReason,outputTokenLimit:outputTokens,
+      generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
       draftProtocol:protocolV71?STUDY_DRAFT_PROTOCOL_V71:protocolV70?STUDY_DRAFT_PROTOCOL_V70:null,
-      lengthReview:{exact:hasExactLength,targetLetters:level==='summary'?cap:target,
-        observedLetters:totalLetters,delta:totalLetters-(level==='summary'?cap:target),
+      lengthReview:{exact:hasExactLength,
+        withinBand:numericAudit.withinBand,
+        compliant:numericAudit.compliant,
+        targetLetters:numericAudit.targetLetters,
+        observedLetters:totalLetters,
+        delta:totalLetters-numericAudit.targetLetters,
         sourceLetters:originalLetters,
-        achievedReduction:originalLetters?Math.round((1-totalLetters/originalLetters)*1000)/10:null,
+        achievedReduction:numericAudit.achievedReduction,
+        minLetters:numericAudit.minLetters,maxLetters:numericAudit.maxLetters,
+        suspectedTruncation:numericAudit.suspectedTruncation,
         range:STUDY_TARGET_V67[level]?{min:STUDY_TARGET_V67[level].min,max:STUDY_TARGET_V67[level].max}:null},
       model:selected,elapsedMs});
   }catch(error){
