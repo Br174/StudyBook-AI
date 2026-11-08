@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install offline test dependencies
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund
       - name: No-secret no-Gemini reproducible negative baseline
         run: |
           node scripts/test-lab72-negative-closure.mjs
