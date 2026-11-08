@@ -4,7 +4,7 @@
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
 import {buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
 import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
-const base='https://studybook-ai-lab72.brunoverlezza.workers.dev';
+const base=process.env.STUDYBOOK_PROBE_BASE||'https://studybook-ai-lab72.brunoverlezza.workers.dev';
 const endpoint=base+'/api/editions/bulk/v51';
 async function timed(name,method,body=null){
  const began=Date.now();
