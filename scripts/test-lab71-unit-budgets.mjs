@@ -66,7 +66,7 @@ try{
   const result=mockRes();
   await handler(request,result);
   assert.equal(result.statusCode,200,'LAB71 draft '+level);
-  assert.equal(result.headers.get('X-StudyBook-Draft-Protocol'),'lab72-canonical-range-observability-v1');
+  assert.equal(result.headers.get('X-StudyBook-Draft-Protocol'),'lab74-page-letter-budget-plusminus5-v1');
   assert.equal(result.data.parts.length,44);
   assert.equal(result.data.draftProtocol,STUDY_DRAFT_PROTOCOL_V71);
   assert.equal(result.data.lengthReview.sourceLetters,sourceLetters);
@@ -102,9 +102,9 @@ try{
  const app=readFileSync(new URL('../src/lib/draftFirstV57.js',import.meta.url),'utf8');
  const repair=readFileSync(new URL('../src/lib/studyRebalanceV67.js',import.meta.url),'utf8');
  const workflow=readFileSync(new URL('../.github/workflows/android-apk.yml',import.meta.url),'utf8');
- assert.match(app,/phase:isNewDraft\?'draft-v72'/);
+ assert.match(app,/isNewDraft\?'draft-v74'/);
  assert.match(app,/buildUnitBudgetsV71\(block,level\)/);
- assert.match(repair,/phase:previousParts.length===block.length\?'repair-v72':'recalibrate-v72'/);
+ assert.match(repair,/phase:fullPageRebuild\?'recalibrate-v74':'repair-v72'/);
  assert.match(workflow,/studybook-ai-lab71\.brunoverlezza\.workers\.dev/);
  console.log('LAB71 PASS: 44 physical pages x 6 editions; per-unit length budget; numerical tolerance; source intact; protocol rejection; targeted length feedback; 0 real Gemini requests');
 }finally{globalThis.fetch=originalFetch}
