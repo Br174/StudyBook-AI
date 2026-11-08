@@ -1,0 +1,24 @@
+name: StudyBook LAB72 negative preflight (isolated)
+on:
+  push:
+    branches:
+      - 'audit/studybook-lab72-negative-preflight-*'
+    paths:
+      - 'scripts/test-lab72-negative-baseline.mjs'
+      - '.github/workflows/studybook-lab72-negative-preflight.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  negative-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exactly pinned LAB71 code
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: No-secret no-Gemini reproducible negative baseline
+        run: node scripts/test-lab72-negative-baseline.mjs
