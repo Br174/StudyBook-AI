@@ -9,6 +9,8 @@ import {immutableFragmentsV67,immutableViolationsV67} from
  '../src/lib/immutableFragmentsV67.js';
 import {STUDY_TARGET_V67,editionReductionV67,planRebalanceV67} from
  '../src/lib/studyRebalancePolicyV67.js';
+import {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
+import {pageLetterReviewV74} from '../src/lib/studyPageBudgetsV74.js';
 import {rebalanceSavedStudyBookV67,canRebalanceBookV67} from
  '../src/lib/studyRebalanceV67.js';
 import {bookUnitsV51} from '../src/lib/integralPlannerV51.js';
@@ -81,7 +83,9 @@ const before=JSON.stringify(book.editionsV36.draftRowsV57);
 const mockLengthProof=request=>{
  const sourceLetters=request.units.reduce((n,u)=>n+studyLetters(u.source),0);
  const outputLetters=request.units.reduce((n,u)=>n+studyLetters(trimTo(u.source,.60)),0);
- return {sourceLetters,observedLetters:outputLetters,withinBand:true,compliant:true};
+ return {sourceLetters,observedLetters:outputLetters,withinBand:true,compliant:true,
+  pageReviewV74:pageLetterReviewV74(request.units,request.units.map(u=>({
+   id:u.id,text:trimTo(u.source,.60)})),request.level)};
 };
 const units=bookUnitsV51(book);
 const targets=planRebalanceV67(units,drafts);
@@ -93,10 +97,10 @@ try{
  globalThis.fetch=async(_url,options)=>{
   const body=JSON.parse(options.body);
   calls.push(body);
-  assert.equal(body.phase,'repair-v72');
+  assert.equal(body.phase,'recalibrate-v74');
   assert.equal(body.level,'40');
   return new Response(JSON.stringify({engine:'ai',version:'integral-v51',
-   level:'40',inputTokens:2100,draftProtocol:'lab72-canonical-range-observability-v1',finishReason:'stop',outputTokenLimit:6000,
+   level:'40',inputTokens:2100,draftProtocol:STUDY_DRAFT_PROTOCOL_V74,finishReason:'stop',outputTokenLimit:6000,
    lengthReview:mockLengthProof(body),
    parts:body.units.map(u=>({id:u.id,text:trimTo(u.source,.60)}))}),
    {status:200,headers:{'Content-Type':'application/json'}});
