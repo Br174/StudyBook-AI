@@ -17,7 +17,8 @@ import {waitForGeminiCadenceV58,markGeminiCadenceSuccessV58}
 import {auditFidelity} from './fidelityEngine.js';
 import {immutableViolationsV67} from './immutableFragmentsV67.js';
 import {finalizeStudyQualityV66} from './studyQualityV66.js';
-import {STUDY_DRAFT_PROTOCOL_V71,verifyStudyDraftResponseV71,buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
+import {buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
+import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from './studyDraftProtocolV72.js';
 const clean=x=>typeof x==='string'?x.trim():'';
 const clone=x=>JSON.parse(JSON.stringify(x));
 const stamp=()=>new Date().toISOString();
@@ -103,8 +104,8 @@ export async function rebalanceSavedStudyBookV67(book,{
      return current;
     }
     const body={
-      phase:trial===0?'recalibrate-v71':'repair-v71',
-      draftProtocol:STUDY_DRAFT_PROTOCOL_V71,
+      phase:trial===0?'recalibrate-v72':'repair-v72',
+      draftProtocol:STUDY_DRAFT_PROTOCOL_V72,
       level,bookTitle:String(book.title||'').slice(0,140),
       targetLetters:level==='summary'?null:limit,
       summaryCapLetters:level==='summary'?limit:null,
@@ -146,7 +147,7 @@ export async function rebalanceSavedStudyBookV67(book,{
       }
       if(reply?.engine!=='ai'||reply?.version!=='integral-v51'||
           reply?.level!==level)throw Error('Risposta Gemini non autentica.');
-      const version=verifyStudyDraftResponseV71(reply,originals,level);
+      const version=verifyStudyDraftResponseV72(reply,originals,level);
       if(!version.ok)throw Object.assign(new Error(version.message),{code:version.code});
       const ids=new Set(block.map(u=>u.id));
       const rows=new Map();
