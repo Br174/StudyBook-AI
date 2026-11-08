@@ -8,6 +8,7 @@ import {progressDiagnostic} from '../lib/geminiRecoveryV39.js';
 import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
 import StudyPhaseProgressV59 from './StudyPhaseProgressV59.jsx';
 import StudyDraftInspectorV63 from './StudyDraftInspectorV63.jsx';
+import {STUDY_TARGET_V67} from '../lib/studyRebalancePolicyV67.js';
 import {geminiResumeDisplayV55} from '../lib/studyAutoResumeV45.js';
 import '../appShellV16.css';
 
@@ -422,7 +423,7 @@ function ScannedBookPhoto({ blob }) {
   return url ? <img className="sb-scanned-book-cover-photo" src={url} alt="Fotografia reale della pagina scannerizzata" /> : null;
 }
 
-export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, onResumeGemini, generating = false, status='', workPhase='idle', geminiStalled=false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility, scannedPhoto = null, reduction = 10, onReductionChange, reductionMeta = null }) {
+export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, onResumeGemini, onRebalance, generating = false, status='', workPhase='idle', geminiStalled=false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility, scannedPhoto = null, reduction = 10, onReductionChange, reductionMeta = null }) {
   const [exportVariant, setExportVariant] = useState('study');
   const [exportOpen, setExportOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -464,6 +465,18 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   const resumeWait=geminiResumeDisplayV55(studyBook?.editionsV36);
 
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
+  const editionState=studyBook?.editionsV36;
+  const canImprove=Boolean(onRebalance&&!isOriginalOnly&&
+    editionState?.complete&&editionState?.draftComplete&&
+    editionState?.publicationModeV66==='generated-text-quality-not-certified'&&
+    editionState?.checkpointPersistent!==false);
+  const qualityLevels=editionState?.qualityV66?.levels||{};
+  const outsideTarget=Object.entries(STUDY_TARGET_V67).filter(([id,range])=>{
+    const v=qualityLevels[id]?.actualReduction;
+    return !Number.isFinite(v)||v<range.min||v>range.max;
+  }).map(([id])=>id);
+  const rebalanceCurrent=editionState?.rebalanceV67;
+  const improvementLeft=outsideTarget.length>0;
   const editionStages=studyBook?.editionsV36?.rows?.length
     ? ['summary','50','40','30','20','10'].map(id=>({
         id,label:id==='summary'?'Riassunto':id+'%',
@@ -523,6 +536,24 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             : <button type="button" onClick={onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>}
           <button type="button" disabled={v36Partial&&!isOriginalOnly} className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>Scarica libro</strong></button>
         </div>
+        {canImprove&&improvementLeft&&
+          <div style={{marginTop:12,padding:'12px 14px',
+            border:'1px solid #dce6f1',borderRadius:12}}>
+            <button type="button" className="sb-resume-manual"
+              style={{width:'100%'}} disabled={generating}
+              onClick={onRebalance}>
+              {generating?'↻ Gemini sta migliorando la compressione':
+               rebalanceCurrent?.status==='waiting-provider'
+                 ?'↻ Riprendi miglioramento delle compressioni'
+                 :'✦ Migliora percentuali e chiarezza'}
+            </button>
+            <p style={{margin:'8px 0 0',fontSize:12,color:'#526476'}}>
+              {outsideTarget.length} versioni fuori dal margine desiderato.
+              Gemini semplifica le spiegazioni senza alterare formule o
+              citazioni normative. Le copie precedenti rimangono salvate,
+              la verifica finale resta non bloccante.
+            </p>
+          </div>}
         {!isOriginalOnly && studyBook?.editionsV36 && <>
           <button type="button" className="sb-resume-manual"
             style={{width:'100%',marginTop:12}}

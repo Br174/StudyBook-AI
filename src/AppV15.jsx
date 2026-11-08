@@ -25,6 +25,7 @@ import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
+import {rebalanceSavedStudyBookV67,canRebalanceBookV67} from './lib/studyRebalanceV67.js';
 import {STUDY_PILLAR_VERSION} from './lib/studyPillarV38.js';
 import {studyHomeAction,sameStoredDocument} from './lib/studyHomeFlowV38.js';
 import {progressDiagnostic} from './lib/geminiRecoveryV39.js';
@@ -1320,6 +1321,63 @@ export default function AppV14() {
 
   // Direct resume, also after Android process death: always reload the stored
   // original and the sparse verified-unit checkpoints, never reimport the PDF.
+  // LAB67: explicit improvement of deficient completed editions. This is
+  // PHASE TWO, never a correction cycle in the nonblocking quality phase.
+  async function improveReductionV67(){
+    if(generating||resumeExecutionRef.current||!canRebalanceBookV67(studyBook)){
+      setStatus('Miglioramento non disponibile: verificare il libro salvato.');
+      return;
+    }
+    resumeExecutionRef.current=true;
+    setGenerating(true);setWorkPhase('gemini');setGeminiStalled(false);setError('');
+    const book=studyBook;
+    const abort=new AbortController();
+    geminiAbortRef.current=abort;
+    try{
+      setStatus('Gemini riformula con parole più semplici, proteggendo formule e leggi. Le versioni attuali restano salvate.');
+      const result=await rebalanceSavedStudyBookV67(book,{
+        signal:abort.signal,
+        onActivity:info=>{
+          geminiLastActivityRef.current=Date.now();
+          if(info.phase==='recalibrate')
+            setStatus('Ricalibrazione '+(info.level==='summary'?'Riassunto':info.level+'%')+
+              ' · pagine '+info.pageStart+'-'+info.pageEnd+
+              ' · testo più comprensibile e riduzione misurata');
+        },
+        onProgress:async checkpoint=>{
+          const saved={...book,editionsV36:checkpoint};
+          // Never advance the local checkpoint without durable persistence.
+          if(libraryId){
+            const stored=await persistBook(saved,documentData,fileName,libraryId);
+            if(!stored)throw new Error('Checkpoint non salvato: conservate le versioni precedenti.');
+          }
+          setStudyBook(saved);
+        }
+      });
+      const improved={...book,editionsV36:result};
+      if(libraryId){
+        const stored=await persistBook(improved,documentData,fileName,libraryId);
+        if(!stored)throw new Error('Ultimo checkpoint non salvato.');
+      }
+      setStudyBook(improved);
+      const done=result.rebalanceV67;
+      const left=done?.remaining?.length||0;
+      setStatus(done?.status==='waiting-provider'
+        ?'Gemini temporaneamente non disponibile. Progressi conservati; riprendi la ricalibrazione.'
+        :left===0
+          ?'Riduzioni migliorate · testo più chiaro · controllo qualità aggiornato'
+          :'Ricalibrazione conclusa: '+(done?.accepted||0)+
+             ' versioni migliorate; '+left+' obiettivi ancora fuori tolleranza. I testi precedenti restano salvati.');
+    }catch(error){
+      setError(error?.message||'Ricalibrazione interrotta.');
+      setStatus('Ricalibrazione interrotta. Libro originale e versioni precedenti conservati.');
+    }finally{
+      if(geminiAbortRef.current===abort)geminiAbortRef.current=null;
+      resumeExecutionRef.current=false;
+      setGenerating(false);setWorkPhase('idle');setGeminiStalled(false);
+    }
+  }
+
   async function resumeGeminiEditions(record=null){
     if(generating){
       if(geminiStalled)requestActiveGeminiRecovery();
@@ -2115,6 +2173,7 @@ export default function AppV14() {
           sourceData={documentData} generating={generating} onPrepareOriginal={prepareOriginalForStudy}
           status={status} workPhase={workPhase} geminiStalled={geminiStalled}
           onResumeGemini={()=>void resumeGeminiEditions()}
+          onRebalance={()=>void improveReductionV67()}
           originalRecord={originalRecord?.id === libraryId ? originalRecord : null}
           originalReading={originalReading} onCloseOriginalReader={() => setOriginalReading(false)}
           onOpenOriginalNative={openOriginalNative} accessibility={accessibility}
