@@ -1,6 +1,7 @@
 // LAB51: one bounded Gemini call for a contiguous run of COMPLETE source pages.
 // No images, no OCR changes, no silent fallback, no paid-model routing.
 import {studyLetters} from '../src/lib/studyPillarV38.js';
+import {editionBestOfInstructionV76,STUDY_BEST_OF_V76} from '../src/lib/studyBestOfV76.js';
 import {STUDY_TARGET_V67,measureEditionLengthV72} from '../src/lib/studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {STUDY_DRAFT_PROTOCOL_V71,buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
@@ -249,7 +250,7 @@ export function editionPageBudgetInstructionV74(level,sourceLetters,phase='draft
 
 function instructions(level,target,cap,phase='repair',sourceLetters=0,feedback=null){
   if(phase==='draft-v74'||phase==='recalibrate-v74')
-    return editionPageBudgetInstructionV74(level,sourceLetters,phase);
+    return editionBestOfInstructionV76(level,sourceLetters,phase);
   if(phase==='repair-v72')return editionTargetedRepairInstructionV72(level,sourceLetters);
   if(phase==='draft-v72'||phase==='recalibrate-v72'||
      phase==='draft-v71'||phase==='recalibrate-v71'||phase==='repair-v71')
@@ -626,6 +627,7 @@ export default async function handler(req,res){
       finishReason,outputTokenLimit:outputTokens,
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
+      bestOfInstruction:protocolV74?STUDY_BEST_OF_V76:null,
       draftProtocol:protocolV75?STUDY_DRAFT_PROTOCOL_V75:protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:protocolV70?STUDY_DRAFT_PROTOCOL_V70:null,
       lengthReview:{exact:hasExactLength,
         withinBand:numericAudit.withinBand,
