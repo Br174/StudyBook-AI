@@ -95,7 +95,7 @@ try{
  // A stale LAB77 app must never silently bypass LAB78 geometry contract.
  const rejected={...response,statusCode:200,body:null};
  await handler({method:'POST',env:{AI_API_KEY:'fake-offline-no-network'},
-  body:{...body,geometryPolicyV78:null}},rejected);
+  body:{...body,geometryPolicyV78:'stale-lab77-no-row-contract'}},rejected);
  assert.equal(rejected.statusCode,409);
  assert.equal(rejected.body.code,'AI_GEOMETRY_PROTOCOL_REQUIRED');
  assert.equal(generationCalls,1);
