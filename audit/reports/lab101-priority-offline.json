@@ -1,0 +1,656 @@
+{
+  "experiment": "LAB101 offline priority ledger and explicit limits of source-anchor check",
+  "date": "2026-11-09T15:12:33.503Z",
+  "summary": {
+    "benchmarkSources": 5,
+    "legacyFacts": 53,
+    "sixLevelPlans": 30,
+    "sourceHashValid": true,
+    "flattenedClassificationsFlagged": 4,
+    "stressScenarios": 24000,
+    "expectedOutcomesObserved": 24000,
+    "semanticContradictionAutomaticallyRejected": false,
+    "GeminiCalls": 0,
+    "issues": 0
+  },
+  "samples": [
+    {
+      "source": "scienze",
+      "valid": true,
+      "counts": {
+        "facts": 12,
+        "core": 11,
+        "support": 1,
+        "context": 0,
+        "flatPriority": false,
+        "quotedSourceSentences": 9,
+        "sourceSentenceCount": 9,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "errors": [],
+      "warnings": [
+        "OVERBROAD_EVIDENCE_9"
+      ],
+      "priorityMap": [
+        {
+          "id": "F1",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F2",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F3",
+          "priority": "supporto"
+        },
+        {
+          "id": "F4",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F5",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F6",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F7",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F8",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F9",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F10",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F11",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F12",
+          "priority": "fondamentale"
+        }
+      ]
+    },
+    {
+      "source": "procedura",
+      "valid": true,
+      "counts": {
+        "facts": 11,
+        "core": 8,
+        "support": 2,
+        "context": 1,
+        "flatPriority": false,
+        "quotedSourceSentences": 7,
+        "sourceSentenceCount": 7,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "errors": [],
+      "warnings": [
+        "OVERBROAD_EVIDENCE_0",
+        "NONSTANDARD_KIND_1",
+        "NONSTANDARD_KIND_2",
+        "OVERBROAD_EVIDENCE_3",
+        "CRITICAL_EVIDENCE_NOT_MARKED_9",
+        "OVERBROAD_EVIDENCE_10",
+        "CRITICAL_MARKER_NOT_VISIBLE_S5:obligation"
+      ],
+      "priorityMap": [
+        {
+          "id": "F1",
+          "priority": "contesto"
+        },
+        {
+          "id": "F2",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F3",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F4",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F5",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F6",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F7",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F8",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F9",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F10",
+          "priority": "supporto"
+        },
+        {
+          "id": "F11",
+          "priority": "supporto"
+        }
+      ]
+    },
+    {
+      "source": "medicina",
+      "valid": true,
+      "counts": {
+        "facts": 14,
+        "core": 12,
+        "support": 2,
+        "context": 0,
+        "flatPriority": false,
+        "quotedSourceSentences": 8,
+        "sourceSentenceCount": 8,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "errors": [],
+      "warnings": [
+        "OVERBROAD_EVIDENCE_8",
+        "OVERBROAD_EVIDENCE_11",
+        "CLAUSE_UNCOVERED_S6"
+      ],
+      "priorityMap": [
+        {
+          "id": "F1",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F2",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F3",
+          "priority": "supporto"
+        },
+        {
+          "id": "F4",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F5",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F6",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F7",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F8",
+          "priority": "supporto"
+        },
+        {
+          "id": "F9",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F10",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F11",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F12",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F13",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F14",
+          "priority": "fondamentale"
+        }
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "valid": true,
+      "counts": {
+        "facts": 13,
+        "core": 11,
+        "support": 2,
+        "context": 0,
+        "flatPriority": false,
+        "quotedSourceSentences": 8,
+        "sourceSentenceCount": 8,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "errors": [],
+      "warnings": [
+        "OVERBROAD_EVIDENCE_2",
+        "NONSTANDARD_KIND_3",
+        "NONSTANDARD_KIND_9",
+        "NONSTANDARD_KIND_12",
+        "CLAUSE_UNCOVERED_S4"
+      ],
+      "priorityMap": [
+        {
+          "id": "F1",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F2",
+          "priority": "supporto"
+        },
+        {
+          "id": "F3",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F4",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F5",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F6",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F7",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F8",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F9",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F10",
+          "priority": "supporto"
+        },
+        {
+          "id": "F11",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F12",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F13",
+          "priority": "fondamentale"
+        }
+      ]
+    },
+    {
+      "source": "pagina_breve_continua",
+      "valid": true,
+      "counts": {
+        "facts": 3,
+        "core": 3,
+        "support": 0,
+        "context": 0,
+        "flatPriority": true,
+        "quotedSourceSentences": 2,
+        "sourceSentenceCount": 2,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "errors": [],
+      "warnings": [
+        "CRITICAL_MARKER_NOT_VISIBLE_S1:obligation"
+      ],
+      "priorityMap": [
+        {
+          "id": "F1",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F2",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F3",
+          "priority": "fondamentale"
+        }
+      ]
+    }
+  ],
+  "plans": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "immutableHash": "61618e3b526da732db440c91caa7f2ec3f40f4d5434648020101aa5c830c56a4",
+      "fundamental": 11,
+      "support": 1,
+      "context": 0,
+      "softLetters": 539,
+      "maxRows": 12
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "immutableHash": "61618e3b526da732db440c91caa7f2ec3f40f4d5434648020101aa5c830c56a4",
+      "fundamental": 11,
+      "support": 1,
+      "context": 0,
+      "softLetters": 479,
+      "maxRows": 11
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "immutableHash": "61618e3b526da732db440c91caa7f2ec3f40f4d5434648020101aa5c830c56a4",
+      "fundamental": 11,
+      "support": 1,
+      "context": 0,
+      "softLetters": 419,
+      "maxRows": 10
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "immutableHash": "61618e3b526da732db440c91caa7f2ec3f40f4d5434648020101aa5c830c56a4",
+      "fundamental": 11,
+      "support": 1,
+      "context": 0,
+      "softLetters": 359,
+      "maxRows": 8
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "immutableHash": "61618e3b526da732db440c91caa7f2ec3f40f4d5434648020101aa5c830c56a4",
+      "fundamental": 11,
+      "support": 1,
+      "context": 0,
+      "softLetters": 300,
+      "maxRows": 7
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "immutableHash": "61618e3b526da732db440c91caa7f2ec3f40f4d5434648020101aa5c830c56a4",
+      "fundamental": 11,
+      "support": 1,
+      "context": 0,
+      "softLetters": 210,
+      "maxRows": 5
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "immutableHash": "c90ea029f4eb09fcf522f939c2a3fe1fb254bb296d9f6c170ada3239f668f727",
+      "fundamental": 8,
+      "support": 2,
+      "context": 1,
+      "softLetters": 572,
+      "maxRows": 13
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "immutableHash": "c90ea029f4eb09fcf522f939c2a3fe1fb254bb296d9f6c170ada3239f668f727",
+      "fundamental": 8,
+      "support": 2,
+      "context": 1,
+      "softLetters": 509,
+      "maxRows": 11
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "immutableHash": "c90ea029f4eb09fcf522f939c2a3fe1fb254bb296d9f6c170ada3239f668f727",
+      "fundamental": 8,
+      "support": 2,
+      "context": 1,
+      "softLetters": 445,
+      "maxRows": 10
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "immutableHash": "c90ea029f4eb09fcf522f939c2a3fe1fb254bb296d9f6c170ada3239f668f727",
+      "fundamental": 8,
+      "support": 2,
+      "context": 1,
+      "softLetters": 382,
+      "maxRows": 9
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "immutableHash": "c90ea029f4eb09fcf522f939c2a3fe1fb254bb296d9f6c170ada3239f668f727",
+      "fundamental": 8,
+      "support": 2,
+      "context": 1,
+      "softLetters": 318,
+      "maxRows": 7
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "immutableHash": "c90ea029f4eb09fcf522f939c2a3fe1fb254bb296d9f6c170ada3239f668f727",
+      "fundamental": 8,
+      "support": 2,
+      "context": 1,
+      "softLetters": 223,
+      "maxRows": 5
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "immutableHash": "a75b62066831374c1edb311e363727807cc89e4b581128ac357617e3b0b48a79",
+      "fundamental": 12,
+      "support": 2,
+      "context": 0,
+      "softLetters": 655,
+      "maxRows": 15
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "immutableHash": "a75b62066831374c1edb311e363727807cc89e4b581128ac357617e3b0b48a79",
+      "fundamental": 12,
+      "support": 2,
+      "context": 0,
+      "softLetters": 582,
+      "maxRows": 13
+    },
+    {
+      "source": "medicina",
+      "level": 30,
+      "immutableHash": "a75b62066831374c1edb311e363727807cc89e4b581128ac357617e3b0b48a79",
+      "fundamental": 12,
+      "support": 2,
+      "context": 0,
+      "softLetters": 510,
+      "maxRows": 12
+    },
+    {
+      "source": "medicina",
+      "level": 40,
+      "immutableHash": "a75b62066831374c1edb311e363727807cc89e4b581128ac357617e3b0b48a79",
+      "fundamental": 12,
+      "support": 2,
+      "context": 0,
+      "softLetters": 437,
+      "maxRows": 10
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "immutableHash": "a75b62066831374c1edb311e363727807cc89e4b581128ac357617e3b0b48a79",
+      "fundamental": 12,
+      "support": 2,
+      "context": 0,
+      "softLetters": 364,
+      "maxRows": 8
+    },
+    {
+      "source": "medicina",
+      "level": 65,
+      "immutableHash": "a75b62066831374c1edb311e363727807cc89e4b581128ac357617e3b0b48a79",
+      "fundamental": 12,
+      "support": 2,
+      "context": 0,
+      "softLetters": 255,
+      "maxRows": 6
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "immutableHash": "f649609a9fb7fca95f5e9a4b409ded09e31d87871c6ca833cba828a63d9a4a12",
+      "fundamental": 11,
+      "support": 2,
+      "context": 0,
+      "softLetters": 603,
+      "maxRows": 14
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "immutableHash": "f649609a9fb7fca95f5e9a4b409ded09e31d87871c6ca833cba828a63d9a4a12",
+      "fundamental": 11,
+      "support": 2,
+      "context": 0,
+      "softLetters": 536,
+      "maxRows": 12
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 30,
+      "immutableHash": "f649609a9fb7fca95f5e9a4b409ded09e31d87871c6ca833cba828a63d9a4a12",
+      "fundamental": 11,
+      "support": 2,
+      "context": 0,
+      "softLetters": 469,
+      "maxRows": 11
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "immutableHash": "f649609a9fb7fca95f5e9a4b409ded09e31d87871c6ca833cba828a63d9a4a12",
+      "fundamental": 11,
+      "support": 2,
+      "context": 0,
+      "softLetters": 402,
+      "maxRows": 9
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "immutableHash": "f649609a9fb7fca95f5e9a4b409ded09e31d87871c6ca833cba828a63d9a4a12",
+      "fundamental": 11,
+      "support": 2,
+      "context": 0,
+      "softLetters": 335,
+      "maxRows": 8
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "immutableHash": "f649609a9fb7fca95f5e9a4b409ded09e31d87871c6ca833cba828a63d9a4a12",
+      "fundamental": 11,
+      "support": 2,
+      "context": 0,
+      "softLetters": 234,
+      "maxRows": 6
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 10,
+      "immutableHash": "d40dacbcc233ac3c940454f10a68f6e496fd10f84a1ea3b826aca057098e5cd4",
+      "fundamental": 3,
+      "support": 0,
+      "context": 0,
+      "softLetters": 140,
+      "maxRows": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "immutableHash": "d40dacbcc233ac3c940454f10a68f6e496fd10f84a1ea3b826aca057098e5cd4",
+      "fundamental": 3,
+      "support": 0,
+      "context": 0,
+      "softLetters": 124,
+      "maxRows": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 30,
+      "immutableHash": "d40dacbcc233ac3c940454f10a68f6e496fd10f84a1ea3b826aca057098e5cd4",
+      "fundamental": 3,
+      "support": 0,
+      "context": 0,
+      "softLetters": 109,
+      "maxRows": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 40,
+      "immutableHash": "d40dacbcc233ac3c940454f10a68f6e496fd10f84a1ea3b826aca057098e5cd4",
+      "fundamental": 3,
+      "support": 0,
+      "context": 0,
+      "softLetters": 93,
+      "maxRows": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "immutableHash": "d40dacbcc233ac3c940454f10a68f6e496fd10f84a1ea3b826aca057098e5cd4",
+      "fundamental": 3,
+      "support": 0,
+      "context": 0,
+      "softLetters": 78,
+      "maxRows": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 65,
+      "immutableHash": "d40dacbcc233ac3c940454f10a68f6e496fd10f84a1ea3b826aca057098e5cd4",
+      "fundamental": 3,
+      "support": 0,
+      "context": 0,
+      "softLetters": 54,
+      "maxRows": 5
+    }
+  ],
+  "errors": [],
+  "caveats": "Manual classifications are subjective calibration, not verified gold. Source quotes can be valid while generated claim meaning is wrong. No actual six reductions generated."
+}

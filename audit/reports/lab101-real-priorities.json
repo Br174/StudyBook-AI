@@ -1,0 +1,3437 @@
+{
+  "study": "LAB101 automatic one-pass extract+priority Gemini",
+  "date": "2026-11-09T15:12:53.878Z",
+  "model": "gemini-3.5-flash-lite",
+  "provider": {
+    "attempts": 6,
+    "halt": false,
+    "why": "",
+    "maxCalls": 7
+  },
+  "summary": {
+    "plannedPages": 5,
+    "attemptedPages": 5,
+    "modelResponses": 5,
+    "validatedLedgers": 5,
+    "totalExtractedFacts": 56,
+    "fundamental": 47,
+    "support": 7,
+    "context": 2,
+    "flatLongInventories": 0,
+    "levelPlans": 30,
+    "matchedEditorialAnchors": 52,
+    "editorialPriorityAgreements": 46,
+    "editorialPriorityDisagreements": 6,
+    "unmatchedManualFacts": 1,
+    "semanticCertified": 0
+  },
+  "errors": [
+    {
+      "source": "medicina",
+      "http": 503,
+      "attempt": 3,
+      "ms": 792,
+      "message": "HTTP failed"
+    }
+  ],
+  "pages": [
+    {
+      "source": "scienze",
+      "modelAnswered": true,
+      "anchorValidated": true,
+      "ms": 2774,
+      "rawPriorities": [
+        {
+          "id": "F1",
+          "sourceSentence": "S1",
+          "evidence": "La Terra ruota attorno al proprio asse.",
+          "claim": "La Terra compie una rotazione attorno al proprio asse.",
+          "kind": "fatto",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F2",
+          "sourceSentence": "S2",
+          "evidence": "La rotazione causa il giorno e la notte",
+          "claim": "La rotazione terrestre è la causa del giorno e della notte.",
+          "kind": "causa",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F3",
+          "sourceSentence": "S2",
+          "evidence": "una parte della superficie riceve luce solare mentre l’altra rimane al buio.",
+          "claim": "Durante la rotazione, una parte della superficie riceve luce solare mentre l'altra rimane al buio.",
+          "kind": "fatto",
+          "priority": "supporto"
+        },
+        {
+          "id": "F4",
+          "sourceSentence": "S3",
+          "evidence": "La rivoluzione attorno al Sole dura circa un anno.",
+          "claim": "La rivoluzione della Terra attorno al Sole ha una durata di circa un anno.",
+          "kind": "fatto",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F5",
+          "sourceSentence": "S4",
+          "evidence": "Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre",
+          "claim": "Le stagioni dipendono principalmente dall'inclinazione dell'asse terrestre.",
+          "kind": "causa",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F6",
+          "sourceSentence": "S4",
+          "evidence": "non dalla distanza tra la Terra e il Sole.",
+          "claim": "Le stagioni non dipendono dalla distanza tra la Terra e il Sole.",
+          "kind": "negazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F7",
+          "sourceSentence": "S5",
+          "evidence": "La Luna influisce sulle maree insieme al Sole.",
+          "claim": "La Luna, insieme al Sole, esercita un'influenza sulle maree.",
+          "kind": "relazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F8",
+          "sourceSentence": "S6",
+          "evidence": "Le eclissi richiedono un allineamento particolare",
+          "claim": "Il verificarsi delle eclissi richiede un allineamento particolare.",
+          "kind": "condizione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F9",
+          "sourceSentence": "S6",
+          "evidence": "non avvengono a ogni lunazione.",
+          "claim": "Le eclissi non avvengono ad ogni lunazione.",
+          "kind": "negazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F10",
+          "sourceSentence": "S7",
+          "evidence": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili.",
+          "claim": "Il metodo scientifico richiede la presenza di ipotesi verificabili e osservazioni ripetibili.",
+          "kind": "obbligo",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F11",
+          "sourceSentence": "S8",
+          "evidence": "Un risultato isolato non basta per dimostrare una spiegazione.",
+          "claim": "Un risultato isolato è insufficiente a dimostrare una spiegazione.",
+          "kind": "negazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F12",
+          "sourceSentence": "S9",
+          "evidence": "Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+          "claim": "La comprensione del fenomeno richiede la distinzione tra la descrizione del movimento e le cause delle variazioni osservate.",
+          "kind": "condizione",
+          "priority": "fondamentale"
+        }
+      ],
+      "validationErrors": [],
+      "validationWarnings": [
+        "NONSTANDARD_KIND_9",
+        "OVERBROAD_EVIDENCE_9",
+        "OVERBROAD_EVIDENCE_11",
+        "CRITICAL_MARKER_NOT_VISIBLE_S8:negation"
+      ],
+      "quoteRepairs": [],
+      "ledger": {
+        "schema": "LAB101_FIRST_READ_PRIORITY_V1",
+        "sourceId": "scienze",
+        "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+        "facts": [
+          {
+            "id": "F1",
+            "sourceSentence": "S1",
+            "evidence": "La Terra ruota attorno al proprio asse.",
+            "claim": "La Terra compie una rotazione attorno al proprio asse.",
+            "kind": "fatto",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F2",
+            "sourceSentence": "S2",
+            "evidence": "La rotazione causa il giorno e la notte",
+            "claim": "La rotazione terrestre è la causa del giorno e della notte.",
+            "kind": "causa",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F3",
+            "sourceSentence": "S2",
+            "evidence": "una parte della superficie riceve luce solare mentre l’altra rimane al buio.",
+            "claim": "Durante la rotazione, una parte della superficie riceve luce solare mentre l'altra rimane al buio.",
+            "kind": "fatto",
+            "essential": false,
+            "priority": "supporto"
+          },
+          {
+            "id": "F4",
+            "sourceSentence": "S3",
+            "evidence": "La rivoluzione attorno al Sole dura circa un anno.",
+            "claim": "La rivoluzione della Terra attorno al Sole ha una durata di circa un anno.",
+            "kind": "fatto",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F5",
+            "sourceSentence": "S4",
+            "evidence": "Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre",
+            "claim": "Le stagioni dipendono principalmente dall'inclinazione dell'asse terrestre.",
+            "kind": "causa",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F6",
+            "sourceSentence": "S4",
+            "evidence": "non dalla distanza tra la Terra e il Sole.",
+            "claim": "Le stagioni non dipendono dalla distanza tra la Terra e il Sole.",
+            "kind": "negazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F7",
+            "sourceSentence": "S5",
+            "evidence": "La Luna influisce sulle maree insieme al Sole.",
+            "claim": "La Luna, insieme al Sole, esercita un'influenza sulle maree.",
+            "kind": "relazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F8",
+            "sourceSentence": "S6",
+            "evidence": "Le eclissi richiedono un allineamento particolare",
+            "claim": "Il verificarsi delle eclissi richiede un allineamento particolare.",
+            "kind": "condizione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F9",
+            "sourceSentence": "S6",
+            "evidence": "non avvengono a ogni lunazione.",
+            "claim": "Le eclissi non avvengono ad ogni lunazione.",
+            "kind": "negazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F10",
+            "sourceSentence": "S7",
+            "evidence": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili.",
+            "claim": "Il metodo scientifico richiede la presenza di ipotesi verificabili e osservazioni ripetibili.",
+            "kind": "obbligo",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F11",
+            "sourceSentence": "S8",
+            "evidence": "Un risultato isolato non basta per dimostrare una spiegazione.",
+            "claim": "Un risultato isolato è insufficiente a dimostrare una spiegazione.",
+            "kind": "negazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F12",
+            "sourceSentence": "S9",
+            "evidence": "Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+            "claim": "La comprensione del fenomeno richiede la distinzione tra la descrizione del movimento e le cause delle variazioni osservate.",
+            "kind": "condizione",
+            "essential": true,
+            "priority": "fondamentale"
+          }
+        ],
+        "hierarchy": {
+          "fundamental": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "support": [
+            "F3"
+          ],
+          "context": []
+        },
+        "quoteRepairs": [],
+        "validation": {
+          "errors": [],
+          "warnings": [
+            "NONSTANDARD_KIND_9",
+            "OVERBROAD_EVIDENCE_9",
+            "OVERBROAD_EVIDENCE_11",
+            "CRITICAL_MARKER_NOT_VISIBLE_S8:negation"
+          ]
+        },
+        "hash": "c632c416dd8071d65ab1022fa922baa12a919bad12bb7c9bd39cf0f852072020"
+      },
+      "summary": {
+        "facts": 12,
+        "core": 11,
+        "support": 1,
+        "context": 0,
+        "flatPriority": false,
+        "quotedSourceSentences": 9,
+        "sourceSentenceCount": 9,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "plans": [
+        {
+          "source": "scienze",
+          "level": 10,
+          "originalLetters": 599,
+          "targetLetters": 539,
+          "band": {
+            "low": 510,
+            "high": 569
+          },
+          "maxRows": 12,
+          "ledgerHash": "8b669c46e19543aa2cf0b4a6719d060bc0e15102fd3be57cf177f636bcb75760",
+          "ledgerSourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "c632c416dd8071d65ab1022fa922baa12a919bad12bb7c9bd39cf0f852072020",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "supportFactIds": [
+            "F3"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "spiegazione_quasi_integrale",
+            "contextTreatment": "se_utile_alla_comprensione",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "scienze",
+          "level": 20,
+          "originalLetters": 599,
+          "targetLetters": 479,
+          "band": {
+            "low": 450,
+            "high": 509
+          },
+          "maxRows": 11,
+          "ledgerHash": "8b669c46e19543aa2cf0b4a6719d060bc0e15102fd3be57cf177f636bcb75760",
+          "ledgerSourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "c632c416dd8071d65ab1022fa922baa12a919bad12bb7c9bd39cf0f852072020",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "supportFactIds": [
+            "F3"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "spiegazione_chiara",
+            "contextTreatment": "se_utile_alla_comprensione",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "scienze",
+          "level": 30,
+          "originalLetters": 599,
+          "targetLetters": 419,
+          "band": {
+            "low": 390,
+            "high": 449
+          },
+          "maxRows": 10,
+          "ledgerHash": "8b669c46e19543aa2cf0b4a6719d060bc0e15102fd3be57cf177f636bcb75760",
+          "ledgerSourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "c632c416dd8071d65ab1022fa922baa12a919bad12bb7c9bd39cf0f852072020",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "supportFactIds": [
+            "F3"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "sintetica_ma_fedele",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "scienze",
+          "level": 40,
+          "originalLetters": 599,
+          "targetLetters": 359,
+          "band": {
+            "low": 330,
+            "high": 389
+          },
+          "maxRows": 8,
+          "ledgerHash": "8b669c46e19543aa2cf0b4a6719d060bc0e15102fd3be57cf177f636bcb75760",
+          "ledgerSourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "c632c416dd8071d65ab1022fa922baa12a919bad12bb7c9bd39cf0f852072020",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "supportFactIds": [
+            "F3"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "sintetica_ma_fedele",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "scienze",
+          "level": 50,
+          "originalLetters": 599,
+          "targetLetters": 300,
+          "band": {
+            "low": 270,
+            "high": 329
+          },
+          "maxRows": 7,
+          "ledgerHash": "8b669c46e19543aa2cf0b4a6719d060bc0e15102fd3be57cf177f636bcb75760",
+          "ledgerSourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "c632c416dd8071d65ab1022fa922baa12a919bad12bb7c9bd39cf0f852072020",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "supportFactIds": [
+            "F3"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "molto_compatta",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "scienze",
+          "level": 65,
+          "originalLetters": 599,
+          "targetLetters": 210,
+          "band": {
+            "low": 180,
+            "high": 239
+          },
+          "maxRows": 5,
+          "ledgerHash": "8b669c46e19543aa2cf0b4a6719d060bc0e15102fd3be57cf177f636bcb75760",
+          "ledgerSourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "c632c416dd8071d65ab1022fa922baa12a919bad12bb7c9bd39cf0f852072020",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12"
+          ],
+          "supportFactIds": [
+            "F3"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "molto_compatta",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        }
+      ],
+      "calibration": {
+        "sourceId": "scienze",
+        "modelAtoms": 12,
+        "referenceAtoms": 12,
+        "matched": 12,
+        "agreed": 12,
+        "mismatch": 0,
+        "unmatchedNew": [],
+        "unmatchedReference": [],
+        "confusion": {
+          "fondamentale→fondamentale": 11,
+          "supporto→supporto": 1
+        },
+        "matchedPairs": [
+          {
+            "newId": "F1",
+            "referenceId": "F1",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F2",
+            "referenceId": "F2",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F3",
+            "referenceId": "F3",
+            "score": 1,
+            "predicted": "supporto",
+            "manual": "supporto",
+            "equal": true
+          },
+          {
+            "newId": "F4",
+            "referenceId": "F4",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F5",
+            "referenceId": "F5",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F6",
+            "referenceId": "F6",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F7",
+            "referenceId": "F7",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F8",
+            "referenceId": "F8",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F9",
+            "referenceId": "F9",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F10",
+            "referenceId": "F10",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F11",
+            "referenceId": "F11",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F12",
+            "referenceId": "F12",
+            "score": 0.769,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          }
+        ],
+        "limitations": "Editorial reference is subjective. Word-overlap matching is imperfect and a priority match does not prove the atom is true or that a complete book can be safely compressed."
+      },
+      "semanticallyCertified": false,
+      "approvedForApp": false
+    },
+    {
+      "source": "procedura",
+      "modelAnswered": true,
+      "anchorValidated": true,
+      "ms": 2606,
+      "rawPriorities": [
+        {
+          "id": "F1",
+          "sourceSentence": "S1",
+          "evidence": "In un esercizio scolastico del 2024",
+          "claim": "Nel 2024, in un esercizio scolastico",
+          "kind": "contesto",
+          "priority": "contesto"
+        },
+        {
+          "id": "F2",
+          "sourceSentence": "S1",
+          "evidence": "una biblioteca simulata ha introdotto una procedura per richiedere i libri",
+          "claim": "una biblioteca simulata ha introdotto una procedura per richiedere i libri",
+          "kind": "fatto",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F3",
+          "sourceSentence": "S2",
+          "evidence": "La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito",
+          "claim": "La regola interna numero 12 impone allo studente di registrare il titolo prima del prestito",
+          "kind": "obbligo",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F4",
+          "sourceSentence": "S2",
+          "evidence": "e confermi la restituzione entro dieci giorni",
+          "claim": "lo studente deve confermare la restituzione entro dieci giorni",
+          "kind": "misura",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F5",
+          "sourceSentence": "S3",
+          "evidence": "Il personale può concedere una proroga",
+          "claim": "Il personale ha la possibilità di concedere una proroga",
+          "kind": "possibilità",
+          "priority": "supporto"
+        },
+        {
+          "id": "F6",
+          "sourceSentence": "S3",
+          "evidence": "soltanto se il volume non è stato prenotato da altri studenti",
+          "claim": "la proroga è subordinata alla condizione che il volume non sia stato prenotato da altri studenti",
+          "kind": "condizione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F7",
+          "sourceSentence": "S4",
+          "evidence": "La proroga non è automatica",
+          "claim": "La proroga non avviene in modo automatico",
+          "kind": "negazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F8",
+          "sourceSentence": "S4",
+          "evidence": "senza conferma scritta resta valida la data iniziale",
+          "claim": "in assenza di conferma scritta rimane valida la data di scadenza iniziale",
+          "kind": "condizione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F9",
+          "sourceSentence": "S5",
+          "evidence": "Quando un libro è già riservato",
+          "claim": "Nel caso in cui un libro sia già riservato",
+          "kind": "condizione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F10",
+          "sourceSentence": "S5",
+          "evidence": "lo studente deve restituirlo alla scadenza anche se non ha completato la lettura",
+          "claim": "lo studente ha l'obbligo di restituirlo alla scadenza anche se la lettura non è completata",
+          "kind": "obbligo",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F11",
+          "sourceSentence": "S6",
+          "evidence": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno",
+          "claim": "Il registro permette di tracciare il destinatario del libro e la data di ricezione",
+          "kind": "relazione",
+          "priority": "supporto"
+        },
+        {
+          "id": "F12",
+          "sourceSentence": "S6",
+          "evidence": "ma non contiene dati sulle opinioni personali dei lettori",
+          "claim": "il registro non include dati relativi alle opinioni personali dei lettori",
+          "kind": "negazione",
+          "priority": "supporto"
+        },
+        {
+          "id": "F13",
+          "sourceSentence": "S7",
+          "evidence": "Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura",
+          "claim": "Condizioni ed eccezioni risultano essenziali per la corretta applicazione della procedura",
+          "kind": "fatto",
+          "priority": "supporto"
+        }
+      ],
+      "validationErrors": [],
+      "validationWarnings": [
+        "NONSTANDARD_KIND_2",
+        "NONSTANDARD_KIND_4",
+        "NONSTANDARD_KIND_9",
+        "CRITICAL_EVIDENCE_NOT_MARKED_11",
+        "OVERBROAD_EVIDENCE_12",
+        "CRITICAL_MARKER_NOT_VISIBLE_S5:obligation"
+      ],
+      "quoteRepairs": [],
+      "ledger": {
+        "schema": "LAB101_FIRST_READ_PRIORITY_V1",
+        "sourceId": "procedura",
+        "sourceHash": "7e4759f0f1a1c6344af4ebf2e026c1be5544c53b2527d722e67a90cef79ee2bd",
+        "facts": [
+          {
+            "id": "F1",
+            "sourceSentence": "S1",
+            "evidence": "In un esercizio scolastico del 2024",
+            "claim": "Nel 2024, in un esercizio scolastico",
+            "kind": "contesto",
+            "essential": false,
+            "priority": "contesto"
+          },
+          {
+            "id": "F2",
+            "sourceSentence": "S1",
+            "evidence": "una biblioteca simulata ha introdotto una procedura per richiedere i libri",
+            "claim": "una biblioteca simulata ha introdotto una procedura per richiedere i libri",
+            "kind": "fatto",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F3",
+            "sourceSentence": "S2",
+            "evidence": "La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito",
+            "claim": "La regola interna numero 12 impone allo studente di registrare il titolo prima del prestito",
+            "kind": "obbligo",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F4",
+            "sourceSentence": "S2",
+            "evidence": "e confermi la restituzione entro dieci giorni",
+            "claim": "lo studente deve confermare la restituzione entro dieci giorni",
+            "kind": "misura",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F5",
+            "sourceSentence": "S3",
+            "evidence": "Il personale può concedere una proroga",
+            "claim": "Il personale ha la possibilità di concedere una proroga",
+            "kind": "possibilità",
+            "essential": false,
+            "priority": "supporto"
+          },
+          {
+            "id": "F6",
+            "sourceSentence": "S3",
+            "evidence": "soltanto se il volume non è stato prenotato da altri studenti",
+            "claim": "la proroga è subordinata alla condizione che il volume non sia stato prenotato da altri studenti",
+            "kind": "condizione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F7",
+            "sourceSentence": "S4",
+            "evidence": "La proroga non è automatica",
+            "claim": "La proroga non avviene in modo automatico",
+            "kind": "negazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F8",
+            "sourceSentence": "S4",
+            "evidence": "senza conferma scritta resta valida la data iniziale",
+            "claim": "in assenza di conferma scritta rimane valida la data di scadenza iniziale",
+            "kind": "condizione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F9",
+            "sourceSentence": "S5",
+            "evidence": "Quando un libro è già riservato",
+            "claim": "Nel caso in cui un libro sia già riservato",
+            "kind": "condizione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F10",
+            "sourceSentence": "S5",
+            "evidence": "lo studente deve restituirlo alla scadenza anche se non ha completato la lettura",
+            "claim": "lo studente ha l'obbligo di restituirlo alla scadenza anche se la lettura non è completata",
+            "kind": "obbligo",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F11",
+            "sourceSentence": "S6",
+            "evidence": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno",
+            "claim": "Il registro permette di tracciare il destinatario del libro e la data di ricezione",
+            "kind": "relazione",
+            "essential": false,
+            "priority": "supporto"
+          },
+          {
+            "id": "F12",
+            "sourceSentence": "S6",
+            "evidence": "ma non contiene dati sulle opinioni personali dei lettori",
+            "claim": "il registro non include dati relativi alle opinioni personali dei lettori",
+            "kind": "negazione",
+            "essential": false,
+            "priority": "supporto"
+          },
+          {
+            "id": "F13",
+            "sourceSentence": "S7",
+            "evidence": "Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura",
+            "claim": "Condizioni ed eccezioni risultano essenziali per la corretta applicazione della procedura",
+            "kind": "fatto",
+            "essential": false,
+            "priority": "supporto"
+          }
+        ],
+        "hierarchy": {
+          "fundamental": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "support": [
+            "F5",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "context": [
+            "F1"
+          ]
+        },
+        "quoteRepairs": [],
+        "validation": {
+          "errors": [],
+          "warnings": [
+            "NONSTANDARD_KIND_2",
+            "NONSTANDARD_KIND_4",
+            "NONSTANDARD_KIND_9",
+            "CRITICAL_EVIDENCE_NOT_MARKED_11",
+            "OVERBROAD_EVIDENCE_12",
+            "CRITICAL_MARKER_NOT_VISIBLE_S5:obligation"
+          ]
+        },
+        "hash": "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c"
+      },
+      "summary": {
+        "facts": 13,
+        "core": 8,
+        "support": 4,
+        "context": 1,
+        "flatPriority": false,
+        "quotedSourceSentences": 7,
+        "sourceSentenceCount": 7,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "plans": [
+        {
+          "source": "procedura",
+          "level": 10,
+          "originalLetters": 636,
+          "targetLetters": 572,
+          "band": {
+            "low": 541,
+            "high": 604
+          },
+          "maxRows": 13,
+          "ledgerHash": "2e4afd8675469496f6a298fe9915f5417f1bfe22e5ce192fc2cbb24db3383791",
+          "ledgerSourceHash": "7e4759f0f1a1c6344af4ebf2e026c1be5544c53b2527d722e67a90cef79ee2bd",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "supportFactIds": [
+            "F5",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "spiegazione_quasi_integrale",
+            "contextTreatment": "se_utile_alla_comprensione",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "procedura",
+          "level": 20,
+          "originalLetters": 636,
+          "targetLetters": 509,
+          "band": {
+            "low": 477,
+            "high": 540
+          },
+          "maxRows": 11,
+          "ledgerHash": "2e4afd8675469496f6a298fe9915f5417f1bfe22e5ce192fc2cbb24db3383791",
+          "ledgerSourceHash": "7e4759f0f1a1c6344af4ebf2e026c1be5544c53b2527d722e67a90cef79ee2bd",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "supportFactIds": [
+            "F5",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "spiegazione_chiara",
+            "contextTreatment": "se_utile_alla_comprensione",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "procedura",
+          "level": 30,
+          "originalLetters": 636,
+          "targetLetters": 445,
+          "band": {
+            "low": 414,
+            "high": 477
+          },
+          "maxRows": 10,
+          "ledgerHash": "2e4afd8675469496f6a298fe9915f5417f1bfe22e5ce192fc2cbb24db3383791",
+          "ledgerSourceHash": "7e4759f0f1a1c6344af4ebf2e026c1be5544c53b2527d722e67a90cef79ee2bd",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "supportFactIds": [
+            "F5",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "sintetica_ma_fedele",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "procedura",
+          "level": 40,
+          "originalLetters": 636,
+          "targetLetters": 382,
+          "band": {
+            "low": 350,
+            "high": 413
+          },
+          "maxRows": 9,
+          "ledgerHash": "2e4afd8675469496f6a298fe9915f5417f1bfe22e5ce192fc2cbb24db3383791",
+          "ledgerSourceHash": "7e4759f0f1a1c6344af4ebf2e026c1be5544c53b2527d722e67a90cef79ee2bd",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "supportFactIds": [
+            "F5",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "sintetica_ma_fedele",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "procedura",
+          "level": 50,
+          "originalLetters": 636,
+          "targetLetters": 318,
+          "band": {
+            "low": 287,
+            "high": 349
+          },
+          "maxRows": 7,
+          "ledgerHash": "2e4afd8675469496f6a298fe9915f5417f1bfe22e5ce192fc2cbb24db3383791",
+          "ledgerSourceHash": "7e4759f0f1a1c6344af4ebf2e026c1be5544c53b2527d722e67a90cef79ee2bd",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "supportFactIds": [
+            "F5",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "molto_compatta",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "procedura",
+          "level": 65,
+          "originalLetters": 636,
+          "targetLetters": 223,
+          "band": {
+            "low": 191,
+            "high": 254
+          },
+          "maxRows": 5,
+          "ledgerHash": "2e4afd8675469496f6a298fe9915f5417f1bfe22e5ce192fc2cbb24db3383791",
+          "ledgerSourceHash": "7e4759f0f1a1c6344af4ebf2e026c1be5544c53b2527d722e67a90cef79ee2bd",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10"
+          ],
+          "supportFactIds": [
+            "F5",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "molto_compatta",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        }
+      ],
+      "calibration": {
+        "sourceId": "procedura",
+        "modelAtoms": 13,
+        "referenceAtoms": 11,
+        "matched": 10,
+        "agreed": 8,
+        "mismatch": 2,
+        "unmatchedNew": [
+          "F1",
+          "F5",
+          "F9"
+        ],
+        "unmatchedReference": [
+          "F8"
+        ],
+        "confusion": {
+          "fondamentale→fondamentale": 6,
+          "fondamentale→supporto": 1,
+          "supporto→supporto": 2,
+          "contesto→fondamentale": 1
+        },
+        "matchedPairs": [
+          {
+            "newId": "F3",
+            "referenceId": "F2",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F4",
+            "referenceId": "F3",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F7",
+            "referenceId": "F5",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F8",
+            "referenceId": "F6",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F11",
+            "referenceId": "F9",
+            "score": 1,
+            "predicted": "supporto",
+            "manual": "fondamentale",
+            "equal": false
+          },
+          {
+            "newId": "F12",
+            "referenceId": "F10",
+            "score": 1,
+            "predicted": "supporto",
+            "manual": "supporto",
+            "equal": true
+          },
+          {
+            "newId": "F13",
+            "referenceId": "F11",
+            "score": 1,
+            "predicted": "supporto",
+            "manual": "supporto",
+            "equal": true
+          },
+          {
+            "newId": "F2",
+            "referenceId": "F1",
+            "score": 0.727,
+            "predicted": "fondamentale",
+            "manual": "contesto",
+            "equal": false
+          },
+          {
+            "newId": "F6",
+            "referenceId": "F4",
+            "score": 0.583,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F10",
+            "referenceId": "F7",
+            "score": 0.556,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          }
+        ],
+        "limitations": "Editorial reference is subjective. Word-overlap matching is imperfect and a priority match does not prove the atom is true or that a complete book can be safely compressed."
+      },
+      "semanticallyCertified": false,
+      "approvedForApp": false
+    },
+    {
+      "source": "medicina",
+      "modelAnswered": true,
+      "anchorValidated": true,
+      "ms": 3441,
+      "rawPriorities": [
+        {
+          "id": "F1",
+          "sourceSentence": "S1",
+          "evidence": "In un esempio didattico",
+          "claim": "Il contesto descritto è un esempio didattico.",
+          "kind": "contesto",
+          "priority": "contesto"
+        },
+        {
+          "id": "F2",
+          "sourceSentence": "S1",
+          "evidence": "l'apparato respiratorio porta aria ai polmoni attraverso le vie aeree.",
+          "claim": "L'apparato respiratorio trasporta l'aria ai polmoni per mezzo delle vie aeree.",
+          "kind": "relazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F3",
+          "sourceSentence": "S2",
+          "evidence": "Durante l'inspirazione il diaframma si contrae",
+          "claim": "Durante l'inspirazione il diaframma subisce una contrazione.",
+          "kind": "causa",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F4",
+          "sourceSentence": "S2",
+          "evidence": "e il torace aumenta di volume",
+          "claim": "Durante l'inspirazione il volume del torace aumenta.",
+          "kind": "fatto",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F5",
+          "sourceSentence": "S2",
+          "evidence": "durante l'espirazione a riposo il diaframma si rilassa.",
+          "claim": "Durante l'espirazione a riposo il diaframma si rilassa.",
+          "kind": "fatto",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F6",
+          "sourceSentence": "S3",
+          "evidence": "Negli alveoli polmonari l'ossigeno passa dall'aria al sangue",
+          "claim": "Negli alveoli polmonari l'ossigeno si sposta dall'aria al sangue.",
+          "kind": "relazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F7",
+          "sourceSentence": "S3",
+          "evidence": "mentre l'anidride carbonica compie il percorso opposto.",
+          "claim": "L'anidride carbonica si sposta dal sangue all'aria negli alveoli polmonari.",
+          "kind": "relazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F8",
+          "sourceSentence": "S4",
+          "evidence": "Lo scambio avviene grazie a differenze di pressione parziale dei gas",
+          "claim": "Lo scambio gassoso è causato da differenze di pressione parziale dei gas.",
+          "kind": "causa",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F9",
+          "sourceSentence": "S4",
+          "evidence": "attraverso pareti molto sottili.",
+          "claim": "Lo scambio gassoso avviene attraverso pareti molto sottili.",
+          "kind": "fatto",
+          "priority": "supporto"
+        },
+        {
+          "id": "F10",
+          "sourceSentence": "S5",
+          "evidence": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue.",
+          "claim": "L'emoglobina presente nei globuli rossi si occupa del trasporto della maggior parte dell'ossigeno nel sangue.",
+          "kind": "relazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F11",
+          "sourceSentence": "S6",
+          "evidence": "La frequenza respiratoria può aumentare durante uno sforzo",
+          "claim": "La frequenza respiratoria ha la possibilità di aumentare durante uno sforzo fisico.",
+          "kind": "possibilità",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F12",
+          "sourceSentence": "S6",
+          "evidence": "perché l'organismo consuma più ossigeno e produce più anidride carbonica.",
+          "claim": "L'aumento della frequenza respiratoria è causato dal maggiore consumo di ossigeno e maggiore produzione di anidride carbonica da parte dell'organismo.",
+          "kind": "causa",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F13",
+          "sourceSentence": "S7",
+          "evidence": "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo.",
+          "claim": "Per la valutazione di un disturbo respiratorio il medico prende in esame sintomi, storia clinica ed esame obiettivo.",
+          "kind": "fatto",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F14",
+          "sourceSentence": "S8",
+          "evidence": "Un singolo valore misurato non basta sempre per una diagnosi",
+          "claim": "Un singolo valore misurato non è sempre sufficiente per formulare una diagnosi.",
+          "kind": "negazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F15",
+          "sourceSentence": "S8",
+          "evidence": "deve essere interpretato nel contesto clinico.",
+          "claim": "Un singolo valore misurato ha l'obbligo di essere interpretato all'interno del contesto clinico.",
+          "kind": "obbligo",
+          "priority": "fondamentale"
+        }
+      ],
+      "validationErrors": [],
+      "validationWarnings": [
+        "OVERBROAD_EVIDENCE_9",
+        "NONSTANDARD_KIND_10",
+        "OVERBROAD_EVIDENCE_12",
+        "NONSTANDARD_KIND_14",
+        "CRITICAL_MARKER_NOT_VISIBLE_S8:obligation"
+      ],
+      "quoteRepairs": [],
+      "ledger": {
+        "schema": "LAB101_FIRST_READ_PRIORITY_V1",
+        "sourceId": "medicina",
+        "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+        "facts": [
+          {
+            "id": "F1",
+            "sourceSentence": "S1",
+            "evidence": "In un esempio didattico",
+            "claim": "Il contesto descritto è un esempio didattico.",
+            "kind": "contesto",
+            "essential": false,
+            "priority": "contesto"
+          },
+          {
+            "id": "F2",
+            "sourceSentence": "S1",
+            "evidence": "l'apparato respiratorio porta aria ai polmoni attraverso le vie aeree.",
+            "claim": "L'apparato respiratorio trasporta l'aria ai polmoni per mezzo delle vie aeree.",
+            "kind": "relazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F3",
+            "sourceSentence": "S2",
+            "evidence": "Durante l'inspirazione il diaframma si contrae",
+            "claim": "Durante l'inspirazione il diaframma subisce una contrazione.",
+            "kind": "causa",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F4",
+            "sourceSentence": "S2",
+            "evidence": "e il torace aumenta di volume",
+            "claim": "Durante l'inspirazione il volume del torace aumenta.",
+            "kind": "fatto",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F5",
+            "sourceSentence": "S2",
+            "evidence": "durante l'espirazione a riposo il diaframma si rilassa.",
+            "claim": "Durante l'espirazione a riposo il diaframma si rilassa.",
+            "kind": "fatto",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F6",
+            "sourceSentence": "S3",
+            "evidence": "Negli alveoli polmonari l'ossigeno passa dall'aria al sangue",
+            "claim": "Negli alveoli polmonari l'ossigeno si sposta dall'aria al sangue.",
+            "kind": "relazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F7",
+            "sourceSentence": "S3",
+            "evidence": "mentre l'anidride carbonica compie il percorso opposto.",
+            "claim": "L'anidride carbonica si sposta dal sangue all'aria negli alveoli polmonari.",
+            "kind": "relazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F8",
+            "sourceSentence": "S4",
+            "evidence": "Lo scambio avviene grazie a differenze di pressione parziale dei gas",
+            "claim": "Lo scambio gassoso è causato da differenze di pressione parziale dei gas.",
+            "kind": "causa",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F9",
+            "sourceSentence": "S4",
+            "evidence": "attraverso pareti molto sottili.",
+            "claim": "Lo scambio gassoso avviene attraverso pareti molto sottili.",
+            "kind": "fatto",
+            "essential": false,
+            "priority": "supporto"
+          },
+          {
+            "id": "F10",
+            "sourceSentence": "S5",
+            "evidence": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue.",
+            "claim": "L'emoglobina presente nei globuli rossi si occupa del trasporto della maggior parte dell'ossigeno nel sangue.",
+            "kind": "relazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F11",
+            "sourceSentence": "S6",
+            "evidence": "La frequenza respiratoria può aumentare durante uno sforzo",
+            "claim": "La frequenza respiratoria ha la possibilità di aumentare durante uno sforzo fisico.",
+            "kind": "possibilità",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F12",
+            "sourceSentence": "S6",
+            "evidence": "perché l'organismo consuma più ossigeno e produce più anidride carbonica.",
+            "claim": "L'aumento della frequenza respiratoria è causato dal maggiore consumo di ossigeno e maggiore produzione di anidride carbonica da parte dell'organismo.",
+            "kind": "causa",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F13",
+            "sourceSentence": "S7",
+            "evidence": "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo.",
+            "claim": "Per la valutazione di un disturbo respiratorio il medico prende in esame sintomi, storia clinica ed esame obiettivo.",
+            "kind": "fatto",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F14",
+            "sourceSentence": "S8",
+            "evidence": "Un singolo valore misurato non basta sempre per una diagnosi",
+            "claim": "Un singolo valore misurato non è sempre sufficiente per formulare una diagnosi.",
+            "kind": "negazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F15",
+            "sourceSentence": "S8",
+            "evidence": "deve essere interpretato nel contesto clinico.",
+            "claim": "Un singolo valore misurato ha l'obbligo di essere interpretato all'interno del contesto clinico.",
+            "kind": "obbligo",
+            "essential": true,
+            "priority": "fondamentale"
+          }
+        ],
+        "hierarchy": {
+          "fundamental": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "support": [
+            "F9"
+          ],
+          "context": [
+            "F1"
+          ]
+        },
+        "quoteRepairs": [],
+        "validation": {
+          "errors": [],
+          "warnings": [
+            "OVERBROAD_EVIDENCE_9",
+            "NONSTANDARD_KIND_10",
+            "OVERBROAD_EVIDENCE_12",
+            "NONSTANDARD_KIND_14",
+            "CRITICAL_MARKER_NOT_VISIBLE_S8:obligation"
+          ]
+        },
+        "hash": "5c9f68c6db9487bbaef44fee7b52c41707ecdb4a064cd4d54833b6283fcf84f0"
+      },
+      "summary": {
+        "facts": 15,
+        "core": 13,
+        "support": 1,
+        "context": 1,
+        "flatPriority": false,
+        "quotedSourceSentences": 8,
+        "sourceSentenceCount": 8,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "plans": [
+        {
+          "source": "medicina",
+          "level": 10,
+          "originalLetters": 728,
+          "targetLetters": 655,
+          "band": {
+            "low": 619,
+            "high": 691
+          },
+          "maxRows": 15,
+          "ledgerHash": "e5034ee6708ad9427b936f316391c7e3bfdb8d4b5a6962d41e6af263515db55a",
+          "ledgerSourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "5c9f68c6db9487bbaef44fee7b52c41707ecdb4a064cd4d54833b6283fcf84f0",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "supportFactIds": [
+            "F9"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "spiegazione_quasi_integrale",
+            "contextTreatment": "se_utile_alla_comprensione",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "medicina",
+          "level": 20,
+          "originalLetters": 728,
+          "targetLetters": 582,
+          "band": {
+            "low": 546,
+            "high": 618
+          },
+          "maxRows": 13,
+          "ledgerHash": "e5034ee6708ad9427b936f316391c7e3bfdb8d4b5a6962d41e6af263515db55a",
+          "ledgerSourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "5c9f68c6db9487bbaef44fee7b52c41707ecdb4a064cd4d54833b6283fcf84f0",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "supportFactIds": [
+            "F9"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "spiegazione_chiara",
+            "contextTreatment": "se_utile_alla_comprensione",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "medicina",
+          "level": 30,
+          "originalLetters": 728,
+          "targetLetters": 510,
+          "band": {
+            "low": 474,
+            "high": 546
+          },
+          "maxRows": 12,
+          "ledgerHash": "e5034ee6708ad9427b936f316391c7e3bfdb8d4b5a6962d41e6af263515db55a",
+          "ledgerSourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "5c9f68c6db9487bbaef44fee7b52c41707ecdb4a064cd4d54833b6283fcf84f0",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "supportFactIds": [
+            "F9"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "sintetica_ma_fedele",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "medicina",
+          "level": 40,
+          "originalLetters": 728,
+          "targetLetters": 437,
+          "band": {
+            "low": 401,
+            "high": 473
+          },
+          "maxRows": 10,
+          "ledgerHash": "e5034ee6708ad9427b936f316391c7e3bfdb8d4b5a6962d41e6af263515db55a",
+          "ledgerSourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "5c9f68c6db9487bbaef44fee7b52c41707ecdb4a064cd4d54833b6283fcf84f0",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "supportFactIds": [
+            "F9"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "sintetica_ma_fedele",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "medicina",
+          "level": 50,
+          "originalLetters": 728,
+          "targetLetters": 364,
+          "band": {
+            "low": 328,
+            "high": 400
+          },
+          "maxRows": 8,
+          "ledgerHash": "e5034ee6708ad9427b936f316391c7e3bfdb8d4b5a6962d41e6af263515db55a",
+          "ledgerSourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "5c9f68c6db9487bbaef44fee7b52c41707ecdb4a064cd4d54833b6283fcf84f0",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "supportFactIds": [
+            "F9"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "molto_compatta",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "medicina",
+          "level": 65,
+          "originalLetters": 728,
+          "targetLetters": 255,
+          "band": {
+            "low": 219,
+            "high": 291
+          },
+          "maxRows": 6,
+          "ledgerHash": "e5034ee6708ad9427b936f316391c7e3bfdb8d4b5a6962d41e6af263515db55a",
+          "ledgerSourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "5c9f68c6db9487bbaef44fee7b52c41707ecdb4a064cd4d54833b6283fcf84f0",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15"
+          ],
+          "supportFactIds": [
+            "F9"
+          ],
+          "contextFactIds": [
+            "F1"
+          ],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "molto_compatta",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        }
+      ],
+      "calibration": {
+        "sourceId": "medicina",
+        "modelAtoms": 15,
+        "referenceAtoms": 14,
+        "matched": 14,
+        "agreed": 13,
+        "mismatch": 1,
+        "unmatchedNew": [
+          "F1"
+        ],
+        "unmatchedReference": [],
+        "confusion": {
+          "fondamentale→fondamentale": 12,
+          "supporto→fondamentale": 1,
+          "supporto→supporto": 1
+        },
+        "matchedPairs": [
+          {
+            "newId": "F2",
+            "referenceId": "F1",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F3",
+            "referenceId": "F2",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F4",
+            "referenceId": "F3",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "supporto",
+            "equal": false
+          },
+          {
+            "newId": "F5",
+            "referenceId": "F4",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F6",
+            "referenceId": "F5",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F8",
+            "referenceId": "F7",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F9",
+            "referenceId": "F8",
+            "score": 1,
+            "predicted": "supporto",
+            "manual": "supporto",
+            "equal": true
+          },
+          {
+            "newId": "F10",
+            "referenceId": "F9",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F11",
+            "referenceId": "F10",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F13",
+            "referenceId": "F12",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F14",
+            "referenceId": "F13",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F15",
+            "referenceId": "F14",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F12",
+            "referenceId": "F11",
+            "score": 0.875,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F7",
+            "referenceId": "F6",
+            "score": 0.833,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          }
+        ],
+        "limitations": "Editorial reference is subjective. Word-overlap matching is imperfect and a priority match does not prove the atom is true or that a complete book can be safely compressed."
+      },
+      "semanticallyCertified": false,
+      "approvedForApp": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "modelAnswered": true,
+      "anchorValidated": true,
+      "ms": 2687,
+      "rawPriorities": [
+        {
+          "id": "F1",
+          "sourceSentence": "S1",
+          "evidence": "gli studenti confrontano lettere, cronache, carte geografiche e registri",
+          "claim": "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri.",
+          "kind": "fatto",
+          "priority": "supporto"
+        },
+        {
+          "id": "F2",
+          "sourceSentence": "S1",
+          "evidence": "per ricostruire gli avvenimenti",
+          "claim": "Lo scopo del confronto di documenti in un laboratorio di storia è ricostruire gli avvenimenti.",
+          "kind": "causa",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F3",
+          "sourceSentence": "S2",
+          "evidence": "La provenienza di ciascun documento aiuta a capire chi lo ha prodotto, quando e per quale scopo",
+          "claim": "La provenienza di un documento aiuta a comprenderne l'autore, il tempo di produzione e lo scopo.",
+          "kind": "relazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F4",
+          "sourceSentence": "S3",
+          "evidence": "Due testimonianze possono riferire lo stesso episodio in modo diverso",
+          "claim": "Due testimonianze possono riferire lo stesso episodio in modo differente.",
+          "kind": "possibilità",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F5",
+          "sourceSentence": "S3",
+          "evidence": "perché i loro autori hanno osservato aspetti differenti oppure hanno interessi particolari",
+          "claim": "Le differenze tra testimonianze dipendono dal fatto che gli autori hanno osservato aspetti differenti o hanno interessi particolari.",
+          "kind": "causa",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F6",
+          "sourceSentence": "S4",
+          "evidence": "occorre confrontare più fonti indipendenti",
+          "claim": "Per verificare un'affermazione è necessario confrontare più fonti indipendenti.",
+          "kind": "condizione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F7",
+          "sourceSentence": "S4",
+          "evidence": "distinguere un fatto da un'opinione",
+          "claim": "Per verificare un'affermazione bisogna distinguere un fatto da un'opinione.",
+          "kind": "obbligo",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F8",
+          "sourceSentence": "S4",
+          "evidence": "segnalare ciò che resta incerto",
+          "claim": "Per verificare un'affermazione bisogna segnalare ciò che resta incerto.",
+          "kind": "obbligo",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F9",
+          "sourceSentence": "S5",
+          "evidence": "Una data isolata non spiega da sola le cause di un evento",
+          "claim": "Una data isolata non è sufficiente a spiegare le cause di un evento.",
+          "kind": "negazione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F10",
+          "sourceSentence": "S5",
+          "evidence": "bisogna studiarne il contesto e le conseguenze",
+          "claim": "Per comprendere un evento bisogna studiarne il contesto e le conseguenze.",
+          "kind": "obbligo",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F11",
+          "sourceSentence": "S6",
+          "evidence": "Una fonte primaria è prodotta nel periodo studiato",
+          "claim": "Una fonte primaria è definita come un documento prodotto nel periodo studiato.",
+          "kind": "definizione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F12",
+          "sourceSentence": "S7",
+          "evidence": "Una fonte secondaria interpreta documenti precedenti",
+          "claim": "Una fonte secondaria è definita come un'opera che interpreta documenti precedenti.",
+          "kind": "definizione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F13",
+          "sourceSentence": "S8",
+          "evidence": "Le ipotesi vanno distinte dai fatti documentati",
+          "claim": "È necessario distinguere le ipotesi dai fatti documentati.",
+          "kind": "obbligo",
+          "priority": "fondamentale"
+        }
+      ],
+      "validationErrors": [],
+      "validationWarnings": [
+        "OVERBROAD_EVIDENCE_2",
+        "NONSTANDARD_KIND_3",
+        "NONSTANDARD_KIND_6",
+        "NONSTANDARD_KIND_7",
+        "NONSTANDARD_KIND_9",
+        "NONSTANDARD_KIND_12",
+        "CLAUSE_UNCOVERED_S4"
+      ],
+      "quoteRepairs": [],
+      "ledger": {
+        "schema": "LAB101_FIRST_READ_PRIORITY_V1",
+        "sourceId": "concetto_sbilanciato",
+        "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+        "facts": [
+          {
+            "id": "F1",
+            "sourceSentence": "S1",
+            "evidence": "gli studenti confrontano lettere, cronache, carte geografiche e registri",
+            "claim": "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri.",
+            "kind": "fatto",
+            "essential": false,
+            "priority": "supporto"
+          },
+          {
+            "id": "F2",
+            "sourceSentence": "S1",
+            "evidence": "per ricostruire gli avvenimenti",
+            "claim": "Lo scopo del confronto di documenti in un laboratorio di storia è ricostruire gli avvenimenti.",
+            "kind": "causa",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F3",
+            "sourceSentence": "S2",
+            "evidence": "La provenienza di ciascun documento aiuta a capire chi lo ha prodotto, quando e per quale scopo",
+            "claim": "La provenienza di un documento aiuta a comprenderne l'autore, il tempo di produzione e lo scopo.",
+            "kind": "relazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F4",
+            "sourceSentence": "S3",
+            "evidence": "Due testimonianze possono riferire lo stesso episodio in modo diverso",
+            "claim": "Due testimonianze possono riferire lo stesso episodio in modo differente.",
+            "kind": "possibilità",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F5",
+            "sourceSentence": "S3",
+            "evidence": "perché i loro autori hanno osservato aspetti differenti oppure hanno interessi particolari",
+            "claim": "Le differenze tra testimonianze dipendono dal fatto che gli autori hanno osservato aspetti differenti o hanno interessi particolari.",
+            "kind": "causa",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F6",
+            "sourceSentence": "S4",
+            "evidence": "occorre confrontare più fonti indipendenti",
+            "claim": "Per verificare un'affermazione è necessario confrontare più fonti indipendenti.",
+            "kind": "condizione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F7",
+            "sourceSentence": "S4",
+            "evidence": "distinguere un fatto da un'opinione",
+            "claim": "Per verificare un'affermazione bisogna distinguere un fatto da un'opinione.",
+            "kind": "obbligo",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F8",
+            "sourceSentence": "S4",
+            "evidence": "segnalare ciò che resta incerto",
+            "claim": "Per verificare un'affermazione bisogna segnalare ciò che resta incerto.",
+            "kind": "obbligo",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F9",
+            "sourceSentence": "S5",
+            "evidence": "Una data isolata non spiega da sola le cause di un evento",
+            "claim": "Una data isolata non è sufficiente a spiegare le cause di un evento.",
+            "kind": "negazione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F10",
+            "sourceSentence": "S5",
+            "evidence": "bisogna studiarne il contesto e le conseguenze",
+            "claim": "Per comprendere un evento bisogna studiarne il contesto e le conseguenze.",
+            "kind": "obbligo",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F11",
+            "sourceSentence": "S6",
+            "evidence": "Una fonte primaria è prodotta nel periodo studiato",
+            "claim": "Una fonte primaria è definita come un documento prodotto nel periodo studiato.",
+            "kind": "definizione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F12",
+            "sourceSentence": "S7",
+            "evidence": "Una fonte secondaria interpreta documenti precedenti",
+            "claim": "Una fonte secondaria è definita come un'opera che interpreta documenti precedenti.",
+            "kind": "definizione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F13",
+            "sourceSentence": "S8",
+            "evidence": "Le ipotesi vanno distinte dai fatti documentati",
+            "claim": "È necessario distinguere le ipotesi dai fatti documentati.",
+            "kind": "obbligo",
+            "essential": true,
+            "priority": "fondamentale"
+          }
+        ],
+        "hierarchy": {
+          "fundamental": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "support": [
+            "F1"
+          ],
+          "context": []
+        },
+        "quoteRepairs": [],
+        "validation": {
+          "errors": [],
+          "warnings": [
+            "OVERBROAD_EVIDENCE_2",
+            "NONSTANDARD_KIND_3",
+            "NONSTANDARD_KIND_6",
+            "NONSTANDARD_KIND_7",
+            "NONSTANDARD_KIND_9",
+            "NONSTANDARD_KIND_12",
+            "CLAUSE_UNCOVERED_S4"
+          ]
+        },
+        "hash": "47a76ec21bd09d15131d9f3b18e6ac22a99479309056aecd8b671cdbc9adf317"
+      },
+      "summary": {
+        "facts": 13,
+        "core": 12,
+        "support": 1,
+        "context": 0,
+        "flatPriority": false,
+        "quotedSourceSentences": 8,
+        "sourceSentenceCount": 8,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "plans": [
+        {
+          "source": "concetto_sbilanciato",
+          "level": 10,
+          "originalLetters": 670,
+          "targetLetters": 603,
+          "band": {
+            "low": 570,
+            "high": 636
+          },
+          "maxRows": 14,
+          "ledgerHash": "2c05db4fc875841f9379c7a589f7b99a0da6b9047e89662b4ec2c86e0817e3f2",
+          "ledgerSourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "47a76ec21bd09d15131d9f3b18e6ac22a99479309056aecd8b671cdbc9adf317",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "supportFactIds": [
+            "F1"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "spiegazione_quasi_integrale",
+            "contextTreatment": "se_utile_alla_comprensione",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "concetto_sbilanciato",
+          "level": 20,
+          "originalLetters": 670,
+          "targetLetters": 536,
+          "band": {
+            "low": 503,
+            "high": 569
+          },
+          "maxRows": 12,
+          "ledgerHash": "2c05db4fc875841f9379c7a589f7b99a0da6b9047e89662b4ec2c86e0817e3f2",
+          "ledgerSourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "47a76ec21bd09d15131d9f3b18e6ac22a99479309056aecd8b671cdbc9adf317",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "supportFactIds": [
+            "F1"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "spiegazione_chiara",
+            "contextTreatment": "se_utile_alla_comprensione",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "concetto_sbilanciato",
+          "level": 30,
+          "originalLetters": 670,
+          "targetLetters": 469,
+          "band": {
+            "low": 436,
+            "high": 502
+          },
+          "maxRows": 11,
+          "ledgerHash": "2c05db4fc875841f9379c7a589f7b99a0da6b9047e89662b4ec2c86e0817e3f2",
+          "ledgerSourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "47a76ec21bd09d15131d9f3b18e6ac22a99479309056aecd8b671cdbc9adf317",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "supportFactIds": [
+            "F1"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "sintetica_ma_fedele",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "concetto_sbilanciato",
+          "level": 40,
+          "originalLetters": 670,
+          "targetLetters": 402,
+          "band": {
+            "low": 369,
+            "high": 435
+          },
+          "maxRows": 9,
+          "ledgerHash": "2c05db4fc875841f9379c7a589f7b99a0da6b9047e89662b4ec2c86e0817e3f2",
+          "ledgerSourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "47a76ec21bd09d15131d9f3b18e6ac22a99479309056aecd8b671cdbc9adf317",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "supportFactIds": [
+            "F1"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "sintetica_ma_fedele",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "concetto_sbilanciato",
+          "level": 50,
+          "originalLetters": 670,
+          "targetLetters": 335,
+          "band": {
+            "low": 302,
+            "high": 368
+          },
+          "maxRows": 8,
+          "ledgerHash": "2c05db4fc875841f9379c7a589f7b99a0da6b9047e89662b4ec2c86e0817e3f2",
+          "ledgerSourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "47a76ec21bd09d15131d9f3b18e6ac22a99479309056aecd8b671cdbc9adf317",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "supportFactIds": [
+            "F1"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "molto_compatta",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "concetto_sbilanciato",
+          "level": 65,
+          "originalLetters": 670,
+          "targetLetters": 234,
+          "band": {
+            "low": 202,
+            "high": 268
+          },
+          "maxRows": 6,
+          "ledgerHash": "2c05db4fc875841f9379c7a589f7b99a0da6b9047e89662b4ec2c86e0817e3f2",
+          "ledgerSourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+          "protectedFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "47a76ec21bd09d15131d9f3b18e6ac22a99479309056aecd8b671cdbc9adf317",
+          "fundamentalFactIds": [
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F7",
+            "F8",
+            "F9",
+            "F10",
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "supportFactIds": [
+            "F1"
+          ],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "molto_compatta",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        }
+      ],
+      "calibration": {
+        "sourceId": "concetto_sbilanciato",
+        "modelAtoms": 13,
+        "referenceAtoms": 13,
+        "matched": 13,
+        "agreed": 10,
+        "mismatch": 3,
+        "unmatchedNew": [],
+        "unmatchedReference": [],
+        "confusion": {
+          "fondamentale→supporto": 1,
+          "supporto→fondamentale": 2,
+          "fondamentale→fondamentale": 10
+        },
+        "matchedPairs": [
+          {
+            "newId": "F1",
+            "referenceId": "F1",
+            "score": 1,
+            "predicted": "supporto",
+            "manual": "fondamentale",
+            "equal": false
+          },
+          {
+            "newId": "F2",
+            "referenceId": "F2",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "supporto",
+            "equal": false
+          },
+          {
+            "newId": "F3",
+            "referenceId": "F3",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F4",
+            "referenceId": "F4",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F5",
+            "referenceId": "F5",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F6",
+            "referenceId": "F6",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F7",
+            "referenceId": "F7",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F8",
+            "referenceId": "F8",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F9",
+            "referenceId": "F9",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F10",
+            "referenceId": "F10",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "supporto",
+            "equal": false
+          },
+          {
+            "newId": "F11",
+            "referenceId": "F11",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F12",
+            "referenceId": "F12",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F13",
+            "referenceId": "F13",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          }
+        ],
+        "limitations": "Editorial reference is subjective. Word-overlap matching is imperfect and a priority match does not prove the atom is true or that a complete book can be safely compressed."
+      },
+      "semanticallyCertified": false,
+      "approvedForApp": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "modelAnswered": true,
+      "anchorValidated": true,
+      "ms": 1272,
+      "rawPriorities": [
+        {
+          "id": "F1",
+          "sourceSentence": "S1",
+          "evidence": "termine perentorio per depositare le osservazioni è di 15 giorni dalla notifica",
+          "claim": "Il termine perentorio per depositare le osservazioni è di 15 giorni dalla notifica",
+          "kind": "definizione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F2",
+          "sourceSentence": "S2",
+          "evidence": "Se scade, la parte perde la possibilità di depositarle",
+          "claim": "Se il termine scade, la parte perde la possibilità di depositare le osservazioni",
+          "kind": "condizione",
+          "priority": "fondamentale"
+        },
+        {
+          "id": "F3",
+          "sourceSentence": "S2",
+          "evidence": "resta però il diritto di conoscere la motivazione",
+          "claim": "Resta comunque il diritto di conoscere la motivazione",
+          "kind": "eccezione",
+          "priority": "fondamentale"
+        }
+      ],
+      "validationErrors": [],
+      "validationWarnings": [
+        "CRITICAL_MARKER_NOT_VISIBLE_S1:obligation"
+      ],
+      "quoteRepairs": [],
+      "ledger": {
+        "schema": "LAB101_FIRST_READ_PRIORITY_V1",
+        "sourceId": "pagina_breve_continua",
+        "sourceHash": "540ed34d3b6ab8ccf002699ae87a48463ca1a4a93f3f6aacb4a8458044041f12",
+        "facts": [
+          {
+            "id": "F1",
+            "sourceSentence": "S1",
+            "evidence": "termine perentorio per depositare le osservazioni è di 15 giorni dalla notifica",
+            "claim": "Il termine perentorio per depositare le osservazioni è di 15 giorni dalla notifica",
+            "kind": "definizione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F2",
+            "sourceSentence": "S2",
+            "evidence": "Se scade, la parte perde la possibilità di depositarle",
+            "claim": "Se il termine scade, la parte perde la possibilità di depositare le osservazioni",
+            "kind": "condizione",
+            "essential": true,
+            "priority": "fondamentale"
+          },
+          {
+            "id": "F3",
+            "sourceSentence": "S2",
+            "evidence": "resta però il diritto di conoscere la motivazione",
+            "claim": "Resta comunque il diritto di conoscere la motivazione",
+            "kind": "eccezione",
+            "essential": true,
+            "priority": "fondamentale"
+          }
+        ],
+        "hierarchy": {
+          "fundamental": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "support": [],
+          "context": []
+        },
+        "quoteRepairs": [],
+        "validation": {
+          "errors": [],
+          "warnings": [
+            "CRITICAL_MARKER_NOT_VISIBLE_S1:obligation"
+          ]
+        },
+        "hash": "35a2d961898ce0e42dcf2ea872ca80d3c11b4dfe1b0682b2547589f4bed1757e"
+      },
+      "summary": {
+        "facts": 3,
+        "core": 3,
+        "support": 0,
+        "context": 0,
+        "flatPriority": true,
+        "quotedSourceSentences": 2,
+        "sourceSentenceCount": 2,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "plans": [
+        {
+          "source": "pagina_breve_continua",
+          "level": 10,
+          "originalLetters": 155,
+          "targetLetters": 140,
+          "band": {
+            "low": 132,
+            "high": 147
+          },
+          "maxRows": 5,
+          "ledgerHash": "2d8c9b20b87ca106839568d22f5baecb013b919484aa52b1c61b3fb1c4150dd3",
+          "ledgerSourceHash": "540ed34d3b6ab8ccf002699ae87a48463ca1a4a93f3f6aacb4a8458044041f12",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "35a2d961898ce0e42dcf2ea872ca80d3c11b4dfe1b0682b2547589f4bed1757e",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "supportFactIds": [],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "spiegazione_quasi_integrale",
+            "contextTreatment": "se_utile_alla_comprensione",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "pagina_breve_continua",
+          "level": 20,
+          "originalLetters": 155,
+          "targetLetters": 124,
+          "band": {
+            "low": 117,
+            "high": 131
+          },
+          "maxRows": 5,
+          "ledgerHash": "2d8c9b20b87ca106839568d22f5baecb013b919484aa52b1c61b3fb1c4150dd3",
+          "ledgerSourceHash": "540ed34d3b6ab8ccf002699ae87a48463ca1a4a93f3f6aacb4a8458044041f12",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "35a2d961898ce0e42dcf2ea872ca80d3c11b4dfe1b0682b2547589f4bed1757e",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "supportFactIds": [],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "spiegazione_chiara",
+            "contextTreatment": "se_utile_alla_comprensione",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "pagina_breve_continua",
+          "level": 30,
+          "originalLetters": 155,
+          "targetLetters": 109,
+          "band": {
+            "low": 101,
+            "high": 116
+          },
+          "maxRows": 5,
+          "ledgerHash": "2d8c9b20b87ca106839568d22f5baecb013b919484aa52b1c61b3fb1c4150dd3",
+          "ledgerSourceHash": "540ed34d3b6ab8ccf002699ae87a48463ca1a4a93f3f6aacb4a8458044041f12",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "35a2d961898ce0e42dcf2ea872ca80d3c11b4dfe1b0682b2547589f4bed1757e",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "supportFactIds": [],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "sintetica_ma_fedele",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "pagina_breve_continua",
+          "level": 40,
+          "originalLetters": 155,
+          "targetLetters": 93,
+          "band": {
+            "low": 86,
+            "high": 100
+          },
+          "maxRows": 5,
+          "ledgerHash": "2d8c9b20b87ca106839568d22f5baecb013b919484aa52b1c61b3fb1c4150dd3",
+          "ledgerSourceHash": "540ed34d3b6ab8ccf002699ae87a48463ca1a4a93f3f6aacb4a8458044041f12",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "35a2d961898ce0e42dcf2ea872ca80d3c11b4dfe1b0682b2547589f4bed1757e",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "supportFactIds": [],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "sintetica_ma_fedele",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "pagina_breve_continua",
+          "level": 50,
+          "originalLetters": 155,
+          "targetLetters": 78,
+          "band": {
+            "low": 70,
+            "high": 85
+          },
+          "maxRows": 5,
+          "ledgerHash": "2d8c9b20b87ca106839568d22f5baecb013b919484aa52b1c61b3fb1c4150dd3",
+          "ledgerSourceHash": "540ed34d3b6ab8ccf002699ae87a48463ca1a4a93f3f6aacb4a8458044041f12",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "35a2d961898ce0e42dcf2ea872ca80d3c11b4dfe1b0682b2547589f4bed1757e",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "supportFactIds": [],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "molto_compatta",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        },
+        {
+          "source": "pagina_breve_continua",
+          "level": 65,
+          "originalLetters": 155,
+          "targetLetters": 54,
+          "band": {
+            "low": 47,
+            "high": 62
+          },
+          "maxRows": 5,
+          "ledgerHash": "2d8c9b20b87ca106839568d22f5baecb013b919484aa52b1c61b3fb1c4150dd3",
+          "ledgerSourceHash": "540ed34d3b6ab8ccf002699ae87a48463ca1a4a93f3f6aacb4a8458044041f12",
+          "protectedFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "everyFactRetainedInVerifier": true,
+          "requiresPostGenerationVerification": true,
+          "rankedInventoryHash": "35a2d961898ce0e42dcf2ea872ca80d3c11b4dfe1b0682b2547589f4bed1757e",
+          "fundamentalFactIds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "supportFactIds": [],
+          "contextFactIds": [],
+          "fullSourceFactsAccessible": true,
+          "rules": {
+            "keepAllFundamentals": true,
+            "neverInventPadding": true,
+            "preservePolarityAndModality": true,
+            "supportTreatment": "molto_compatta",
+            "contextTreatment": "non_obbligatorio",
+            "finalSemanticCertificationRequired": true
+          }
+        }
+      ],
+      "calibration": {
+        "sourceId": "pagina_breve_continua",
+        "modelAtoms": 3,
+        "referenceAtoms": 3,
+        "matched": 3,
+        "agreed": 3,
+        "mismatch": 0,
+        "unmatchedNew": [],
+        "unmatchedReference": [],
+        "confusion": {
+          "fondamentale→fondamentale": 3
+        },
+        "matchedPairs": [
+          {
+            "newId": "F1",
+            "referenceId": "F1",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F2",
+            "referenceId": "F2",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          },
+          {
+            "newId": "F3",
+            "referenceId": "F3",
+            "score": 1,
+            "predicted": "fondamentale",
+            "manual": "fondamentale",
+            "equal": true
+          }
+        ],
+        "limitations": "Editorial reference is subjective. Word-overlap matching is imperfect and a priority match does not prove the atom is true or that a complete book can be safely compressed."
+      },
+      "semanticallyCertified": false,
+      "approvedForApp": false
+    }
+  ],
+  "scope": "Five synthetic pre-extracted pages. No PDF, no A4 real font, no real book. Calibration manually labeled from LAB100 and not provided to Gemini.",
+  "warning": "Priority agreement on overlapping quotes does not certify knowledge accuracy or guarantee that all fundamental concepts will fit in the shorter page."
+}
