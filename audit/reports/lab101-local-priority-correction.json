@@ -1,0 +1,57 @@
+{
+  "study": "LAB101c local editorial priority correction feasibility",
+  "date": "2026-11-09T15:19:39.191Z",
+  "summary": {
+    "editedFactPriorities": 1,
+    "unchangedClaims": true,
+    "sourceHashUnchanged": true,
+    "distinctPriorityHashes": true,
+    "beforeC4Core": 0,
+    "afterC4Core": 1,
+    "originalHighRiskFlags": 3,
+    "afterHighRiskFlags": 1,
+    "additionalModelCalls": 0,
+    "sixPlansChecked": 6,
+    "productionApproved": false,
+    "errors": 0
+  },
+  "edits": [
+    {
+      "factId": "F11",
+      "from": "supporto",
+      "to": "fondamentale",
+      "evidence": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno",
+      "claim": "Il registro permette di tracciare il destinatario del libro e la data di ricezione"
+    }
+  ],
+  "errors": [],
+  "remainingFlags": [
+    {
+      "type": "MODAL_NEGATIVE_OR_CONDITION_DOWNGRADED",
+      "factId": "F12",
+      "priority": "supporto",
+      "evidence": "ma non contiene dati sulle opinioni personali dei lettori",
+      "highRisk": true,
+      "note": "Source phrase contains risk-sensitive wording; a model may still have reasonable grounds for support, so human review required."
+    }
+  ],
+  "originalHash": "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+  "revisedHash": "c3c3545fefa7b7696871172759333835d318e396c2ef9de6f695eb56a61f1743",
+  "originalSixLevelFingerprint": [
+    "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+    "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+    "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+    "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+    "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+    "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c"
+  ],
+  "revisedSixLevelFingerprint": [
+    "c3c3545fefa7b7696871172759333835d318e396c2ef9de6f695eb56a61f1743",
+    "c3c3545fefa7b7696871172759333835d318e396c2ef9de6f695eb56a61f1743",
+    "c3c3545fefa7b7696871172759333835d318e396c2ef9de6f695eb56a61f1743",
+    "c3c3545fefa7b7696871172759333835d318e396c2ef9de6f695eb56a61f1743",
+    "c3c3545fefa7b7696871172759333835d318e396c2ef9de6f695eb56a61f1743",
+    "c3c3545fefa7b7696871172759333835d318e396c2ef9de6f695eb56a61f1743"
+  ],
+  "warning": "This is an explicit review-based correction on a cloned experimental fact map. It is not a generally reliable automatic ranking algorithm; the remaining negative-clause support flag needs review. No actual reduced texts or app release."
+}
