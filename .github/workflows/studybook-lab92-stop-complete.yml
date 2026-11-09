@@ -1,4 +1,5 @@
 name: StudyBook LAB92 stop-complete real Gemini and offline audits
+# Rerun after correction of fractional row WIDTH identifier
 on:
   push:
     branches:
