@@ -3,6 +3,7 @@
 // Only an explicitly diagnosed per-minute provider 429 learns a pacing rule.
 // Zero delay while the provider succeeds and no measured minute-limit exists.
 import {loadResumeState,saveResumeState,deleteResumeState} from './resumeStore.js';
+import {readGeminiThroughputV77,throughputDelayV77,noteGeminiSuccessV77} from './geminiThroughputV77.js';
 
 const KEY='studybook-gemini-cadence-v58';
 const LIFE_MS=6*60*60*1000;
@@ -84,6 +85,8 @@ export async function markGeminiCadenceSuccessV58({
  const prior=await loadResumeState(KEY);
  const next=cadenceAfterSuccessV58(prior,{requestStartedAt,inputTokens});
  if(next)await saveResumeState(KEY,next);
+ // Use same existing request owner, no extra queue, no additional Gemini calls.
+ await noteGeminiSuccessV77({now:Date.now(),requestStartedAt,inputTokens});
  return next;
 }
 export async function readGeminiCadenceV58(){
@@ -111,11 +114,17 @@ export async function waitForGeminiCadenceV58({signal=null,onWait=()=>{}}={}){
  // the EXISTING request owner and is NOT a separate scheduler.
  for(;;){
    if(signal?.aborted)throw abortError();
-   const next=await readGeminiCadenceV58();
-   const delay=cadenceDelayV58(next);
+   const [next,throughput]=await Promise.all([
+     readGeminiCadenceV58(),readGeminiThroughputV77()
+   ]);
+   const rpmDelay=cadenceDelayV58(next);
+   const overloadDelay=throughputDelayV77(throughput);
+   const delay=Math.max(rpmDelay,overloadDelay);
    if(delay<=0)return 0;
    const chunk=Math.min(15000,delay);
-   onWait({kind:next.kind,remainingMs:delay,expectedGapMs:next.gapMs});
+   const owner=overloadDelay>rpmDelay?throughput:next;
+   onWait({kind:owner?.kind||'provider-pacing',remainingMs:delay,
+     expectedGapMs:owner?.gapMs||0});
    await sleepWithAbort(chunk,signal);
  }
 }
