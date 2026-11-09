@@ -1,0 +1,80 @@
+{
+  "study": "LAB97 limited deterministic postprocessing and preservation of modal meaning",
+  "date": "2026-11-09T14:04:25.959Z",
+  "method": "Whitelist punctuation repairs; never change source letters. Review-only flags for possibility, evidence strength and negation. No provider calls.",
+  "caution": "These whitelisted fixes only work on the present examples; never auto-generalize Italian apostrophes with broad regex. Semantic risk flags cannot be auto-repaired with punctuation alone.",
+  "summary": {
+    "simulatedSamples": 15000,
+    "realSamples": 4,
+    "realWithApostropheFix": 1,
+    "semanticRiskFlags": 4,
+    "allLettersUnchanged": true,
+    "arithmeticOrFormattingFailures": 0
+  },
+  "examples": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "originalLetters": 509,
+      "correctedLetters": 509,
+      "correctionNames": [],
+      "originalLines": 11,
+      "correctedLines": 11,
+      "percentUnchanged": true,
+      "semanticRiskFlags": [
+        "ECLIPSES_LUNATION_CAUSALITY_AMBIGUITY"
+      ],
+      "correctedPreview": null,
+      "canPublishWithoutSemanticReview": false
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "originalLetters": 660,
+      "correctedLetters": 660,
+      "correctionNames": [],
+      "originalLines": 14,
+      "correctedLines": 14,
+      "percentUnchanged": true,
+      "semanticRiskFlags": [
+        "MODALITY_CHANGED_FROM_POSSIBILITY_TO_CERTAINTY"
+      ],
+      "correctedPreview": null,
+      "canPublishWithoutSemanticReview": false
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "originalLetters": 573,
+      "correctedLetters": 573,
+      "correctionNames": [
+        "apostrophe_l_alunno",
+        "apostrophe_l_iscritto"
+      ],
+      "originalLines": 13,
+      "correctedLines": 13,
+      "percentUnchanged": true,
+      "semanticRiskFlags": [
+        "INTERNAL_RULE_CHANGED_TO_NORMA"
+      ],
+      "correctedPreview": "In un esercizio del 2024, una biblioteca simulata ha adottato una procedura per i prestiti. La norma 12 impone che l'alunno registri il titolo prima del prelievo e confermi il reso entro dieci giorni. Gli operatori possono accordare una proroga unicamente se il testo non risulta prenotato da altri. Tale prolungamento non è automatico: in assenza di conferma scritta vale la scadenza originaria. Se il volume è già opzionato, l'iscritto deve riconsegnarlo nei termini anche senza aver terminato la lettura. Il registro permette di tracciare assegnatari e date, ma esclude pareri personali dei lettori. Tali condizioni ed eccezioni risultano fondamentali per la corretta applicazione della prassi.",
+      "canPublishWithoutSemanticReview": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "originalLetters": 587,
+      "correctedLetters": 587,
+      "correctionNames": [],
+      "originalLines": 13,
+      "correctedLines": 13,
+      "percentUnchanged": true,
+      "semanticRiskFlags": [
+        "DOCUMENTED_NOT_SAME_AS_PROVEN"
+      ],
+      "correctedPreview": null,
+      "canPublishWithoutSemanticReview": false
+    }
+  ],
+  "problems": []
+}
