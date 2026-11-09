@@ -1,0 +1,64 @@
+{
+  "study": "MotorLab LAB99 focused human spot-check after five Gemini sentence outputs",
+  "date": "2026-11-09",
+  "method": "Assistant comparison of exact LAB98 source and regenerated one-sentence copy, plus deterministic metrics; no independent expert certification.",
+  "summary": {
+    "pagesWithTargetRecovered": 4,
+    "pagesNumericallyInside": 4,
+    "pagesSemanticallyComplete": 0,
+    "pagesEligibleForAndroid": 0,
+    "extraTargetedCalls": 1
+  },
+  "cases": [
+    {
+      "id": "tides_sole_scienze50",
+      "reduction": 47.91,
+      "rows": "7/7",
+      "repaired": "Tornato il contributo congiunto di Luna e Sole alle maree.",
+      "remaining": [
+        "Manca la necessità dell'allineamento per le eclissi.",
+        "Manca il principio delle osservazioni scientifiche ripetibili.",
+        "Manca il confronto esplicito fra descrizione del fenomeno e cause delle variazioni."
+      ],
+      "language": "Frase corretta e naturale",
+      "approved": false
+    },
+    {
+      "id": "hemoglobin_red_cells_medicina20",
+      "reduction": 19.23,
+      "rows": "13/13",
+      "repaired": "Ripristinata l'emoglobina nei globuli rossi.",
+      "remaining": [
+        "La fonte dice «un singolo valore misurato non basta sempre», ma il testo dice «non basta», rendendo assoluta una cautela.",
+        "«Contesto» non esplicita il contesto clinico della fonte."
+      ],
+      "language": "Frase corretta e naturale",
+      "approved": false
+    },
+    {
+      "id": "unread_reserved_procedura40",
+      "reduction": 40.25,
+      "rows": "9/9",
+      "repaired": "Ripristinato l'obbligo di restituire il volume prenotato anche quando la lettura è incompleta.",
+      "remaining": [
+        "Il registro non esplicita chi ha ricevuto il libro e in quale giorno.",
+        "«Pur se» è grammaticalmente interpretabile, ma «anche se» sarebbe più naturale in uno strumento didattico."
+      ],
+      "language": "Frase grammaticalmente comprensibile, può essere resa più naturale",
+      "approved": false
+    },
+    {
+      "id": "eclipses_lunation_scienze40",
+      "reduction": 36.89,
+      "rows": "8/8",
+      "repaired": "Ripristinato che le eclissi non avvengono a ogni lunazione.",
+      "remaining": [
+        "Non è spiegata la distinzione fra descrizione del moto e causa delle variazioni osservate.",
+        "La frase «dall'inclinazione asse» è sgrammaticata e richiede correzione."
+      ],
+      "language": "Il nuovo periodo sulle eclissi è corretto, ma il resto della pagina contiene un difetto grafico",
+      "approved": false
+    }
+  ],
+  "verdict": "The one-sentence surgery is mathematically promising and saves provider calls. Remaining semantic and orthographic defects forbid auto-publishing. No production app changes."
+}
