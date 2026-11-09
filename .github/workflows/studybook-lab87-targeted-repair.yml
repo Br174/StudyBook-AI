@@ -1,0 +1,50 @@
+name: StudyBook LAB87 targeted correction hard-grid Gemini pilot
+on:
+  push:
+    branches:
+      - 'audit/studybook-targeted-repair-v87-*'
+    paths:
+      - 'scripts/test-lab87-targeted-repair.mjs'
+      - '.github/workflows/studybook-lab87-targeted-repair.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab87-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check targeted repair script
+        run: node --check scripts/test-lab87-targeted-repair.mjs
+      - name: Run bounded real Gemini repair tests
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab87-targeted-repair.mjs
+      - name: Upload full or partial evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB87-TargetedRepair-RealGemini
+          path: audit/reports/lab87-targeted-repair-real-gemini.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Persist evidence to isolated audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab87-targeted-repair-real-gemini.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab87-targeted-repair-real-gemini.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(LAB87): preserve raw and corrected Gemini evidence'
+            git push origin "HEAD:${TARGET_REF}"
+          fi
