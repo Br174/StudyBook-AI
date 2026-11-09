@@ -31,6 +31,7 @@ import {studyHomeAction,sameStoredDocument} from './lib/studyHomeFlowV38.js';
 import {progressDiagnostic} from './lib/geminiRecoveryV39.js';
 import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
 import { planStudyAutoResumeV45,autoResumeWakeDecisionV54,autoResumeNextWakeMsV54 } from './lib/studyAutoResumeV45.js';
+import {requiresRecalibrationV79,hasFinishedLocalAuditV79} from './lib/studyQualityRecoveryV79.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
 import { reacquireFromSavedPdf } from './lib/sourceRecoveryV34.js';
@@ -1395,16 +1396,27 @@ export default function AppV14() {
       setStatus('Nessuna elaborazione parziale recuperabile per questo libro');
       return;
     }
+    if(requiresRecalibrationV79(current.editionsV36)){
+      // LAB79: "resume" must not repeat an already complete local audit
+      // or imply a Gemini request ran. Show the existing targeted correction
+      // control instead; only explicit user action may call the provider.
+      setStatus('Tutte le bozze sono salvate. Il controllo ha rilevato '+
+        'riduzioni fuori margine. Apri Studio e premi «Migliora percentuali e chiarezza».');
+      navigateTo('studio');
+      return;
+    }
     resumeExecutionRef.current=true;
     let draft=current;
     setGenerating(true);setWorkPhase('gemini');setGeminiStalled(false);setError('');
     setProgress({done:current.editionsV36.verifiedChunkVariants||0,
       total:current.editionsV36.totalChunkVariants||1});
     try{
-      // LAB66 local quality finalization is permitted during Gemini cooldown;
-      // all six drafts already exist, therefore no provider call is needed.
+      // LAB79: execute a free local audit ONLY if the six saved drafts
+      // have never been audited. A finished but nonconforming audit must
+      // never be mistaken for more pending generation.
       const localAudit=Boolean(current.editionsV36?.draftComplete&&
-        current.editionsV36?.draftRowsV57);
+        current.editionsV36?.draftRowsV57&&
+        !hasFinishedLocalAuditV79(current.editionsV36));
       const pause=localAudit?null:await readGeminiPause();
       if(pause){
         const paused={...current.editionsV36,quota:pause,status:pause.automatic?'quota-paused':'quota-review'};
@@ -1481,6 +1493,17 @@ export default function AppV14() {
         ? {id:libraryId,fileName,sourceData:documentData,studyBook}:null);
       if(!record?.studyBook?.editionsV36||record.studyBook.editionsV36.complete){
         setStatus('Nessun libro incompleto trovato nei checkpoint');
+        return;
+      }
+      if(requiresRecalibrationV79(record.studyBook.editionsV36)){
+        setLibraryId(record.id);
+        setFileName(record.fileName);
+        setDocumentData(record.sourceData);
+        setSourceFile(record.originalFile||null);
+        setStudyBook(record.studyBook);
+        setStatus('44/44 pagine esaminate per livello. Bozze conservate: '+
+          'aprire Studio e usare «Migliora percentuali e chiarezza».');
+        if(!auto)navigateTo('studio');
         return;
       }
       setLibraryId(record.id);
