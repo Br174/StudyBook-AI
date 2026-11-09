@@ -1,0 +1,81 @@
+{
+  "name": "LAB94_ITALIAN_FACTS_FROM_SOURCE_V1",
+  "date": "2026-11-09",
+  "intent": "Only user-facing Italian semantic descriptions are sent to Gemini. Internal English keys never enter the model prompt. All phrases grounded in original synthetic sample.",
+  "sources": {
+    "scienze": {
+      "earth_rotates": "La Terra ruota attorno al proprio asse",
+      "day_night": "Questa rotazione determina il giorno e la notte",
+      "axis": "Asse terrestre",
+      "light_dark": "Una parte della Terra riceve la luce solare, l'altra resta al buio",
+      "revolution": "La Terra compie la rivoluzione attorno al Sole",
+      "year": "La rivoluzione dura circa un anno",
+      "seasons_axis_tilt": "Le stagioni dipendono dall'inclinazione dell'asse terrestre",
+      "not_distance": "Le stagioni NON dipendono dalla distanza della Terra dal Sole",
+      "earth_around_sun": "Rivoluzione terrestre attorno al Sole",
+      "tides_lunar_solar": "La Luna e il Sole influiscono sulle maree",
+      "eclipses_alignment": "Le eclissi richiedono un allineamento particolare",
+      "not_every_lunation": "Le eclissi NON avvengono a ogni lunazione",
+      "testable_hypotheses": "Il metodo scientifico richiede ipotesi verificabili",
+      "repeatable_observations": "Servono osservazioni ripetibili",
+      "isolated_result_insufficient": "Un risultato isolato non basta a dimostrare la spiegazione",
+      "cause_vs_description": "Distinguere la descrizione del movimento dalle cause delle variazioni osservate"
+    },
+    "procedura": {
+      "regulation_12": "La procedura segue la regola interna numero 12",
+      "title_before_loan": "Lo studente registra il titolo prima del prestito",
+      "return_ten_days": "Conferma della restituzione entro dieci giorni",
+      "year_2024": "Si tratta dell'esercizio scolastico del 2024",
+      "simulated_library": "È una biblioteca simulata nell'esercizio",
+      "extension_only_if_unreserved": "La proroga è possibile soltanto se il volume non è prenotato da altri",
+      "not_automatic": "La proroga NON è automatica",
+      "written_confirmation": "Serve una conferma scritta della proroga",
+      "initial_date_without_confirmation": "Senza conferma scritta resta valida la data iniziale",
+      "reserved_return_on_deadline": "Il volume prenotato deve essere restituito alla scadenza",
+      "even_if_not_finished": "Va restituito anche se la lettura non è stata completata",
+      "deadline": "Scadenza del prestito",
+      "register_who_when": "Il registro indica chi ha ricevuto il libro e in quale giorno",
+      "no_opinions": "Il registro NON raccoglie opinioni personali dei lettori",
+      "conditions_exceptions": "Le condizioni e le eccezioni della procedura sono essenziali"
+    },
+    "medicina": {
+      "respiratory_route": "L'apparato respiratorio trasporta aria ai polmoni",
+      "inspiration_contracts_diaphragm": "Durante l'inspirazione il diaframma si contrae",
+      "expiration_relaxes": "Durante l'espirazione a riposo il diaframma si rilassa",
+      "airways": "L'aria passa attraverso le vie aeree",
+      "thorax_expands": "Durante l'inspirazione il torace aumenta di volume",
+      "oxygen_to_blood": "Negli alveoli l'ossigeno passa dall'aria al sangue",
+      "co2_opposite": "L'anidride carbonica passa dal sangue verso l'aria in direzione opposta",
+      "partial_pressure": "Lo scambio avviene per differenze di pressione parziale dei gas",
+      "alveoli": "Gli scambi gassosi avvengono negli alveoli polmonari",
+      "thin_wall": "Le pareti degli alveoli sono molto sottili",
+      "hemoglobin_transports_oxygen": "L'emoglobina trasporta gran parte dell'ossigeno nel sangue",
+      "effort_increases_breathing": "Durante lo sforzo la frequenza respiratoria può aumentare",
+      "oxygen_consumption_co2_production": "Lo sforzo aumenta il consumo di ossigeno e la produzione di anidride carbonica",
+      "red_blood_cells": "L'emoglobina si trova nei globuli rossi",
+      "diagnostic_triad": "Il medico valuta sintomi, storia clinica ed esame obiettivo",
+      "single_measurement_not_enough": "Un singolo valore misurato non basta sempre per una diagnosi",
+      "clinical_context": "Il valore va interpretato nel contesto clinico"
+    },
+    "concetto_sbilanciato": {
+      "compare_documents": "Confrontare fonti e documenti diversi per ricostruire gli avvenimenti",
+      "provenance_purpose": "Valutare provenienza, autore, periodo e scopo di ogni documento",
+      "different_perspectives_interests": "Testimonianze diverse dipendono da punti di osservazione e interessi degli autori",
+      "distinguish_fact_opinion": "Distinguere fatti e opinioni",
+      "uncertainty": "Segnalare ciò che resta incerto",
+      "context_causes": "Una data isolata non basta: studiare contesto e cause degli eventi",
+      "independent_sources": "Verificare usando più fonti indipendenti",
+      "consequences": "Analizzare anche le conseguenze degli eventi",
+      "primary_source_period": "Una fonte primaria è prodotta nel periodo storico studiato",
+      "secondary_source_interprets": "Una fonte secondaria interpreta documenti precedenti",
+      "hypothesis_vs_facts": "Distinguere ipotesi da fatti documentati"
+    },
+    "pagina_breve_continua": {
+      "peremptory_deadline": "Il termine per depositare le osservazioni è perentorio",
+      "15_days_from_notification": "Il termine è di 15 giorni dalla notifica",
+      "observations_filing": "La parte può depositare osservazioni entro il termine",
+      "loss_right_to_file": "Dopo la scadenza la parte perde la possibilità di depositare le osservazioni",
+      "right_to_reasons_remains": "Resta il diritto della parte di conoscere la motivazione"
+    }
+  }
+}
