@@ -1,0 +1,88 @@
+{
+  "date": "2026-11-09",
+  "kind": "LAB95 manual assistant spot-check",
+  "method": "Direct reading of each full output against five synthetic source fixtures. Not medical/legal specialist review.",
+  "reviewed": 7,
+  "readyForProduction": 0,
+  "falsePositiveNote": "Regex alerts should not be turned into automatic omission verdicts. Examples: 'anziché' negates dependence; 'origine' can convey provenance.",
+  "ratings": [
+    {
+      "source": "scienze",
+      "level": 20,
+      "variant": "A",
+      "judgment": "REVIEW",
+      "issues": [
+        "La riduzione e la capienza sono conformi (23,71%; 10/11).",
+        "Falso positivo del controllo 'non-distanza': l'espressione «anziché dalla distanza» ne conserva correttamente il significato.",
+        "La frase finale contiene formulazione un po' artificiosa («occorrendo distinguere»); richiede revisione di stile.",
+        "Non dichiarare certificazione scientifica sulla base di regex."
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "variant": "B",
+      "judgment": "REJECT",
+      "issues": [
+        "La riduzione e la capienza sono conformi (15,36%; 11/11).",
+        "Accenti e apostrofi mancanti: «poiche», «l altra», «dall inclinazione», «percio».",
+        "Fatti obbligatori visibili, ma testo non stampabile per lo studio senza correzione ortografica."
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "variant": "A",
+      "judgment": "REJECT",
+      "issues": [
+        "Riduzione eccessiva: 32,69% invece di 20%.",
+        "Mancano «pressione parziale», esplicitazione di consumo ossigeno e produzione anidride carbonica, globuli rossi e «contesto clinico».",
+        "Scostamento non spiegabile come semplice mezza riga libera."
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "variant": "B",
+      "judgment": "REJECT",
+      "issues": [
+        "Concetti essenziali sostanzialmente presenti; nessun allarme lessicale.",
+        "Riduzione soltanto 7,69%; 14 righe utilizzate su 13, dunque violazione della griglia.",
+        "Troppe formulazioni estese per il livello richiesto."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "variant": "A",
+      "judgment": "REJECT",
+      "issues": [
+        "Riduzione 12,26%, e 12 righe invece di 11.",
+        "Registro non indica chi ha ricevuto il libro e quando: omissione sostanziale.",
+        "Altre condizioni su proroga e restituzione risultano conservate."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "variant": "B",
+      "judgment": "REJECT",
+      "issues": [
+        "Riduzione 17,92% e 11/11 righe corrette.",
+        "L'espressione «altrimenti resta valida la data iniziale» è riferita ambiguamente al caso del libro prenotato anziché chiaramente all'assenza di conferma scritta.",
+        "La checkbox lessicale produce falsi positivi sull'ordine delle parole, ma non deve nascondere questa ambiguità normativa."
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "variant": "A",
+      "judgment": "REVIEW",
+      "issues": [
+        "Contenuti principali preservati; «origine di ogni testimonianza» sostituisce in modo accettabile «provenienza».",
+        "Riduzione 13,73%: 1,27 punti sotto la fascia 15–25%; capienza 12/12 righe.",
+        "Non automatizzare accettazione per banda senza valutare qualità e tolleranza."
+      ]
+    }
+  ]
+}
