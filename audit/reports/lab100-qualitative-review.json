@@ -1,0 +1,86 @@
+{
+  "title": "StudyBook AI LAB100 qualitative review of real first-reading inventories",
+  "date": "2026-11-09",
+  "scope": "Five synthetic, pre-extracted page texts; assistant qualitative spot-check against complete original page text, not independent expert verification.",
+  "summary": {
+    "sourcePages": 5,
+    "geminiStatements": 53,
+    "allStatementsMarkedEssential": 53,
+    "structuredInventoriesValidAfterCaseOnlyQuoteFix": 5,
+    "manuallyCuratedLexicalSignals": 64,
+    "matchedExactly": 61,
+    "apparentLexicalFalsePositives": 3,
+    "confirmedMissingCoreInThisSpotCheck": 0,
+    "didacticallyCertified": 0,
+    "automaticPDFSourceSegmentationTested": false,
+    "automaticFactPrioritySelectionValidated": false
+  },
+  "reviews": [
+    {
+      "source": "scienze",
+      "facts": 12,
+      "summary": "All 9 source sentences represented, including negation of distance as seasons' cause, eclipse alignment and not every lunation, lunar and solar tides, repeatable observations, and single-result insufficiency.",
+      "issues": [
+        "One evidence quote is almost the complete source sentence, which is allowed but not independent atomic-claim proof.",
+        "Every extracted fact is marked essential, so the model has not distinguished detailed evidence from minimal concepts."
+      ],
+      "manualRubricMissing": [],
+      "approved": false
+    },
+    {
+      "source": "procedura",
+      "facts": 11,
+      "summary": "All 7 original sentences represented, including regola interna 12, ten-day return confirmation, written extension, original deadline, reserved-book exception and who/when register.",
+      "issues": [
+        "One claim uses «l obbligo» instead of «l'obbligo». This is an orthographic defect in the inventory claim, NOT the source quote.",
+        "The model emitted kind «obbligo», which falls outside the narrower experimental type set; should be handled as a valid obligation class in a future schema.",
+        "The critical-marker detector failed to recognize «obbligo» as a preserved obligation due to regex word boundaries. False warning."
+      ],
+      "manualRubricMissing": [],
+      "approved": false
+    },
+    {
+      "source": "medicina",
+      "facts": 14,
+      "summary": "All 8 source sentences represented after repairing ONLY the initial capital of one exact evidence quote. Mentions airways, inspiration/expiration, alveoli, oxygen and CO2 directions, partial pressure, red cells/hemoglobin, effort and diagnostic caveat.",
+      "issues": [
+        "An exact evidence quote initially started with lowercase «durante» instead of source uppercase «Durante»; safe metadata-only correction performed with unchanged claim.",
+        "The phrase «tragitto inverso» is equivalent here to «percorso opposto», but strict reference regex did not match.",
+        "The phrase «La maggior parte dell'ossigeno ... viene trasportata dall'emoglobina» changes word order; manual reference regex assumed emoglobina before ossigeno.",
+        "The word «produzione» differs morphologically from reference regex «produc»; false lexical warning.",
+        "Automatic clause coverage flags a semicolon-separated source sentence even though the atomic claims cover its two parts: needs better checking of combined evidence spans."
+      ],
+      "manualRubricMissing": [
+        "co2_opposite",
+        "hemoglobin_transports_oxygen",
+        "oxygen_consumption_co2_production"
+      ],
+      "falsePositiveBySourceReading": true,
+      "approved": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "facts": 13,
+      "summary": "All 8 source sentences represented, including provenance, different perspectives, facts versus opinions, uncertainty, causes and consequences, primary and secondary sources, and hypotheses versus documented facts.",
+      "issues": [
+        "The source clause coverage check gives one warning for a multi-fact source sentence, because no single evidence quote spans the entire clause.",
+        "The model emitted kind «possibilità» and «obbligo», outside the narrow experimental kind vocabulary, although those categories are semantically reasonable.",
+        "All facts marked essential; proportional allocation based on importance is not yet calibrated."
+      ],
+      "manualRubricMissing": [],
+      "approved": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "facts": 3,
+      "summary": "Both source sentences covered: peremptory 15 days from notification, forfeiture of filing right, and continuing right to reasons. None of the context-only adjacent page sentences was copied.",
+      "issues": [
+        "The relation detector warns about the peremptory term because its obligation pattern recognizes «perentor» but not «perentorio» as a whole token. False warning.",
+        "For a very short original page, generating multiple detailed facts is possible but must never force a percentage or unnecessarily lengthen the page."
+      ],
+      "manualRubricMissing": [],
+      "approved": false
+    }
+  ],
+  "conclusion": "Successful first-reading extraction and immutable six-plan reuse on these five examples, but not a validated production semantic understanding engine. High-priority next step: distinguish minimal essential concepts from supporting details, improve morphological/relational checks, verify real PDF page extraction and end-to-end quality."
+}
