@@ -11,6 +11,9 @@ on:
       - 'src/lib/draftFirstV57.js'
       - 'api/editionsBulkV51.js'
       - 'scripts/test-lab78-real-worker-parity.mjs'
+      - 'scripts/test-lab66-nonblocking-quality.mjs'
+      - 'src/lib/studyRebalanceV67.js'
+      - 'src/lib/editionViewV36.js'
   workflow_dispatch:
 permissions:
   contents: read
