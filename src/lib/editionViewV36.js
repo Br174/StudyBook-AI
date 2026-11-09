@@ -12,7 +12,10 @@ export function buildGeminiEditionViewV36(book,reduction){
   const id=String(reduction);
   if(!Object.hasOwn(labels,id))return null;
   const source=book.editionsV36;
-  const qualityOnly=source.publicationModeV66==='generated-text-quality-not-certified';
+  const lab78=source.publicationModeV66==='lab78-numeric-gate-semantic-unverified';
+  const qualityOnly=lab78||source.publicationModeV66==='generated-text-quality-not-certified';
+  const quantitativePass=lab78?
+    source.qualityV66?.levels?.[id]?.quantitativeAndGeometryCompliantV78===true:null;
   let sourceLetters=0,outputLetters=0,sourceWords=0,outputWords=0,valid=0,total=0;
   let readablePartialParagraphs=0,verifiedPreviewFragments=0;
   const chapters=(book.chapters||[]).map((chapter,ci)=>({
@@ -50,8 +53,11 @@ export function buildGeminiEditionViewV36(book,reduction){
   }));
   const pillar=book?.studyPillarV38==='studybook-progressive-v38-1';
   // A completed single edition is independently studiable/exportable while other levels run.
-  const complete=source.checkpointPersistent!==false&&total>0&&valid===total&&
+  const available=source.checkpointPersistent!==false&&total>0&&valid===total&&
     (!pillar||source.version==='lab38-progressive-editions-v1');
+  // Availability is not mathematical validity. LAB78 can show drafts
+  // read-only for user review, but must never mark them study-ready/exportable.
+  const complete=available&&(!lab78||quantitativePass);
   const achievedLettersPercent=sourceLetters&&complete
     ?Math.round((1-outputLetters/sourceLetters)*1000)/10:null;
   const targetPercent=id==='summary'?null:Number(id);
@@ -64,7 +70,8 @@ export function buildGeminiEditionViewV36(book,reduction){
     readableParagraphs:valid+readablePartialParagraphs,
     verifiedPreviewFragments,
     source:'gemini-v36',level:id,
-    status:complete?(qualityOnly?'available-with-quality-notes':'complete'):'preview-only',
+    status:complete?(qualityOnly?'available-with-quality-notes':'complete'):
+      available&&lab78?'draft-available-needs-calibration':'preview-only',
   };
   return {...book,chapters,editionReadiness,
     precisionEdition:{
@@ -79,7 +86,7 @@ export function buildGeminiEditionViewV36(book,reduction){
       reductionCompliant:Boolean(withinBand),
       qualityGuard:{status:complete
           ?(qualityOnly?'generated-quality-not-certified':'ai-generated-verified')
-          :'preview-only',
+          :available&&lab78?'numeric-geometry-review-required':'preview-only',
         issueCount:qualityOnly
           ?(source.qualityV66?.levels?.[id]?.warnings||0):total-valid,
         semanticCertification:false,
