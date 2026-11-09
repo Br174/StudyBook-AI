@@ -1,0 +1,61 @@
+name: StudyBook LAB78 REAL native six-level run and targeted repair gate
+on:
+  push:
+    branches:
+      - 'lab/studybook-core-android-01-update-78-*'
+    paths:
+      - '.github/workflows/studybook-lab78-live-native-gate.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab78-native-full-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  real-app-six-levels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install project packages
+        run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: Verify LAB78 Worker is live and has source geometry contract
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          const url='https://studybook-ai-lab78-geometry.brunoverlezza.workers.dev/api/editions/bulk/v51';
+          const r=await fetch(url,{method:'GET',signal:AbortSignal.timeout(12000)});
+          assert.equal(r.status,405);
+          assert.equal(r.headers.get('X-StudyBook-Geometry-Policy'),'lab78-real-worker-60-cell-source-pages-v1');
+          console.log('ACTUAL_APP_NATIVE_WORKER_VERSION_VERIFIED');
+          NODE
+      - name: TRUE app DraftFirst engine through Worker, including optional targeted repairs
+        run: node scripts/test-lab78-live-native-full-cycle.mjs
+      - name: Archive the full actual-model evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB78-Real-Native-FullCycle
+          path: audit/reports/lab78-live-native-full-cycle.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Save exact model calls and actual six-level outcome on isolated research branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab78-live-native-full-cycle.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab78-live-native-full-cycle.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB78): genuine StudyBook app six-level end-to-end result, no false green'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
