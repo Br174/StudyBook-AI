@@ -69,6 +69,14 @@ export const RULES={
    reason:'Il diritto alla motivazione permane anche dopo la scadenza.'}
  ]
 };
+function preservesConditionalDeadline(text){
+ // Require the condition and the ORIGINAL/INITIAL deadline inside the SAME sentence.
+ // Otherwise a later reference to an unrelated scadenza could falsely imply correctness.
+ return text.split(/[.!?]+/u).some(sentence=>
+  /(?:senza|assenza|mancanza).{0,45}(?:conferma|autorizzaz).{0,95}(?:inizial|originari)/iu.test(sentence) ||
+  /(?:data|scadenza).{0,25}(?:inizial|originari).{0,65}(?:senza|assenza|mancanza).{0,35}(?:conferma|autorizzaz)/iu.test(sentence)
+ );
+}
 export function semanticGuard(sourceId,original,generated,{level=10}={}){
  if(typeof original!=='string'||typeof generated!=='string')throw Error('Expected source and generated text');
  const source=original.normalize('NFC').replace(/\s+/gu,' ');
@@ -76,7 +84,7 @@ export function semanticGuard(sourceId,original,generated,{level=10}={}){
  const matched=[],alerts=[],skipped=[];
  for(const rule of RULES[sourceId]||[]){
   if(!rule.source.test(source)){skipped.push(rule.id);continue}
-  const isPresent=rule.output.test(output);
+  const isPresent=rule.id==='written_confirmation_initial_deadline' ? preservesConditionalDeadline(output) : rule.output.test(output);
   const event={id:rule.id,reason:rule.reason,severity:rule.severity,verifiedBy:'regex heuristic only'};
   if(isPresent)matched.push(event);
   else alerts.push(event);
