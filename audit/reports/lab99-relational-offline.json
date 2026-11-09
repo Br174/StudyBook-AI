@@ -1,0 +1,346 @@
+{
+  "study": "LAB99 relation verification, patch safety and rollback offline",
+  "date": "2026-11-09T14:37:18.199Z",
+  "modelCalls": 0,
+  "summary": {
+    "originalPages": 5,
+    "originalFalseAlerts": 0,
+    "relationsInOriginals": 21,
+    "oldPagesReplayed": 15,
+    "historicalFalseNegativesRevealed": 3,
+    "handcraftedPatches": 4,
+    "handcraftedProvisionalAccepted": 4,
+    "deliberateMutations": 124,
+    "mutationsDetected": 116,
+    "issues": 8
+  },
+  "originals": [
+    {
+      "source": "scienze",
+      "checked": 6,
+      "alerts": []
+    },
+    {
+      "source": "procedura",
+      "checked": 5,
+      "alerts": []
+    },
+    {
+      "source": "medicina",
+      "checked": 5,
+      "alerts": []
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "checked": 3,
+      "alerts": []
+    },
+    {
+      "source": "pagina_breve_continua",
+      "checked": 2,
+      "alerts": []
+    }
+  ],
+  "historical": [
+    {
+      "source": "scienze",
+      "level": 20,
+      "math": false,
+      "oldGuardAlerts": [],
+      "relationalAlerts": [],
+      "criticalFacts": 6,
+      "hadNoOldGuardAlerts": true
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "math": true,
+      "oldGuardAlerts": [],
+      "relationalAlerts": [
+        "hemoglobin_in_red_cells"
+      ],
+      "criticalFacts": 5,
+      "hadNoOldGuardAlerts": true
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "math": false,
+      "oldGuardAlerts": [],
+      "relationalAlerts": [],
+      "criticalFacts": 5,
+      "hadNoOldGuardAlerts": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "math": false,
+      "oldGuardAlerts": [],
+      "relationalAlerts": [],
+      "criticalFacts": 3,
+      "hadNoOldGuardAlerts": true
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "math": true,
+      "oldGuardAlerts": [
+        "right_to_motivation_remains"
+      ],
+      "relationalAlerts": [],
+      "criticalFacts": 2,
+      "hadNoOldGuardAlerts": false
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "math": false,
+      "oldGuardAlerts": [
+        "eclipses_not_every_lunation"
+      ],
+      "relationalAlerts": [
+        "tides_both_moon_and_sun",
+        "eclipse_not_each_lunation"
+      ],
+      "criticalFacts": 6,
+      "hadNoOldGuardAlerts": false
+    },
+    {
+      "source": "medicina",
+      "level": 30,
+      "math": false,
+      "oldGuardAlerts": [
+        "pressure_is_partial",
+        "single_value_not_always_sufficient"
+      ],
+      "relationalAlerts": [
+        "hemoglobin_in_red_cells",
+        "partial_pressure",
+        "effort_both_oxygen_and_co2",
+        "single_value_not_always_enough"
+      ],
+      "criticalFacts": 5,
+      "hadNoOldGuardAlerts": false
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "math": true,
+      "oldGuardAlerts": [
+        "extension_not_automatic"
+      ],
+      "relationalAlerts": [
+        "reserved_return_even_if_unread",
+        "extension_not_automatic"
+      ],
+      "criticalFacts": 5,
+      "hadNoOldGuardAlerts": false
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "math": true,
+      "oldGuardAlerts": [
+        "eclipses_not_every_lunation"
+      ],
+      "relationalAlerts": [
+        "eclipse_not_each_lunation"
+      ],
+      "criticalFacts": 6,
+      "hadNoOldGuardAlerts": false
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "math": true,
+      "oldGuardAlerts": [],
+      "relationalAlerts": [
+        "reserved_return_even_if_unread"
+      ],
+      "criticalFacts": 5,
+      "hadNoOldGuardAlerts": true
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "math": true,
+      "oldGuardAlerts": [],
+      "relationalAlerts": [
+        "tides_both_moon_and_sun",
+        "eclipse_alignment",
+        "observations_repeatable"
+      ],
+      "criticalFacts": 6,
+      "hadNoOldGuardAlerts": true
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "math": false,
+      "oldGuardAlerts": [
+        "pressure_is_partial",
+        "single_value_not_always_sufficient"
+      ],
+      "relationalAlerts": [
+        "hemoglobin_in_red_cells",
+        "partial_pressure",
+        "effort_both_oxygen_and_co2",
+        "single_value_not_always_enough"
+      ],
+      "criticalFacts": 5,
+      "hadNoOldGuardAlerts": false
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "math": true,
+      "oldGuardAlerts": [
+        "seasons_not_distance",
+        "single_result_insufficient"
+      ],
+      "relationalAlerts": [
+        "eclipse_alignment",
+        "observations_repeatable",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "criticalFacts": 6,
+      "hadNoOldGuardAlerts": false
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "math": false,
+      "oldGuardAlerts": [
+        "internal_rule_not_generic_norm",
+        "written_confirmation_initial_deadline"
+      ],
+      "relationalAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "reserved_return_even_if_unread",
+        "register_who_and_when"
+      ],
+      "criticalFacts": 5,
+      "hadNoOldGuardAlerts": false
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "math": false,
+      "oldGuardAlerts": [
+        "eclipses_not_every_lunation"
+      ],
+      "relationalAlerts": [
+        "eclipse_not_each_lunation"
+      ],
+      "criticalFacts": 6,
+      "hadNoOldGuardAlerts": false
+    }
+  ],
+  "handcrafted": [
+    {
+      "caseId": "tides_sole_scienze50",
+      "type": "MANUALLY_AUTHORED_REFERENCE_NOT_GEMINI",
+      "verdict": "PRELIMINARY_ACCEPT_NEEDS_SEMANTIC_REVIEW",
+      "factsFixed": true,
+      "geometryBefore": 7,
+      "geometryAfter": 7,
+      "percentBefore": 50.08,
+      "percentAfter": 48.58,
+      "reasons": [],
+      "proposedText": "La rotazione terrestre causa giorno e notte. La rivoluzione dura circa un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre, non dalla distanza dal Sole. La Luna e il Sole influiscono sulle maree. Le eclissi non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili; un risultato isolato non basta per dimostrare una spiegazione.",
+      "approvedForApp": false
+    },
+    {
+      "caseId": "hemoglobin_red_cells_medicina20",
+      "type": "MANUALLY_AUTHORED_REFERENCE_NOT_GEMINI",
+      "verdict": "PRELIMINARY_ACCEPT_NEEDS_SEMANTIC_REVIEW",
+      "factsFixed": true,
+      "geometryBefore": 12,
+      "geometryAfter": 13,
+      "percentBefore": 21.29,
+      "percentAfter": 19.23,
+      "reasons": [],
+      "proposedText": "In un esempio didattico l'apparato respiratorio porta aria ai polmoni tramite le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume mentre nell'espirazione a riposo si rilassa. Negli alveoli l'ossigeno passa al sangue e l'anidride carbonica fa il percorso opposto grazie a differenze di pressione parziale attraverso pareti sottili. Nei globuli rossi, l'emoglobina trasporta gran parte dell'ossigeno. La frequenza respiratoria può aumentare sotto sforzo per maggiore consumo di ossigeno e produzione di anidride carbonica. Il medico valuta i disturbi considerando sintomi storia clinica ed esame obiettivo. Un singolo valore non basta e va interpretato nel contesto.",
+      "approvedForApp": false
+    },
+    {
+      "caseId": "unread_reserved_procedura40",
+      "type": "MANUALLY_AUTHORED_REFERENCE_NOT_GEMINI",
+      "verdict": "PRELIMINARY_ACCEPT_NEEDS_SEMANTIC_REVIEW",
+      "factsFixed": true,
+      "geometryBefore": 8,
+      "geometryAfter": 9,
+      "percentBefore": 43.08,
+      "percentAfter": 38.99,
+      "reasons": [],
+      "proposedText": "In una biblioteca scolastica simulata del 2024, la regola interna 12 impone allo studente di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni. Il personale può concedere una proroga solo se il libro non è prenotato da altri; questa non è automatica e senza conferma scritta vale la scadenza iniziale. Se prenotato, va restituito alla scadenza anche se la lettura non è finita. Il registro traccia prestiti e date senza opinioni personali.",
+      "approvedForApp": false
+    },
+    {
+      "caseId": "eclipses_lunation_scienze40",
+      "type": "MANUALLY_AUTHORED_REFERENCE_NOT_GEMINI",
+      "verdict": "PRELIMINARY_ACCEPT_NEEDS_SEMANTIC_REVIEW",
+      "factsFixed": true,
+      "geometryBefore": 8,
+      "geometryAfter": 8,
+      "percentBefore": 41.4,
+      "percentAfter": 36.39,
+      "reasons": [],
+      "proposedText": "La Terra ruota attorno al proprio asse causando il giorno e la notte, mentre la rivoluzione attorno al Sole dura un anno. Le stagioni dipendono dall'inclinazione asse, non dalla distanza solare. La Luna e il Sole influenzano le maree. Le eclissi richiedono allineamenti particolari e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili; un risultato isolato non basta per dimostrare una spiegazione.",
+      "approvedForApp": false
+    }
+  ],
+  "limitations": "Rules are manually developed for five fixed synthetic study pages; same-sentence matches can miss valid paraphrases or miss wrong meaning. Handwritten candidate edits are NOT Gemini generated and NOT production-ready.",
+  "problems": [
+    {
+      "source": "procedura",
+      "rule": "register_who_and_when",
+      "issue": "deliberate source relation deletion unflagged",
+      "index": 21
+    },
+    {
+      "source": "procedura",
+      "rule": "register_who_and_when",
+      "issue": "deliberate source relation deletion unflagged",
+      "index": 25
+    },
+    {
+      "source": "procedura",
+      "rule": "register_who_and_when",
+      "issue": "deliberate source relation deletion unflagged",
+      "index": 44
+    },
+    {
+      "source": "procedura",
+      "rule": "register_who_and_when",
+      "issue": "deliberate source relation deletion unflagged",
+      "index": 86
+    },
+    {
+      "source": "procedura",
+      "rule": "register_who_and_when",
+      "issue": "deliberate source relation deletion unflagged",
+      "index": 103
+    },
+    {
+      "source": "procedura",
+      "rule": "register_who_and_when",
+      "issue": "deliberate source relation deletion unflagged",
+      "index": 104
+    },
+    {
+      "source": "procedura",
+      "rule": "register_who_and_when",
+      "issue": "deliberate source relation deletion unflagged",
+      "index": 119
+    },
+    {
+      "source": "procedura",
+      "rule": "register_who_and_when",
+      "issue": "deliberate source relation deletion unflagged",
+      "index": 123
+    }
+  ]
+}
