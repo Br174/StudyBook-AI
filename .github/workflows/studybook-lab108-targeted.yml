@@ -1,0 +1,58 @@
+name: StudyBook LAB108 - targeted source fact and science40 verification
+on:
+  push:
+    branches:
+      - audit/studybook-source-preserving-calibration-v108-20261110
+    paths:
+      - .github/workflows/studybook-lab108-targeted.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab108-targeted-once
+  cancel-in-progress: false
+jobs:
+  verify-source-patch-and-science:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check targeted test scripts
+        run: |
+          node --check scripts/lab108-local-source-patch.mjs
+          node --check scripts/test-lab108-science40-targeted.mjs
+      - name: Verify source anchored procedure20 correction without Gemini
+        run: node scripts/lab108-local-source-patch.mjs
+      - name: Two capped genuine Gemini science40 tests
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab108-science40-targeted.mjs
+      - name: Archive both complete and partial evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB108-Targeted-Evidence
+          path: |
+            audit/reports/lab108-local-source-patch.json
+            audit/reports/lab108-science40-targeted.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Keep evidence on isolated branch
+        if: always()
+        shell: bash
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f audit/reports/lab108-local-source-patch.json audit/reports/lab108-science40-targeted.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB108): record no-provider patch and two real targeted results'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
