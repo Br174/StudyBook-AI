@@ -1,0 +1,584 @@
+{
+  "method": "LAB90 dynamic shared line, fractional targets, deterministic letter balances",
+  "note": "No AI model called in offline mode; baseline replay measures geometry only, no semantic certification.",
+  "calibration": {
+    "rowWidth": 60,
+    "lettersPerRow": 46.346,
+    "naturalSpaces": 7.844,
+    "justificationSpaces": 3.658,
+    "punctuation": 1.966,
+    "digits": 0.186
+  },
+  "summary": {
+    "fixtures": 30,
+    "randomRuns": 12000,
+    "failed": 0,
+    "baselineReplays": 15,
+    "replayNoLetterChanges": true,
+    "previousStrictAndPercent": 2,
+    "sharedAndPercent": 8
+  },
+  "fixtures": [
+    {
+      "source": "scienze",
+      "level": 65,
+      "target": 210,
+      "fractionalEquivalent": 4.5311,
+      "physicalCap": 5,
+      "softShares": [
+        42,
+        48,
+        39,
+        81
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "target": 300,
+      "fractionalEquivalent": 6.4731,
+      "physicalCap": 7,
+      "softShares": [
+        59,
+        69,
+        56,
+        116
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "target": 359,
+      "fractionalEquivalent": 7.7461,
+      "physicalCap": 8,
+      "softShares": [
+        71,
+        82,
+        67,
+        139
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "target": 419,
+      "fractionalEquivalent": 9.0407,
+      "physicalCap": 10,
+      "softShares": [
+        83,
+        96,
+        78,
+        162
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "target": 479,
+      "fractionalEquivalent": 10.3353,
+      "physicalCap": 11,
+      "softShares": [
+        95,
+        110,
+        89,
+        185
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "target": 539,
+      "fractionalEquivalent": 11.6299,
+      "physicalCap": 12,
+      "softShares": [
+        107,
+        123,
+        101,
+        208
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "target": 223,
+      "fractionalEquivalent": 4.8116,
+      "physicalCap": 5,
+      "softShares": [
+        66,
+        60,
+        34,
+        63
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "target": 318,
+      "fractionalEquivalent": 6.8614,
+      "physicalCap": 7,
+      "softShares": [
+        94,
+        86,
+        49,
+        89
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "target": 382,
+      "fractionalEquivalent": 8.2424,
+      "physicalCap": 9,
+      "softShares": [
+        113,
+        103,
+        59,
+        107
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "target": 445,
+      "fractionalEquivalent": 9.6017,
+      "physicalCap": 10,
+      "softShares": [
+        132,
+        120,
+        68,
+        125
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "target": 509,
+      "fractionalEquivalent": 10.9826,
+      "physicalCap": 11,
+      "softShares": [
+        151,
+        137,
+        78,
+        143
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "target": 572,
+      "fractionalEquivalent": 12.3419,
+      "physicalCap": 13,
+      "softShares": [
+        169,
+        154,
+        88,
+        161
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 65,
+      "target": 255,
+      "fractionalEquivalent": 5.5021,
+      "physicalCap": 6,
+      "softShares": [
+        57,
+        73,
+        59,
+        66
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "target": 364,
+      "fractionalEquivalent": 7.854,
+      "physicalCap": 8,
+      "softShares": [
+        82,
+        104,
+        85,
+        93
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 40,
+      "target": 437,
+      "fractionalEquivalent": 9.4291,
+      "physicalCap": 10,
+      "softShares": [
+        98,
+        125,
+        102,
+        112
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 30,
+      "target": 510,
+      "fractionalEquivalent": 11.0042,
+      "physicalCap": 12,
+      "softShares": [
+        115,
+        145,
+        119,
+        131
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "target": 582,
+      "fractionalEquivalent": 12.5577,
+      "physicalCap": 13,
+      "softShares": [
+        131,
+        166,
+        136,
+        149
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "target": 655,
+      "fractionalEquivalent": 14.1328,
+      "physicalCap": 15,
+      "softShares": [
+        147,
+        187,
+        153,
+        168
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "target": 234,
+      "fractionalEquivalent": 5.049,
+      "physicalCap": 6,
+      "softShares": [
+        192,
+        14,
+        15,
+        13
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "target": 335,
+      "fractionalEquivalent": 7.2282,
+      "physicalCap": 8,
+      "softShares": [
+        274,
+        20,
+        22,
+        19
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "target": 402,
+      "fractionalEquivalent": 8.6739,
+      "physicalCap": 9,
+      "softShares": [
+        329,
+        24,
+        26,
+        23
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 30,
+      "target": 469,
+      "fractionalEquivalent": 10.1195,
+      "physicalCap": 11,
+      "softShares": [
+        384,
+        28,
+        30,
+        27
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "target": 536,
+      "fractionalEquivalent": 11.5652,
+      "physicalCap": 12,
+      "softShares": [
+        439,
+        32,
+        35,
+        30
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "target": 603,
+      "fractionalEquivalent": 13.0108,
+      "physicalCap": 14,
+      "softShares": [
+        494,
+        36,
+        39,
+        34
+      ]
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 65,
+      "target": 54,
+      "fractionalEquivalent": 1.1651,
+      "physicalCap": 5,
+      "softShares": [
+        19,
+        35
+      ]
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "target": 78,
+      "fractionalEquivalent": 1.683,
+      "physicalCap": 5,
+      "softShares": [
+        28,
+        50
+      ]
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 40,
+      "target": 93,
+      "fractionalEquivalent": 2.0066,
+      "physicalCap": 5,
+      "softShares": [
+        33,
+        60
+      ]
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 30,
+      "target": 109,
+      "fractionalEquivalent": 2.3519,
+      "physicalCap": 5,
+      "softShares": [
+        39,
+        70
+      ]
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "target": 124,
+      "fractionalEquivalent": 2.6755,
+      "physicalCap": 5,
+      "softShares": [
+        44,
+        80
+      ]
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 10,
+      "target": 140,
+      "fractionalEquivalent": 3.0208,
+      "physicalCap": 5,
+      "softShares": [
+        50,
+        90
+      ]
+    }
+  ],
+  "rechecks": [
+    {
+      "source": "scienze",
+      "level": 40,
+      "physicalCap": 8,
+      "equivalentLines": 7.7461,
+      "prevStrictPagePass": false,
+      "sharedNewLinePass": true,
+      "newPctPass": true,
+      "newCombinedPass": true,
+      "fractionsRemainingAtLastRow": 44,
+      "lettersInvariant": true
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "physicalCap": 5,
+      "equivalentLines": 4.5311,
+      "prevStrictPagePass": false,
+      "sharedNewLinePass": true,
+      "newPctPass": true,
+      "newCombinedPass": true,
+      "fractionsRemainingAtLastRow": 53,
+      "lettersInvariant": true
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "physicalCap": 7,
+      "equivalentLines": 6.4731,
+      "prevStrictPagePass": false,
+      "sharedNewLinePass": true,
+      "newPctPass": true,
+      "newCombinedPass": true,
+      "fractionsRemainingAtLastRow": 50,
+      "lettersInvariant": true
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "physicalCap": 10,
+      "equivalentLines": 9.0407,
+      "prevStrictPagePass": true,
+      "sharedNewLinePass": true,
+      "newPctPass": false,
+      "newCombinedPass": false,
+      "fractionsRemainingAtLastRow": 11,
+      "lettersInvariant": true
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "physicalCap": 11,
+      "equivalentLines": 10.3353,
+      "prevStrictPagePass": false,
+      "sharedNewLinePass": false,
+      "newPctPass": false,
+      "newCombinedPass": false,
+      "fractionsRemainingAtLastRow": 42,
+      "lettersInvariant": true
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "physicalCap": 12,
+      "equivalentLines": 11.6299,
+      "prevStrictPagePass": false,
+      "sharedNewLinePass": false,
+      "newPctPass": false,
+      "newCombinedPass": false,
+      "fractionsRemainingAtLastRow": 21,
+      "lettersInvariant": true
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "physicalCap": 9,
+      "equivalentLines": 8.2424,
+      "prevStrictPagePass": false,
+      "sharedNewLinePass": true,
+      "newPctPass": true,
+      "newCombinedPass": true,
+      "fractionsRemainingAtLastRow": 28,
+      "lettersInvariant": true
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "physicalCap": 5,
+      "equivalentLines": 4.8116,
+      "prevStrictPagePass": false,
+      "sharedNewLinePass": true,
+      "newPctPass": true,
+      "newCombinedPass": true,
+      "fractionsRemainingAtLastRow": 34,
+      "lettersInvariant": true
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "physicalCap": 7,
+      "equivalentLines": 6.8614,
+      "prevStrictPagePass": false,
+      "sharedNewLinePass": false,
+      "newPctPass": false,
+      "newCombinedPass": false,
+      "fractionsRemainingAtLastRow": 38,
+      "lettersInvariant": true
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "physicalCap": 10,
+      "equivalentLines": 9.6017,
+      "prevStrictPagePass": false,
+      "sharedNewLinePass": true,
+      "newPctPass": true,
+      "newCombinedPass": true,
+      "fractionsRemainingAtLastRow": 48,
+      "lettersInvariant": true
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "physicalCap": 11,
+      "equivalentLines": 10.9826,
+      "prevStrictPagePass": true,
+      "sharedNewLinePass": true,
+      "newPctPass": true,
+      "newCombinedPass": true,
+      "fractionsRemainingAtLastRow": 10,
+      "lettersInvariant": true
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "physicalCap": 13,
+      "equivalentLines": 12.3419,
+      "prevStrictPagePass": true,
+      "sharedNewLinePass": true,
+      "newPctPass": false,
+      "newCombinedPass": false,
+      "fractionsRemainingAtLastRow": 13,
+      "lettersInvariant": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "physicalCap": 9,
+      "equivalentLines": 8.6739,
+      "prevStrictPagePass": true,
+      "sharedNewLinePass": true,
+      "newPctPass": true,
+      "newCombinedPass": true,
+      "fractionsRemainingAtLastRow": 31,
+      "lettersInvariant": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "physicalCap": 6,
+      "equivalentLines": 5.049,
+      "prevStrictPagePass": false,
+      "sharedNewLinePass": true,
+      "newPctPass": false,
+      "newCombinedPass": false,
+      "fractionsRemainingAtLastRow": 41,
+      "lettersInvariant": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "physicalCap": 14,
+      "equivalentLines": 13.0108,
+      "prevStrictPagePass": true,
+      "sharedNewLinePass": true,
+      "newPctPass": false,
+      "newCombinedPass": false,
+      "fractionsRemainingAtLastRow": 58,
+      "lettersInvariant": true
+    }
+  ],
+  "failures": []
+}
