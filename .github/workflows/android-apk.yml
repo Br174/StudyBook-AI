@@ -1357,9 +1357,18 @@ jobs:
           console.log('LAB72_WORKER_CONFIRMED: isolated; no production change');
           NODE
 
+      - name: LAB76 source-first best-of and semantic QA regression gate
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-76-')
+        run: |
+          node scripts/test-lab76-best-of.mjs
+          node scripts/test-lab74-page-letter-budgets.mjs
+          node scripts/test-lab74-selective-pages.mjs
+          node scripts/test-lab58-large-block-cadence.mjs
+          node scripts/test-fidelity-engine.mjs
+
       - name: Build web core
         env:
-          VITE_NATIVE_API_BASE: ${{ startsWith(github.ref_name, 'lab/studybook-core-android-01-update-74-') && 'https://studybook-ai-lab74.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-73-') && 'https://studybook-ai-lab73.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-72-') && 'https://studybook-ai-lab72.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-71-') && 'https://studybook-ai-lab71.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-70-') && 'https://studybook-ai-lab70.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-69-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-68-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-67-')) && 'https://studybook-ai-lab67.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-66-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-65-')) && 'https://studybook-ai-lab65.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-63-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-62-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-61-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-60-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-59-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-58-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-57-')) && 'https://studybook-ai-lab57.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-56-') && 'https://studybook-ai-lab56.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-55-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-54-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-53-')) && 'https://studybook-ai-lab53.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-52-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-51-')) && 'https://studybook-ai-lab51.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-50-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-49-')) && 'https://studybook-ai-lab49.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-46-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-45-')) && 'https://studybook-ai-lab44.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-44-') && 'https://studybook-ai-lab44.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-43-') && 'https://studybook-ai-lab43.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-42-') && 'https://studybook-ai-lab42.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-41-') && 'https://studybook-ai-lab41.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-40-') && 'https://studybook-ai-lab40.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-39-') && 'https://studybook-ai-lab39.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-38-') && 'https://studybook-ai-lab38.brunoverlezza.workers.dev' || ((startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-37-')) && 'https://studybook-ai-lab36.brunoverlezza.workers.dev' || 'https://studybook-ai.brunoverlezza.workers.dev'))))))) }}
+          VITE_NATIVE_API_BASE: ${{ startsWith(github.ref_name, 'lab/studybook-core-android-01-update-76-') && 'https://studybook-ai-lab76-bestof.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-74-') && 'https://studybook-ai-lab74.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-73-') && 'https://studybook-ai-lab73.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-72-') && 'https://studybook-ai-lab72.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-71-') && 'https://studybook-ai-lab71.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-70-') && 'https://studybook-ai-lab70.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-69-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-68-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-67-')) && 'https://studybook-ai-lab67.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-66-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-65-')) && 'https://studybook-ai-lab65.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-63-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-62-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-61-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-60-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-59-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-58-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-57-')) && 'https://studybook-ai-lab57.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-56-') && 'https://studybook-ai-lab56.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-55-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-54-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-53-')) && 'https://studybook-ai-lab53.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-52-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-51-')) && 'https://studybook-ai-lab51.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-50-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-49-')) && 'https://studybook-ai-lab49.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-46-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-45-')) && 'https://studybook-ai-lab44.brunoverlezza.workers.dev' || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-44-') && 'https://studybook-ai-lab44.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-43-') && 'https://studybook-ai-lab43.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-42-') && 'https://studybook-ai-lab42.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-41-') && 'https://studybook-ai-lab41.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-40-') && 'https://studybook-ai-lab40.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-39-') && 'https://studybook-ai-lab39.brunoverlezza.workers.dev' || (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-38-') && 'https://studybook-ai-lab38.brunoverlezza.workers.dev' || ((startsWith(github.ref_name, 'lab/studybook-core-android-01-update-36-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-37-')) && 'https://studybook-ai-lab36.brunoverlezza.workers.dev' || 'https://studybook-ai.brunoverlezza.workers.dev'))))))) }}
         run: npm run build
 
       - name: Scudo360 mandatory LAB23 covers and duplicate regression
@@ -1503,6 +1512,39 @@ jobs:
           printf '%s' "${GH_AI_KEY:-${GH_GEMINI_KEY:-}}" | npx wrangler secret put AI_API_KEY --name studybook-ai-lab74
           npx wrangler deploy --config wrangler.lab74-page-budget.jsonc
           node scripts/test-lab74-real-six-levels.mjs
+      - name: LAB76 deploy isolated zero-paid Gemini backend and verify native API
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-76-')
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GH_AI_KEY: ${{ secrets.AI_API_KEY }}
+          GH_GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo "::error::Existing Cloudflare token missing; no APK can claim the new backend"; exit 1; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || { echo "::error::Existing Cloudflare account missing"; exit 1; }
+          test -n "${GH_AI_KEY:-${GH_GEMINI_KEY:-}}" || { echo "::error::Existing free Gemini key missing"; exit 1; }
+          printf '%s' "${GH_AI_KEY:-${GH_GEMINI_KEY:-}}" | npx wrangler secret put AI_API_KEY --name studybook-ai-lab76-bestof
+          npx wrangler deploy --config wrangler.lab76-bestof.jsonc
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          const base='https://studybook-ai-lab76-bestof.brunoverlezza.workers.dev';
+          let good=false;
+          for(let n=0;n<12;n++){
+           try{
+            const r=await fetch(base+'/api/editions/bulk/v51',{
+             method:'GET',signal:AbortSignal.timeout(12000)});
+            if(r.status===405 &&
+               r.headers.get('X-StudyBook-Draft-Protocol')==='lab74-page-letter-budget-plusminus5-v1'){good=true;break}
+           }catch{}
+           await new Promise(resolve=>setTimeout(resolve,1500));
+          }
+          assert(good,'LAB76 isolated backend not ready or version is wrong');
+          console.log('LAB76_BACKEND_VERIFIED native app must use this separate URL');
+          NODE
+
       - name: Preserve StudyBook Android Scudo proof
         if: always()
         uses: actions/upload-artifact@v4
@@ -1925,6 +1967,19 @@ jobs:
           printf 'branch=%s\napplicationId=%s\nversionCode=%s\nversionName=%s\nmode=%s\n' \
             "$GITHUB_REF_NAME" "$STUDYBOOK_APPLICATION_ID" "$STUDYBOOK_VERSION_CODE" "$STUDYBOOK_VERSION_NAME" "$STUDYBOOK_SIGNING_MODE" \
             > "artifacts/${STUDYBOOK_ARTIFACT_BASENAME}-identity.txt"
+
+      - name: LAB76 package immutable APK ZIP and source-checkpoint ZIP
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-76-')
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="$STUDYBOOK_ARTIFACT_BASENAME"
+          zip -j "artifacts/${BASE}.zip"             "artifacts/${BASE}.apk"             "artifacts/${BASE}.sha256"             "artifacts/${BASE}-identity.txt"             "artifacts/${BASE}-signing.txt"
+          git archive --format=zip --output="artifacts/${BASE}-SORGENTI.zip" HEAD
+          unzip -tq "artifacts/${BASE}.zip"
+          unzip -tq "artifacts/${BASE}-SORGENTI.zip"
+          sha256sum "artifacts/${BASE}.zip" "artifacts/${BASE}-SORGENTI.zip"             > "artifacts/${BASE}-ZIP.sha256"
+          echo "LAB76 signed APK, installer ZIP and full source checkpoint ZIP ready"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
