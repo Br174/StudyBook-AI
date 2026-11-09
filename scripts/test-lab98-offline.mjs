@@ -18,7 +18,7 @@ const mutate=[
  ['procedura','extension not automatic','proroga non è automatica','proroga è automatica','extension_not_automatic'],
  ['procedura','confirmation','senza conferma scritta resta valida la data iniziale','le date cambiano senza alcuna conferma','written_confirmation_initial_deadline'],
  ['concetto_sbilanciato','documented not proven','fatti documentati','fatti dimostrati','documented_not_proven'],
- ['concetto_sbilanciato','fact opinion','distinguere un fatto da un’opinione','non distinguere informazioni','fact_vs_opinion'],
+ ['concetto_sbilanciato','fact opinion','distinguere un fatto da un'opinione','non distinguere informazioni','fact_vs_opinion'],
  ['concetto_sbilanciato','uncertainty','segnalare ciò che resta incerto','segnalare i dettagli','source_uncertainty'],
  ['pagina_breve_continua','peremptory','termine perentorio','termine indicativo','peremptory_term'],
  ['pagina_breve_continua','motivation right','resta il diritto alla motivazione','il diritto alla motivazione non continua','right_to_motivation_remains']
