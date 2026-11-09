@@ -8,7 +8,7 @@ import handler from '../api/editionsBulkV51.js';
 import {studyLetters} from '../src/lib/studyPillarV38.js';
 import {studyGeometryPlanV78,studyGeometryReviewV78,studyGeometryPromptV78,
  STUDY_GEOMETRY_V78,wrapStudyWordsV78,largestRemainderV78} from '../src/lib/studyGeometryV78.js';
-import {pageLetterBudgetsV74} from '../src/lib/studyPageBudgetsV74.js';
+import {pageLetterBudgetsV74,sourceLetterBudgetV74} from '../src/lib/studyPageBudgetsV74.js';
 import {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
 import {buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
 import {blockLetterTargetV51,planNaturalBlocksV51} from '../src/lib/integralPlannerV51.js';
@@ -75,7 +75,7 @@ try{
    pageBudgetsV74:pageLetterBudgetsV74(units,'20'),
    unitBudgets:buildUnitBudgetsV71(units,'20'),
    bookTitle:'Test nuovo, non presente nei campioni LAB104',
-   level:'20',targetLetters:blockLetterTargetV51(units,'20').targetLetters,
+   level:'20',targetLetters:sourceLetterBudgetV74(studyLetters(units[0].source),'20').targetLetters,
    summaryCapLetters:null,maxOutputTokens:4096,timeoutMs:55000,
    units:units.map(u=>({id:u.id,source:u.source,
      chapterTitle:u.chapterTitle,sectionTitle:u.sectionTitle,
