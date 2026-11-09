@@ -1,0 +1,275 @@
+{
+  "date": "2026-11-09",
+  "title": "MotorLab LAB92 qualitative spot-check of real Gemini output",
+  "methodology": "Manual assistant text inspection against the exact supplied benchmark fixtures; NOT independent legal/medical expert validation.",
+  "policy": "Never mark a source page certified based only on letter counts, rows or heuristic words; preserve intact source. Short 1–5 rows free from percentage but still require correct meaning.",
+  "source": "audit/reports/lab92-stop-complete-real-gemini.json",
+  "summary": {
+    "reviewed": 15,
+    "longReviewed": 12,
+    "shortReviewed": 3,
+    "mathPass": 6,
+    "longMathPass": 3,
+    "smallShortfallReview": 4,
+    "certifiedProduction": 0
+  },
+  "reviews": [
+    {
+      "source": "scienze",
+      "level": 40,
+      "sourceLetters": 599,
+      "generatedLetters": 430,
+      "percentage": 28.21,
+      "insideBand": false,
+      "insideGrid": false,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": false,
+      "status": "REJECT_OR_REVISE",
+      "issues": [
+        "Riduzione 28,21% anziché 40%; 9 righe invece delle 8 previste.",
+        "Manca il confronto esplicito fra descrizione del movimento e cause."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "sourceLetters": 636,
+      "generatedLetters": 348,
+      "percentage": 45.28,
+      "insideBand": false,
+      "insideGrid": true,
+      "smallShortfallReview": true,
+      "preliminaryMathAccept": false,
+      "status": "SMALL_SHORTFALL_REVIEW_REQUIRED",
+      "issues": [
+        "Riduzione 45,28%, appena oltre il limite superiore di 45%, equivalente a una piccola mancanza di lettere.",
+        "Semplificazione plausibile, ma «restituito ... senza completare» è meno preciso dell'originale «anche se non ha completato»."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "medicina",
+      "level": 40,
+      "sourceLetters": 728,
+      "generatedLetters": 421,
+      "percentage": 42.17,
+      "insideBand": true,
+      "insideGrid": true,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": true,
+      "status": "MATH_PASS_SEMANTIC_REVIEW_REQUIRED",
+      "issues": [
+        "Riduzione e griglia conformi.",
+        "Manca la precisazione sul consumo e produzione di anidride carbonica durante lo sforzo, e il ruolo distinto delle vie aeree.",
+        "La diagnosi viene generalizzata: la fedeltà didattica non è ancora accertata."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "sourceLetters": 670,
+      "generatedLetters": 346,
+      "percentage": 48.36,
+      "insideBand": false,
+      "insideGrid": true,
+      "smallShortfallReview": true,
+      "preliminaryMathAccept": false,
+      "status": "SMALL_SHORTFALL_REVIEW_REQUIRED",
+      "issues": [
+        "Riduzione troppo forte rispetto alla fascia; la griglia è rispettata.",
+        "Non sono più esplicitati i fatti distinti dalle opinioni, né le incertezze da segnalare."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 40,
+      "sourceLetters": 155,
+      "generatedLetters": 133,
+      "percentage": 14.19,
+      "insideBand": true,
+      "insideGrid": true,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": true,
+      "status": "SHORT_PAGE_REVIEW_REQUIRED",
+      "issues": [
+        "Breve pagina correttamente nel limite; percentuale libera.",
+        "La formulazione «si decade dal deposito» è comprensibile ma meno precisa della perdita del diritto di depositare osservazioni."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "sourceLetters": 599,
+      "generatedLetters": 319,
+      "percentage": 46.74,
+      "insideBand": true,
+      "insideGrid": true,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": true,
+      "status": "MATH_PASS_SEMANTIC_REVIEW_REQUIRED",
+      "issues": [
+        "Righe e lettere rientrano.",
+        "Omette che le eclissi non avvengono a ogni lunazione e che un singolo risultato non basta a dimostrare una spiegazione."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "sourceLetters": 636,
+      "generatedLetters": 359,
+      "percentage": 43.55,
+      "insideBand": false,
+      "insideGrid": false,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": false,
+      "status": "REJECT_OR_REVISE",
+      "issues": [
+        "Contenuti principali mantenuti in modo leggibile.",
+        "Nove righe invece di sette e 43,55% anziché fascia 45-55%."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "sourceLetters": 728,
+      "generatedLetters": 362,
+      "percentage": 50.27,
+      "insideBand": true,
+      "insideGrid": true,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": true,
+      "status": "MATH_PASS_SEMANTIC_REVIEW_REQUIRED",
+      "issues": [
+        "Righe e lettere rientrano.",
+        "Mancano il ruolo delle vie aeree e alcuni dettagli della pressione parziale e della maggiore produzione di anidride carbonica sotto sforzo."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "sourceLetters": 670,
+      "generatedLetters": 287,
+      "percentage": 57.16,
+      "insideBand": false,
+      "insideGrid": true,
+      "smallShortfallReview": true,
+      "preliminaryMathAccept": false,
+      "status": "SMALL_SHORTFALL_REVIEW_REQUIRED",
+      "issues": [
+        "Riduzione eccessiva: 57,16% anziché fascia 45-55%.",
+        "Errore grammaticale: «confrontano documenti diversi valutarne».",
+        "Mancano distinzioni fatti/opinioni, incertezza e verifica critica."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "sourceLetters": 155,
+      "generatedLetters": 133,
+      "percentage": 14.19,
+      "insideBand": true,
+      "insideGrid": true,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": true,
+      "status": "SHORT_PAGE_REVIEW_REQUIRED",
+      "issues": [
+        "La pagina breve contiene i punti giuridici principali entro il limite di cinque righe.",
+        "«Decade dal deposito» resta una forma da migliorare in «perde la possibilità di depositarle»."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "sourceLetters": 599,
+      "generatedLetters": 411,
+      "percentage": 31.39,
+      "insideBand": false,
+      "insideGrid": true,
+      "smallShortfallReview": true,
+      "preliminaryMathAccept": false,
+      "status": "SMALL_SHORTFALL_REVIEW_REQUIRED",
+      "issues": [
+        "Riduzione 31,39% anziché 20%, ma il deficit è di circa 0,8 riga stimata oltre la fascia.",
+        "La descrizione di luce e buio e parte della spiegazione della rivoluzione sono state abbreviate; richiede controllo didattico."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "sourceLetters": 636,
+      "generatedLetters": 404,
+      "percentage": 36.48,
+      "insideBand": false,
+      "insideGrid": true,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": false,
+      "status": "REJECT_OR_REVISE",
+      "issues": [
+        "Riduzione 36,48% anziché 20%, sensibilmente troppo forte.",
+        "Errori grafici negli accenti: «non e», «gia»; il numero dodici scritto in lettere NON è un errore semantico."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "sourceLetters": 728,
+      "generatedLetters": 362,
+      "percentage": 50.27,
+      "insideBand": false,
+      "insideGrid": true,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": false,
+      "status": "REJECT_OR_REVISE",
+      "issues": [
+        "Riduzione 50,27% anziché 20%, scostamento molto ampio.",
+        "Mancano molte precisazioni sui meccanismi respiratori e non conserva l'estensione richiesta."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "sourceLetters": 670,
+      "generatedLetters": 417,
+      "percentage": 37.76,
+      "insideBand": false,
+      "insideGrid": true,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": false,
+      "status": "REJECT_OR_REVISE",
+      "issues": [
+        "Riduzione 37,76% anziché 20%, troppo sintetica per una versione quasi estesa.",
+        "Perde il confronto fra testimonianze e l'obbligo di segnalare esplicitamente ciò che resta incerto."
+      ],
+      "certifiedForProduction": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "sourceLetters": 155,
+      "generatedLetters": 150,
+      "percentage": 3.23,
+      "insideBand": true,
+      "insideGrid": true,
+      "smallShortfallReview": false,
+      "preliminaryMathAccept": true,
+      "status": "SHORT_PAGE_REVIEW_REQUIRED",
+      "issues": [
+        "Pagina breve esente dalla banda, testo sotto cinque righe, tutti i punti chiave visibili.",
+        "Da verificare in revisione linguistica la frase «decade dal deposito»."
+      ],
+      "certifiedForProduction": false
+    }
+  ]
+}
