@@ -1,0 +1,341 @@
+{
+  "study": "LAB97 level-specific prompts Gemini test",
+  "date": "2026-11-09T14:01:12.319Z",
+  "model": "gemini-3.5-flash-lite",
+  "provider": {
+    "attempts": 6,
+    "stopped": true,
+    "stopReason": "HTTP_503",
+    "maxAttempts": 20
+  },
+  "methodology": "No duplicate semantic checklist in model prompt. Semantic ledger analyzed AFTER model reply. 60-cell monospace virtual rows, not physical A4. Sources are five pre-segmented synthetic pages, not scanned PDFs.",
+  "controls": {
+    "mainModified": false,
+    "installedAppModified": false,
+    "APKModified": false,
+    "extraPaidServices": false,
+    "oneGenerationPerCase": true,
+    "onDemandSimpleLanguageGenerated": false
+  },
+  "warning": "Lexical absence may be a false alarm and keyword presence may not prove correct meaning; all numerical passes require full semantic review.",
+  "summary": {
+    "planned": 20,
+    "attempted": 5,
+    "valid": 4,
+    "long": 4,
+    "short": 0,
+    "longGrid": 4,
+    "longBand": 3,
+    "longBoth": 3,
+    "longBothWithoutLexicalAlerts": 0,
+    "byMode": {
+      "CONSERVATIVE_EDIT": {
+        "answers": 4,
+        "grid": 4,
+        "band": 3,
+        "both": 3,
+        "missingFactSignals": 13
+      },
+      "MODERATE_REWRITE": {
+        "answers": 0,
+        "grid": 0,
+        "band": 0,
+        "both": 0,
+        "missingFactSignals": 0
+      },
+      "ESSENTIAL_FACT_SUMMARY": {
+        "answers": 0,
+        "grid": 0,
+        "band": 0,
+        "both": 0,
+        "missingFactSignals": 0
+      }
+    }
+  },
+  "errors": [
+    {
+      "source": "scienze",
+      "level": 20,
+      "mode": "CONSERVATIVE_EDIT",
+      "attempt": 5,
+      "http": 503,
+      "ms": 729,
+      "message": "Gemini provider error"
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "mode": "CONSERVATIVE_EDIT",
+      "attempt": 6,
+      "http": 503,
+      "ms": 754,
+      "message": "Gemini provider error"
+    }
+  ],
+  "results": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "mode": "CONSERVATIVE_EDIT",
+      "valid": true,
+      "ms": 1486,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 539,
+        "actualLetters": 509,
+        "reduction": 15.03,
+        "band": {
+          "low": 510,
+          "high": 569,
+          "passes": false
+        },
+        "grid": {
+          "rows": 11,
+          "maxRows": 12,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 49,
+          "fractionalEquivalent": 10.817
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 16,
+          "matched": 14,
+          "missing": [
+            {
+              "fact": "not_every_lunation",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "isolated_result_insufficient",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota attorno al proprio asse, determinando l'alternanza tra giorno e notte poiché illumina solo una metà della superficie. La rivoluzione intorno al Sole richiede circa un anno, e le stagioni variano principalmente per l'inclinazione dell'asse e non per la distanza solare. La Luna, insieme al Sole, condiziona le maree, mentre le eclissi necessitano di un allineamento specifico che esclude ogni lunazione. Il metodo scientifico impone ipotesi verificabili e osservazioni ripetibili, rifiutando prove isolate. Per capire un fenomeno serve separare la descrizione del moto dalle cause dei cambiamenti.",
+        "words": 89
+      },
+      "completionTokens": 152,
+      "qualityStatus": "NOT_SEMANTICALLY_CERTIFIED",
+      "sourceLetters": 599,
+      "targetLetters": 539,
+      "generatedFromSourceOnly": true
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "mode": "CONSERVATIVE_EDIT",
+      "valid": true,
+      "ms": 1194,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 728,
+        "targetLetters": 655,
+        "actualLetters": 660,
+        "reduction": 9.34,
+        "band": {
+          "low": 619,
+          "high": 691,
+          "passes": true
+        },
+        "grid": {
+          "rows": 14,
+          "maxRows": 15,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 50,
+          "fractionalEquivalent": 13.833
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 17,
+          "matched": 14,
+          "missing": [
+            {
+              "fact": "thorax_expands",
+              "importance": "support",
+              "concept": "C1"
+            },
+            {
+              "fact": "co2_opposite",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "oxygen_consumption_co2_production",
+              "importance": "core",
+              "concept": "C3"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un caso didattico, l'apparato respiratorio veicola aria ai polmoni tramite le vie aeree. Durante l'inspirazione il diaframma si contrae espandendo il torace; nell'espirazione a riposo esso si rilassa. Negli alveoli l'ossigeno passa dall'aria al sangue e l'anidride carbonica fa il percorso inverso. Tale scambio sfrutta differenze di pressione parziale dei gas attraverso pareti sottili. L'emoglobina dei globuli rossi trasporta la maggior parte dell'ossigeno ematico. La frequenza respiratoria sale sotto sforzo poiché il corpo consuma più ossigeno e genera più anidride carbonica. Per esaminare un disturbo respiratorio il medico valuta sintomi, storia clinica ed esame obiettivo. Un singolo dato misurato non è sempre sufficiente alla diagnosi, ma va interpretato nel contesto clinico.",
+        "words": 112
+      },
+      "completionTokens": 206,
+      "qualityStatus": "NOT_SEMANTICALLY_CERTIFIED",
+      "sourceLetters": 728,
+      "targetLetters": 655,
+      "generatedFromSourceOnly": true
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "mode": "CONSERVATIVE_EDIT",
+      "valid": true,
+      "ms": 1214,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 572,
+        "actualLetters": 573,
+        "reduction": 9.91,
+        "band": {
+          "low": 541,
+          "high": 604,
+          "passes": true
+        },
+        "grid": {
+          "rows": 13,
+          "maxRows": 13,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 7,
+          "fractionalEquivalent": 12.117
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 15,
+          "matched": 11,
+          "missing": [
+            {
+              "fact": "title_before_loan",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "return_ten_days",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "not_automatic",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "no_opinions",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un esercizio del 2024, una biblioteca simulata ha adottato una procedura per i prestiti. La norma 12 impone che l alunno registri il titolo prima del prelievo e confermi il reso entro dieci giorni. Gli operatori possono accordare una proroga unicamente se il testo non risulta prenotato da altri. Tale prolungamento non è automatico: in assenza di conferma scritta vale la scadenza originaria. Se il volume è già opzionato, l iscritto deve riconsegnarlo nei termini anche senza aver terminato la lettura. Il registro permette di tracciare assegnatari e date, ma esclude pareri personali dei lettori. Tali condizioni ed eccezioni risultano fondamentali per la corretta applicazione della prassi.",
+        "words": 108
+      },
+      "completionTokens": 170,
+      "qualityStatus": "NOT_SEMANTICALLY_CERTIFIED",
+      "sourceLetters": 636,
+      "targetLetters": 572,
+      "generatedFromSourceOnly": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "mode": "CONSERVATIVE_EDIT",
+      "valid": true,
+      "ms": 1298,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 670,
+        "targetLetters": 603,
+        "actualLetters": 587,
+        "reduction": 12.39,
+        "band": {
+          "low": 570,
+          "high": 636,
+          "passes": true
+        },
+        "grid": {
+          "rows": 13,
+          "maxRows": 14,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 11,
+          "fractionalEquivalent": 12.183
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 7,
+          "missing": [
+            {
+              "fact": "provenance_purpose",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "uncertainty",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "consequences",
+              "importance": "support",
+              "concept": "C1"
+            },
+            {
+              "fact": "secondary_source_interprets",
+              "importance": "core",
+              "concept": "C3"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un laboratorio di storia, gli studenti esaminano lettere, cronache, mappe e registri per ricostruire i fatti. L'origine di ogni documento chiarisce chi lo ha redatto, quando e perché. Testimonianze diverse possono raccontare lo stesso evento in modo difforme, poiché gli autori colgono aspetti differenti o hanno interessi specifici. Per validare un'affermazione serve confrontare più fonti indipendenti, separare i fatti dalle opinioni ed evidenziare i dubbi. Una singola data non chiarisce le cause di un fatto: occorre analizzarne il contesto e gli effetti. Una fonte primaria risale all'epoca studiata, mentre una secondaria rielabora scritti passati. Le ipotesi vanno separate dai fatti dimostrati.",
+        "words": 102
+      },
+      "completionTokens": 165,
+      "qualityStatus": "NOT_SEMANTICALLY_CERTIFIED",
+      "sourceLetters": 670,
+      "targetLetters": 603,
+      "generatedFromSourceOnly": true
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "mode": "CONSERVATIVE_EDIT",
+      "valid": false,
+      "error": {
+        "source": "scienze",
+        "level": 20,
+        "mode": "CONSERVATIVE_EDIT",
+        "attempt": 6,
+        "http": 503,
+        "ms": 754,
+        "message": "Gemini provider error"
+      }
+    }
+  ]
+}

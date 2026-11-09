@@ -1,0 +1,378 @@
+{
+  "study": "StudyBook LAB97 offline invariants / golden and historical baselines",
+  "date": "2026-11-09T14:00:59.061Z",
+  "status": "offline tests only, no provider calls",
+  "warnings": "Source fragments already extracted manually; automatic detection of facts and real PDF dimensions not tested. Golden examples manually authored.",
+  "summary": {
+    "plans": 30,
+    "manualGolden": 2,
+    "manualGoldenConforming": 2,
+    "pastGeminiReplays": 12,
+    "stressCases": 12000,
+    "omissionProbesDetected": 12000,
+    "errors": 0
+  },
+  "metrics": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "short": false,
+      "originalLetters": 599,
+      "targetLetters": 539,
+      "lines": 12
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "short": false,
+      "originalLetters": 599,
+      "targetLetters": 479,
+      "lines": 11
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "short": false,
+      "originalLetters": 599,
+      "targetLetters": 419,
+      "lines": 10
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "short": false,
+      "originalLetters": 599,
+      "targetLetters": 359,
+      "lines": 8
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "short": false,
+      "originalLetters": 599,
+      "targetLetters": 300,
+      "lines": 7
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "short": false,
+      "originalLetters": 599,
+      "targetLetters": 210,
+      "lines": 5
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "short": false,
+      "originalLetters": 636,
+      "targetLetters": 572,
+      "lines": 13
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "short": false,
+      "originalLetters": 636,
+      "targetLetters": 509,
+      "lines": 11
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "short": false,
+      "originalLetters": 636,
+      "targetLetters": 445,
+      "lines": 10
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "short": false,
+      "originalLetters": 636,
+      "targetLetters": 382,
+      "lines": 9
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "short": false,
+      "originalLetters": 636,
+      "targetLetters": 318,
+      "lines": 7
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "short": false,
+      "originalLetters": 636,
+      "targetLetters": 223,
+      "lines": 5
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "short": false,
+      "originalLetters": 728,
+      "targetLetters": 655,
+      "lines": 15
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "short": false,
+      "originalLetters": 728,
+      "targetLetters": 582,
+      "lines": 13
+    },
+    {
+      "source": "medicina",
+      "level": 30,
+      "short": false,
+      "originalLetters": 728,
+      "targetLetters": 510,
+      "lines": 12
+    },
+    {
+      "source": "medicina",
+      "level": 40,
+      "short": false,
+      "originalLetters": 728,
+      "targetLetters": 437,
+      "lines": 10
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "short": false,
+      "originalLetters": 728,
+      "targetLetters": 364,
+      "lines": 8
+    },
+    {
+      "source": "medicina",
+      "level": 65,
+      "short": false,
+      "originalLetters": 728,
+      "targetLetters": 255,
+      "lines": 6
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "short": false,
+      "originalLetters": 670,
+      "targetLetters": 603,
+      "lines": 14
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "short": false,
+      "originalLetters": 670,
+      "targetLetters": 536,
+      "lines": 12
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 30,
+      "short": false,
+      "originalLetters": 670,
+      "targetLetters": 469,
+      "lines": 11
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "short": false,
+      "originalLetters": 670,
+      "targetLetters": 402,
+      "lines": 9
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "short": false,
+      "originalLetters": 670,
+      "targetLetters": 335,
+      "lines": 8
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "short": false,
+      "originalLetters": 670,
+      "targetLetters": 234,
+      "lines": 6
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 10,
+      "short": true,
+      "originalLetters": 155,
+      "targetLetters": 140,
+      "lines": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "short": true,
+      "originalLetters": 155,
+      "targetLetters": 124,
+      "lines": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 30,
+      "short": true,
+      "originalLetters": 155,
+      "targetLetters": 109,
+      "lines": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 40,
+      "short": true,
+      "originalLetters": 155,
+      "targetLetters": 93,
+      "lines": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "short": true,
+      "originalLetters": 155,
+      "targetLetters": 78,
+      "lines": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 65,
+      "short": true,
+      "originalLetters": 155,
+      "targetLetters": 54,
+      "lines": 5
+    }
+  ],
+  "golden": [
+    {
+      "source": "scienze",
+      "level": 20,
+      "letters": 498,
+      "percent": 16.86,
+      "rows": 11,
+      "math": true,
+      "missingLexicalFacts": 0,
+      "authorship": "manual, not Gemini"
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "letters": 609,
+      "percent": 16.35,
+      "rows": 13,
+      "math": true,
+      "missingLexicalFacts": 0,
+      "authorship": "manual, not Gemini"
+    }
+  ],
+  "baseline": [
+    {
+      "source": "scienze",
+      "level": 20,
+      "percent": 32.39,
+      "rows": 9,
+      "strict": false,
+      "coreMissing": 2
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "percent": 34.34,
+      "rows": 10,
+      "strict": false,
+      "coreMissing": 3
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "percent": 35.53,
+      "rows": 9,
+      "strict": false,
+      "coreMissing": 2
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "percent": 32.54,
+      "rows": 10,
+      "strict": false,
+      "coreMissing": 2
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "percent": 18.06,
+      "rows": 3,
+      "strict": true,
+      "coreMissing": 1
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "percent": 50.08,
+      "rows": 7,
+      "strict": true,
+      "coreMissing": 3
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "percent": 52.88,
+      "rows": 8,
+      "strict": true,
+      "coreMissing": 4
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "percent": 56.45,
+      "rows": 6,
+      "strict": false,
+      "coreMissing": 5
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "percent": 29.88,
+      "rows": 9,
+      "strict": false,
+      "coreMissing": 1
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "percent": 22.39,
+      "rows": 12,
+      "strict": false,
+      "coreMissing": 1
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "percent": 40.07,
+      "rows": 8,
+      "strict": false,
+      "coreMissing": 3
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "percent": 54.25,
+      "rows": 7,
+      "strict": false,
+      "coreMissing": 6
+    }
+  ],
+  "issues": []
+}
