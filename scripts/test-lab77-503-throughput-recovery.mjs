@@ -60,11 +60,17 @@ const reply=body=>{
   lengthReview:{sourceLetters,observedLetters,compliant:true,withinBand:true,
    pageReviewV74:pageLetterReviewV74(body.units,parts,body.level)}};
 };
-const oldFetch=globalThis.fetch,oldDB=globalThis.indexedDB,realClock=Date.now;
+const oldFetch=globalThis.fetch,oldDB=globalThis.indexedDB,realClock=Date.now,
+ realTimer=globalThis.setTimeout;
 let clock=start,requests=[],failedAtLevel=null;
 try{
  globalThis.indexedDB=fakeIndexedDB;
  Date.now=()=>clock;
+ // Model multi-minute provider pacing WITHOUT waiting for real minutes in CI.
+ // Keep IndexedDB's normal 0-1ms event loop timers unchanged.
+ globalThis.setTimeout=(callback,delay,...args)=>Number(delay)>=5000
+  ? realTimer(()=>{clock+=Math.ceil(Number(delay));callback(...args)},0)
+  : realTimer(callback,delay,...args);
  await clearGeminiPause();
  await clearGeminiCadenceForTestV58();
  await clearGeminiThroughputForTestV77();
@@ -119,6 +125,7 @@ try{
  }));
 }finally{
  globalThis.fetch=oldFetch;Date.now=realClock;
+ globalThis.setTimeout=realTimer;
  await clearGeminiPause();
  await clearGeminiCadenceForTestV58();
  await clearGeminiThroughputForTestV77();
