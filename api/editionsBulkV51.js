@@ -313,6 +313,7 @@ async function countOfficialTokens(model,key,messages,signal){
 }
 export default async function handler(req,res){
   res.setHeader('X-StudyBook-Draft-Protocol',STUDY_DRAFT_PROTOCOL_V74);
+  res.setHeader('X-StudyBook-Geometry-Policy',STUDY_GEOMETRY_V78);
   // Separate opt-in staging protocol; existing LAB74 devices continue as-is.
   res.setHeader('X-StudyBook-Planning-Protocol',STUDY_DRAFT_PROTOCOL_V75);
   if(req.method!=='POST'){res.setHeader('Allow','POST');return fail(res,405,'METHOD_NOT_ALLOWED','Usare POST.');}
