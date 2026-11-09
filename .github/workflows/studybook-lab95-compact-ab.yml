@@ -1,0 +1,56 @@
+name: StudyBook LAB95 compact factual clauses A/B
+on:
+  push:
+    branches:
+      - 'audit/studybook-compact-combined-facts-v95-*'
+    paths:
+      - '.github/workflows/studybook-lab95-compact-ab.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab95-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: node --check scripts/test-lab95-compact-clauses.mjs
+      - name: Offline manual feasibility references and prompts
+        run: node scripts/test-lab95-compact-clauses.mjs --offline
+      - name: Real Gemini compact A/B without filler
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab95-compact-clauses.mjs --real
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB95-Compact-Factual-AB
+          path: |
+            audit/reports/lab95-compact-clause-offline.json
+            audit/reports/lab95-compact-clause-ab-real.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Keep evidence on the isolated audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab95-compact-clause-offline.json audit/reports/lab95-compact-clause-ab-real.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(LAB95): save compact A/B real Gemini evidence'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
