@@ -1,4 +1,5 @@
 name: StudyBook LAB90 fluid budgets with useful concept elaboration
+# Pilot rerun after verified JS rubric syntax correction
 on:
   push:
     branches:
