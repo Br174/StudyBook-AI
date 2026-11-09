@@ -55,7 +55,7 @@ jobs:
   apk:
     # LAB72: never build/distribute untested intermediate commits.
     # Only explicit CI release-gate commit can run full Scudo360+Android.
-    if: ${{ !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-75-') && (!startsWith(github.ref_name, 'lab/studybook-core-android-01-update-74-') || contains(github.event.head_commit.message, '[lab74-release-approved]')) && (!startsWith(github.ref_name, 'lab/studybook-core-android-01-update-72-') || contains(github.event.head_commit.message, '[lab72-release-approved]')) && (!startsWith(github.ref_name, 'lab/studybook-core-android-01-update-73-') || contains(github.event.head_commit.message, '[lab73-release-approved]')) }}
+    if: ${{ (!startsWith(github.ref_name, 'lab/studybook-core-android-01-update-76-') || contains(github.event.head_commit.message, '[lab76-release-approved]')) && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-75-') && (!startsWith(github.ref_name, 'lab/studybook-core-android-01-update-74-') || contains(github.event.head_commit.message, '[lab74-release-approved]')) && (!startsWith(github.ref_name, 'lab/studybook-core-android-01-update-72-') || contains(github.event.head_commit.message, '[lab72-release-approved]')) && (!startsWith(github.ref_name, 'lab/studybook-core-android-01-update-73-') || contains(github.event.head_commit.message, '[lab73-release-approved]')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -1935,7 +1935,7 @@ jobs:
           if-no-files-found: error
 
       - name: Advance verified StudyBook source only after signed Scudo APK
-        if: success() && github.event_name == 'push' && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-72-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-73-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-74-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-49-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-50-')
+        if: success() && github.event_name == 'push' && startsWith(github.ref_name, 'lab/studybook-core-android-01-update-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-76-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-72-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-73-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-74-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-47-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-48-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-49-') && !startsWith(github.ref_name, 'lab/studybook-core-android-01-update-50-')
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
