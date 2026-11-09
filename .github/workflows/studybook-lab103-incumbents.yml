@@ -24,14 +24,19 @@ jobs:
         run: |
           node --check scripts/lab103-incumbent-no-regression.mjs
           node --check scripts/lab103-source-direction-risk.mjs
+          node --check scripts/lab103-targeted-history-modality.mjs
       - name: Audit saved historical percent/geometry winners and semantic candidates
-        run: node scripts/lab103-incumbent-no-regression.mjs
+        run: |
+          node scripts/lab103-incumbent-no-regression.mjs
+          node scripts/lab103-targeted-history-modality.mjs
       - name: Preserve complete evidence regardless of step status
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: StudyBook-LAB103-BestOfAll-NoRegression-Offline
-          path: audit/reports/lab103-incumbent-no-regression.json
+          path: |
+            audit/reports/lab103-incumbent-no-regression.json
+            audit/reports/lab103-targeted-history-modality.json
           retention-days: 30
           if-no-files-found: ignore
       - name: Commit evidence only to isolated LAB103 research branch
@@ -44,7 +49,7 @@ jobs:
           test -f audit/reports/lab103-incumbent-no-regression.json || exit 0
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add audit/reports/lab103-incumbent-no-regression.json
+          git add audit/reports/lab103-incumbent-no-regression.json audit/reports/lab103-targeted-history-modality.json
           if ! git diff --cached --quiet; then
             git commit -m 'audit(LAB103): pin best numerical and qualitative incumbents'
             git fetch origin "${TARGET_REF}"
