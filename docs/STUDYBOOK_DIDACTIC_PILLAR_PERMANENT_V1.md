@@ -97,6 +97,19 @@ La **chiarezza è obbligatoria in tutte le sei versioni**, ma non è sinonimo di
 **Nota cruciale:** con l'originale da 1.000 lettere e riduzione 50%, bersaglio 500 lettere. Al dato medio LAB84 sono circa 10,79 righe-equivalenti: dieci righe da 60 posizioni contengono mediamente soltanto ~463 lettere, non 500. La griglia va quindi pianificata partendo dalle lettere e mai al contrario contando solo i righi riempiti.
 
 
+## 4 quinquies. APPROFONDIMENTO UTILE PER RECUPERARE IL BUDGET IN LETTERE
+
+**Precisazione approvata dall'utente il 9 novembre 2026.** La regola del "non riempire con parole inutili" NON significa lasciare passivamente inutilizzata la quota di lettere quando il risultato è più sintetico del livello richiesto.
+
+- Se un concetto si conclude correttamente con meno parole/celle/lettere del previsto, il budget risparmiato passa agli altri concetti. Gemini può e **deve preferibilmente utilizzarlo per approfondire o chiarire le informazioni GIA' PRESENTI nella fonte** e rimaste troppo sintetiche, migliorando la comprensibilità e la fedeltà didattica.
+- Esempi legittimi: precisare una definizione tecnica, esplicitare la causa, rendere più comprensibile un nesso logico, spiegare con parole comuni un termine conservandone anche il nome specialistico, riportare una condizione/negazione/eccezione che un'altra sintesi avrebbe omesso, chiarire un passaggio difficile. Non è lecito inventare esempi, fatti, condizioni, dettagli medici o giuridici non supportati dalla fonte.
+- Il modello deve sapere **PRIMA DELLA SCRITTURA**, in un'unica chiamata, che può compensare sia lo spazio delle righe sia la quota complessiva di lettere scegliendo il concetto che trae un reale beneficio dall'approfondimento. Non deve per forza espandere l'ultimo concetto o quello successivo: sceglie in base alla necessità didattica e alla provenienza dei fatti dalla medesima pagina.
+- L'impaginazione è un unico flusso continuo: alla fine di un concetto il successivo parte con un solo spazio normale, se la parola successiva entra nella medesima riga; altrimenti va a capo. La larghezza e il font fisici della pagina non cambiano. Gli spazi aggiuntivi di giustificazione sono applicati **solo dopo**, dal motore grafico, e non riempiono il budget di lettere.
+- Calcolare *due obiettivi separati*: (a) il numero di lettere alfabetiche Unicode desiderate e la fascia ±5 punti di riduzione, (b) il budget massimo di celle/righe virtuali e la posizione finale frazionaria. Le medie LAB84 (46,346 lettere, 7,844 spazi naturali, 3,658 di giustificazione, 1,966 di punteggiatura e 0,186 cifre per riga da 60 celle) restano stime, non vincoli per singola riga.
+- Nessun obbligo di riempire ogni riga o ogni quota concettuale se il risultato risulta didatticamente completo; non allungare con ridondanze per centrare il numero. Se la fedeltà semantica rende impossibile entrare in fascia, dichiarare onestamente lo scostamento, non "correggere" eliminando concetti.
+- Le sei versioni mantengono i livelli di precisione tecnica e semplificazione previsti; l'eccezione 1–5 righe e il pulsante «In parole semplici» solo su richiesta restano invariati.
+- **Stato:** chiarimento documentato. La compensazione dinamica con approfondimento utile non è ancora validata su nuove risposte Gemini; richiede un collaudo isolato e controllo indipendente di contenuti e percentuali prima di considerarla funzionalità dell'app.
+
 ## 5. Casi di accettazione da usare nei test
 A. Una definizione giuridica in 3 righe: produrre tutti e sei i livelli, con spiegazione più semplice dove utile e termini tecnici preservati almeno al 10/20%; accettare riduzioni diverse dagli obiettivi.
 B. Articolo che inizia su P e finisce su P+1: la prima lettura riconosce la continuità; il testo derivato di P non contiene parti che appartengono a P+1, e viceversa; nessuna duplicazione.
