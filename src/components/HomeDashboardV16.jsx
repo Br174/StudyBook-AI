@@ -3,6 +3,7 @@ import { StudyIcon } from './StudyUiIcons.jsx';
 import '../appShellV16.css';
 import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
 import {geminiResumeDisplayV55} from '../lib/studyAutoResumeV45.js';
+import {requiresRecalibrationV79} from '../lib/studyQualityRecoveryV79.js';
 import StudyPhaseProgressV59 from './StudyPhaseProgressV59.jsx';
 
 const titleOf = name => String(name || 'Documento').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
@@ -60,6 +61,7 @@ export function HomeDashboardV16({
     progressBook?.coverAI||progressBook?.coverUrl||null;
   const scannerActive = Boolean(scanContent);
   const resumeWait=geminiResumeDisplayV55(resumeEdition||resumeCandidate?.edition);
+  const needsCorrection=requiresRecalibrationV79(resumeEdition||resumeCandidate?.edition);
 
   return <section className={scannerActive ? 'sb-screen sb-home-screen sb-home-v16 sb-home-scanning' : 'sb-screen sb-home-screen sb-home-v16'}>
     <div className="sb-home-primary">
@@ -106,7 +108,11 @@ export function HomeDashboardV16({
             ? (workPhase==='preparing'?'Sto preparando la struttura del libro.'
               :'Elaborazione Gemini in corso; le pagine originali restano disponibili.')
             :'Checkpoint di compressione e verifica conservati'}</small>
-          {!generating&&resumeCandidate?.diagnostic?.description &&
+          {needsCorrection&&<small role="status">
+            Bozze salvate, controllo locale concluso. Alcune riduzioni sono fuori
+            margine: apri Studio per la ricalibrazione mirata, non rifare il libro.
+          </small>}
+          {!generating&&!needsCorrection&&resumeCandidate?.diagnostic?.description &&
             <small role="status">{resumeCandidate.diagnostic.description}</small>}
           {!generating&&resumeWait.label&&
             <small className="sb-gemini-wait-note" role="status">{resumeWait.label}</small>}
@@ -117,7 +123,7 @@ export function HomeDashboardV16({
           </button>
           <button type="button" className="sb-resume-manual" onClick={onManualRecovery}
             disabled={resumeBusy||(generating&&workPhase==='preparing')}>
-            {resumeBusy?'Verifica in corso…':geminiStalled?'↻ Recupera richiesta bloccata':resumeWait.label?resumeWait.button:'↻ Verifica e riprendi'}
+            {resumeBusy?'Verifica in corso…':needsCorrection?'✦ Apri e correggi le percentuali':geminiStalled?'↻ Recupera richiesta bloccata':resumeWait.label?resumeWait.button:'↻ Verifica e riprendi'}
           </button>
         </div>}
       </div>}
