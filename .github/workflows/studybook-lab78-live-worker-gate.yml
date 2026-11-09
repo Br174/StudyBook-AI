@@ -6,6 +6,8 @@ on:
     paths:
       - '.github/workflows/studybook-lab78-live-worker-gate.yml'
       - 'scripts/test-lab78-real-worker-six-levels.mjs'
+      - 'src/lib/studyGeometryV78.js'
+      - 'src/lib/studyBestOfV76.js'
   workflow_dispatch:
 permissions:
   contents: write
@@ -59,13 +61,14 @@ jobs:
       - name: REAL Gemini six reductions on same fresh synthetic pages, stop on free quota
         env:
           LAB78_URL: https://studybook-ai-lab78-geometry.brunoverlezza.workers.dev
+          LAB78_REAL_REPORT: audit/reports/lab78-real-worker-six-levels-r2.json
         run: node scripts/test-lab78-real-worker-six-levels.mjs
       - name: Preserve actual provider results, including failures
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: StudyBook-LAB78-Real-Gemini-SixLevel-Gate
-          path: audit/reports/lab78-real-worker-six-levels.json
+          path: audit/reports/lab78-real-worker-six-levels-r2.json
           if-no-files-found: ignore
           retention-days: 30
       - name: Record strictly isolated LAB78 experimental evidence
@@ -75,10 +78,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f audit/reports/lab78-real-worker-six-levels.json || exit 0
+          test -f audit/reports/lab78-real-worker-six-levels-r2.json || exit 0
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add audit/reports/lab78-real-worker-six-levels.json
+          git add audit/reports/lab78-real-worker-six-levels-r2.json
           if ! git diff --cached --quiet; then
             git commit -m 'audit(LAB78): genuine live provider results, green only when all six pass'
             git fetch origin "${TARGET_REF}"
