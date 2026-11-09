@@ -1,0 +1,68 @@
+{
+  "study": "LAB99b exactly one targeted follow-up for one failed candidate",
+  "date": "2026-11-09T14:41:01.064Z",
+  "allowedCases": 1,
+  "attempts": 1,
+  "model": "gemini-3.5-flash-lite",
+  "providerError": null,
+  "result": {
+    "caseId": "unread_reserved_procedura40",
+    "output": "Se prenotato, va reso alla scadenza pur se la lettura non è finita.",
+    "ms": 969,
+    "check": {
+      "source": "procedura",
+      "level": 40,
+      "caseId": "unread_reserved_procedura40",
+      "candidateValid": true,
+      "acceptedMathematically": false,
+      "approvedForApp": false,
+      "verdict": "REJECT_ROLLBACK",
+      "preservedUnchangedPrefix": 340,
+      "preservedUnchangedSuffix": 62,
+      "oldText": "In una biblioteca scolastica simulata del 2024, la regola interna 12 impone allo studente di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni. Il personale può concedere una proroga solo se il libro non è prenotato da altri; questa non è automatica e senza conferma scritta vale la scadenza iniziale. Se riservato, va restituito puntualmente. Il registro traccia prestiti e date senza opinioni personali.",
+      "newText": "In una biblioteca scolastica simulata del 2024, la regola interna 12 impone allo studente di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni. Il personale può concedere una proroga solo se il libro non è prenotato da altri; questa non è automatica e senza conferma scritta vale la scadenza iniziale. Se prenotato, va reso alla scadenza pur se la lettura non è finita. Il registro traccia prestiti e date senza opinioni personali.",
+      "originalTargetSentence": "Se riservato, va restituito puntualmente.",
+      "replacementSentence": "Se prenotato, va reso alla scadenza pur se la lettura non è finita.",
+      "old": {
+        "letters": 362,
+        "reduction": 43.08,
+        "rows": 8,
+        "cap": 9,
+        "letterBand": true,
+        "relationAlerts": [
+          "reserved_return_even_if_unread",
+          "register_who_and_when"
+        ],
+        "lexicalAlerts": [
+          "even_if_not_finished",
+          "register_who_when"
+        ]
+      },
+      "next": {
+        "letters": 380,
+        "reduction": 40.25,
+        "rows": 9,
+        "cap": 9,
+        "letterBand": true,
+        "relationAlerts": [
+          "reserved_return_even_if_unread",
+          "register_who_and_when"
+        ],
+        "lexicalAlerts": [
+          "register_who_when"
+        ]
+      },
+      "targetRecovered": false,
+      "newRelationRegressions": [],
+      "lexicalRegressions": [],
+      "forbiddenReasons": [
+        "TARGET_RELATION_NOT_RESTORED"
+      ],
+      "disclaimer": "This replaces only an exact target sentence in a test copy. Numerical/lexical checks do not certify semantic correctness. Never publish automatically."
+    },
+    "approvedForApp": false
+  },
+  "limits": "Never additional calls after 429/503; only one call for first failed sentence. No production edits.",
+  "semanticCertification": false,
+  "prodModified": false
+}
