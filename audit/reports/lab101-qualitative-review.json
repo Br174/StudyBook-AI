@@ -1,0 +1,105 @@
+{
+  "title": "MotorLab StudyBook AI LAB101 qualitative review of first-read priority separation",
+  "date": "2026-11-09",
+  "reviewMethod": "Assistant inspection of complete 56 model claims, source quotations, five page texts, and 53 hand-labeled LAB100 references; not independent academic, medical or legal expert validation.",
+  "summary": {
+    "sources": 5,
+    "geminiFacts": 56,
+    "core": 47,
+    "support": 7,
+    "context": 2,
+    "matchedEditorialAtoms": 52,
+    "agreedPriorityLabels": 46,
+    "disagreedPriorityLabels": 6,
+    "unmatchedLegacyAtoms": 1,
+    "unmatchedNewAtoms": 4,
+    "criticalConceptFlagsBefore": 3,
+    "criticalConceptFlagsAfterOneEditorialTestChange": 1,
+    "approvedForProduction": 0
+  },
+  "pages": [
+    {
+      "source": "scienze",
+      "modelPriority": {
+        "fundamental": 11,
+        "support": 1,
+        "context": 0
+      },
+      "editorialOverlap": "12/12 matches",
+      "assessment": "Scientific source negations (distance vs seasons, not every lunation) and causal connections all classified fundamental. One light/dark explanation as support.",
+      "issues": [
+        "The model's semantic statements still require natural-language inference review. An atom of support may need explanatory coverage at the 10%-20% levels; do not simply delete it."
+      ],
+      "approval": false
+    },
+    {
+      "source": "procedura",
+      "modelPriority": {
+        "fundamental": 8,
+        "support": 4,
+        "context": 1
+      },
+      "editorialOverlap": "8/10 aligned labels match; 1 legacy atom unmatched due extraction segmentation",
+      "assessment": "Detected material under-prioritization of C4: who received a book and when was labeled support. Entire source concept C4 had no fundamental fact.",
+      "issues": [
+        "Core fact F11 on recipients/dates was marked support although it is central to the register procedure.",
+        "Fact F12 «registro non contiene opinioni» is support despite a negation; requires human classification review, not automatic deletion.",
+        "A contextual opening was split into two facts, altering exact comparison to LAB100.",
+        "An internal obligation may be expressed by model wording of different strength, requiring source-based semantic review."
+      ],
+      "editorialTrial": {
+        "changedFact": "F11",
+        "newPriority": "fondamentale",
+        "claimsAndQuotesModified": false,
+        "conceptC4CoreAfter": 1,
+        "highRiskFlagsAfter": 1
+      },
+      "approval": false
+    },
+    {
+      "source": "medicina",
+      "modelPriority": {
+        "fundamental": 13,
+        "support": 1,
+        "context": 1
+      },
+      "editorialOverlap": "13/14 aligned labels match; one new context fragment",
+      "assessment": "Details include alveolar thin walls (support) and inspiration thoracic expansion (fundamental according to Gemini, support according to manual comparison). The differing rank is a judgment call, not proof of a factual error.",
+      "issues": [
+        "The claim about measured values is close to source meaning, but degree of obligation and diagnostic caution should be checked before publication.",
+        "Source evidence validates where the claim came from, not whether every causal link is medically correct."
+      ],
+      "approval": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "modelPriority": {
+        "fundamental": 12,
+        "support": 1,
+        "context": 0
+      },
+      "editorialOverlap": "10/13 aligned labels match",
+      "assessment": "Source comparison of documents was assigned to support while the goal of reconstructing events was fundamental; consequences and causes were promoted to core relative to editorial ranking.",
+      "issues": [
+        "Several disagreements reflect a reasonable alternative grouping, and one could drop a distinct fact if a future short summary treats support as optional.",
+        "No whole-book context validation was performed."
+      ],
+      "approval": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "modelPriority": {
+        "fundamental": 3,
+        "support": 0,
+        "context": 0
+      },
+      "editorialOverlap": "3/3 labels match",
+      "assessment": "All three facts being fundamental is reasonable for an original page of only two sentences; no rule should force artificial support/context tiers for brief pages.",
+      "issues": [
+        "Percent reduction remains nonbinding for original short pages; no automated PDF page-boundary test."
+      ],
+      "approval": false
+    }
+  ],
+  "conclusion": "LAB101 supports single-call extraction and three-way priority ranking on five synthetic pages. It cannot yet serve as a release gate: rank mistakes can demote entire concepts, lexical anchors do not establish semantic entailment, and no actual six compressed texts were generated. A separate concept-level and risk-word QA gate is required before any automatic use."
+}
