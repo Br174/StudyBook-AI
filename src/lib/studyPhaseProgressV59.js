@@ -65,10 +65,17 @@ export function studyPhaseProgressV59(book,{acquisition=null}={}){
      if(completeReview)corrected++;
    }
    const audited=qualityMode?snapshot.qualityV66?.levels?.[id]:null;
+   const geometries=audited?.geometryV78?.groups;
+   const withinTarget=qualityMode?(Array.isArray(geometries)?
+     Math.min(pageCount,geometries.filter(g=>g.pass===true).reduce((n,g)=>
+       n+Math.max(1,Number(g.pageEnd)-Number(g.pageStart)+1),0)):
+     audited?.quantitativeAndGeometryCompliantV78===true?pageCount:0):null;
    return {id,label:studyLevelLabelV59(id),
      completed:phase==='quality'?Number(audited?.checked)||0:
        phase==='correction'?corrected:compressed,
      compressed,corrected,total:pageCount,
+     conformant:withinTarget,
+     fullNumericPass:qualityMode?audited?.quantitativeAndGeometryCompliantV78===true:null,
      warnings:qualityMode?Number(audited?.warnings)||0:null,
      available:qualityMode?Number(audited?.available)||0:null,
      actualReduction:qualityMode?audited?.actualReduction:null,
