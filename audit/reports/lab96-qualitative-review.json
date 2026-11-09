@@ -1,0 +1,238 @@
+{
+  "title": "StudyBook LAB96 manual quality spot-check of all 12 real Gemini outputs",
+  "date": "2026-11-09",
+  "method": "Assistant review against original five synthetic source pages; not independent licensed medical/legal review. Language quality and semantic equivalence require stronger QA before deployment.",
+  "reference": "audit/reports/lab96-source-only-real-gemini.json",
+  "summary": {
+    "reviewed": 12,
+    "longReviewed": 11,
+    "numericallyConformingLong": 2,
+    "candidatesWithConfirmedOmissions": 11,
+    "releaseEligible": 0
+  },
+  "reviews": [
+    {
+      "source": "scienze",
+      "level": 20,
+      "percentage": 32.39,
+      "physicalRows": 9,
+      "maxPhysicalRows": 11,
+      "numericAndGeometryPass": false,
+      "confirmedOmissions": [
+        "Scompare la precisazione che le eclissi non si verificano a ogni lunazione.",
+        "Scompare l'alternanza luce/buio che spiega giorno e notte."
+      ],
+      "reviewCautions": [
+        "«dati non isolati» non esplicita chiaramente che un risultato singolo non è sufficiente."
+      ],
+      "lexicalFalsePositiveExamples": [],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "percentage": 34.34,
+      "physicalRows": 10,
+      "maxPhysicalRows": 13,
+      "numericAndGeometryPass": false,
+      "confirmedOmissions": [
+        "Non indica che l'emoglobina è nei globuli rossi."
+      ],
+      "reviewCautions": [
+        "L'espirazione è richiamata indirettamente, ma la frase sul diaframma è ambigua."
+      ],
+      "lexicalFalsePositiveExamples": [
+        "«l'anidride carbonica fa il percorso inverso» esprime il verso dello scambio.",
+        "«maggiore consumo di ossigeno e produzione di anidride carbonica» conserva il nesso dello sforzo."
+      ],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "percentage": 35.53,
+      "physicalRows": 9,
+      "maxPhysicalRows": 11,
+      "numericAndGeometryPass": false,
+      "confirmedOmissions": [
+        "Omette il numero della regola interna: 12."
+      ],
+      "reviewCautions": [
+        "L'assenza di automatismo nella proroga è meno esplicita che nell'originale."
+      ],
+      "lexicalFalsePositiveExamples": [],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "percentage": 32.54,
+      "physicalRows": 10,
+      "maxPhysicalRows": 12,
+      "numericAndGeometryPass": false,
+      "confirmedOmissions": [
+        "Manca il riferimento esplicito allo studio delle cause degli eventi."
+      ],
+      "reviewCautions": [
+        "Il testo è più corto di quanto previsto per una versione quasi estesa."
+      ],
+      "lexicalFalsePositiveExamples": [
+        "«quelle secondarie interpretano documenti precedenti» conserva la definizione della fonte secondaria."
+      ],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "percentage": 18.06,
+      "physicalRows": 3,
+      "maxPhysicalRows": 5,
+      "numericAndGeometryPass": true,
+      "confirmedOmissions": [],
+      "reviewCautions": [
+        "La pagina breve sembra conservare i punti giuridici principali, da verificare nel contesto dell'intero documento."
+      ],
+      "lexicalFalsePositiveExamples": [
+        "«La scadenza preclude il deposito» conserva il divieto di deposito dopo il termine."
+      ],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "percentage": 50.08,
+      "physicalRows": 7,
+      "maxPhysicalRows": 7,
+      "numericAndGeometryPass": true,
+      "confirmedOmissions": [
+        "Manca il fatto che le stagioni non dipendono dalla distanza dal Sole.",
+        "Manca la condizione che le eclissi non avvengono a ogni lunazione.",
+        "Manca il principio che un singolo risultato non basta."
+      ],
+      "reviewCautions": [
+        "«rivoluziona attorno al Sole» è una formulazione poco naturale."
+      ],
+      "lexicalFalsePositiveExamples": [],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "percentage": 52.88,
+      "physicalRows": 8,
+      "maxPhysicalRows": 8,
+      "numericAndGeometryPass": true,
+      "confirmedOmissions": [
+        "Le differenze di pressione parziale diventano differenze generiche di pressione.",
+        "Non esplicita che lo sforzo comporta più consumo di ossigeno e più produzione di anidride carbonica.",
+        "Mancano l'esame obiettivo e la cautela su un singolo valore insufficiente alla diagnosi."
+      ],
+      "reviewCautions": [],
+      "lexicalFalsePositiveExamples": [],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "percentage": 56.45,
+      "physicalRows": 6,
+      "maxPhysicalRows": 7,
+      "numericAndGeometryPass": false,
+      "confirmedOmissions": [
+        "Manca la regola che un libro prenotato va reso anche se la lettura non è terminata.",
+        "Manca la validità della data iniziale quando la proroga non è confermata.",
+        "Manca la registrazione esplicita di chi ha ricevuto il libro e quando."
+      ],
+      "reviewCautions": [
+        "La riduzione 56,45% è leggermente superiore alla fascia ordinaria 45–55%; il testo rimane però insufficiente semanticamente."
+      ],
+      "lexicalFalsePositiveExamples": [],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "percentage": 29.88,
+      "physicalRows": 9,
+      "maxPhysicalRows": 12,
+      "numericAndGeometryPass": false,
+      "confirmedOmissions": [
+        "Manca la precisazione sulle eclissi non a ogni lunazione.",
+        "Manca la spiegazione dell'alternanza di parte illuminata e parte al buio, richiesta nel livello quasi esteso."
+      ],
+      "reviewCautions": [
+        "Riduzione 29,88% invece del 10%, troppo aggressiva."
+      ],
+      "lexicalFalsePositiveExamples": [],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "percentage": 22.39,
+      "physicalRows": 12,
+      "maxPhysicalRows": 15,
+      "numericAndGeometryPass": false,
+      "confirmedOmissions": [
+        "Non specifica che gli alveoli hanno pareti molto sottili.",
+        "Non indica che l'emoglobina è nei globuli rossi."
+      ],
+      "reviewCautions": [
+        "Versione troppo corta rispetto alla riduzione del 10%."
+      ],
+      "lexicalFalsePositiveExamples": [
+        "La frase su consumo e produzione di gas conserva il significato dello sforzo, anche se la regex non l'ha riconosciuto."
+      ],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "percentage": 40.07,
+      "physicalRows": 8,
+      "maxPhysicalRows": 10,
+      "numericAndGeometryPass": false,
+      "confirmedOmissions": [
+        "Manca la negazione che le stagioni non dipendono dalla distanza.",
+        "Manca la condizione che le eclissi non avvengono a ogni lunazione."
+      ],
+      "reviewCautions": [
+        "La formula «prove non isolate» è meno chiara di «un risultato isolato non basta»."
+      ],
+      "lexicalFalsePositiveExamples": [],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "percentage": 54.25,
+      "physicalRows": 7,
+      "maxPhysicalRows": 9,
+      "numericAndGeometryPass": false,
+      "confirmedOmissions": [
+        "Manca il riferimento alla regola numero 12.",
+        "Non chiarisce che, senza conferma scritta, resta valida la data iniziale.",
+        "Non specifica chi ha ricevuto il libro e in quale giorno."
+      ],
+      "reviewCautions": [
+        "«solo senza altre prenotazioni» conserva il senso del limite, ma non tutti i dettagli."
+      ],
+      "lexicalFalsePositiveExamples": [
+        "La proroga non automatica è effettivamente specificata."
+      ],
+      "semanticallyCertified": false,
+      "releaseEligible": false
+    }
+  ]
+}
