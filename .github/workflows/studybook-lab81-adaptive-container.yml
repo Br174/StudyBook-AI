@@ -1,0 +1,51 @@
+name: StudyBook LAB81 adaptive elastic container real Gemini QA
+on:
+  push:
+    branches:
+      - 'audit/studybook-adaptive-container-v81-*'
+    paths:
+      - 'scripts/test-lab81-adaptive-container.mjs'
+      - '.github/workflows/studybook-lab81-adaptive-container.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab81-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate syntax without running any AI
+        run: node --check scripts/test-lab81-adaptive-container.mjs
+      - name: Execute isolated real Gemini 18 calls maximum
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab81-adaptive-container.mjs
+      - name: Preserve structured output even for incomplete quota
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB81-AdaptiveContainer-RealGemini
+          path: audit/reports/studybook-lab81-real.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Persist evidence only on this audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/studybook-lab81-real.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/studybook-lab81-real.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(LAB81): preserve Gemini comparison data'
+            git push origin "HEAD:${TARGET_REF}"
+          fi
