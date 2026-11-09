@@ -60,7 +60,7 @@
         "core": [
           {
             "id": "tides_lunar_solar",
-            "re": "maree.{0,100}luna.{0,100}sole|luna.{0,100}sole.{0,100}maree|sole.{0,100}luna.{0,100}maree"
+            "re": "maree.{0,100}luna.{0,100}sole|luna.{0,100}sole.{0,100}maree|sole.{0,100}luna.{0,100}maree|luna.{0,100}maree.{0,100}sole"
           },
           {
             "id": "eclipses_alignment",
