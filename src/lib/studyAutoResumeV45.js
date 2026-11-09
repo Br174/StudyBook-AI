@@ -1,3 +1,4 @@
+import {recoveryActionV79} from './studyQualityRecoveryV79.js';
 // LAB46: the original single recovery owner. One foreground retry plan, no
 // second scheduler, no immediate retry storm and no bypass of Gemini cooldown.
 const QUALITY=['AI_QUALITY_REVIEW_REQUIRED','AI_QUALITY_REVIEW'];
@@ -7,10 +8,14 @@ export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0
   if(!snapshot||snapshot.complete)return null;
   // LAB66: old books stuck after finishing ALL drafts migrate locally with
   // zero provider traffic. This runs even if Gemini has a provider cooldown.
-  if(snapshot.draftComplete&&snapshot.draftRowsV57&&
-     snapshot.publicationModeV66!=='generated-text-quality-not-certified'){
+  // LAB79: a LAB78 audit that already checked 44x6 pages is terminal
+  // until the user explicitly requests targeted Gemini recalibration.
+  // It must never wake the foreground auto-resume loop every 1.2 seconds.
+  const qualityAction=recoveryActionV79(snapshot);
+  if(qualityAction==='manual-recalibration'||qualityAction==='none')return null;
+  if(qualityAction==='local-audit'&&
+     snapshot.publicationModeV66!=='generated-text-quality-not-certified')
     return {reason:'local-quality-audit',at:now+1200};
-  }
   const quota=snapshot.quota;
   if(quota){
     if(!quota.automatic)return null;
