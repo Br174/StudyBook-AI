@@ -1,6 +1,6 @@
 {
   "study": "LAB98 semantic source guard offline",
-  "date": "2026-11-09T14:17:52.882Z",
+  "date": "2026-11-09T14:18:54.488Z",
   "limits": "Regex alerts are risk indicators; synonymy may cause false positives, matched words may hide semantic reversal. No automatic factual repair or certification.",
   "sourceProtection": "No edits to source text or previous Gemini generations, only deterministic re-evaluation.",
   "summary": {
@@ -9,9 +9,9 @@
     "historicalReplays": 16,
     "manualExamples": 2,
     "historicalLAB97CriticalRisksCaught": 4,
-    "seededMutations": 57,
-    "mutationsDetected": 52,
-    "failures": 5
+    "seededMutations": 16000,
+    "mutationsDetected": 16000,
+    "failures": 0
   },
   "originals": [
     {
@@ -202,7 +202,8 @@
       "strictCombined": false,
       "alerts": [
         "internal_rule_not_generic_norm",
-        "extension_not_automatic"
+        "extension_not_automatic",
+        "written_confirmation_initial_deadline"
       ],
       "orthography": [],
       "semanticCertified": false
@@ -329,46 +330,5 @@
       "expect": "right_to_motivation_remains"
     }
   ],
-  "issues": [
-    {
-      "n": 18,
-      "source": "procedura",
-      "name": "confirmation",
-      "reason": "missed forced semantic mutation",
-      "expected": "written_confirmation_initial_deadline",
-      "found": []
-    },
-    {
-      "n": 37,
-      "source": "procedura",
-      "name": "confirmation",
-      "reason": "missed forced semantic mutation",
-      "expected": "written_confirmation_initial_deadline",
-      "found": []
-    },
-    {
-      "n": 39,
-      "source": "procedura",
-      "name": "confirmation",
-      "reason": "missed forced semantic mutation",
-      "expected": "written_confirmation_initial_deadline",
-      "found": []
-    },
-    {
-      "n": 42,
-      "source": "procedura",
-      "name": "confirmation",
-      "reason": "missed forced semantic mutation",
-      "expected": "written_confirmation_initial_deadline",
-      "found": []
-    },
-    {
-      "n": 56,
-      "source": "procedura",
-      "name": "confirmation",
-      "reason": "missed forced semantic mutation",
-      "expected": "written_confirmation_initial_deadline",
-      "found": []
-    }
-  ]
+  "issues": []
 }
