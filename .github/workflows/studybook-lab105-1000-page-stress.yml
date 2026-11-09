@@ -1,0 +1,54 @@
+name: StudyBook LAB105 1000-page reliability stress (offline, zero cost)
+on:
+  push:
+    branches:
+      - 'audit/studybook-1000page-reliability-v105-*'
+    paths:
+      - '.github/workflows/studybook-lab105-1000-page-stress.yml'
+      - 'scripts/lab105-1000-page-stress.mjs'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab105-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  big-book-simulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Baseline review and stress syntax
+        run: |
+          node --check scripts/lab105-1000-page-stress.mjs
+          node --check scripts/lab104-fact-by-fact-editorial-review.mjs
+      - name: Simulate 1000 pages, six requested levels, source integrity and crash recovery
+        run: node scripts/lab105-1000-page-stress.mjs
+      - name: Archive evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB105-1000-Pages-6000-Jobs
+          path: audit/reports/lab105-1000-page-stress.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Persist only new test report on isolated research branch
+        if: success()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab105-1000-page-stress.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab105-1000-page-stress.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB105): preserve evidence for 1000 page stress and recovery'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
