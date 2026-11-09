@@ -209,5 +209,9 @@ async function main(){
  }
  const out=write();
  console.log('LAB102_FINAL',JSON.stringify(out.summary));
+ if(out.summary.successfulGenerations!==out.summary.expectedGenerations||halted){
+  console.error('LAB102_PARTIAL_NOT_GREEN',JSON.stringify({completed:out.summary.successfulGenerations,expected:out.summary.expectedGenerations,reason:haltReason}));
+  process.exitCode=2; // GitHub Actions must not label incomplete provider runs as green.
+ }
 }
 if(fileURLToPath(import.meta.url)===resolve(process.argv[1]))await main();
