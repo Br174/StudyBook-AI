@@ -1,0 +1,153 @@
+{
+  "experiment": "LAB87 acceptance seal",
+  "source": "LAB86 original and LAB87 corrected text, plus focused review",
+  "scope": "audit only",
+  "mainBranchModified": false,
+  "appModified": false,
+  "releaseAllowed": false,
+  "note": "Manual assistant review is not an expert validation; all eight are rejected. Grid and percentage success NEVER auto-publishes.",
+  "summary": {
+    "reviewed": 8,
+    "numericallyConforming": 5,
+    "preliminaryAutomatedTextClean": 0,
+    "approvedForPublishing": 0,
+    "rejected": 8
+  },
+  "rows": [
+    {
+      "source": "scienze",
+      "level": 50,
+      "gridPass": true,
+      "mathPass": true,
+      "automatedTextChecks": false,
+      "explicitQualityReview": "REJECT",
+      "acceptedForPublishing": false,
+      "action": "REJECT_AND_PRESERVE_SOURCE",
+      "sourceNeverMutated": true,
+      "issueCount": 3,
+      "issues": [
+        "La frase «Maree eclissi allineamenti e metodo scientifico sano» non spiega relazioni o condizioni scientifiche.",
+        "Il riferimento alla «quota» non equivale chiaramente alla distanza Terra-Sole.",
+        "Mancano alcuni concetti indispensabili; lingua innaturale."
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "gridPass": true,
+      "mathPass": false,
+      "automatedTextChecks": false,
+      "explicitQualityReview": "REJECT",
+      "acceptedForPublishing": false,
+      "action": "REJECT_AND_PRESERVE_SOURCE",
+      "sourceNeverMutated": true,
+      "issueCount": 2,
+      "issues": [
+        "La riduzione è del 24,71%, fuori dalla fascia 5–15%.",
+        "Non compare più la verifica delle ipotesi né la ripetibilità delle osservazioni, contenuti richiesti."
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "gridPass": true,
+      "mathPass": true,
+      "automatedTextChecks": false,
+      "explicitQualityReview": "REJECT",
+      "acceptedForPublishing": false,
+      "action": "REJECT_AND_PRESERVE_SOURCE",
+      "sourceNeverMutated": true,
+      "issueCount": 3,
+      "issues": [
+        "«Mareee» è un errore ortografico.",
+        "La sintesi non spiega esplicitamente giorno e notte e non conserva chiaramente l'allineamento per le eclissi.",
+        "Non distingue più descrizione del fenomeno e cause."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "gridPass": true,
+      "mathPass": true,
+      "automatedTextChecks": false,
+      "explicitQualityReview": "REJECT",
+      "acceptedForPublishing": false,
+      "action": "REJECT_AND_PRESERVE_SOURCE",
+      "sourceNeverMutated": true,
+      "issueCount": 3,
+      "issues": [
+        "«proro\\nga» rompe la parola «proroga» fra due righe senza spazio o punteggiatura.",
+        "Manca la restituzione entro dieci giorni e il riferimento all'anno 2024.",
+        "Il registro non specifica chiaramente chi riceve il libro e quando; frase poco naturale."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "gridPass": false,
+      "mathPass": false,
+      "automatedTextChecks": false,
+      "explicitQualityReview": "REJECT",
+      "acceptedForPublishing": false,
+      "action": "REJECT_AND_PRESERVE_SOURCE",
+      "sourceNeverMutated": true,
+      "issueCount": 3,
+      "issues": [
+        "Sono necessarie 10 righe invece delle 8 consentite.",
+        "La riduzione effettiva è 30,97%, fuori dalla fascia 35–45%.",
+        "La conferma scritta e la non automaticità della proroga non sono espresse con precisione."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "gridPass": true,
+      "mathPass": true,
+      "automatedTextChecks": false,
+      "explicitQualityReview": "REJECT",
+      "acceptedForPublishing": false,
+      "action": "REJECT_AND_PRESERVE_SOURCE",
+      "sourceNeverMutated": true,
+      "issueCount": 3,
+      "issues": [
+        "Frasi malformate: «in dieci di», «prenotato da», «data prima», «ed vere».",
+        "Manca l'informazione che il registro non contiene opinioni personali.",
+        "Non conserva con precisione tutte le condizioni della procedura."
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "gridPass": true,
+      "mathPass": true,
+      "automatedTextChecks": false,
+      "explicitQualityReview": "REJECT",
+      "acceptedForPublishing": false,
+      "action": "REJECT_AND_PRESERVE_SOURCE",
+      "sourceNeverMutated": true,
+      "issueCount": 2,
+      "issues": [
+        "La frase «generando il di e la notte» è errata e compromette la comprensione di giorno/notte.",
+        "L'aggiustamento grammaticale non può essere approvato solo perché il conteggio delle lettere rientra."
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "gridPass": true,
+      "mathPass": false,
+      "automatedTextChecks": false,
+      "explicitQualityReview": "REJECT",
+      "acceptedForPublishing": false,
+      "action": "REJECT_AND_PRESERVE_SOURCE",
+      "sourceNeverMutated": true,
+      "issueCount": 4,
+      "issues": [
+        "La riduzione è 45,91%, fuori dalla fascia 25–35%.",
+        "Introduce terminologia «cinematica/dinamica» assente dal testo originale e modifica il significato.",
+        "Formulazione «la Terra ... rivoluziona sul Sole» scorretta e omette durata di un anno e alternanza giorno/notte.",
+        "Confonde condizioni di maree ed eclissi."
+      ]
+    }
+  ]
+}
