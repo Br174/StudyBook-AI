@@ -159,7 +159,7 @@ function instructions(s,p){
  return rows.join('\n');
 }
 const rubric={
- scienze:[[/rotaz|ruot/i,/giorno/i,/notte/i,/rivoluz/i,/stagion/i,/inclin/i,/non.{0,35}distanza|distanza.{0,30}non/i,/maree/i,/luna/i,/sole/i,/ecliss/i,/allineam/i,/lunaz|ogni/i,/ipotes/i,/verific/i,/ripet/i,/caus/i],
+ scienze:[/rotaz|ruot/i,/giorno/i,/notte/i,/rivoluz/i,/stagion/i,/inclin/i,/non.{0,35}distanza|distanza.{0,30}non/i,/maree/i,/luna/i,/sole/i,/ecliss/i,/allineam/i,/lunaz|ogni/i,/ipotes/i,/verific/i,/ripet/i,/caus/i],
  procedura:[/2024|duemilaventiquattro/i,/12|dodici/i,/titolo/i,/prestito/i,/dieci|10/i,/prorog/i,/prenot|riserv/i,/scritt/i,/scaden|data iniziale/i,/lettur|letto|finito|complet/i,/registr/i,/opinioni/i],
  medicina:[/diaframma/i,/inspir/i,/espir/i,/alveol/i,/ossigeno/i,/anidride carbonica/i,/emoglobin/i,/sforzo/i,/diagnos|medic/i,/sintom/i],
  concetto_sbilanciato:[/font/i,/confront/i,/document/i,/primaria/i,/secondaria/i,/ipotes/i,/fatt/i],
