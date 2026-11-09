@@ -86,7 +86,7 @@ export function evaluate(source,plan,sections){
   fitsTarget:pageFitsTarget,fitsTolerance:pageFitsTolerance,
   strictCombined:strictBand&&pageFitsTarget,
   toleranceCombined:strictBand&&pageFitsTolerance,
-  lastRowUsed:lastLength,usedFractionalRows:+(layout.lines.length-1+lastLength/W).toFixed(3),
+  lastRowUsed:lastLength,usedFractionalRows:+(layout.lines.length-1+lastLength/WIDTH).toFixed(3),
   maxRowWidth,wordIntegrity:!hyphenSplit&&!malformed,spuriousMultipleSpaces:suspiciousSpacing,
   technicalMissing,missingRubric,possibleSemanticPass:missingRubric.length===0&&technicalMissing.length===0&&!hyphenSplit&&!malformed,
   rawText:text,sections:sourceSections,virtualRows:layout.lines};
