@@ -1,0 +1,60 @@
+name: StudyBook LAB100 single first-read inventory and six-level reuse
+on:
+  push:
+    branches:
+      - 'audit/studybook-first-read-inventory-v100-*'
+    paths:
+      - '.github/workflows/studybook-lab100-first-read.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab100-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check before any Gemini use
+        run: |
+          node --check scripts/lab100-first-read-ledger.mjs
+          node --check scripts/test-lab100-offline.mjs
+          node --check scripts/test-lab100-real-first-read.mjs
+      - name: Verify source anchors, tampering and 30 six-level plans without quota
+        run: node scripts/test-lab100-offline.mjs
+      - name: Bounded single Gemini first reading per original page
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab100-real-first-read.mjs
+      - name: Upload all evidence even after quota block
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB100-FirstReadInventory
+          path: |
+            audit/reports/lab100-first-read-offline.json
+            audit/reports/lab100-real-first-read.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Persist audit files only on LAB branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab100-first-read-offline.json audit/reports/lab100-real-first-read.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB100): preserve first-read Gemini inventory and six-level plans'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
