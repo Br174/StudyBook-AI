@@ -1,0 +1,666 @@
+{
+  "experiment": "LAB87 isolated targeted Gemini correction from LAB86",
+  "date": "2026-11-09T09:59:25.677Z",
+  "sourceReport": "audit/reports/lab86-six-levels-real-gemini.json",
+  "model": "gemini-3.5-flash-lite",
+  "grid": "60 monospace cells max, predetermined row cap; no clipping",
+  "calibration": {
+    "letters": 46.346,
+    "spaces": 11.502,
+    "width": 60
+  },
+  "policy": "One correction per case; max one temporary HTTP503 retry (total at most 9 attempts), halt 429/503, no paid plans",
+  "semantics": "Concept checks are heuristics; manual expert review still required. None of numeric or heuristic passes certify semantic fidelity.",
+  "controls": {
+    "productionChanged": false,
+    "APKChanged": false,
+    "onDemandSimpleLanguageGenerated": false
+  },
+  "provider": {
+    "attempts": 8,
+    "stopped": false,
+    "reason": ""
+  },
+  "summary": {
+    "candidates": 8,
+    "attemptedCases": 8,
+    "providerAttempts": 8,
+    "beforeGridPass": 6,
+    "afterGridPass": 7,
+    "beforeMathPass": 6,
+    "afterMathPass": 5,
+    "afterCombined": 5,
+    "afterStrictProvisional": 0
+  },
+  "records": [
+    {
+      "source": "scienze",
+      "level": 50,
+      "label": "50%",
+      "providerMs": 1121,
+      "providerOutputTokens": 87,
+      "originalSource": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+      "problem": "Una parola viene spezzata in \"dipen-\\ndono\" e la frase sulla rivoluzione del Sole e scientificamente sbagliata. La rivoluzione e il moto della Terra intorno al Sole; dura circa un anno. Non confondere il Sole con il movimento.",
+      "previous": "La Terra ruota sull asse generando il giorno e la notte.\nLa rivoluzione e il Sole durano un anno. Le stagioni dipen-\ndono dall inclinazione terrestre non dalla distanza solare.\nLa Luna e il Sole causano le maree. Le eclissi avvengono\ncon allineamenti specifici. Il metodo scientifico richiede\nipotesi verificabili osservazioni e spiegazioni causali.",
+      "repaired": "La Terra ruota generando il ciclo diurno e notturno.\nLa rivoluzione terrestre attorno al Sole dura un anno.\nLe stagioni variano per l asse inclinato non la quota.\nMaree eclissi allineamenti e metodo scientifico sano.\nIpotesi verificabili osservazioni e prove ripetibili.\nDistinguere descrizione e cause per ogni spiegazione.",
+      "before": {
+        "letters": 289,
+        "reduction": 51.75,
+        "letterBand": [
+          270,
+          329
+        ],
+        "mathPass": true,
+        "maxRows": 6,
+        "rows": 6,
+        "wrapPreview": [
+          "La Terra ruota sull asse generando il giorno e la notte. La",
+          "rivoluzione e il Sole durano un anno. Le stagioni dipen-",
+          "dono dall inclinazione terrestre non dalla distanza solare.",
+          "La Luna e il Sole causano le maree. Le eclissi avvengono con",
+          "allineamenti specifici. Il metodo scientifico richiede",
+          "ipotesi verificabili osservazioni e spiegazioni causali."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": true,
+        "wordIntegrityPass": false,
+        "hyphenBreak": true,
+        "apostropheError": true,
+        "heuristicMissingConcepts": [
+          "Eclissi non ad ogni lunazione",
+          "Ipotesi verificabili e osservazioni ripetibili",
+          "Un singolo risultato non basta",
+          "Descrizione del moto diversa dalle cause"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "after": {
+        "letters": 271,
+        "reduction": 54.76,
+        "letterBand": [
+          270,
+          329
+        ],
+        "mathPass": true,
+        "maxRows": 6,
+        "rows": 6,
+        "wrapPreview": [
+          "La Terra ruota generando il ciclo diurno e notturno. La",
+          "rivoluzione terrestre attorno al Sole dura un anno. Le",
+          "stagioni variano per l asse inclinato non la quota. Maree",
+          "eclissi allineamenti e metodo scientifico sano. Ipotesi",
+          "verificabili osservazioni e prove ripetibili. Distinguere",
+          "descrizione e cause per ogni spiegazione."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": true,
+        "wordIntegrityPass": false,
+        "hyphenBreak": false,
+        "apostropheError": true,
+        "heuristicMissingConcepts": [
+          "Giorno e notte dalla rotazione",
+          "Stagioni non dipendono dalla distanza dal Sole",
+          "Maree: Luna e Sole",
+          "Un singolo risultato non basta"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "afterProvisionalAccepted": false
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "label": "10%",
+      "providerMs": 1088,
+      "providerOutputTokens": 148,
+      "originalSource": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+      "problem": "Il testo viene ridotto del 20,70% invece del 10%; e da espandere con contenuto fondamentale esistente nella fonte, non con riempitivi. Le maree dipendono dall interazione gravitazionale di Luna e Sole, NON dalla luce solare.",
+      "previous": "La Terra ruota attorno al proprio asse causando il giorno\ne la notte, dato che una parte riceve luce e l'altra buio.\nLa rivoluzione attorno al Sole dura circa un anno intero.\nLe stagioni dipendono dall'inclinazione dell'asse terrestre,\nnon dalla distanza fra il pianeta e la nostra stella.\nLa Luna influisce sulle maree insieme con la luce solare.\nLe eclissi esigono un allineamento e non a ogni lunazione.\nIl metodo scientifico richiede ipotesi e osservazioni.\nUn risultato isolato non basta per dimostrare la teoria.\nPer capire bisogna distinguere moto e cause delle variazioni.",
+      "repaired": "La Terra ruota attorno al proprio asse creando il giorno\ne la notte, poiche una parte riceve luce e l'altra buio.\nLa rivoluzione attorno al Sole dura circa un anno intero.\nLe stagioni dipendono dall'inclinazione asse terrestre,\nnon dalla distanza fra il pianeta e la nostra stella.\nLa Luna e il Sole causano le maree con la gravita.\nLe eclissi esigono allineamenti e non a ogni lunazione.\nIl metodo scientifico richiede ipotesi e osservazioni.\nUn risultato isolato non basta per dimostrare la teoria.\nPer capire bisogna distinguere moto e cause del moto.",
+      "before": {
+        "letters": 475,
+        "reduction": 20.7,
+        "letterBand": [
+          510,
+          569
+        ],
+        "mathPass": false,
+        "maxRows": 12,
+        "rows": 10,
+        "wrapPreview": [
+          "La Terra ruota attorno al proprio asse causando il giorno e",
+          "la notte, dato che una parte riceve luce e l'altra buio. La",
+          "rivoluzione attorno al Sole dura circa un anno intero. Le",
+          "stagioni dipendono dall'inclinazione dell'asse terrestre,",
+          "non dalla distanza fra il pianeta e la nostra stella. La",
+          "Luna influisce sulle maree insieme con la luce solare. Le",
+          "eclissi esigono un allineamento e non a ogni lunazione. Il",
+          "metodo scientifico richiede ipotesi e osservazioni. Un",
+          "risultato isolato non basta per dimostrare la teoria. Per",
+          "capire bisogna distinguere moto e cause delle variazioni."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": false,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Ipotesi verificabili e osservazioni ripetibili"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "after": {
+        "letters": 451,
+        "reduction": 24.71,
+        "letterBand": [
+          510,
+          569
+        ],
+        "mathPass": false,
+        "maxRows": 12,
+        "rows": 10,
+        "wrapPreview": [
+          "La Terra ruota attorno al proprio asse creando il giorno e",
+          "la notte, poiche una parte riceve luce e l'altra buio. La",
+          "rivoluzione attorno al Sole dura circa un anno intero. Le",
+          "stagioni dipendono dall'inclinazione asse terrestre, non",
+          "dalla distanza fra il pianeta e la nostra stella. La Luna e",
+          "il Sole causano le maree con la gravita. Le eclissi esigono",
+          "allineamenti e non a ogni lunazione. Il metodo scientifico",
+          "richiede ipotesi e osservazioni. Un risultato isolato non",
+          "basta per dimostrare la teoria. Per capire bisogna",
+          "distinguere moto e cause del moto."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": true,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Ipotesi verificabili e osservazioni ripetibili"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "afterProvisionalAccepted": false
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "label": "Riassunto finale",
+      "providerMs": 751,
+      "providerOutputTokens": 73,
+      "originalSource": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+      "problem": "Il precedente testo occupa 6 righe anziche il massimo di 5 e scende soltanto del 53,59% anziche circa il 65%. Mantieni i concetti indispensabili e la condizione delle eclissi; se non e possibile non inventare e non sacrificare la fedelta.",
+      "previous": "La Terra ruota generando il ciclo di giorno e notte mentre la rivoluzione e l asse inclinato determinano le stagioni. Le maree dipendono da Luna e Sole e le eclissi richiedono un preciso allineamento. Il metodo scientifico si fonda su ipotesi verificabili e osservazioni ripetibili distinguendo tra descrizione e cause dei fenomeni.",
+      "repaired": "La terra ruota e compie la rivoluzione annua.\nL asse inclinato determina le stagioni non la distanza.\nMareee eclissi seguono leggi precise non ogni novilunio.\nIpotesi verificabili e prove ripetute servono sempre.\nUn solo risultato isolato non basta mai alla prova.",
+      "before": {
+        "letters": 278,
+        "reduction": 53.59,
+        "letterBand": [
+          180,
+          239
+        ],
+        "mathPass": false,
+        "maxRows": 5,
+        "rows": 6,
+        "wrapPreview": [
+          "La Terra ruota generando il ciclo di giorno e notte mentre",
+          "la rivoluzione e l asse inclinato determinano le stagioni.",
+          "Le maree dipendono da Luna e Sole e le eclissi richiedono un",
+          "preciso allineamento. Il metodo scientifico si fonda su",
+          "ipotesi verificabili e osservazioni ripetibili distinguendo",
+          "tra descrizione e cause dei fenomeni."
+        ],
+        "gridPass": false,
+        "rawLineCompliant": false,
+        "wordIntegrityPass": false,
+        "hyphenBreak": false,
+        "apostropheError": true,
+        "heuristicMissingConcepts": [
+          "Rivoluzione della Terra e durata annua",
+          "Stagioni non dipendono dalla distanza dal Sole",
+          "Eclissi non ad ogni lunazione",
+          "Un singolo risultato non basta"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "after": {
+        "letters": 219,
+        "reduction": 63.44,
+        "letterBand": [
+          180,
+          239
+        ],
+        "mathPass": true,
+        "maxRows": 5,
+        "rows": 5,
+        "wrapPreview": [
+          "La terra ruota e compie la rivoluzione annua. L asse",
+          "inclinato determina le stagioni non la distanza. Mareee",
+          "eclissi seguono leggi precise non ogni novilunio. Ipotesi",
+          "verificabili e prove ripetute servono sempre. Un solo",
+          "risultato isolato non basta mai alla prova."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": true,
+        "wordIntegrityPass": false,
+        "hyphenBreak": false,
+        "apostropheError": true,
+        "heuristicMissingConcepts": [
+          "Giorno e notte dalla rotazione",
+          "Maree: Luna e Sole",
+          "Eclissi con allineamento",
+          "Descrizione del moto diversa dalle cause"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "afterProvisionalAccepted": false
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "label": "Riassunto finale",
+      "providerMs": 802,
+      "providerOutputTokens": 72,
+      "originalSource": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura per richiedere i libri. La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni. Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data iniziale. Quando un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura. Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori. Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura.",
+      "problem": "Il precedente testo occupa 6 righe anziche 5. Restano indispensabili regola 12, prenotazione/proroga, conferma scritta, scadenza, registro e la restituzione anche se non letto; non puoi inventare o spostare informazioni.",
+      "previous": "Nel 2024 la biblioteca scolastica richiede la registrazione\ndel titolo e la restituzione entro dieci giorni dal prestito.\nLa proroga si concede solo se il libro non è prenotato ed\nè esclusa la sua automaticità senza conferma scritta. Se\nriservato va restituito alla scadenza senza eccezioni.",
+      "repaired": "Biblioteca simulata regola dodici registra titolo e proro\nga solo senza prenotazione previa conferma scritta valida\nscadenza tassativa per libri prenotati anche non letti\nil registro storico traccia prestiti ma non le opinioni\nrispetta condizioni ed eccezioni della nuova procedura",
+      "before": {
+        "letters": 239,
+        "reduction": 62.42,
+        "letterBand": [
+          191,
+          254
+        ],
+        "mathPass": true,
+        "maxRows": 5,
+        "rows": 6,
+        "wrapPreview": [
+          "Nel 2024 la biblioteca scolastica richiede la registrazione",
+          "del titolo e la restituzione entro dieci giorni dal",
+          "prestito. La proroga si concede solo se il libro non è",
+          "prenotato ed è esclusa la sua automaticità senza conferma",
+          "scritta. Se riservato va restituito alla scadenza senza",
+          "eccezioni."
+        ],
+        "gridPass": false,
+        "rawLineCompliant": false,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Biblioteca simulata",
+          "Regola interna numero 12",
+          "Registrare titolo prima del prestito",
+          "Libro prenotato: reso anche se non letto",
+          "Non registra opinioni"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "after": {
+        "letters": 242,
+        "reduction": 61.95,
+        "letterBand": [
+          191,
+          254
+        ],
+        "mathPass": true,
+        "maxRows": 5,
+        "rows": 5,
+        "wrapPreview": [
+          "Biblioteca simulata regola dodici registra titolo e proro ga",
+          "solo senza prenotazione previa conferma scritta valida",
+          "scadenza tassativa per libri prenotati anche non letti il",
+          "registro storico traccia prestiti ma non le opinioni",
+          "rispetta condizioni ed eccezioni della nuova procedura"
+        ],
+        "gridPass": true,
+        "rawLineCompliant": true,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Anno 2024",
+          "Registrare titolo prima del prestito",
+          "Confermare restituzione in dieci giorni",
+          "Proroga consentita solo senza prenotazione",
+          "Proroga non automatica; conferma scritta",
+          "Libro prenotato: reso anche se non letto",
+          "Registro identifica lettore e data"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "afterProvisionalAccepted": false
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "label": "40%",
+      "providerMs": 986,
+      "providerOutputTokens": 134,
+      "originalSource": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura per richiedere i libri. La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni. Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data iniziale. Quando un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura. Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori. Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura.",
+      "problem": "Omissioni: regola interna numero 12, eccezione della lettura non conclusa, dettagli del registro su chi riceve il volume e il giorno. Mantieni tutti i dettagli fondamentali.",
+      "previous": "Nel 2024 una biblioteca scolastica adotta una regola per i prestiti. La norma richiede la registrazione del titolo prima dell'uscita e la conferma del reso in dieci giorni. La proroga è possibile solo se nessun altro ha prenotato il volume; non è automatica e senza conferma scritta vale il termine iniziale. Se il libro è riservato va restituito alla scadenza. Il registro traccia i prestiti senza annotare le opinioni dei lettori.",
+      "repaired": "Nel 2024 una biblioteca simulata adotta una regola per i prestiti librari.\nLa norma interna numero dodici richiede la registrazione del titolo.\nIl reso va confermato in dieci giorni dalla concessione del volume.\nLa proroga e possibile solo senza prenotazioni altrui ed e scritta.\nSe il libro e riservato va restituito anche a lettura non conclusa.\nIl registro traccia chi ha ricevuto il libro e il giorno esatto.\nNon sono presenti dati sulle opinioni personali dei lettori.\nTali condizioni ed eccezioni sono essenziali per la procedura.",
+      "before": {
+        "letters": 351,
+        "reduction": 44.81,
+        "letterBand": [
+          350,
+          413
+        ],
+        "mathPass": true,
+        "maxRows": 8,
+        "rows": 8,
+        "wrapPreview": [
+          "Nel 2024 una biblioteca scolastica adotta una regola per i",
+          "prestiti. La norma richiede la registrazione del titolo",
+          "prima dell'uscita e la conferma del reso in dieci giorni. La",
+          "proroga è possibile solo se nessun altro ha prenotato il",
+          "volume; non è automatica e senza conferma scritta vale il",
+          "termine iniziale. Se il libro è riservato va restituito alla",
+          "scadenza. Il registro traccia i prestiti senza annotare le",
+          "opinioni dei lettori."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": false,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Biblioteca simulata",
+          "Regola interna numero 12"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "after": {
+        "letters": 439,
+        "reduction": 30.97,
+        "letterBand": [
+          350,
+          413
+        ],
+        "mathPass": false,
+        "maxRows": 8,
+        "rows": 10,
+        "wrapPreview": [
+          "Nel 2024 una biblioteca simulata adotta una regola per i",
+          "prestiti librari. La norma interna numero dodici richiede la",
+          "registrazione del titolo. Il reso va confermato in dieci",
+          "giorni dalla concessione del volume. La proroga e possibile",
+          "solo senza prenotazioni altrui ed e scritta. Se il libro e",
+          "riservato va restituito anche a lettura non conclusa. Il",
+          "registro traccia chi ha ricevuto il libro e il giorno",
+          "esatto. Non sono presenti dati sulle opinioni personali dei",
+          "lettori. Tali condizioni ed eccezioni sono essenziali per la",
+          "procedura."
+        ],
+        "gridPass": false,
+        "rawLineCompliant": false,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Registrare titolo prima del prestito",
+          "Proroga non automatica; conferma scritta"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "afterProvisionalAccepted": false
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "label": "50%",
+      "providerMs": 1024,
+      "providerOutputTokens": 98,
+      "originalSource": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura per richiedere i libri. La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni. Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data iniziale. Quando un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura. Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori. Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura.",
+      "problem": "Omissioni: libro prenotato da restituire pur se non finito di leggere, e registro contenente chi e quando. Conserva numero 12 e conferma scritta.",
+      "previous": "Nel 2024 una biblioteca scolastica ha stabilito una regola.\nLa norma numero 12 impone allo studente di registrare il\nlibro prima del prestito e confermare il reso in dieci\ngiorni. Il personale concede una proroga solo se nessuno\nha prenotato il volume. Senza conferma scritta vale la\ndata iniziale. Se il libro e riservato va reso alla\nscadenza. Il registro traccia i prestiti ma non le opinioni.",
+      "repaired": "Biblioteca simulata del 2024: regola dodici prevede.\nStudente registra titolo e conferma reso in dieci di.\nProroga concessa se il volume non e prenotato da.\nSenza conferma scritta resta valida la data prima.\nLibro prenotato va reso pur se non letto affatto.\nRegistro contiene sempre chi e quando lo ha avuto.\nEccezioni e condizioni sono essenziali ed vere.",
+      "before": {
+        "letters": 318,
+        "reduction": 50,
+        "letterBand": [
+          287,
+          349
+        ],
+        "mathPass": true,
+        "maxRows": 7,
+        "rows": 7,
+        "wrapPreview": [
+          "Nel 2024 una biblioteca scolastica ha stabilito una regola.",
+          "La norma numero 12 impone allo studente di registrare il",
+          "libro prima del prestito e confermare il reso in dieci",
+          "giorni. Il personale concede una proroga solo se nessuno ha",
+          "prenotato il volume. Senza conferma scritta vale la data",
+          "iniziale. Se il libro e riservato va reso alla scadenza. Il",
+          "registro traccia i prestiti ma non le opinioni."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": true,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Biblioteca simulata",
+          "Registrare titolo prima del prestito",
+          "Libro prenotato: reso anche se non letto"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "after": {
+        "letters": 287,
+        "reduction": 54.87,
+        "letterBand": [
+          287,
+          349
+        ],
+        "mathPass": true,
+        "maxRows": 7,
+        "rows": 7,
+        "wrapPreview": [
+          "Biblioteca simulata del 2024: regola dodici prevede.",
+          "Studente registra titolo e conferma reso in dieci di.",
+          "Proroga concessa se il volume non e prenotato da. Senza",
+          "conferma scritta resta valida la data prima. Libro prenotato",
+          "va reso pur se non letto affatto. Registro contiene sempre",
+          "chi e quando lo ha avuto. Eccezioni e condizioni sono",
+          "essenziali ed vere."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": true,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Confermare restituzione in dieci giorni",
+          "Non registra opinioni"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "afterProvisionalAccepted": false
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "label": "40%",
+      "providerMs": 993,
+      "providerOutputTokens": 126,
+      "originalSource": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+      "problem": "Manca apostrofo in \"dall asse\", e il vincolo che le eclissi non si verificano a ogni lunazione. Mantieni i vocaboli scientifici esatti.",
+      "previous": "La Terra ruota su se stessa generando il giorno e la notte.\nLa rivoluzione solare dura un anno e le stagioni dipendono\ndall asse inclinato, non dalla distanza. La Luna e il Sole\ninfluiscono sulle maree. Le eclissi esigono un preciso\nallineamento. Il metodo scientifico richiede ipotesi\nverificabili e prove ripetibili per evitare errori. Un\nsolo risultato non basta. Bisogna distinguere fra la\nsemplice descrizione di un movimento e le sue reali cause.",
+      "repaired": "La Terra ruota su se stessa generando il di e la notte.\nLa rivoluzione solare dura un anno e le stagioni dipendono\ndall'asse inclinato, non dalla distanza. La Luna e il Sole\ninfluiscono sulle maree. Le eclissi esigono un preciso\nallineamento e non avvengono ad ogni lunazione. Il metodo\nscientifico richiede ipotesi verificabili e prove ripetibili\nper evitare errori. Un solo risultato non basta. Bisogna\ndistinguere fra descrizione di un moto e le reali cause.",
+      "before": {
+        "letters": 372,
+        "reduction": 37.9,
+        "letterBand": [
+          330,
+          389
+        ],
+        "mathPass": true,
+        "maxRows": 8,
+        "rows": 8,
+        "wrapPreview": [
+          "La Terra ruota su se stessa generando il giorno e la notte.",
+          "La rivoluzione solare dura un anno e le stagioni dipendono",
+          "dall asse inclinato, non dalla distanza. La Luna e il Sole",
+          "influiscono sulle maree. Le eclissi esigono un preciso",
+          "allineamento. Il metodo scientifico richiede ipotesi",
+          "verificabili e prove ripetibili per evitare errori. Un solo",
+          "risultato non basta. Bisogna distinguere fra la semplice",
+          "descrizione di un movimento e le sue reali cause."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": true,
+        "wordIntegrityPass": false,
+        "hyphenBreak": false,
+        "apostropheError": true,
+        "heuristicMissingConcepts": [
+          "Eclissi non ad ogni lunazione"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "after": {
+        "letters": 378,
+        "reduction": 36.89,
+        "letterBand": [
+          330,
+          389
+        ],
+        "mathPass": true,
+        "maxRows": 8,
+        "rows": 8,
+        "wrapPreview": [
+          "La Terra ruota su se stessa generando il di e la notte. La",
+          "rivoluzione solare dura un anno e le stagioni dipendono",
+          "dall'asse inclinato, non dalla distanza. La Luna e il Sole",
+          "influiscono sulle maree. Le eclissi esigono un preciso",
+          "allineamento e non avvengono ad ogni lunazione. Il metodo",
+          "scientifico richiede ipotesi verificabili e prove ripetibili",
+          "per evitare errori. Un solo risultato non basta. Bisogna",
+          "distinguere fra descrizione di un moto e le reali cause."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": true,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Giorno e notte dalla rotazione"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "afterProvisionalAccepted": false
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "label": "30%",
+      "providerMs": 961,
+      "providerOutputTokens": 110,
+      "originalSource": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+      "problem": "Rendi esplicita la distinzione fra descrizione del moto e le sue cause. Conserva stagioni/asse/distanza, allineamenti e ripetibilita delle prove.",
+      "previous": "La Terra compie una rotazione attorno al proprio asse, generando il ciclo del giorno e della notte. La rivoluzione intorno al Sole dura circa un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre e non dalla distanza. Sole e Luna influenzano le maree, mentre le eclissi avvengono solo per specifici allineamenti. Il metodo scientifico si fonda su ipotesi verificabili e ripetibili; un unico risultato isolato non basta per confermare una spiegazione valida.",
+      "repaired": "La cinematica studia il moto descrivendone la forma.\nLa dinamica analizza invece le sue cause profonde.\nLa Terra ruota sull asse e rivoluziona sul Sole.\nStagioni e asse contano non la distanza solare.\nMaree eclissi richiedono specifici allineamenti.\nLe eclissi non avvengono ad ogni fase lunare.\nLe prove scientifiche esigono ripetibilita.\nIpotesi verificabili evitano risultati isolati.",
+      "before": {
+        "letters": 392,
+        "reduction": 34.56,
+        "letterBand": [
+          390,
+          449
+        ],
+        "mathPass": true,
+        "maxRows": 9,
+        "rows": 9,
+        "wrapPreview": [
+          "La Terra compie una rotazione attorno al proprio asse,",
+          "generando il ciclo del giorno e della notte. La rivoluzione",
+          "intorno al Sole dura circa un anno. Le stagioni dipendono",
+          "dall'inclinazione dell'asse terrestre e non dalla distanza.",
+          "Sole e Luna influenzano le maree, mentre le eclissi",
+          "avvengono solo per specifici allineamenti. Il metodo",
+          "scientifico si fonda su ipotesi verificabili e ripetibili;",
+          "un unico risultato isolato non basta per confermare una",
+          "spiegazione valida."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": false,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Eclissi non ad ogni lunazione",
+          "Descrizione del moto diversa dalle cause"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "after": {
+        "letters": 324,
+        "reduction": 45.91,
+        "letterBand": [
+          390,
+          449
+        ],
+        "mathPass": false,
+        "maxRows": 9,
+        "rows": 7,
+        "wrapPreview": [
+          "La cinematica studia il moto descrivendone la forma. La",
+          "dinamica analizza invece le sue cause profonde. La Terra",
+          "ruota sull asse e rivoluziona sul Sole. Stagioni e asse",
+          "contano non la distanza solare. Maree eclissi richiedono",
+          "specifici allineamenti. Le eclissi non avvengono ad ogni",
+          "fase lunare. Le prove scientifiche esigono ripetibilita.",
+          "Ipotesi verificabili evitano risultati isolati."
+        ],
+        "gridPass": true,
+        "rawLineCompliant": true,
+        "wordIntegrityPass": true,
+        "hyphenBreak": false,
+        "apostropheError": false,
+        "heuristicMissingConcepts": [
+          "Giorno e notte dalla rotazione",
+          "Rivoluzione della Terra e durata annua",
+          "Stagioni dipendono dall inclinazione dell asse"
+        ],
+        "heuristicConceptPass": false,
+        "contextLeakSignals": false,
+        "noContextLeak": true
+      },
+      "afterProvisionalAccepted": false
+    }
+  ],
+  "errors": []
+}
