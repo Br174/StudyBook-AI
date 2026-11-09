@@ -1,0 +1,50 @@
+name: StudyBook LAB89 real Gemini proportional semantic grid
+on:
+  push:
+    branches:
+      - 'audit/studybook-proportional-semantic-grid-v89-*'
+    paths:
+      - 'scripts/test-lab89-proportional-real-gemini.mjs'
+      - '.github/workflows/studybook-lab89-real-gemini.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab89-real-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check trial syntax
+        run: node --check scripts/test-lab89-proportional-real-gemini.mjs
+      - name: Generate and measure proportional budget outputs
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab89-proportional-real-gemini.mjs
+      - name: Upload full or partial Gemini results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB89-Proportional-RealGemini
+          path: audit/reports/lab89-proportional-real-gemini.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Preserve audit results in isolated branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab89-proportional-real-gemini.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab89-proportional-real-gemini.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(LAB89): persist real proportional-grid Gemini evidence'
+            git push origin "HEAD:${TARGET_REF}"
+          fi
