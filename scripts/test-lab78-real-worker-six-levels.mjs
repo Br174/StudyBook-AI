@@ -29,7 +29,7 @@ const report={
  semanticCertificates:0,additionalPaidCostEuro:0,
  noGuaranteedSuccessOnUnknownBooks:true
 };
-const OUT='audit/reports/lab78-real-worker-six-levels.json';
+const OUT=process.env.LAB78_REAL_REPORT||'audit/reports/lab78-real-worker-six-levels.json';
 function save(){
  mkdirSync('audit/reports',{recursive:true});
  report.finishedAt=new Date().toISOString();
