@@ -52,6 +52,10 @@ export async function rebalanceSavedStudyBookV67(book,{
  if(!classifySourceReadinessV52(book,units).ok)
   throw Error('Ricalibrazione vietata: fonte originale non verificata.');
  const start=book.editionsV36;
+ // Only new LAB78 snapshots require extra 60-column geometry fixes.
+ // Preserve LAB67/69 legacy behavior and the exact two-call guarantee.
+ const strictGeometry=start.publicationModeV66===
+   'lab78-numeric-gate-semantic-unverified';
  const fp=originalFingerprint(book);
  let current=start;
  // LAB69: legacy LAB67 retries/acceptances are NOT proof of strict precision.
@@ -75,7 +79,7 @@ export async function rebalanceSavedStudyBookV67(book,{
  // outside its band or 60-cell virtual line cap. Include those levels.
  const needsCorrection=(drafts)=>{
   const global=planRebalanceV67(units,drafts);
-  for(const level of ['summary','50','40','30','20','10']){
+  if(strictGeometry)for(const level of ['summary','50','40','30','20','10']){
    const parts=units.map(u=>({id:u.id,
      text:drafts?.[u.ci]?.[u.pi]?.editions?.[level]||''}));
    const rowReview=studyGeometryReviewV78(units,parts,level);
@@ -107,7 +111,7 @@ export async function rebalanceSavedStudyBookV67(book,{
   const pageSelection=selectPageRepairUnitsV74(units,currentParts,level);
   const rowCheck=studyGeometryReviewV78(units,currentParts,level);
   const problemIds=new Set(pageSelection.repairUnits.map(u=>u.id));
-  for(const g of rowCheck.groups.filter(x=>!x.pass))
+  if(strictGeometry)for(const g of rowCheck.groups.filter(x=>!x.pass))
     for(const id of g.ids||[])problemIds.add(id);
   const repairUnits=units.filter(u=>problemIds.has(u.id));
   const untouchedUnits=units.filter(u=>!problemIds.has(u.id));
@@ -242,7 +246,8 @@ export async function rebalanceSavedStudyBookV67(book,{
       const blockNumeric=measureEditionLengthV72({level,originalLetters:originals,
        outputLetters,completeParts:true,finishReason:reply.finishReason||null});
       const virtualRows=studyGeometryReviewV78(block,candidates,level);
-      if(blockNumeric.compliant&&pageNumeric.withinBand&&virtualRows.complete){
+      if(blockNumeric.compliant&&pageNumeric.withinBand&&
+        (!strictGeometry||virtualRows.complete)){
        for(const p of candidates)buffered[p.id]=p.text;
        blockValidated=true;
        stage.errors[level]=null;
@@ -309,9 +314,9 @@ export async function rebalanceSavedStudyBookV67(book,{
     id:u.id,text:nextDrafts?.[u.ci]?.[u.pi]?.editions?.[level]
   })),level);
   const accepts=moreProtectedLoss===0&&immutableDefects===0&&
-    afterPages.withinBand&&afterGeometry.complete&&
+    afterPages.withinBand&&(!strictGeometry||afterGeometry.complete)&&
     (betterReductionV67(before,after)||
-      (before.within&&after.within&&!beforeGeometry.complete));
+      (strictGeometry&&before.within&&after.within&&!beforeGeometry.complete));
   stage.attempted[level]=true;
   stage.completed[level]={
    accepted:accepts,previous:before.measured,measured:after.measured,
