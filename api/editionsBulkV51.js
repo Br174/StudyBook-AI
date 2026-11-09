@@ -406,11 +406,13 @@ export default async function handler(req,res){
   const protocolRequested=protocolV75||protocolV74||protocolV72||protocolV71||protocolV70;
   if(protocolRequested&&req.body?.draftProtocol!==(protocolV75?STUDY_DRAFT_PROTOCOL_V75:protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:STUDY_DRAFT_PROTOCOL_V70))
     return fail(res,409,'AI_DRAFT_PROTOCOL_MISMATCH','Versione motore Gemini non corrispondente alla LAB70.');
-  // Only the LAB78 experimental Worker accepts the LAB74 draft route.
-  // A stale client may not silently skip the 60-cell generation contract.
-  if(protocolV74&&req.body?.geometryPolicyV78!==STUDY_GEOMETRY_V78)
+  // Backward-compatible LAB74 clients remain valid. The new LAB78 Android
+  // client MUST require the signed response geometry policy; if an explicit
+  // policy is sent, reject any mismatch BEFORE making a Gemini request.
+  if(protocolV74&&req.body?.geometryPolicyV78!=null&&
+     req.body.geometryPolicyV78!==STUDY_GEOMETRY_V78)
     return fail(res,409,'AI_GEOMETRY_PROTOCOL_REQUIRED',
-      'Aggiornamento StudyBook LAB78 necessario per la generazione fedele.');
+      'Protocollo geometrico di generazione non compatibile.');
   // Experiment budget: one original page group per planning operation where
   // possible. Never multiply 674 source paragraphs by two model calls.
   if(protocolV75&&safe.length>PLANNING_MAX_UNITS_V75)
