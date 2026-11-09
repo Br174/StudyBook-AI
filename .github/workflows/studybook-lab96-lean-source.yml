@@ -1,0 +1,59 @@
+name: StudyBook LAB96 source-only lean Gemini
+on:
+  push:
+    branches:
+      - 'audit/studybook-lean-source-only-v96-*'
+    paths:
+      - '.github/workflows/studybook-lab96-lean-source.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab96-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Node syntax
+        run: |
+          node --check scripts/lab96-eval.mjs
+          node --check scripts/test-lab96-offline.mjs
+          node --check scripts/test-lab96-real-gemini.mjs
+      - name: Offline regression and anti-omission detection
+        run: node scripts/test-lab96-offline.mjs
+      - name: Limited real Gemini tests source-only
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab96-real-gemini.mjs
+      - name: Upload reports including partial results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB96-SourceOnly
+          path: |
+            audit/reports/lab96-offline.json
+            audit/reports/lab96-source-only-real-gemini.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Persist isolated audit reports
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab96-offline.json audit/reports/lab96-source-only-real-gemini.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB96): preserve real and offline lean-prompt evidence'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
