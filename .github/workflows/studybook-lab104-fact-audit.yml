@@ -1,0 +1,55 @@
+name: StudyBook LAB104 source-backed fact audit best-of-all
+on:
+  push:
+    branches:
+      - 'audit/studybook-source-fact-review-v104-*'
+    paths:
+      - '.github/workflows/studybook-lab104-fact-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab104-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  fact-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check; reuse all prior LAB103 incumbent checks
+        run: |
+          node --check scripts/lab103-incumbent-no-regression.mjs
+          node --check scripts/lab104-fact-by-fact-editorial-review.mjs
+          node scripts/lab103-incumbent-no-regression.mjs
+          node scripts/lab103-targeted-history-modality.mjs
+      - name: LAB104 inspect all 52 saved LAB101 facts and all four best-quality candidates
+        run: node scripts/lab104-fact-by-fact-editorial-review.mjs
+      - name: Save evidence even when test fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB104-SourceBacked-52Facts
+          path: audit/reports/lab104-fact-by-fact-editorial-review.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Commit only isolated QA evidence
+        if: success()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab104-fact-by-fact-editorial-review.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab104-fact-by-fact-editorial-review.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB104): persist 52 source-backed fact decisions and targeted non-regression checks'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
