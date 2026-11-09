@@ -136,7 +136,7 @@ for(const [source,level] of [['medicina',10],['concetto_sbilanciato',20],['scien
    originalLetters:plan.originalLetters,band:plan.band,rows:geometry.lines.length,maxRows:plan.targetCap,
    percentPass:plan.short||(n>=plan.band.low&&n<=plan.band.high),
    gridPass:geometry.lines.length<=plan.targetCap&&!geometry.overlong,
-   relationAlerts:rel.alerts.map(x=>x.id),directionRisk:direction.risk,sourceHash:p.ledger.sourceHash,
+   relationAlerts:rel.alerts.map(x=>x.id),directionRisk:direction.risk??null,sourceHash:p.ledger.sourceHash,
    textHash:sha256(t),noSplitWords:!geometry.overlong};
  }
  const before=measure(base),current=measure(after);
