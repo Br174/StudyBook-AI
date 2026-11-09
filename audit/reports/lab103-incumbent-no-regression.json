@@ -1,6 +1,6 @@
 {
   "name": "MotorLab StudyBook LAB103 incumbent no-regression baseline",
-  "executedAt": "2026-11-09T16:22:02.386Z",
+  "executedAt": "2026-11-09T16:23:45.545Z",
   "scope": "OFFLINE historical-only, no Gemini requests, no APK/production changes",
   "sourceOrigin": "LAB97,LAB98,LAB99,LAB101,LAB102 GitHub evidence",
   "totals": {
@@ -9,7 +9,8 @@
     "semanticReviewCandidates": 4,
     "fullySemanticallyCertified": 0,
     "adversarialCases": 4,
-    "knownGuardFalseNegatives": 1
+    "oldGuardFalseNegatives": 1,
+    "remainingCombinedGuardFalseNegatives": 0
   },
   "quantitativeIncumbents": [
     {
@@ -175,7 +176,9 @@
       "editId": "may_to_must",
       "source": "medicina",
       "level": 10,
-      "guardDetected": true,
+      "oldGuardDetected": true,
+      "targetedDirectionDetected": false,
+      "combinedDetected": true,
       "alerts": [
         "respiration_may_increase"
       ],
@@ -185,7 +188,9 @@
       "editId": "documented_to_proven",
       "source": "concetto_sbilanciato",
       "level": 20,
-      "guardDetected": true,
+      "oldGuardDetected": true,
+      "targetedDirectionDetected": false,
+      "combinedDetected": true,
       "alerts": [
         "documented_not_proven"
       ],
@@ -195,7 +200,9 @@
       "editId": "negation_removed",
       "source": "scienze",
       "level": 65,
-      "guardDetected": true,
+      "oldGuardDetected": true,
+      "targetedDirectionDetected": false,
+      "combinedDetected": true,
       "alerts": [
         "eclipse_not_each_lunation"
       ],
@@ -205,9 +212,18 @@
       "editId": "direction_swapped",
       "source": "medicina",
       "level": 10,
-      "guardDetected": false,
+      "oldGuardDetected": false,
+      "targetedDirectionDetected": true,
+      "combinedDetected": true,
       "alerts": [],
-      "warning": "KNOWN_SEMANTIC_FALSE_NEGATIVE_KEEP_PROMOTION_BLOCKED"
+      "warning": null
+    }
+  ],
+  "targetedDirectionRisks": [
+    {
+      "candidate": "medicina|10|LAB102_GEMINI",
+      "sourceSupportedDirection": true,
+      "reversal": false
     }
   ],
   "candidateIndex": [
