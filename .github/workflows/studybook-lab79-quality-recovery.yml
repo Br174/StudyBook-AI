@@ -49,7 +49,7 @@ jobs:
           VITE_STUDYBOOK_GEOMETRY_V78: '1'
         run: |
           npm run build
-          grep -rl 'lab79-audited-drafts-targeted-recalibration-v1' dist/assets/
+          grep -rl 'manual-recalibration' dist/assets/
           grep -rl 'studybook-ai-lab78-geometry' dist/assets/
       - name: Existing free Worker no change, bundle consistency
         env:
