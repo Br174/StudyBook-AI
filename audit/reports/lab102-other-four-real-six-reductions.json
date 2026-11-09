@@ -1,6 +1,6 @@
 {
   "study": "StudyBook LAB102 real six-level pages",
-  "generatedAt": "2026-11-09T16:00:07.375Z",
+  "generatedAt": "2026-11-09T16:02:09.721Z",
   "source": "LAB101 original single-read inventories, no new fact extractions",
   "model": "gemini-3.5-flash-lite",
   "scope": [
@@ -16,15 +16,15 @@
   },
   "summary": {
     "selectedPages": 4,
-    "processedPages": 2,
-    "successfulGenerations": 11,
+    "processedPages": 4,
+    "successfulGenerations": 24,
     "expectedGenerations": 24,
-    "numericAndGridPasses": 1,
+    "numericAndGridPasses": 11,
     "preliminarySemanticCertificates": 0,
     "approvedForApp": 0,
-    "providerAttempts": 14,
-    "halted": true,
-    "haltReason": "PROVIDER_UNAVAILABLE_503"
+    "providerAttempts": 13,
+    "halted": false,
+    "haltReason": null
   },
   "errors": [
     {
@@ -86,7 +86,7 @@
         }
       ],
       "originalRows": 14,
-      "providerCalls": 6,
+      "providerCalls": 0,
       "versions": [
         {
           "level": 65,
@@ -524,7 +524,7 @@
       "fundamentalFacts": 13,
       "priorityFlags": [],
       "originalRows": 16,
-      "providerCalls": 8,
+      "providerCalls": 1,
       "versions": [
         {
           "level": 65,
@@ -877,8 +877,746 @@
           }
         },
         {
-          "providerOk": false,
-          "http": 503
+          "level": 10,
+          "providerOk": true,
+          "durationMs": 12175,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "L'apparato respiratorio porta aria ai polmoni tramite le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume; durante l'espirazione a riposo il diaframma si rilassa."
+              },
+              {
+                "id": "C2",
+                "text": "Negli alveoli polmonari l'ossigeno passa dall'aria al sangue, mentre l'anidride carbonica fa il percorso inverso. Lo scambio avviene per differenze di pressione parziale attraverso pareti sottili."
+              },
+              {
+                "id": "C3",
+                "text": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno. La frequenza respiratoria può aumentare nello sforzo perché l'organismo consuma più ossigeno e produce più anidride carbonica."
+              },
+              {
+                "id": "C4",
+                "text": "Per valutare un disturbo respiratorio il medico valuta sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per la diagnosi: va interpretato nel contesto clinico."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 728,
+              "targetLetters": 655,
+              "actualLetters": 660,
+              "reductionPercent": 9.34,
+              "percentageDeviation": -0.66,
+              "strictBand": true,
+              "rows": 14,
+              "maxRows": 15,
+              "virtualRows": [
+                "L'apparato respiratorio porta aria ai polmoni tramite le vie",
+                "aeree. Durante l'inspirazione il diaframma si contrae e il",
+                "torace aumenta di volume; durante l'espirazione a riposo il",
+                "diaframma si rilassa. Negli alveoli polmonari l'ossigeno",
+                "passa dall'aria al sangue, mentre l'anidride carbonica fa il",
+                "percorso inverso. Lo scambio avviene per differenze di",
+                "pressione parziale attraverso pareti sottili. L'emoglobina",
+                "nei globuli rossi trasporta gran parte dell'ossigeno. La",
+                "frequenza respiratoria può aumentare nello sforzo perché",
+                "l'organismo consuma più ossigeno e produce più anidride",
+                "carbonica. Per valutare un disturbo respiratorio il medico",
+                "valuta sintomi, storia clinica ed esame obiettivo. Un",
+                "singolo valore misurato non basta sempre per la diagnosi: va",
+                "interpretato nel contesto clinico."
+              ],
+              "overflows": false,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "NEEDS_HUMAN_SEMANTIC_REVIEW",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        }
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+      "inventoryHash": "47a76ec21bd09d15131d9f3b18e6ac22a99479309056aecd8b671cdbc9adf317",
+      "manualPriorityOverride": null,
+      "fundamentalFacts": 12,
+      "priorityFlags": [],
+      "originalRows": 15,
+      "providerCalls": 6,
+      "versions": [
+        {
+          "level": 65,
+          "providerOk": true,
+          "durationMs": 1919,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel laboratorio gli studenti confrontano fonti per ricostruire eventi. La provenienza indica autore e scopo. Testimonianze divergono per punti di vista o interessi. Si verificano affermazioni confrontando fonti indipendenti, distinguendo fatti da opinioni e segnalando incertezze. Date e cause richiedono contesto."
+              },
+              {
+                "id": "C2",
+                "text": "La fonte primaria e prodotta nel periodo studiato."
+              },
+              {
+                "id": "C3",
+                "text": "La fonte secondaria interpreta documenti precedenti."
+              },
+              {
+                "id": "C4",
+                "text": "Occorre distinguere ipotesi da fatti documentati."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 670,
+              "targetLetters": 234,
+              "actualLetters": 399,
+              "reductionPercent": 40.45,
+              "percentageDeviation": -24.55,
+              "strictBand": false,
+              "rows": 9,
+              "maxRows": 6,
+              "virtualRows": [
+                "Nel laboratorio gli studenti confrontano fonti per",
+                "ricostruire eventi. La provenienza indica autore e scopo.",
+                "Testimonianze divergono per punti di vista o interessi. Si",
+                "verificano affermazioni confrontando fonti indipendenti,",
+                "distinguendo fatti da opinioni e segnalando incertezze. Date",
+                "e cause richiedono contesto. La fonte primaria e prodotta",
+                "nel periodo studiato. La fonte secondaria interpreta",
+                "documenti precedenti. Occorre distinguere ipotesi da fatti",
+                "documentati."
+              ],
+              "overflows": true,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 50,
+          "providerOk": true,
+          "durationMs": 1677,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel laboratorio gli studenti usano lettere, cronache, carte e registri per ricostruire gli eventi. La provenienza indica autore, tempo e scopo. Testimonianze diverse sullo stesso fatto dipendono da punti di vista o interessi particolari. Per verificare occorre confrontare fonti indipendenti, distinguere fatti da opinioni e segnalare i dubbi. Una data isolata non basta: serve analizzare contesto e conseguenze."
+              },
+              {
+                "id": "C2",
+                "text": "Una fonte primaria è prodotta nel periodo studiato."
+              },
+              {
+                "id": "C3",
+                "text": "Una fonte secondaria interpreta documenti precedenti."
+              },
+              {
+                "id": "C4",
+                "text": "Le ipotesi vanno distinte dai fatti documentati."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 670,
+              "targetLetters": 335,
+              "actualLetters": 476,
+              "reductionPercent": 28.96,
+              "percentageDeviation": -21.04,
+              "strictBand": false,
+              "rows": 10,
+              "maxRows": 8,
+              "virtualRows": [
+                "Nel laboratorio gli studenti usano lettere, cronache, carte",
+                "e registri per ricostruire gli eventi. La provenienza indica",
+                "autore, tempo e scopo. Testimonianze diverse sullo stesso",
+                "fatto dipendono da punti di vista o interessi particolari.",
+                "Per verificare occorre confrontare fonti indipendenti,",
+                "distinguere fatti da opinioni e segnalare i dubbi. Una data",
+                "isolata non basta: serve analizzare contesto e conseguenze.",
+                "Una fonte primaria è prodotta nel periodo studiato. Una",
+                "fonte secondaria interpreta documenti precedenti. Le ipotesi",
+                "vanno distinte dai fatti documentati."
+              ],
+              "overflows": true,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 40,
+          "providerOk": true,
+          "durationMs": 1313,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel laboratorio studenti confrontano documenti per ricostruire eventi. La provenienza chiarisce autore, tempo e scopo. Testimonianze divergenti dipendono da punti di vista o interessi. Verificare richiede fonti indipendenti, distinguere fatti da opinioni e indicare l'incertezza. Date isolate non bastano: servono contesto e conseguenze."
+              },
+              {
+                "id": "C2",
+                "text": "Una fonte primaria è prodotta nel periodo studiato."
+              },
+              {
+                "id": "C3",
+                "text": "Una fonte secondaria interpreta documenti precedenti."
+              },
+              {
+                "id": "C4",
+                "text": "Le ipotesi vanno distinte dai fatti documentati."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 670,
+              "targetLetters": 402,
+              "actualLetters": 417,
+              "reductionPercent": 37.76,
+              "percentageDeviation": -2.24,
+              "strictBand": true,
+              "rows": 9,
+              "maxRows": 9,
+              "virtualRows": [
+                "Nel laboratorio studenti confrontano documenti per",
+                "ricostruire eventi. La provenienza chiarisce autore, tempo e",
+                "scopo. Testimonianze divergenti dipendono da punti di vista",
+                "o interessi. Verificare richiede fonti indipendenti,",
+                "distinguere fatti da opinioni e indicare l'incertezza. Date",
+                "isolate non bastano: servono contesto e conseguenze. Una",
+                "fonte primaria è prodotta nel periodo studiato. Una fonte",
+                "secondaria interpreta documenti precedenti. Le ipotesi vanno",
+                "distinte dai fatti documentati."
+              ],
+              "overflows": false,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [
+              {
+                "id": "uncertainty_explicit",
+                "why": "La parte incerta della ricostruzione deve essere segnalata.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              }
+            ],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 30,
+          "providerOk": true,
+          "durationMs": 11693,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel laboratorio di storia gli studenti confrontano fonti per ricostruire gli avvenimenti. La provenienza spiega autore, tempo e scopo. Testimonianze diverse dipendono da punti di vista o interessi particolari. Per verificare un'affermazione occorre confrontare fonti indipendenti, distinguere fatti da opinioni e segnalare l'incertezza. Una data isolata non basta: serve analizzare contesto e conseguenze."
+              },
+              {
+                "id": "C2",
+                "text": "Una fonte primaria è prodotta nel periodo studiato."
+              },
+              {
+                "id": "C3",
+                "text": "Una fonte secondaria interpreta documenti precedenti."
+              },
+              {
+                "id": "C4",
+                "text": "Le ipotesi vanno distinte dai fatti documentati."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 670,
+              "targetLetters": 469,
+              "actualLetters": 474,
+              "reductionPercent": 29.25,
+              "percentageDeviation": -0.75,
+              "strictBand": true,
+              "rows": 10,
+              "maxRows": 11,
+              "virtualRows": [
+                "Nel laboratorio di storia gli studenti confrontano fonti per",
+                "ricostruire gli avvenimenti. La provenienza spiega autore,",
+                "tempo e scopo. Testimonianze diverse dipendono da punti di",
+                "vista o interessi particolari. Per verificare",
+                "un'affermazione occorre confrontare fonti indipendenti,",
+                "distinguere fatti da opinioni e segnalare l'incertezza. Una",
+                "data isolata non basta: serve analizzare contesto e",
+                "conseguenze. Una fonte primaria è prodotta nel periodo",
+                "studiato. Una fonte secondaria interpreta documenti",
+                "precedenti. Le ipotesi vanno distinte dai fatti documentati."
+              ],
+              "overflows": false,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "NEEDS_HUMAN_SEMANTIC_REVIEW",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 20,
+          "providerOk": true,
+          "durationMs": 1124,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. La provenienza aiuta a capire autore, tempo e scopo. Testimonianze diverse sullo stesso episodio dipendono da aspetti osservati o interessi particolari. Per verificare un'affermazione occorre confrontare fonti indipendenti, distinguere fatti da opinioni e segnalare l'incertezza. Una data isolata non spiega le cause: serve studiare contesto e conseguenze."
+              },
+              {
+                "id": "C2",
+                "text": "Una fonte primaria è prodotta nel periodo studiato."
+              },
+              {
+                "id": "C3",
+                "text": "Una fonte secondaria interpreta documenti precedenti."
+              },
+              {
+                "id": "C4",
+                "text": "Le ipotesi vanno distinte dai fatti documentati."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 670,
+              "targetLetters": 536,
+              "actualLetters": 544,
+              "reductionPercent": 18.81,
+              "percentageDeviation": -1.19,
+              "strictBand": true,
+              "rows": 11,
+              "maxRows": 12,
+              "virtualRows": [
+                "Nel laboratorio di storia gli studenti confrontano lettere,",
+                "cronache, carte geografiche e registri per ricostruire gli",
+                "avvenimenti. La provenienza aiuta a capire autore, tempo e",
+                "scopo. Testimonianze diverse sullo stesso episodio dipendono",
+                "da aspetti osservati o interessi particolari. Per verificare",
+                "un'affermazione occorre confrontare fonti indipendenti,",
+                "distinguere fatti da opinioni e segnalare l'incertezza. Una",
+                "data isolata non spiega le cause: serve studiare contesto e",
+                "conseguenze. Una fonte primaria è prodotta nel periodo",
+                "studiato. Una fonte secondaria interpreta documenti",
+                "precedenti. Le ipotesi vanno distinte dai fatti documentati."
+              ],
+              "overflows": false,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "NEEDS_HUMAN_SEMANTIC_REVIEW",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 10,
+          "providerOk": true,
+          "durationMs": 1211,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. La provenienza di ciascun documento aiuta a capire chi lo ha prodotto, quando e per quale scopo. Due testimonianze possono riferire lo stesso episodio in modo diverso, perché gli autori hanno osservato aspetti differenti o hanno interessi particolari. Per verificare un'affermazione occorre confrontare più fonti indipendenti, distinguere un fatto da un'opinione e segnalare ciò che resta incerto. Una data isolata non spiega da sola le cause di un evento: bisogna studiarne il contesto e le conseguenze."
+              },
+              {
+                "id": "C2",
+                "text": "Una fonte primaria è prodotta nel periodo studiato."
+              },
+              {
+                "id": "C3",
+                "text": "Una fonte secondaria interpreta documenti precedenti."
+              },
+              {
+                "id": "C4",
+                "text": "Le ipotesi vanno distinte dai fatti documentati."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 670,
+              "targetLetters": 603,
+              "actualLetters": 662,
+              "reductionPercent": 1.19,
+              "percentageDeviation": -8.81,
+              "strictBand": false,
+              "rows": 14,
+              "maxRows": 14,
+              "virtualRows": [
+                "Nel laboratorio di storia gli studenti confrontano lettere,",
+                "cronache, carte geografiche e registri per ricostruire gli",
+                "avvenimenti. La provenienza di ciascun documento aiuta a",
+                "capire chi lo ha prodotto, quando e per quale scopo. Due",
+                "testimonianze possono riferire lo stesso episodio in modo",
+                "diverso, perché gli autori hanno osservato aspetti",
+                "differenti o hanno interessi particolari. Per verificare",
+                "un'affermazione occorre confrontare più fonti indipendenti,",
+                "distinguere un fatto da un'opinione e segnalare ciò che",
+                "resta incerto. Una data isolata non spiega da sola le cause",
+                "di un evento: bisogna studiarne il contesto e le",
+                "conseguenze. Una fonte primaria è prodotta nel periodo",
+                "studiato. Una fonte secondaria interpreta documenti",
+                "precedenti. Le ipotesi vanno distinte dai fatti documentati."
+              ],
+              "overflows": false,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        }
+      ]
+    },
+    {
+      "source": "pagina_breve_continua",
+      "sourceHash": "540ed34d3b6ab8ccf002699ae87a48463ca1a4a93f3f6aacb4a8458044041f12",
+      "inventoryHash": "35a2d961898ce0e42dcf2ea872ca80d3c11b4dfe1b0682b2547589f4bed1757e",
+      "manualPriorityOverride": null,
+      "fundamentalFacts": 3,
+      "priorityFlags": [],
+      "originalRows": 4,
+      "providerCalls": 6,
+      "versions": [
+        {
+          "level": 65,
+          "providerOk": true,
+          "durationMs": 876,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Termine perentorio: 15 giorni dalla notifica."
+              },
+              {
+                "id": "C2",
+                "text": "Se scade si perde il deposito, ma resta il diritto alla motivazione."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 155,
+              "targetLetters": 54,
+              "actualLetters": 91,
+              "reductionPercent": 41.29,
+              "percentageDeviation": -23.71,
+              "strictBand": true,
+              "rows": 2,
+              "maxRows": 5,
+              "virtualRows": [
+                "Termine perentorio: 15 giorni dalla notifica. Se scade si",
+                "perde il deposito, ma resta il diritto alla motivazione."
+              ],
+              "overflows": false,
+              "maxRowWidth": 57,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": true
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "NEEDS_HUMAN_SEMANTIC_REVIEW",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 50,
+          "providerOk": true,
+          "durationMs": 745,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Termine perentorio: 15 giorni dalla notifica per depositare osservazioni."
+              },
+              {
+                "id": "C2",
+                "text": "Se scade, decade il deposito ma resta il diritto di conoscere la motivazione."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 155,
+              "targetLetters": 78,
+              "actualLetters": 124,
+              "reductionPercent": 20,
+              "percentageDeviation": -30,
+              "strictBand": true,
+              "rows": 3,
+              "maxRows": 5,
+              "virtualRows": [
+                "Termine perentorio: 15 giorni dalla notifica per depositare",
+                "osservazioni. Se scade, decade il deposito ma resta il",
+                "diritto di conoscere la motivazione."
+              ],
+              "overflows": false,
+              "maxRowWidth": 59,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": true
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "NEEDS_HUMAN_SEMANTIC_REVIEW",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 40,
+          "providerOk": true,
+          "durationMs": 1054,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Il termine perentorio per depositare le osservazioni è di quindici giorni dalla notifica."
+              },
+              {
+                "id": "C2",
+                "text": "Se scade, si perde la facoltà di depositarle ma resta il diritto di conoscerne la motivazione."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 155,
+              "targetLetters": 93,
+              "actualLetters": 153,
+              "reductionPercent": 1.29,
+              "percentageDeviation": -38.71,
+              "strictBand": true,
+              "rows": 4,
+              "maxRows": 5,
+              "virtualRows": [
+                "Il termine perentorio per depositare le osservazioni è di",
+                "quindici giorni dalla notifica. Se scade, si perde la",
+                "facoltà di depositarle ma resta il diritto di conoscerne la",
+                "motivazione."
+              ],
+              "overflows": false,
+              "maxRowWidth": 59,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": true
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "NEEDS_HUMAN_SEMANTIC_REVIEW",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 30,
+          "providerOk": true,
+          "durationMs": 1035,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Il termine perentorio per depositare le osservazioni è di quindici giorni dalla notifica."
+              },
+              {
+                "id": "C2",
+                "text": "Se scade, si perde tale facoltà ma resta il diritto di conoscere la motivazione."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 155,
+              "targetLetters": 109,
+              "actualLetters": 141,
+              "reductionPercent": 9.03,
+              "percentageDeviation": -20.97,
+              "strictBand": true,
+              "rows": 3,
+              "maxRows": 5,
+              "virtualRows": [
+                "Il termine perentorio per depositare le osservazioni è di",
+                "quindici giorni dalla notifica. Se scade, si perde tale",
+                "facoltà ma resta il diritto di conoscere la motivazione."
+              ],
+              "overflows": false,
+              "maxRowWidth": 57,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": true
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "NEEDS_HUMAN_SEMANTIC_REVIEW",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 20,
+          "providerOk": true,
+          "durationMs": 1618,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Il termine perentorio per depositare le osservazioni è di quindici giorni dalla notifica."
+              },
+              {
+                "id": "C2",
+                "text": "Alla scadenza si perde la facoltà di deposito, ma resta il diritto di conoscere la motivazione."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 155,
+              "targetLetters": 124,
+              "actualLetters": 154,
+              "reductionPercent": 0.65,
+              "percentageDeviation": -19.35,
+              "strictBand": true,
+              "rows": 4,
+              "maxRows": 5,
+              "virtualRows": [
+                "Il termine perentorio per depositare le osservazioni è di",
+                "quindici giorni dalla notifica. Alla scadenza si perde la",
+                "facoltà di deposito, ma resta il diritto di conoscere la",
+                "motivazione."
+              ],
+              "overflows": false,
+              "maxRowWidth": 57,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": true
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "NEEDS_HUMAN_SEMANTIC_REVIEW",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 10,
+          "providerOk": true,
+          "durationMs": 868,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Il termine perentorio per depositare le osservazioni è di quindici giorni dalla notifica."
+              },
+              {
+                "id": "C2",
+                "text": "Se scade, la parte perde tale possibilità ma resta il diritto di conoscerne la motivazione."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 155,
+              "targetLetters": 140,
+              "actualLetters": 151,
+              "reductionPercent": 2.58,
+              "percentageDeviation": -7.42,
+              "strictBand": true,
+              "rows": 4,
+              "maxRows": 5,
+              "virtualRows": [
+                "Il termine perentorio per depositare le osservazioni è di",
+                "quindici giorni dalla notifica. Se scade, la parte perde",
+                "tale possibilità ma resta il diritto di conoscerne la",
+                "motivazione."
+              ],
+              "overflows": false,
+              "maxRowWidth": 57,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": true
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "NEEDS_HUMAN_SEMANTIC_REVIEW",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
         }
       ]
     }
