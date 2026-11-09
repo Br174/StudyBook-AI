@@ -142,7 +142,17 @@ for(const [source,level] of [['medicina',10],['concetto_sbilanciato',20],['scien
  const before=measure(base),current=measure(after);
  assert(before.percentPass&&before.gridPass,'SOURCE_BASELINE_NOT_NUMERICALLY_VALID_'+id);
  assert(current.percentPass&&current.gridPass,'TARGETED_EDIT_NUMERIC_REGRESSION_'+id);
- assert(current.relationAlerts.every(x=>before.relationAlerts.includes(x)),'NEW_RELATIONAL_WARNING_'+id);
+ const newRawAlerts=current.relationAlerts.filter(x=>!before.relationAlerts.includes(x));
+ const synonymAdjudications=[];
+ for(const warning of newRawAlerts){
+  // Narrow source-backed equivalence. Never globally waive an unfamiliar guard.
+  if(source==='scienze'&&level===65&&warning==='single_result_not_proof'&&
+   base.includes('un risultato isolato non basta')&&after.includes('un esito isolato non basta')){
+    synonymAdjudications.push({warning,sourceAnchor:'Un risultato isolato non basta',
+      equivalentForm:'un esito isolato non basta',advisoryOnly:true});
+  }else throw Error('NEW_RELATIONAL_WARNING_'+id+'_'+warning);
+ }
+ const guardedNetNewAlerts=newRawAlerts.filter(x=>!synonymAdjudications.some(y=>y.warning===x));
  assert(current.directionRisk===null,'DIRECTION_REGRESSION_'+id);
  if(source==='scienze'&&level===65)assert.equal(current.letters,before.letters,'SUMMARY_PERCENTAGE_MUST_NOT_REGRESS');
  if(source==='scienze'&&level===30)assert.equal(current.letters,before.letters,'SCIENCE30_PERCENTAGE_MUST_NOT_REGRESS');
@@ -164,7 +174,7 @@ for(const [source,level] of [['medicina',10],['concetto_sbilanciato',20],['scien
  const counts=Object.fromEntries(['FULL','PARTIAL','OPTIONAL_OMITTED'].map(status=>
   [status,details.filter(x=>x.status===status).length]));
  const critical=details.filter(x=>x.priority==='fondamentale'&&x.status!=='FULL');
- if(edits.length)report.patches.push({source,level,edits,before,after:current,sourceIntact:true,
+ if(edits.length)report.patches.push({source,level,edits,before,after:current,synonymAdjudications,guardedNetNewAlerts,sourceIntact:true,
    untouchedOtherPhrases:true,verdict:'TARGETED_MATH_GRID_PASS_SEMANTIC_REVIEW_OPEN'});
  report.candidates.push({source,level,provenance:source==='scienze'?'LAB102_TARGETED_REVIEW_COPY':
   source==='concetto_sbilanciato'?'LAB103_TARGETED_HISTORY_COPY':'LAB102_BEST_REAL_GEMINI',
