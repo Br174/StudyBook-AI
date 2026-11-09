@@ -23,7 +23,8 @@ export function studyPhaseProgressV59(book,{acquisition=null}={}){
    return {phase:'acquisition',title:'Acquisizione',pageCount,
      acquired,levels:[]};
  }
- const qualityMode=snapshot?.publicationModeV66==='generated-text-quality-not-certified';
+ const qualityMode=['generated-text-quality-not-certified',
+  'lab78-numeric-gate-semantic-unverified'].includes(snapshot?.publicationModeV66);
  const phase=qualityMode?'quality':
    (snapshot.draftComplete===true &&
      (['review','repair','complete'].includes(snapshot.phase)||snapshot.complete===true))
