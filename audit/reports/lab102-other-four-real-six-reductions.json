@@ -1,0 +1,887 @@
+{
+  "study": "StudyBook LAB102 real six-level pages",
+  "generatedAt": "2026-11-09T16:00:07.375Z",
+  "source": "LAB101 original single-read inventories, no new fact extractions",
+  "model": "gemini-3.5-flash-lite",
+  "scope": [
+    "procedura",
+    "medicina",
+    "concetto_sbilanciato",
+    "pagina_breve_continua"
+  ],
+  "limits": {
+    "perPageLimit": 8,
+    "freeTierOnly": true,
+    "backoff": "one retry for 503, stop on 429"
+  },
+  "summary": {
+    "selectedPages": 4,
+    "processedPages": 2,
+    "successfulGenerations": 11,
+    "expectedGenerations": 24,
+    "numericAndGridPasses": 1,
+    "preliminarySemanticCertificates": 0,
+    "approvedForApp": 0,
+    "providerAttempts": 14,
+    "halted": true,
+    "haltReason": "PROVIDER_UNAVAILABLE_503"
+  },
+  "errors": [
+    {
+      "page": "medicina",
+      "level": 30,
+      "http": 503,
+      "durationMs": 1779,
+      "message": "Provider error"
+    },
+    {
+      "page": "medicina",
+      "level": 10,
+      "http": 503,
+      "durationMs": 907,
+      "message": "Provider error"
+    },
+    {
+      "page": "medicina",
+      "level": 10,
+      "http": 503,
+      "durationMs": 835,
+      "message": "Provider error"
+    }
+  ],
+  "pages": [
+    {
+      "source": "procedura",
+      "sourceHash": "7e4759f0f1a1c6344af4ebf2e026c1be5544c53b2527d722e67a90cef79ee2bd",
+      "inventoryHash": "72991c6e475afcff7ac68dc55b0ca40010e3ebdf66cf62a0492cb7b71bda449c",
+      "manualPriorityOverride": "F11 supporto→fondamentale, isolated proven LAB101 copy only",
+      "fundamentalFacts": 8,
+      "priorityFlags": [
+        {
+          "type": "CONCEPT_HAS_SUPPORT_BUT_NO_FUNDAMENTAL",
+          "concept": "C4",
+          "factIds": [
+            "F11",
+            "F12",
+            "F13"
+          ],
+          "highRisk": true
+        },
+        {
+          "type": "SOURCE_MODAL_SENTENCE_WITHOUT_CORE",
+          "sentenceId": "S6",
+          "factIds": [
+            "F11",
+            "F12"
+          ],
+          "highRisk": true
+        },
+        {
+          "type": "MODAL_NEGATIVE_OR_CONDITION_DOWNGRADED",
+          "factId": "F12",
+          "priority": "supporto",
+          "evidence": "ma non contiene dati sulle opinioni personali dei lettori",
+          "highRisk": true,
+          "note": "Source phrase contains risk-sensitive wording; a model may still have reasonable grounds for support, so human review required."
+        }
+      ],
+      "originalRows": 14,
+      "providerCalls": 6,
+      "versions": [
+        {
+          "level": 65,
+          "providerOk": true,
+          "durationMs": 1460,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel 2024 una biblioteca simulata ha adottato la regola 12: lo studente registra il titolo prima del prestito e conferma la restituzione entro dieci giorni."
+              },
+              {
+                "id": "C2",
+                "text": "Il personale può concedere una proroga se il volume non è prenotato. Non è automatica: senza conferma scritta resta valida la data iniziale."
+              },
+              {
+                "id": "C3",
+                "text": "Se un libro è riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura."
+              },
+              {
+                "id": "C4",
+                "text": "Il registro traccia destinatario e data ma non le opinioni personali. Condizioni ed eccezioni sono essenziali per la procedura."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 636,
+              "targetLetters": 223,
+              "actualLetters": 432,
+              "reductionPercent": 32.08,
+              "percentageDeviation": -32.92,
+              "strictBand": false,
+              "rows": 10,
+              "maxRows": 5,
+              "virtualRows": [
+                "Nel 2024 una biblioteca simulata ha adottato la regola 12:",
+                "lo studente registra il titolo prima del prestito e conferma",
+                "la restituzione entro dieci giorni. Il personale può",
+                "concedere una proroga se il volume non è prenotato. Non è",
+                "automatica: senza conferma scritta resta valida la data",
+                "iniziale. Se un libro è riservato, lo studente deve",
+                "restituirlo alla scadenza anche se non ha completato la",
+                "lettura. Il registro traccia destinatario e data ma non le",
+                "opinioni personali. Condizioni ed eccezioni sono essenziali",
+                "per la procedura."
+              ],
+              "overflows": true,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [
+              {
+                "id": "internal_rule_12",
+                "why": "Non trasformare la regola interna 12 in una norma generica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              },
+              {
+                "id": "extension_not_automatic",
+                "why": "La proroga non è automatica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              }
+            ],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 50,
+          "providerOk": true,
+          "durationMs": 1527,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel 2024 una biblioteca simulata ha introdotto una procedura: la regola 12 impone allo studente di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni."
+              },
+              {
+                "id": "C2",
+                "text": "Il personale può concedere una proroga solo se il volume non è prenotato da altri. Non è automatica: senza conferma scritta resta valida la data iniziale."
+              },
+              {
+                "id": "C3",
+                "text": "Se un libro è riservato, lo studente deve restituirlo alla scadenza pur non avendo completato la lettura."
+              },
+              {
+                "id": "C4",
+                "text": "Il registro traccia destinatario e data ma non le opinioni dei lettori. Condizioni ed eccezioni sono essenziali per la procedura."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 636,
+              "targetLetters": 318,
+              "actualLetters": 472,
+              "reductionPercent": 25.79,
+              "percentageDeviation": -24.21,
+              "strictBand": false,
+              "rows": 11,
+              "maxRows": 7,
+              "virtualRows": [
+                "Nel 2024 una biblioteca simulata ha introdotto una",
+                "procedura: la regola 12 impone allo studente di registrare",
+                "il titolo prima del prestito e confermare la restituzione",
+                "entro dieci giorni. Il personale può concedere una proroga",
+                "solo se il volume non è prenotato da altri. Non è",
+                "automatica: senza conferma scritta resta valida la data",
+                "iniziale. Se un libro è riservato, lo studente deve",
+                "restituirlo alla scadenza pur non avendo completato la",
+                "lettura. Il registro traccia destinatario e data ma non le",
+                "opinioni dei lettori. Condizioni ed eccezioni sono",
+                "essenziali per la procedura."
+              ],
+              "overflows": true,
+              "maxRowWidth": 58,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [
+              {
+                "id": "internal_rule_12",
+                "why": "Non trasformare la regola interna 12 in una norma generica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              },
+              {
+                "id": "extension_not_automatic",
+                "why": "La proroga non è automatica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              }
+            ],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 40,
+          "providerOk": true,
+          "durationMs": 1651,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel 2024 una biblioteca simulata ha introdotto una procedura: la regola 12 impone allo studente di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni."
+              },
+              {
+                "id": "C2",
+                "text": "Il personale può concedere una proroga solo se il volume non è prenotato da altri. Non è automatica: senza conferma scritta resta valida la data iniziale."
+              },
+              {
+                "id": "C3",
+                "text": "Se il libro è già riservato, lo studente deve restituirlo alla scadenza pur non avendo completato la lettura."
+              },
+              {
+                "id": "C4",
+                "text": "Il registro permette di tracciare destinatario e data, ma non include le opinioni dei lettori. Condizioni ed eccezioni sono essenziali per applicare correttamente la procedura."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 636,
+              "targetLetters": 382,
+              "actualLetters": 516,
+              "reductionPercent": 18.87,
+              "percentageDeviation": -21.13,
+              "strictBand": false,
+              "rows": 12,
+              "maxRows": 9,
+              "virtualRows": [
+                "Nel 2024 una biblioteca simulata ha introdotto una",
+                "procedura: la regola 12 impone allo studente di registrare",
+                "il titolo prima del prestito e confermare la restituzione",
+                "entro dieci giorni. Il personale può concedere una proroga",
+                "solo se il volume non è prenotato da altri. Non è",
+                "automatica: senza conferma scritta resta valida la data",
+                "iniziale. Se il libro è già riservato, lo studente deve",
+                "restituirlo alla scadenza pur non avendo completato la",
+                "lettura. Il registro permette di tracciare destinatario e",
+                "data, ma non include le opinioni dei lettori. Condizioni ed",
+                "eccezioni sono essenziali per applicare correttamente la",
+                "procedura."
+              ],
+              "overflows": true,
+              "maxRowWidth": 59,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [
+              {
+                "id": "internal_rule_12",
+                "why": "Non trasformare la regola interna 12 in una norma generica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              },
+              {
+                "id": "extension_not_automatic",
+                "why": "La proroga non è automatica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              }
+            ],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 30,
+          "providerOk": true,
+          "durationMs": 1103,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel 2024 una biblioteca simulata ha avviato una procedura per i libri. La regola 12 impone allo studente di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni."
+              },
+              {
+                "id": "C2",
+                "text": "Il personale può concedere una proroga solo se il volume non è prenotato da altri. La proroga non è automatica: senza conferma scritta resta valida la data iniziale."
+              },
+              {
+                "id": "C3",
+                "text": "Se un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura."
+              },
+              {
+                "id": "C4",
+                "text": "Il registro traccia chi ha ricevuto il libro e la data, ma non include opinioni personali dei lettori. Condizioni ed eccezioni sono essenziali per applicare correttamente la procedura."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 636,
+              "targetLetters": 445,
+              "actualLetters": 536,
+              "reductionPercent": 15.72,
+              "percentageDeviation": -14.28,
+              "strictBand": false,
+              "rows": 12,
+              "maxRows": 10,
+              "virtualRows": [
+                "Nel 2024 una biblioteca simulata ha avviato una procedura",
+                "per i libri. La regola 12 impone allo studente di registrare",
+                "il titolo prima del prestito e confermare la restituzione",
+                "entro dieci giorni. Il personale può concedere una proroga",
+                "solo se il volume non è prenotato da altri. La proroga non è",
+                "automatica: senza conferma scritta resta valida la data",
+                "iniziale. Se un libro è già riservato, lo studente deve",
+                "restituirlo alla scadenza anche se non ha completato la",
+                "lettura. Il registro traccia chi ha ricevuto il libro e la",
+                "data, ma non include opinioni personali dei lettori.",
+                "Condizioni ed eccezioni sono essenziali per applicare",
+                "correttamente la procedura."
+              ],
+              "overflows": true,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [
+              {
+                "id": "internal_rule_12",
+                "why": "Non trasformare la regola interna 12 in una norma generica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              }
+            ],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 20,
+          "providerOk": true,
+          "durationMs": 1046,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel 2024 una biblioteca simulata ha introdotto una procedura per i libri. La regola 12 impone allo studente di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni."
+              },
+              {
+                "id": "C2",
+                "text": "Il personale può concedere una proroga solo se il volume non è prenotato da altri. La proroga non è automatica: senza conferma scritta resta valida la data iniziale."
+              },
+              {
+                "id": "C3",
+                "text": "Se un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura."
+              },
+              {
+                "id": "C4",
+                "text": "Il registro traccia il destinatario e la data di ricezione, ma non le opinioni personali dei lettori. Condizioni ed eccezioni sono essenziali per applicare correttamente la procedura."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 636,
+              "targetLetters": 509,
+              "actualLetters": 539,
+              "reductionPercent": 15.25,
+              "percentageDeviation": -4.75,
+              "strictBand": true,
+              "rows": 12,
+              "maxRows": 11,
+              "virtualRows": [
+                "Nel 2024 una biblioteca simulata ha introdotto una procedura",
+                "per i libri. La regola 12 impone allo studente di registrare",
+                "il titolo prima del prestito e confermare la restituzione",
+                "entro dieci giorni. Il personale può concedere una proroga",
+                "solo se il volume non è prenotato da altri. La proroga non è",
+                "automatica: senza conferma scritta resta valida la data",
+                "iniziale. Se un libro è già riservato, lo studente deve",
+                "restituirlo alla scadenza anche se non ha completato la",
+                "lettura. Il registro traccia il destinatario e la data di",
+                "ricezione, ma non le opinioni personali dei lettori.",
+                "Condizioni ed eccezioni sono essenziali per applicare",
+                "correttamente la procedura."
+              ],
+              "overflows": true,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [
+              {
+                "id": "internal_rule_12",
+                "why": "Non trasformare la regola interna 12 in una norma generica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              }
+            ],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 10,
+          "providerOk": true,
+          "durationMs": 997,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "Nel 2024 una biblioteca simulata ha introdotto una procedura per i libri. La regola 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni."
+              },
+              {
+                "id": "C2",
+                "text": "Il personale può concedere una proroga soltanto se il volume non è prenotato da altri. La proroga non è automatica: senza conferma scritta resta valida la data iniziale."
+              },
+              {
+                "id": "C3",
+                "text": "Se un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura."
+              },
+              {
+                "id": "C4",
+                "text": "Il registro traccia chi ha ricevuto il libro e la data, ma non contiene dati sulle opinioni personali dei lettori. Le condizioni ed eccezioni sono essenziali per applicare la procedura."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 636,
+              "targetLetters": 572,
+              "actualLetters": 538,
+              "reductionPercent": 15.41,
+              "percentageDeviation": 5.41,
+              "strictBand": false,
+              "rows": 12,
+              "maxRows": 13,
+              "virtualRows": [
+                "Nel 2024 una biblioteca simulata ha introdotto una procedura",
+                "per i libri. La regola 12 prevede che lo studente registri",
+                "il titolo prima del prestito e confermi la restituzione",
+                "entro dieci giorni. Il personale può concedere una proroga",
+                "soltanto se il volume non è prenotato da altri. La proroga",
+                "non è automatica: senza conferma scritta resta valida la",
+                "data iniziale. Se un libro è già riservato, lo studente deve",
+                "restituirlo alla scadenza anche se non ha completato la",
+                "lettura. Il registro traccia chi ha ricevuto il libro e la",
+                "data, ma non contiene dati sulle opinioni personali dei",
+                "lettori. Le condizioni ed eccezioni sono essenziali per",
+                "applicare la procedura."
+              ],
+              "overflows": false,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [
+              {
+                "id": "internal_rule_12",
+                "why": "Non trasformare la regola interna 12 in una norma generica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              }
+            ],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        }
+      ]
+    },
+    {
+      "source": "medicina",
+      "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+      "inventoryHash": "5c9f68c6db9487bbaef44fee7b52c41707ecdb4a064cd4d54833b6283fcf84f0",
+      "manualPriorityOverride": null,
+      "fundamentalFacts": 13,
+      "priorityFlags": [],
+      "originalRows": 16,
+      "providerCalls": 8,
+      "versions": [
+        {
+          "level": 65,
+          "providerOk": true,
+          "durationMs": 1049,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "L'apparato respiratorio porta aria ai polmoni tramite le vie aeree. Inspirando il diaframma si contrae e il torace aumenta; espirando a riposo si rilassa."
+              },
+              {
+                "id": "C2",
+                "text": "Negli alveoli l'ossigeno va dall'aria al sangue e l'anidride carbonica fa il percorso inverso. Lo scambio avviene per differenze di pressione attraverso pareti sottili."
+              },
+              {
+                "id": "C3",
+                "text": "L'emoglobina trasporta gran parte dell'ossigeno. La frequenza respiratoria può aumentare nello sforzo perché l'organismo consuma più ossigeno e produce più anidride."
+              },
+              {
+                "id": "C4",
+                "text": "Per un disturbo il medico valuta sintomi, storia ed esame obiettivo. Un solo valore non basta: va interpretato nel contesto clinico."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 728,
+              "targetLetters": 255,
+              "actualLetters": 515,
+              "reductionPercent": 29.26,
+              "percentageDeviation": -35.74,
+              "strictBand": false,
+              "rows": 11,
+              "maxRows": 6,
+              "virtualRows": [
+                "L'apparato respiratorio porta aria ai polmoni tramite le vie",
+                "aeree. Inspirando il diaframma si contrae e il torace",
+                "aumenta; espirando a riposo si rilassa. Negli alveoli",
+                "l'ossigeno va dall'aria al sangue e l'anidride carbonica fa",
+                "il percorso inverso. Lo scambio avviene per differenze di",
+                "pressione attraverso pareti sottili. L'emoglobina trasporta",
+                "gran parte dell'ossigeno. La frequenza respiratoria può",
+                "aumentare nello sforzo perché l'organismo consuma più",
+                "ossigeno e produce più anidride. Per un disturbo il medico",
+                "valuta sintomi, storia ed esame obiettivo. Un solo valore",
+                "non basta: va interpretato nel contesto clinico."
+              ],
+              "overflows": true,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [
+              {
+                "id": "hemoglobin_in_red_cells",
+                "why": "La fonte colloca l emoglobina nei globuli rossi.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              },
+              {
+                "id": "partial_pressure",
+                "why": "Lo scambio di gas dipende da differenze di pressione parziale.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              },
+              {
+                "id": "effort_both_oxygen_and_co2",
+                "why": "Lo sforzo aumenta il consumo di ossigeno e la produzione di anidride carbonica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              }
+            ],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 50,
+          "providerOk": true,
+          "durationMs": 1184,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "L'apparato respiratorio porta aria ai polmoni via vie aeree. Inspirando il diaframma si contrae e il torace cresce; espirando a riposo si rilassa."
+              },
+              {
+                "id": "C2",
+                "text": "Negli alveoli l'ossigeno va ai polmoni e l'anidride carbonica fa il percorso opposto. Lo scambio avviene per pressione parziale su pareti sottili."
+              },
+              {
+                "id": "C3",
+                "text": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno. La frequenza respiratoria può salire per sforzo, consumo di ossigeno e anidride."
+              },
+              {
+                "id": "C4",
+                "text": "Per valutare un disturbo il medico valuta sintomi, storia ed esame. Un valore non basta per diagnosi: va sempre interpretato nel contesto."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 728,
+              "targetLetters": 364,
+              "actualLetters": 477,
+              "reductionPercent": 34.48,
+              "percentageDeviation": -15.52,
+              "strictBand": false,
+              "rows": 11,
+              "maxRows": 8,
+              "virtualRows": [
+                "L'apparato respiratorio porta aria ai polmoni via vie aeree.",
+                "Inspirando il diaframma si contrae e il torace cresce;",
+                "espirando a riposo si rilassa. Negli alveoli l'ossigeno va",
+                "ai polmoni e l'anidride carbonica fa il percorso opposto. Lo",
+                "scambio avviene per pressione parziale su pareti sottili.",
+                "L'emoglobina nei globuli rossi trasporta gran parte",
+                "dell'ossigeno. La frequenza respiratoria può salire per",
+                "sforzo, consumo di ossigeno e anidride. Per valutare un",
+                "disturbo il medico valuta sintomi, storia ed esame. Un",
+                "valore non basta per diagnosi: va sempre interpretato nel",
+                "contesto."
+              ],
+              "overflows": true,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [
+              {
+                "id": "effort_both_oxygen_and_co2",
+                "why": "Lo sforzo aumenta il consumo di ossigeno e la produzione di anidride carbonica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              },
+              {
+                "id": "single_value_not_always_enough",
+                "why": "Un singolo valore non basta sempre per una diagnosi.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              }
+            ],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 40,
+          "providerOk": true,
+          "durationMs": 1293,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "L'apparato respiratorio porta aria ai polmoni tramite le vie aeree. In inspirazione il diaframma si contrae e il torace aumenta di volume; in espirazione a riposo si rilassa."
+              },
+              {
+                "id": "C2",
+                "text": "Negli alveoli l'ossigeno passa dall'aria al sangue e l'anidride carbonica fa il percorso opposto. Lo scambio avviene per differenze di pressione parziale attraverso pareti sottili."
+              },
+              {
+                "id": "C3",
+                "text": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno. La frequenza respiratoria può aumentare nello sforzo perché l'organismo consuma più ossigeno e produce più anidride carbonica."
+              },
+              {
+                "id": "C4",
+                "text": "Il medico valuta un disturbo respiratorio esaminando sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre e va interpretato nel contesto clinico."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 728,
+              "targetLetters": 437,
+              "actualLetters": 610,
+              "reductionPercent": 16.21,
+              "percentageDeviation": -23.79,
+              "strictBand": false,
+              "rows": 13,
+              "maxRows": 10,
+              "virtualRows": [
+                "L'apparato respiratorio porta aria ai polmoni tramite le vie",
+                "aeree. In inspirazione il diaframma si contrae e il torace",
+                "aumenta di volume; in espirazione a riposo si rilassa. Negli",
+                "alveoli l'ossigeno passa dall'aria al sangue e l'anidride",
+                "carbonica fa il percorso opposto. Lo scambio avviene per",
+                "differenze di pressione parziale attraverso pareti sottili.",
+                "L'emoglobina nei globuli rossi trasporta gran parte",
+                "dell'ossigeno. La frequenza respiratoria può aumentare nello",
+                "sforzo perché l'organismo consuma più ossigeno e produce più",
+                "anidride carbonica. Il medico valuta un disturbo",
+                "respiratorio esaminando sintomi, storia clinica ed esame",
+                "obiettivo. Un singolo valore misurato non basta sempre e va",
+                "interpretato nel contesto clinico."
+              ],
+              "overflows": true,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 30,
+          "providerOk": true,
+          "durationMs": 1682,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "L'apparato respiratorio porta aria ai polmoni tramite le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume; durante l'espirazione a riposo il diaframma si rilassa."
+              },
+              {
+                "id": "C2",
+                "text": "Negli alveoli l'ossigeno passa dall'aria al sangue e l'anidride carbonica fa il percorso opposto. Lo scambio avviene grazie a differenze di pressione parziale attraverso pareti molto sottili."
+              },
+              {
+                "id": "C3",
+                "text": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue. La frequenza respiratoria può aumentare durante uno sforzo perché l'organismo consuma più ossigeno e produce più anidride carbonica."
+              },
+              {
+                "id": "C4",
+                "text": "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi: deve essere interpretato nel contesto clinico."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 728,
+              "targetLetters": 510,
+              "actualLetters": 681,
+              "reductionPercent": 6.46,
+              "percentageDeviation": -23.54,
+              "strictBand": false,
+              "rows": 14,
+              "maxRows": 12,
+              "virtualRows": [
+                "L'apparato respiratorio porta aria ai polmoni tramite le vie",
+                "aeree. Durante l'inspirazione il diaframma si contrae e il",
+                "torace aumenta di volume; durante l'espirazione a riposo il",
+                "diaframma si rilassa. Negli alveoli l'ossigeno passa",
+                "dall'aria al sangue e l'anidride carbonica fa il percorso",
+                "opposto. Lo scambio avviene grazie a differenze di pressione",
+                "parziale attraverso pareti molto sottili. L'emoglobina nei",
+                "globuli rossi trasporta gran parte dell'ossigeno nel sangue.",
+                "La frequenza respiratoria può aumentare durante uno sforzo",
+                "perché l'organismo consuma più ossigeno e produce più",
+                "anidride carbonica. Per valutare un disturbo respiratorio il",
+                "medico considera sintomi, storia clinica ed esame obiettivo.",
+                "Un singolo valore misurato non basta sempre per una",
+                "diagnosi: deve essere interpretato nel contesto clinico."
+              ],
+              "overflows": true,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [],
+            "preliminaryMathPass": false,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "level": 20,
+          "providerOk": true,
+          "durationMs": 1132,
+          "analysis": {
+            "sections": [
+              {
+                "id": "C1",
+                "text": "L'apparato respiratorio porta aria ai polmoni tramite le vie aeree. In inspirazione il diaframma si contrae e il torace aumenta di volume; in espirazione a riposo si rilassa."
+              },
+              {
+                "id": "C2",
+                "text": "Negli alveoli l'ossigeno passa all'aria al sangue e l'anidride carbonica fa il percorso opposto. Tale scambio avviene per differenze di pressione parziale tramite pareti sottili."
+              },
+              {
+                "id": "C3",
+                "text": "L'emoglobina nei globuli rossi trasporta molta parte dell'ossigeno. La frequenza respiratoria può salire nello sforzo poiché il corpo consuma più ossigeno e produce più anidride."
+              },
+              {
+                "id": "C4",
+                "text": "Per valutare un disturbo il medico valuta sintomi, storia clinica ed esame obiettivo. Un solo valore non basta sempre alla diagnosi: deve essere interpretato nel contesto clinico."
+              }
+            ],
+            "metrics": {
+              "sourceLetters": 728,
+              "targetLetters": 582,
+              "actualLetters": 591,
+              "reductionPercent": 18.82,
+              "percentageDeviation": -1.18,
+              "strictBand": true,
+              "rows": 13,
+              "maxRows": 13,
+              "virtualRows": [
+                "L'apparato respiratorio porta aria ai polmoni tramite le vie",
+                "aeree. In inspirazione il diaframma si contrae e il torace",
+                "aumenta di volume; in espirazione a riposo si rilassa. Negli",
+                "alveoli l'ossigeno passa all'aria al sangue e l'anidride",
+                "carbonica fa il percorso opposto. Tale scambio avviene per",
+                "differenze di pressione parziale tramite pareti sottili.",
+                "L'emoglobina nei globuli rossi trasporta molta parte",
+                "dell'ossigeno. La frequenza respiratoria può salire nello",
+                "sforzo poiché il corpo consuma più ossigeno e produce più",
+                "anidride. Per valutare un disturbo il medico valuta sintomi,",
+                "storia clinica ed esame obiettivo. Un solo valore non basta",
+                "sempre alla diagnosi: deve essere interpretato nel contesto",
+                "clinico."
+              ],
+              "overflows": false,
+              "maxRowWidth": 60,
+              "wordIntegrity": true,
+              "lexicalWarnings": [],
+              "technicalWarnings": [],
+              "spuriousMultipleSpaces": false,
+              "shortPageExempt": false
+            },
+            "relationAlerts": [
+              {
+                "id": "effort_both_oxygen_and_co2",
+                "why": "Lo sforzo aumenta il consumo di ossigeno e la produzione di anidride carbonica.",
+                "evidence": "same-sentence lexical co-occurrence only"
+              }
+            ],
+            "preliminaryMathPass": true,
+            "preliminaryLexicalPass": true,
+            "verdict": "REJECT_OR_REVIEW_WITH_TARGETED_REPAIR",
+            "semanticCertified": false,
+            "approvedForApp": false,
+            "note": "Regex/guard pass is NOT semantic equivalence. Validate source-backed facts, polarity, modality, relations before promotion."
+          }
+        },
+        {
+          "providerOk": false,
+          "http": 503
+        }
+      ]
+    }
+  ],
+  "constraints": "No production changes, no A4 claim, no Android build, no new secret or paid service. Synthetic pre-extracted samples."
+}

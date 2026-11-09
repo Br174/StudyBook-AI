@@ -1,0 +1,154 @@
+{
+  "date": "2026-11-09T15:59:32.230Z",
+  "scope": "LAB102 isolated science samples, first Gemini originals untouched",
+  "originalEvidence": "audit/reports/lab102-real-six-reductions.json",
+  "patches": [
+    {
+      "level": 65,
+      "editType": "compact_only_four_concept_sentences_of_failed_summary",
+      "original": [
+        {
+          "id": "C1",
+          "text": "La Terra ruota attorno al proprio asse causando giorno e notte."
+        },
+        {
+          "id": "C2",
+          "text": "La rivoluzione dura un anno. Le stagioni dipendono dall'asse, non dalla distanza."
+        },
+        {
+          "id": "C3",
+          "text": "Luna e Sole influenzano le maree. Le eclissi richiedono un allineamento particolare."
+        },
+        {
+          "id": "C4",
+          "text": "Il metodo richiede ipotesi verificabili. Un risultato isolato non basta."
+        }
+      ],
+      "proposal": [
+        {
+          "id": "C1",
+          "text": "La Terra ruota: giorno e notte."
+        },
+        {
+          "id": "C2",
+          "text": "Orbita attorno al Sole in un anno. Stagioni: asse inclinato, non distanza."
+        },
+        {
+          "id": "C3",
+          "text": "Luna e Sole causano maree. Eclissi: allineamento, non ogni lunazione."
+        },
+        {
+          "id": "C4",
+          "text": "Metodo: ipotesi verificabili, osservazioni ripetibili; un risultato isolato non basta. Distinguere moti e cause."
+        }
+      ],
+      "before": {
+        "letters": 250,
+        "reduction": 58.26,
+        "rows": 6,
+        "cap": 5,
+        "alerts": [
+          "eclipse_not_each_lunation",
+          "observations_repeatable"
+        ]
+      },
+      "after": {
+        "letters": 233,
+        "reduction": 61.1,
+        "rows": 5,
+        "cap": 5,
+        "withinLetterBand": true,
+        "gridFits": true,
+        "relationAlerts": [],
+        "virtualRows": [
+          "La Terra ruota: giorno e notte. Orbita attorno al Sole in un",
+          "anno. Stagioni: asse inclinato, non distanza. Luna e Sole",
+          "causano maree. Eclissi: allineamento, non ogni lunazione.",
+          "Metodo: ipotesi verificabili, osservazioni ripetibili; un",
+          "risultato isolato non basta. Distinguere moti e cause."
+        ]
+      },
+      "noNewRelationAlerts": true,
+      "numericGeometricPass": true,
+      "semanticCertified": false,
+      "approvedForApp": false,
+      "verdict": "MATHEMATICALLY_CONFORMING_NEEDS_EDITORIAL_REVIEW"
+    },
+    {
+      "level": 30,
+      "editType": "replace_only_C4_incomplete_sentence",
+      "original": [
+        {
+          "id": "C1",
+          "text": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte poiché una parte riceve luce e l'altra resta al buio."
+        },
+        {
+          "id": "C2",
+          "text": "La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre e non dalla distanza."
+        },
+        {
+          "id": "C3",
+          "text": "La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione."
+        },
+        {
+          "id": "C4",
+          "text": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili; un risultato isolato non basta. Occorre distinguere."
+        }
+      ],
+      "proposal": [
+        {
+          "id": "C1",
+          "text": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte poiché una parte riceve luce e l'altra resta al buio."
+        },
+        {
+          "id": "C2",
+          "text": "La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre e non dalla distanza."
+        },
+        {
+          "id": "C3",
+          "text": "La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione."
+        },
+        {
+          "id": "C4",
+          "text": "Metodo scientifico: ipotesi verificabili e osservazioni ripetibili; un solo risultato non basta. Distinguere movimenti e cause delle variazioni."
+        }
+      ],
+      "before": {
+        "letters": 438,
+        "reduction": 26.88,
+        "rows": 10,
+        "cap": 10,
+        "alerts": []
+      },
+      "after": {
+        "letters": 448,
+        "reduction": 25.21,
+        "rows": 10,
+        "cap": 10,
+        "withinLetterBand": true,
+        "gridFits": true,
+        "relationAlerts": [],
+        "virtualRows": [
+          "La Terra ruota attorno al proprio asse. La rotazione causa",
+          "il giorno e la notte poiché una parte riceve luce e l'altra",
+          "resta al buio. La rivoluzione attorno al Sole dura circa un",
+          "anno. Le stagioni dipendono dall'inclinazione dell'asse",
+          "terrestre e non dalla distanza. La Luna influisce sulle",
+          "maree insieme al Sole. Le eclissi richiedono un allineamento",
+          "particolare e non avvengono a ogni lunazione. Metodo",
+          "scientifico: ipotesi verificabili e osservazioni ripetibili;",
+          "un solo risultato non basta. Distinguere movimenti e cause",
+          "delle variazioni."
+        ]
+      },
+      "noNewRelationAlerts": true,
+      "numericGeometricPass": true,
+      "semanticCertified": false,
+      "approvedForApp": false,
+      "verdict": "MATHEMATICALLY_CONFORMING_NEEDS_EDITORIAL_REVIEW"
+    }
+  ],
+  "semanticCertified": false,
+  "appApproval": false,
+  "limitations": "An independent human/expert must still validate meaning. Regex/lexical co-occurrence may approve false claims. Virtual 60-cell rows are not physical A4 layout."
+}
