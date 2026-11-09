@@ -21,7 +21,9 @@ jobs:
         with:
           node-version: '22'
       - name: Validate offline reference scripts
-        run: node --check scripts/lab103-incumbent-no-regression.mjs
+        run: |
+          node --check scripts/lab103-incumbent-no-regression.mjs
+          node --check scripts/lab103-source-direction-risk.mjs
       - name: Audit saved historical percent/geometry winners and semantic candidates
         run: node scripts/lab103-incumbent-no-regression.mjs
       - name: Preserve complete evidence regardless of step status
