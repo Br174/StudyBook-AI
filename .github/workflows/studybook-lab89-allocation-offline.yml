@@ -1,0 +1,51 @@
+name: StudyBook LAB89 proportional allocation offline stress
+on:
+  push:
+    branches:
+      - 'audit/studybook-proportional-semantic-grid-v89-*'
+    paths:
+      - 'scripts/lab89-budget-engine.mjs'
+      - 'scripts/test-lab89-proportional-offline.mjs'
+      - '.github/workflows/studybook-lab89-allocation-offline.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab89-offline-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check experiment syntax
+        run: |
+          node --check scripts/lab89-budget-engine.mjs
+          node --check scripts/test-lab89-proportional-offline.mjs
+      - name: Deterministic stress without Gemini
+        run: node scripts/test-lab89-proportional-offline.mjs
+      - name: Upload complete offline evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB89-Proportional-Offline
+          path: audit/reports/lab89-offline-allocation-stress.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Persist evidence on isolated audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab89-offline-allocation-stress.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab89-offline-allocation-stress.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(LAB89): store weighted allocation stress results'
+            git push origin "HEAD:${TARGET_REF}"
+          fi
