@@ -17,16 +17,26 @@ function validate(){
    assert.match(c.cert_sha256,/^[a-f0-9]{64}$/i);
  }else assert.equal(c.mode,'control-only','unrecognized signing mode');
 }
-function getJson(path){return JSON.parse(execFileSync('gh',['api',path],{encoding:'utf8',timeout:20000,stdio:['ignore','pipe','pipe']}));}
+// GitHub compare JSON grows with every LAB. Request only the status via gh
+// --jq so the STDOUT of child_process never grows past Node's 1MB default.
+function getJson(path,jq=null){
+ const args=['api',path];
+ if(jq)args.push('--jq',jq);
+ return JSON.parse(execFileSync('gh',args,{
+  encoding:'utf8',timeout:20000,stdio:['ignore','pipe','pipe'],maxBuffer:8*1024*1024
+ }));
+}
 try{
  validate();
  if(process.argv.includes('--self-test'))console.log('ACTIVE_FAMILY_SELF_TEST_PASS '+c.repo);
  else {
    assert.equal(process.env.GITHUB_REPOSITORY,c.repo,'Wrong project/repository');
-   const ref=getJson('repos/'+c.repo+'/git/ref/heads/'+c.active_ref);
+   const ref=getJson('repos/'+c.repo+'/git/ref/heads/'+c.active_ref,
+     '{object:{sha:.object.sha}}');
    assert.ok(sha.test(ref.object?.sha||''),'Missing authoritative active ref');
    const current=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
-   const comparison=getJson('repos/'+c.repo+'/compare/'+ref.object.sha+'...'+current);
+   const comparison=getJson('repos/'+c.repo+'/compare/'+ref.object.sha+'...'+current,
+     '{status:.status,ahead_by:.ahead_by,behind_by:.behind_by}');
    assert.ok(['ahead','identical'].includes(comparison.status),'WRONG_FAMILY: source does not descend from currently verified active ref');
    console.log('ACTIVE_FAMILY_PASS repo='+c.repo+' ref='+c.active_ref+' base='+ref.object.sha+' current='+current+' Scudo=REQUIRED');
  }
