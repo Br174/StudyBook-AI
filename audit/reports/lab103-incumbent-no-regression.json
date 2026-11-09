@@ -1,10 +1,11 @@
 {
   "name": "MotorLab StudyBook LAB103 incumbent no-regression baseline",
-  "executedAt": "2026-11-09T16:23:45.545Z",
+  "executedAt": "2026-11-09T16:26:01.233Z",
   "scope": "OFFLINE historical-only, no Gemini requests, no APK/production changes",
   "sourceOrigin": "LAB97,LAB98,LAB99,LAB101,LAB102 GitHub evidence",
   "totals": {
-    "historicalRealCandidates": 55,
+    "historicalRealCandidates": 168,
+    "additionalOlderDatasets": 10,
     "quantitativeIncumbents": 6,
     "semanticReviewCandidates": 4,
     "fullySemanticallyCertified": 0,
@@ -12,6 +13,99 @@
     "oldGuardFalseNegatives": 1,
     "remainingCombinedGuardFalseNegatives": 0
   },
+  "nearestMeasured": [
+    {
+      "level": 65,
+      "key": "scienze|65|LAB98_GEMINI",
+      "source": "scienze",
+      "reduction": 64.94,
+      "rows": 5,
+      "maxRows": 5,
+      "distancePoints": 0.06,
+      "relationAlerts": [
+        "eclipse_alignment",
+        "observations_repeatable",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "semanticCertified": false
+    },
+    {
+      "level": 50,
+      "key": "procedura|50|LAB86_GEMINI",
+      "source": "procedura",
+      "reduction": 50,
+      "rows": 7,
+      "maxRows": 7,
+      "distancePoints": 0,
+      "relationAlerts": [
+        "internal_rule_12",
+        "reserved_return_even_if_unread",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "semanticCertified": false
+    },
+    {
+      "level": 40,
+      "key": "procedura|40|LAB99_TARGETED_RETRY_unread_reserved_procedura40",
+      "source": "procedura",
+      "reduction": 40.25,
+      "rows": 9,
+      "maxRows": 9,
+      "distancePoints": 0.25,
+      "relationAlerts": [
+        "register_who_and_when"
+      ],
+      "semanticCertified": false
+    },
+    {
+      "level": 30,
+      "key": "procedura|30|LAB85_GEMINI",
+      "source": "procedura",
+      "reduction": 29.72,
+      "rows": 10,
+      "maxRows": 10,
+      "distancePoints": 0.28,
+      "relationAlerts": [
+        "internal_rule_12",
+        "reserved_return_even_if_unread",
+        "register_who_and_when"
+      ],
+      "semanticCertified": false
+    },
+    {
+      "level": 20,
+      "key": "scienze|20|LAB85_GEMINI",
+      "source": "scienze",
+      "reduction": 20.7,
+      "rows": 11,
+      "maxRows": 11,
+      "distancePoints": 0.7,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "seasons_not_distance"
+      ],
+      "semanticCertified": false
+    },
+    {
+      "level": 10,
+      "key": "procedura|10|LAB97_GEMINI",
+      "source": "procedura",
+      "reduction": 9.91,
+      "rows": 13,
+      "maxRows": 13,
+      "distancePoints": 0.09,
+      "relationAlerts": [
+        "internal_rule_12",
+        "reserved_return_even_if_unread",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "semanticCertified": false
+    }
+  ],
+  "warnings": [],
   "quantitativeIncumbents": [
     {
       "key": "scienze|65|LAB98_GEMINI",
@@ -227,6 +321,1803 @@
     }
   ],
   "candidateIndex": [
+    {
+      "key": "procedura|65|LAB85_GEMINI",
+      "source": "procedura",
+      "level": 65,
+      "from": "LAB85_GEMINI",
+      "reduction": 58.33,
+      "rows": 6,
+      "maxRows": 5,
+      "letters": 265,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "reserved_return_even_if_unread",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "textHash": "d04e97dc376dd12c81d85938041a3b4204af834a26114dc959c3e3775ad6d196"
+    },
+    {
+      "key": "procedura|50|LAB85_GEMINI",
+      "source": "procedura",
+      "level": 50,
+      "from": "LAB85_GEMINI",
+      "reduction": 47.48,
+      "rows": 8,
+      "maxRows": 7,
+      "letters": 334,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "reserved_return_even_if_unread",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "textHash": "abf9491dd007a0ef22f14cd6774f8a4bf390b3765b32b0e3f59965b9b9ffd1c4"
+    },
+    {
+      "key": "procedura|40|LAB85_GEMINI",
+      "source": "procedura",
+      "level": 40,
+      "from": "LAB85_GEMINI",
+      "reduction": 33.49,
+      "rows": 9,
+      "maxRows": 9,
+      "letters": 423,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "textHash": "553d5415dc4aed1ce98983b3680a935a8cb213352338ce7f06c677b5af53f3e5"
+    },
+    {
+      "key": "procedura|30|LAB85_GEMINI",
+      "source": "procedura",
+      "level": 30,
+      "from": "LAB85_GEMINI",
+      "reduction": 29.72,
+      "rows": 10,
+      "maxRows": 10,
+      "letters": 447,
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "reserved_return_even_if_unread",
+        "register_who_and_when"
+      ],
+      "textHash": "f935a3c33cae61d35075ef577f3c707e5acb87ba762848ba2cdf10d1481b72c3"
+    },
+    {
+      "key": "procedura|20|LAB85_GEMINI",
+      "source": "procedura",
+      "level": 20,
+      "from": "LAB85_GEMINI",
+      "reduction": 15.72,
+      "rows": 11,
+      "maxRows": 11,
+      "letters": 536,
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "reserved_return_even_if_unread",
+        "register_who_and_when"
+      ],
+      "textHash": "98a84a06723eb7846c840e90398b129c019226814cceb5408fb4613854ff0ef0"
+    },
+    {
+      "key": "procedura|10|LAB85_GEMINI",
+      "source": "procedura",
+      "level": 10,
+      "from": "LAB85_GEMINI",
+      "reduction": 15.57,
+      "rows": 12,
+      "maxRows": 13,
+      "letters": 537,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12"
+      ],
+      "textHash": "ede4482719378ea38952ddc0c7626007063c9770addd56e0ac6696543e5166f2"
+    },
+    {
+      "key": "scienze|65|LAB85_GEMINI",
+      "source": "scienze",
+      "level": 65,
+      "from": "LAB85_GEMINI",
+      "reduction": 57.26,
+      "rows": 6,
+      "maxRows": 5,
+      "letters": 256,
+      "mathPass": false,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "7e1495c86bc2addedd339919a64138c0914ed575c4d5ed96fea44cf7aec0fd8b"
+    },
+    {
+      "key": "scienze|50|LAB85_GEMINI",
+      "source": "scienze",
+      "level": 50,
+      "from": "LAB85_GEMINI",
+      "reduction": 39.23,
+      "rows": 8,
+      "maxRows": 7,
+      "letters": 364,
+      "mathPass": false,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "b14506feb9a3d870ffad436349e92aa920384807ee0d84340d058f78930ff367"
+    },
+    {
+      "key": "scienze|40|LAB85_GEMINI",
+      "source": "scienze",
+      "level": 40,
+      "from": "LAB85_GEMINI",
+      "reduction": 20.2,
+      "rows": 11,
+      "maxRows": 8,
+      "letters": 478,
+      "mathPass": false,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "252cfb0fd772b072c2b2f498f031e47094640c33f1f064496d60bbb3500154de"
+    },
+    {
+      "key": "scienze|30|LAB85_GEMINI",
+      "source": "scienze",
+      "level": 30,
+      "from": "LAB85_GEMINI",
+      "reduction": 31.72,
+      "rows": 9,
+      "maxRows": 10,
+      "letters": 409,
+      "mathPass": true,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "single_result_not_proof"
+      ],
+      "textHash": "9f5ac69a4ba6e4a0ac85b4cdf5513e1a9bdae57b1afd9771f2eebda84103915b"
+    },
+    {
+      "key": "scienze|20|LAB85_GEMINI",
+      "source": "scienze",
+      "level": 20,
+      "from": "LAB85_GEMINI",
+      "reduction": 20.7,
+      "rows": 11,
+      "maxRows": 11,
+      "letters": 475,
+      "mathPass": true,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "seasons_not_distance"
+      ],
+      "textHash": "e2365093a4bb169aaceb48cb7721921ee7be53b14db3ca9d098b820e7453cceb"
+    },
+    {
+      "key": "scienze|10|LAB85_GEMINI",
+      "source": "scienze",
+      "level": 10,
+      "from": "LAB85_GEMINI",
+      "reduction": 14.52,
+      "rows": 11,
+      "maxRows": 12,
+      "letters": 512,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "31689bcdfa21f5adb1708cbd48a6b776dcf4bd0cbc4862ad678f4c0030705c05"
+    },
+    {
+      "key": "pagina_breve_continua|65|LAB85_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 65,
+      "from": "LAB85_GEMINI",
+      "reduction": -6.45,
+      "rows": 4,
+      "maxRows": 5,
+      "letters": 165,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "362b0bd0d3f4c27392a71364645482e1b6a6a7e3adbab64bd7df4d7c51eb8ead"
+    },
+    {
+      "key": "pagina_breve_continua|50|LAB85_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "from": "LAB85_GEMINI",
+      "reduction": 8.39,
+      "rows": 3,
+      "maxRows": 5,
+      "letters": 142,
+      "mathPass": true,
+      "relationAlerts": [
+        "peremptory_15_days_notification"
+      ],
+      "textHash": "24c9a78b8b298c687ab0fb41457885e686ff2fa4a2eed541d7d45fdf4a19fb68"
+    },
+    {
+      "key": "scienze|40|LAB86_GEMINI",
+      "source": "scienze",
+      "level": 40,
+      "from": "LAB86_GEMINI",
+      "reduction": 37.9,
+      "rows": 8,
+      "maxRows": 8,
+      "letters": 372,
+      "mathPass": true,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "observations_repeatable"
+      ],
+      "textHash": "1114d4b1ab42e7031d7d7ecdd9b918499edb9ca21172f0f327782609292a616b"
+    },
+    {
+      "key": "scienze|65|LAB86_GEMINI",
+      "source": "scienze",
+      "level": 65,
+      "from": "LAB86_GEMINI",
+      "reduction": 53.59,
+      "rows": 6,
+      "maxRows": 5,
+      "letters": 278,
+      "mathPass": false,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "d4b0def518da451e972fd362b9f236f95fb820892cac4d2db8e526154d7107a1"
+    },
+    {
+      "key": "scienze|50|LAB86_GEMINI",
+      "source": "scienze",
+      "level": 50,
+      "from": "LAB86_GEMINI",
+      "reduction": 51.75,
+      "rows": 6,
+      "maxRows": 7,
+      "letters": 289,
+      "mathPass": true,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "observations_repeatable",
+        "single_result_not_proof"
+      ],
+      "textHash": "decc672a37354a03b07739bb6ec32a4ee6569b9f27ff914b08e4a3f5aa46ff1a"
+    },
+    {
+      "key": "scienze|30|LAB86_GEMINI",
+      "source": "scienze",
+      "level": 30,
+      "from": "LAB86_GEMINI",
+      "reduction": 34.56,
+      "rows": 9,
+      "maxRows": 10,
+      "letters": 392,
+      "mathPass": true,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "observations_repeatable"
+      ],
+      "textHash": "b088dde23c8560bc9647ee9133f2405705c7d05a3d62445beb85866df4cea34e"
+    },
+    {
+      "key": "scienze|20|LAB86_GEMINI",
+      "source": "scienze",
+      "level": 20,
+      "from": "LAB86_GEMINI",
+      "reduction": 19.2,
+      "rows": 10,
+      "maxRows": 11,
+      "letters": 484,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "070b584690c7d57e40d58dd33d5947abfad5ecfe22de5194330f3074363ae061"
+    },
+    {
+      "key": "scienze|10|LAB86_GEMINI",
+      "source": "scienze",
+      "level": 10,
+      "from": "LAB86_GEMINI",
+      "reduction": 20.7,
+      "rows": 10,
+      "maxRows": 12,
+      "letters": 475,
+      "mathPass": false,
+      "relationAlerts": [
+        "tides_both_moon_and_sun",
+        "observations_repeatable"
+      ],
+      "textHash": "1a36d58c45ae68c9c0b8d61712d6ea851b4e301f0039267f74eac1fff5a76b58"
+    },
+    {
+      "key": "procedura|40|LAB86_GEMINI",
+      "source": "procedura",
+      "level": 40,
+      "from": "LAB86_GEMINI",
+      "reduction": 44.81,
+      "rows": 8,
+      "maxRows": 9,
+      "letters": 351,
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "reserved_return_even_if_unread",
+        "register_who_and_when"
+      ],
+      "textHash": "f9f0545c2ad9cfd693c6917c7d81999986ef3c2b68253ed56e21d15b94b74344"
+    },
+    {
+      "key": "procedura|65|LAB86_GEMINI",
+      "source": "procedura",
+      "level": 65,
+      "from": "LAB86_GEMINI",
+      "reduction": 62.42,
+      "rows": 6,
+      "maxRows": 5,
+      "letters": 239,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "reserved_return_even_if_unread",
+        "register_who_and_when"
+      ],
+      "textHash": "9cd618322b8a9e100bfa67ffed87696a3ac22113e70b619162d217c757f0282f"
+    },
+    {
+      "key": "procedura|50|LAB86_GEMINI",
+      "source": "procedura",
+      "level": 50,
+      "from": "LAB86_GEMINI",
+      "reduction": 50,
+      "rows": 7,
+      "maxRows": 7,
+      "letters": 318,
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "reserved_return_even_if_unread",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "textHash": "5f2a0a1daabdd611454de1f25989331105b0eb60793ca8be6a918d50f541a8c5"
+    },
+    {
+      "key": "scienze|50|LAB87_GEMINI",
+      "source": "scienze",
+      "level": 50,
+      "from": "LAB87_GEMINI",
+      "reduction": 54.76,
+      "rows": 6,
+      "maxRows": 7,
+      "letters": 271,
+      "mathPass": true,
+      "relationAlerts": [
+        "tides_both_moon_and_sun",
+        "eclipse_not_each_lunation",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "fbfa6dac072fa121c05e74c81e7fe38451357ce5c9df5ed515bd36fd01cdc2b1"
+    },
+    {
+      "key": "scienze|10|LAB87_GEMINI",
+      "source": "scienze",
+      "level": 10,
+      "from": "LAB87_GEMINI",
+      "reduction": 24.71,
+      "rows": 10,
+      "maxRows": 12,
+      "letters": 451,
+      "mathPass": false,
+      "relationAlerts": [
+        "observations_repeatable"
+      ],
+      "textHash": "8031b35732f7b966a64be4a0c0532da246865dfb5857724443c7926a086f24e1"
+    },
+    {
+      "key": "scienze|65|LAB87_GEMINI",
+      "source": "scienze",
+      "level": 65,
+      "from": "LAB87_GEMINI",
+      "reduction": 63.44,
+      "rows": 5,
+      "maxRows": 5,
+      "letters": 219,
+      "mathPass": true,
+      "relationAlerts": [
+        "tides_both_moon_and_sun",
+        "eclipse_alignment",
+        "eclipse_not_each_lunation",
+        "observations_repeatable"
+      ],
+      "textHash": "116b21ec33e35ac07f2e2cbd75debc211ce6cefbbdbb646c7353ffbd1d78e478"
+    },
+    {
+      "key": "procedura|65|LAB87_GEMINI",
+      "source": "procedura",
+      "level": 65,
+      "from": "LAB87_GEMINI",
+      "reduction": 61.95,
+      "rows": 5,
+      "maxRows": 5,
+      "letters": 242,
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "reserved_return_even_if_unread",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "textHash": "807917e18833e20229996241f5ab15632bb5548a1596b2190ed7a07e66ef3428"
+    },
+    {
+      "key": "procedura|40|LAB87_GEMINI",
+      "source": "procedura",
+      "level": 40,
+      "from": "LAB87_GEMINI",
+      "reduction": 30.97,
+      "rows": 10,
+      "maxRows": 9,
+      "letters": 439,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "reserved_return_even_if_unread",
+        "extension_not_automatic"
+      ],
+      "textHash": "ca6fe2c36338705ef33173305f988e0601df04ee154f5128258f4f6d7dadebbf"
+    },
+    {
+      "key": "procedura|50|LAB87_GEMINI",
+      "source": "procedura",
+      "level": 50,
+      "from": "LAB87_GEMINI",
+      "reduction": 54.87,
+      "rows": 7,
+      "maxRows": 7,
+      "letters": 287,
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "extension_not_automatic"
+      ],
+      "textHash": "1870ce5578961ff608df9915e40f306c5113d6bd5abbf282cfaa5362f8c14a31"
+    },
+    {
+      "key": "scienze|40|LAB87_GEMINI",
+      "source": "scienze",
+      "level": 40,
+      "from": "LAB87_GEMINI",
+      "reduction": 36.89,
+      "rows": 8,
+      "maxRows": 8,
+      "letters": 378,
+      "mathPass": true,
+      "relationAlerts": [
+        "observations_repeatable"
+      ],
+      "textHash": "ae966ec6107891284033f5e6c29e128be580466d86776d26afe32780c8de4aa0"
+    },
+    {
+      "key": "scienze|30|LAB87_GEMINI",
+      "source": "scienze",
+      "level": 30,
+      "from": "LAB87_GEMINI",
+      "reduction": 45.91,
+      "rows": 7,
+      "maxRows": 10,
+      "letters": 324,
+      "mathPass": false,
+      "relationAlerts": [
+        "tides_both_moon_and_sun",
+        "eclipse_not_each_lunation",
+        "observations_repeatable",
+        "single_result_not_proof"
+      ],
+      "textHash": "e1d9b0c1977777307093b5b2e2be4b559d5be03a39da3de0dc673fbec8439b0c"
+    },
+    {
+      "key": "scienze|40|LAB89_GEMINI",
+      "source": "scienze",
+      "level": 40,
+      "from": "LAB89_GEMINI",
+      "reduction": 38.23,
+      "rows": 8,
+      "maxRows": 8,
+      "letters": 370,
+      "mathPass": true,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "seasons_not_distance"
+      ],
+      "textHash": "662c69d56b45c8eda7bba75487a9722799fad60527ba283c3ef941229717b49d"
+    },
+    {
+      "key": "scienze|65|LAB89_GEMINI",
+      "source": "scienze",
+      "level": 65,
+      "from": "LAB89_GEMINI",
+      "reduction": 60.77,
+      "rows": 5,
+      "maxRows": 5,
+      "letters": 235,
+      "mathPass": true,
+      "relationAlerts": [
+        "tides_both_moon_and_sun",
+        "eclipse_not_each_lunation",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "e1d595526d2f4817f63fd0f958a488a4749dd9f37148594c1b5d3ecdbecce6a7"
+    },
+    {
+      "key": "scienze|50|LAB89_GEMINI",
+      "source": "scienze",
+      "level": 50,
+      "from": "LAB89_GEMINI",
+      "reduction": 51.92,
+      "rows": 6,
+      "maxRows": 7,
+      "letters": 288,
+      "mathPass": true,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "observations_repeatable",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "ec677872cad3024babb1e9986d21487059d111592312aa14e50bcf62a023759e"
+    },
+    {
+      "key": "scienze|30|LAB89_GEMINI",
+      "source": "scienze",
+      "level": 30,
+      "from": "LAB89_GEMINI",
+      "reduction": 50.92,
+      "rows": 7,
+      "maxRows": 10,
+      "letters": 294,
+      "mathPass": false,
+      "relationAlerts": [
+        "tides_both_moon_and_sun",
+        "eclipse_not_each_lunation",
+        "observations_repeatable",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "8025ae1e5f635601ae4f0d34d8c3935f765eb23c71f81c5eabb6d4cb5fa1fabd"
+    },
+    {
+      "key": "scienze|20|LAB89_GEMINI",
+      "source": "scienze",
+      "level": 20,
+      "from": "LAB89_GEMINI",
+      "reduction": -1.67,
+      "rows": 13,
+      "maxRows": 11,
+      "letters": 609,
+      "mathPass": false,
+      "relationAlerts": [
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "331925186cd8b5ea6db6b9b1df00cd24c81ef8eb811aa9dae33fd2808f6e0f21"
+    },
+    {
+      "key": "scienze|10|LAB89_GEMINI",
+      "source": "scienze",
+      "level": 10,
+      "from": "LAB89_GEMINI",
+      "reduction": -6.51,
+      "rows": 14,
+      "maxRows": 12,
+      "letters": 638,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "61af0e3cf4142a519187af2a746866e8b8a9d49fcf951a20a59c93c5979d778a"
+    },
+    {
+      "key": "procedura|40|LAB89_GEMINI",
+      "source": "procedura",
+      "level": 40,
+      "from": "LAB89_GEMINI",
+      "reduction": 37.58,
+      "rows": 9,
+      "maxRows": 9,
+      "letters": 397,
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12"
+      ],
+      "textHash": "92a363c3642975df46f2b3939b3928d6dbf24a37208a298ba8e6ab035bb19541"
+    },
+    {
+      "key": "procedura|65|LAB89_GEMINI",
+      "source": "procedura",
+      "level": 65,
+      "from": "LAB89_GEMINI",
+      "reduction": 66.04,
+      "rows": 5,
+      "maxRows": 5,
+      "letters": 216,
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "reserved_return_even_if_unread"
+      ],
+      "textHash": "838842e330b71c6d52c9bbb4695943c4e8f37d8e7d2316385149a4bbe26b8f96"
+    },
+    {
+      "key": "procedura|50|LAB89_GEMINI",
+      "source": "procedura",
+      "level": 50,
+      "from": "LAB89_GEMINI",
+      "reduction": 44.81,
+      "rows": 8,
+      "maxRows": 7,
+      "letters": 351,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12"
+      ],
+      "textHash": "29d7770e790767ae6a4d6f3ac975d412ba7b670a18f93957c2f3b0dcc0d1006a"
+    },
+    {
+      "key": "procedura|30|LAB89_GEMINI",
+      "source": "procedura",
+      "level": 30,
+      "from": "LAB89_GEMINI",
+      "reduction": 33.18,
+      "rows": 9,
+      "maxRows": 10,
+      "letters": 425,
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12"
+      ],
+      "textHash": "fccce50b3c45b70f59462851a95eb7c606be146d8b181d73e620220cada5d2be"
+    },
+    {
+      "key": "procedura|20|LAB89_GEMINI",
+      "source": "procedura",
+      "level": 20,
+      "from": "LAB89_GEMINI",
+      "reduction": 23.27,
+      "rows": 11,
+      "maxRows": 11,
+      "letters": 488,
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "extension_not_automatic"
+      ],
+      "textHash": "f6ab1dbce98ccfbd6a51c37ed16bebbe7a32ac5a3e9cbebb8441277749318cae"
+    },
+    {
+      "key": "procedura|10|LAB89_GEMINI",
+      "source": "procedura",
+      "level": 10,
+      "from": "LAB89_GEMINI",
+      "reduction": 29.09,
+      "rows": 10,
+      "maxRows": 13,
+      "letters": 451,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12"
+      ],
+      "textHash": "d2a167218166c324c38ee67fa4258f0d8fe4ce80c18ccd24e1800df24eaaabff"
+    },
+    {
+      "key": "concetto_sbilanciato|40|LAB89_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "from": "LAB89_GEMINI",
+      "reduction": 44.48,
+      "rows": 8,
+      "maxRows": 9,
+      "letters": 372,
+      "mathPass": true,
+      "relationAlerts": [
+        "uncertainty_explicit"
+      ],
+      "textHash": "bebf9398d31559eda6f6ac4d0fe38adc236e5d297dbb99105daf56c67d85d301"
+    },
+    {
+      "key": "concetto_sbilanciato|65|LAB89_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "from": "LAB89_GEMINI",
+      "reduction": 57.91,
+      "rows": 6,
+      "maxRows": 6,
+      "letters": 282,
+      "mathPass": false,
+      "relationAlerts": [
+        "facts_not_opinions",
+        "uncertainty_explicit"
+      ],
+      "textHash": "30db8149fa9a29f556fb3e2020a1bc945792df237bcc89e1df3d92820fae2666"
+    },
+    {
+      "key": "concetto_sbilanciato|10|LAB89_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "from": "LAB89_GEMINI",
+      "reduction": 28.21,
+      "rows": 10,
+      "maxRows": 14,
+      "letters": 481,
+      "mathPass": false,
+      "relationAlerts": [
+        "documented_not_proven"
+      ],
+      "textHash": "3abe1612a055d1a9afcc120cdf79473442654dded30e5f04304d86b3edd36382"
+    },
+    {
+      "key": "scienze|40|LAB90_GEMINI",
+      "source": "scienze",
+      "level": 40,
+      "from": "LAB90_GEMINI",
+      "reduction": 31.89,
+      "rows": 9,
+      "maxRows": 8,
+      "letters": 408,
+      "mathPass": false,
+      "relationAlerts": [
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "3815a0bda8d242358bbb8cde0f939f6a4e9fe062eca2699e404e7d46b7bd89f5"
+    },
+    {
+      "key": "procedura|40|LAB90_GEMINI",
+      "source": "procedura",
+      "level": 40,
+      "from": "LAB90_GEMINI",
+      "reduction": 23.74,
+      "rows": 11,
+      "maxRows": 9,
+      "letters": 485,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "register_who_and_when"
+      ],
+      "textHash": "367004bf4b3a6b075a223f248d775a6930f94bc35d91b97855ace7e82196ea06"
+    },
+    {
+      "key": "concetto_sbilanciato|40|LAB90_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "from": "LAB90_GEMINI",
+      "reduction": 34.18,
+      "rows": 9,
+      "maxRows": 9,
+      "letters": 441,
+      "mathPass": false,
+      "relationAlerts": [
+        "documented_not_proven"
+      ],
+      "textHash": "83a48bf1ef86246a35c1f93a9df84a3c097a44e8dec527e80bb4c7fb2f51aa13"
+    },
+    {
+      "key": "medicina|40|LAB90_GEMINI",
+      "source": "medicina",
+      "level": 40,
+      "from": "LAB90_GEMINI",
+      "reduction": 10.58,
+      "rows": 14,
+      "maxRows": 10,
+      "letters": 651,
+      "mathPass": false,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase",
+        "single_value_not_always_enough"
+      ],
+      "textHash": "c05e9b114b6d573ca9da919c14527582646202750088aa68b857d8fed3300da6"
+    },
+    {
+      "key": "pagina_breve_continua|40|LAB90_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 40,
+      "from": "LAB90_GEMINI",
+      "reduction": -3.87,
+      "rows": 4,
+      "maxRows": 5,
+      "letters": 161,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "a920e800abcb54dd0f6d6cf609ddaa7901ab7ecd9f7838283a18180cc478206e"
+    },
+    {
+      "key": "scienze|65|LAB90_GEMINI",
+      "source": "scienze",
+      "level": 65,
+      "from": "LAB90_GEMINI",
+      "reduction": 57.6,
+      "rows": 6,
+      "maxRows": 5,
+      "letters": 254,
+      "mathPass": false,
+      "relationAlerts": [
+        "tides_both_moon_and_sun",
+        "eclipse_not_each_lunation",
+        "observations_repeatable",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "61c852d8f23ca45c01f8c09335396fcac64fb9827f82d597f9c5dc148974ab44"
+    },
+    {
+      "key": "procedura|65|LAB90_GEMINI",
+      "source": "procedura",
+      "level": 65,
+      "from": "LAB90_GEMINI",
+      "reduction": 44.5,
+      "rows": 8,
+      "maxRows": 5,
+      "letters": 353,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "register_who_and_when"
+      ],
+      "textHash": "c61bc87d505ea5a2a0052f1e160f69046464eb6cce0b96f1337044d287aad3da"
+    },
+    {
+      "key": "concetto_sbilanciato|65|LAB90_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "from": "LAB90_GEMINI",
+      "reduction": 37.31,
+      "rows": 9,
+      "maxRows": 6,
+      "letters": 420,
+      "mathPass": false,
+      "relationAlerts": [
+        "uncertainty_explicit"
+      ],
+      "textHash": "e015e3936f370dd9042a19b01aa7d75a66fa2011303d14c3ee65cece2b6d610d"
+    },
+    {
+      "key": "medicina|65|LAB90_GEMINI",
+      "source": "medicina",
+      "level": 65,
+      "from": "LAB90_GEMINI",
+      "reduction": 38.46,
+      "rows": 10,
+      "maxRows": 6,
+      "letters": 448,
+      "mathPass": false,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase"
+      ],
+      "textHash": "6aa952382f47944a7395b4413622a9371b697588b8ad5d26912e45a1ec9b2139"
+    },
+    {
+      "key": "pagina_breve_continua|65|LAB90_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 65,
+      "from": "LAB90_GEMINI",
+      "reduction": 56.13,
+      "rows": 2,
+      "maxRows": 5,
+      "letters": 68,
+      "mathPass": true,
+      "relationAlerts": [
+        "peremptory_15_days_notification",
+        "right_motivation_remains"
+      ],
+      "textHash": "8d37e7bd68a2a145c5d86a12354e47b67f4e8b8adef4c1adbf3e562b31668a4b"
+    },
+    {
+      "key": "scienze|50|LAB90_GEMINI",
+      "source": "scienze",
+      "level": 50,
+      "from": "LAB90_GEMINI",
+      "reduction": 16.19,
+      "rows": 11,
+      "maxRows": 7,
+      "letters": 502,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "dce20ffca14df129039ddcbb81404984986be031e4f1fe71886db190dabf1422"
+    },
+    {
+      "key": "procedura|50|LAB90_GEMINI",
+      "source": "procedura",
+      "level": 50,
+      "from": "LAB90_GEMINI",
+      "reduction": 34.91,
+      "rows": 9,
+      "maxRows": 7,
+      "letters": 414,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12"
+      ],
+      "textHash": "a24d0db45f193f53d4ccccc2398da5da9a805dfc4c3fd7b2ff00213bb4a68152"
+    },
+    {
+      "key": "concetto_sbilanciato|50|LAB90_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "from": "LAB90_GEMINI",
+      "reduction": 28.81,
+      "rows": 10,
+      "maxRows": 8,
+      "letters": 477,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "a36c802c997a6ea95dd70920eee0f590f850d1814e7b6e4ec0251ee6ad7652ef"
+    },
+    {
+      "key": "medicina|50|LAB90_GEMINI",
+      "source": "medicina",
+      "level": 50,
+      "from": "LAB90_GEMINI",
+      "reduction": 23.49,
+      "rows": 12,
+      "maxRows": 8,
+      "letters": 557,
+      "mathPass": false,
+      "relationAlerts": [
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase"
+      ],
+      "textHash": "3d4f61733dac0355d62f9d6e1599ed36c3d51cd18e6b94af4ce294e09af7d303"
+    },
+    {
+      "key": "pagina_breve_continua|50|LAB90_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "from": "LAB90_GEMINI",
+      "reduction": -56.13,
+      "rows": 5,
+      "maxRows": 5,
+      "letters": 242,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "42a3b94d293a65a64c7368f6d1ec2b7be0a61a53f1ba8aa081a99a7e83b5bf79"
+    },
+    {
+      "key": "scienze|40|LAB92_GEMINI",
+      "source": "scienze",
+      "level": 40,
+      "from": "LAB92_GEMINI",
+      "reduction": 28.21,
+      "rows": 9,
+      "maxRows": 8,
+      "letters": 430,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "f5f7112c7b72e4b88922ed160d51f82cacbcda115a91c5f99ec857b75e690e13"
+    },
+    {
+      "key": "procedura|40|LAB92_GEMINI",
+      "source": "procedura",
+      "level": 40,
+      "from": "LAB92_GEMINI",
+      "reduction": 45.28,
+      "rows": 8,
+      "maxRows": 9,
+      "letters": 348,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12"
+      ],
+      "textHash": "61ddd70330ae1cbd20725a322ce6e2f27ea21db39b51a17164c9119ce4dd3b1a"
+    },
+    {
+      "key": "medicina|40|LAB92_GEMINI",
+      "source": "medicina",
+      "level": 40,
+      "from": "LAB92_GEMINI",
+      "reduction": 42.17,
+      "rows": 9,
+      "maxRows": 10,
+      "letters": 421,
+      "mathPass": true,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase"
+      ],
+      "textHash": "de323b7596f54065e4d50dfb662d2839177957e7fab7586759b9731ae8691b25"
+    },
+    {
+      "key": "concetto_sbilanciato|40|LAB92_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "from": "LAB92_GEMINI",
+      "reduction": 48.36,
+      "rows": 7,
+      "maxRows": 9,
+      "letters": 346,
+      "mathPass": false,
+      "relationAlerts": [
+        "facts_not_opinions",
+        "uncertainty_explicit",
+        "documented_not_proven"
+      ],
+      "textHash": "adca854a97821bd2c4463f599dd5a95e965901f0b9e8d3787e027e9bcfd675ba"
+    },
+    {
+      "key": "pagina_breve_continua|40|LAB92_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 40,
+      "from": "LAB92_GEMINI",
+      "reduction": 14.19,
+      "rows": 3,
+      "maxRows": 5,
+      "letters": 133,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "b175199615fe82e1eea9783d96042f5a105a9c22dfd5ab4eea49c7c3ffac86bf"
+    },
+    {
+      "key": "scienze|50|LAB92_GEMINI",
+      "source": "scienze",
+      "level": 50,
+      "from": "LAB92_GEMINI",
+      "reduction": 46.74,
+      "rows": 7,
+      "maxRows": 7,
+      "letters": 319,
+      "mathPass": true,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "single_result_not_proof"
+      ],
+      "textHash": "df2bd6416a6f48627272c8aaadb1c0282c7d6fcf614c76bc64522ce27dd85ac9"
+    },
+    {
+      "key": "procedura|50|LAB92_GEMINI",
+      "source": "procedura",
+      "level": 50,
+      "from": "LAB92_GEMINI",
+      "reduction": 43.55,
+      "rows": 9,
+      "maxRows": 7,
+      "letters": 359,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "register_who_and_when"
+      ],
+      "textHash": "0c49252a888dcc05bfcaf154b54abbefc3c1befc9085eb810acf58deab6bddfd"
+    },
+    {
+      "key": "medicina|50|LAB92_GEMINI",
+      "source": "medicina",
+      "level": 50,
+      "from": "LAB92_GEMINI",
+      "reduction": 50.27,
+      "rows": 8,
+      "maxRows": 8,
+      "letters": 362,
+      "mathPass": true,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "partial_pressure",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase",
+        "single_value_not_always_enough"
+      ],
+      "textHash": "a34e8461751056588998e081b83bf0c2dc2dfd057ff39760a403c73e6840ba1f"
+    },
+    {
+      "key": "concetto_sbilanciato|50|LAB92_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "from": "LAB92_GEMINI",
+      "reduction": 57.16,
+      "rows": 6,
+      "maxRows": 8,
+      "letters": 287,
+      "mathPass": false,
+      "relationAlerts": [
+        "facts_not_opinions",
+        "uncertainty_explicit",
+        "documented_not_proven"
+      ],
+      "textHash": "7c052bb0821c41cc3f65f8a8d721fb75fa0082f024a5a61319606881a9c4f95a"
+    },
+    {
+      "key": "pagina_breve_continua|50|LAB92_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "from": "LAB92_GEMINI",
+      "reduction": 14.19,
+      "rows": 3,
+      "maxRows": 5,
+      "letters": 133,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "b3ea28f3037f5c81281dd89cb8011e21aabeebc97f8a3b101ea5909d48bda61f"
+    },
+    {
+      "key": "scienze|20|LAB92_GEMINI",
+      "source": "scienze",
+      "level": 20,
+      "from": "LAB92_GEMINI",
+      "reduction": 31.39,
+      "rows": 9,
+      "maxRows": 11,
+      "letters": 411,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "74b4214e2a710ae22434e51aa907083e5375c4e14c1260f453f0e105782e128e"
+    },
+    {
+      "key": "procedura|20|LAB92_GEMINI",
+      "source": "procedura",
+      "level": 20,
+      "from": "LAB92_GEMINI",
+      "reduction": 36.48,
+      "rows": 9,
+      "maxRows": 11,
+      "letters": 404,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "extension_not_automatic"
+      ],
+      "textHash": "fae6136dfffb08976c6295ae5c16daa3ab0aa96050a2fadb799957aab898b1d3"
+    },
+    {
+      "key": "medicina|20|LAB92_GEMINI",
+      "source": "medicina",
+      "level": 20,
+      "from": "LAB92_GEMINI",
+      "reduction": 50.27,
+      "rows": 8,
+      "maxRows": 13,
+      "letters": 362,
+      "mathPass": false,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "partial_pressure",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase",
+        "single_value_not_always_enough"
+      ],
+      "textHash": "1ff6f183915393e5de6d2e2c3b62e2e772b7727fcdf45e3b27c0efcedda40dba"
+    },
+    {
+      "key": "concetto_sbilanciato|20|LAB92_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "from": "LAB92_GEMINI",
+      "reduction": 37.76,
+      "rows": 9,
+      "maxRows": 12,
+      "letters": 417,
+      "mathPass": false,
+      "relationAlerts": [
+        "uncertainty_explicit"
+      ],
+      "textHash": "aee418bd64116dc9349a3241da4bad45cb850fdf4918d38a613507ec27b2238f"
+    },
+    {
+      "key": "pagina_breve_continua|20|LAB92_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "from": "LAB92_GEMINI",
+      "reduction": 3.23,
+      "rows": 4,
+      "maxRows": 5,
+      "letters": 150,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "b3a30da8bebe412c6c4752fdcb8a79e4ec79f2bca73888e6b0cb33097afd10f1"
+    },
+    {
+      "key": "medicina|20|LAB93_GEMINI",
+      "source": "medicina",
+      "level": 20,
+      "from": "LAB93_GEMINI",
+      "reduction": 38.19,
+      "rows": 10,
+      "maxRows": 13,
+      "letters": 450,
+      "mathPass": false,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "partial_pressure",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase",
+        "single_value_not_always_enough"
+      ],
+      "textHash": "959e12275ad928d3cda17ba1dd3716a9f3fcf8971c8c6bb47e7b641655cbb8e2"
+    },
+    {
+      "key": "scienze|20|LAB93_GEMINI",
+      "source": "scienze",
+      "level": 20,
+      "from": "LAB93_GEMINI",
+      "reduction": 22.7,
+      "rows": 10,
+      "maxRows": 11,
+      "letters": 463,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "c1cacfd94c5b849da19fffaf25275f5e4b8c47a8ac2daf27ce49f66d2c311055"
+    },
+    {
+      "key": "concetto_sbilanciato|20|LAB93_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "from": "LAB93_GEMINI",
+      "reduction": 30.45,
+      "rows": 10,
+      "maxRows": 12,
+      "letters": 466,
+      "mathPass": false,
+      "relationAlerts": [
+        "documented_not_proven"
+      ],
+      "textHash": "ac4240b5ec31d7663fbb76f34460426bfc3cd2aca75e71c9fbff8011e1742040"
+    },
+    {
+      "key": "pagina_breve_continua|20|LAB93_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "from": "LAB93_GEMINI",
+      "reduction": 7.74,
+      "rows": 3,
+      "maxRows": 5,
+      "letters": 143,
+      "mathPass": true,
+      "relationAlerts": [
+        "peremptory_15_days_notification",
+        "right_motivation_remains"
+      ],
+      "textHash": "2e07c4b7a22d7086bea437c4e74826435aeb4e13055ef68b1bbd88f85dac5469"
+    },
+    {
+      "key": "scienze|50|LAB93_GEMINI",
+      "source": "scienze",
+      "level": 50,
+      "from": "LAB93_GEMINI",
+      "reduction": 50.25,
+      "rows": 7,
+      "maxRows": 7,
+      "letters": 298,
+      "mathPass": true,
+      "relationAlerts": [
+        "tides_both_moon_and_sun",
+        "eclipse_alignment",
+        "eclipse_not_each_lunation",
+        "observations_repeatable",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "0aac96c516e2163ebbefd2412b8282b0580c1d7f5de2e58caf473eec3a20ee94"
+    },
+    {
+      "key": "medicina|50|LAB93_GEMINI",
+      "source": "medicina",
+      "level": 50,
+      "from": "LAB93_GEMINI",
+      "reduction": 48.76,
+      "rows": 8,
+      "maxRows": 8,
+      "letters": 373,
+      "mathPass": true,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "partial_pressure",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase",
+        "single_value_not_always_enough"
+      ],
+      "textHash": "3ad4de86c698dcd7cd582c15cbe83587e9c6c6b67acf383a15c0cd3282824793"
+    },
+    {
+      "key": "procedura|50|LAB93_GEMINI",
+      "source": "procedura",
+      "level": 50,
+      "from": "LAB93_GEMINI",
+      "reduction": 58.65,
+      "rows": 6,
+      "maxRows": 7,
+      "letters": 263,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "reserved_return_even_if_unread",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "textHash": "94bebaa7710656a3376f06e516d1e80b546630c0edd6275e3dca88b0b6dbe6ab"
+    },
+    {
+      "key": "concetto_sbilanciato|50|LAB93_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "from": "LAB93_GEMINI",
+      "reduction": 58.66,
+      "rows": 6,
+      "maxRows": 8,
+      "letters": 277,
+      "mathPass": false,
+      "relationAlerts": [
+        "documented_not_proven"
+      ],
+      "textHash": "78e3dc995919a78e946e13864cc26d97c183d4ecd67e299eaf24f184c3768e01"
+    },
+    {
+      "key": "pagina_breve_continua|50|LAB93_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "from": "LAB93_GEMINI",
+      "reduction": 25.16,
+      "rows": 3,
+      "maxRows": 5,
+      "letters": 116,
+      "mathPass": true,
+      "relationAlerts": [
+        "peremptory_15_days_notification",
+        "right_motivation_remains"
+      ],
+      "textHash": "83b5062f14e3cd49e2be2ae86f9003b69adc19b694e9af5c7d7592d4b1bb0da7"
+    },
+    {
+      "key": "medicina|40|LAB93_GEMINI",
+      "source": "medicina",
+      "level": 40,
+      "from": "LAB93_GEMINI",
+      "reduction": 32.97,
+      "rows": 11,
+      "maxRows": 10,
+      "letters": 488,
+      "mathPass": false,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "partial_pressure",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase",
+        "single_value_not_always_enough"
+      ],
+      "textHash": "141aa3b7c7ca6406702966b61eb6b7dbafb863d06b8dbac247318cbd54c58514"
+    },
+    {
+      "key": "scienze|10|LAB93_GEMINI",
+      "source": "scienze",
+      "level": 10,
+      "from": "LAB93_GEMINI",
+      "reduction": 29.88,
+      "rows": 9,
+      "maxRows": 12,
+      "letters": 420,
+      "mathPass": false,
+      "relationAlerts": [
+        "tides_both_moon_and_sun",
+        "eclipse_alignment",
+        "eclipse_not_each_lunation",
+        "observations_repeatable",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "655f302b8ebd6ac59ebd14a1e4b584def7140618dfda8c377419c8107b3a2014"
+    },
+    {
+      "key": "procedura|10|LAB93_GEMINI",
+      "source": "procedura",
+      "level": 10,
+      "from": "LAB93_GEMINI",
+      "reduction": 30.35,
+      "rows": 10,
+      "maxRows": 13,
+      "letters": 443,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "extension_not_automatic"
+      ],
+      "textHash": "0b6e136f18ea68c707d166efa27ea03d111c0686e57a96d82a91e5ed347aaef5"
+    },
+    {
+      "key": "concetto_sbilanciato|10|LAB93_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "from": "LAB93_GEMINI",
+      "reduction": 37.01,
+      "rows": 9,
+      "maxRows": 14,
+      "letters": 422,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "41fe55a34095c8befac36263a3ee497e6efda2f8092e2295584afae163e8c6fc"
+    },
+    {
+      "key": "medicina|20|LAB94_GEMINI",
+      "source": "medicina",
+      "level": 20,
+      "from": "LAB94_GEMINI",
+      "reduction": 8.52,
+      "rows": 14,
+      "maxRows": 13,
+      "letters": 666,
+      "mathPass": false,
+      "relationAlerts": [
+        "respiration_may_increase"
+      ],
+      "textHash": "1206c67da9df5d2ddf74865e00a1e96f51cf8c5ac838a4c75abf9df7e727c83b"
+    },
+    {
+      "key": "procedura|20|LAB94_GEMINI",
+      "source": "procedura",
+      "level": 20,
+      "from": "LAB94_GEMINI",
+      "reduction": 10.06,
+      "rows": 12,
+      "maxRows": 11,
+      "letters": 572,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "58d4fe1c09c8809f972e2710f90882580154ccef32c3a3937fa70f9b265f36df"
+    },
+    {
+      "key": "scienze|20|LAB94_GEMINI",
+      "source": "scienze",
+      "level": 20,
+      "from": "LAB94_GEMINI",
+      "reduction": 2.17,
+      "rows": 13,
+      "maxRows": 11,
+      "letters": 586,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "ce566068ca0382bd731422d3e4582ea905d10890ad5c97c25a39ceb661399223"
+    },
+    {
+      "key": "concetto_sbilanciato|20|LAB94_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "from": "LAB94_GEMINI",
+      "reduction": 21.04,
+      "rows": 11,
+      "maxRows": 12,
+      "letters": 529,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "17e4ea3c1a07cce7ba94a3e9ea370197362ddedde6edd6c8023f8d836fcd9eee"
+    },
+    {
+      "key": "pagina_breve_continua|20|LAB94_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "from": "LAB94_GEMINI",
+      "reduction": -14.19,
+      "rows": 4,
+      "maxRows": 5,
+      "letters": 177,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "3084cdd6b2b88a462a836e4811c835fd482b253ae0fba31953066b09d1a33b88"
+    },
+    {
+      "key": "scienze|20|LAB95_GEMINI_A",
+      "source": "scienze",
+      "level": 20,
+      "from": "LAB95_GEMINI_A",
+      "reduction": -3.67,
+      "rows": 14,
+      "maxRows": 11,
+      "letters": 621,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "0327a4e82a2ec2efb962625d2b7dc789a74161eda501d600941fd3d7e42e97ea"
+    },
+    {
+      "key": "scienze|20|LAB95_GEMINI_B",
+      "source": "scienze",
+      "level": 20,
+      "from": "LAB95_GEMINI_B",
+      "reduction": -3.17,
+      "rows": 13,
+      "maxRows": 11,
+      "letters": 618,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "a666e0e1b5acf156d72e911e33521ee3678672779c7cea0f623fbc4de48a9628"
+    },
+    {
+      "key": "medicina|20|LAB95_GEMINI_A",
+      "source": "medicina",
+      "level": 20,
+      "from": "LAB95_GEMINI_A",
+      "reduction": -4.67,
+      "rows": 16,
+      "maxRows": 13,
+      "letters": 762,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "06f502f593999b2d2047c76d0cca2c856ca79f9dc5045898212227aeee7d3484"
+    },
+    {
+      "key": "medicina|20|LAB95_GEMINI_B",
+      "source": "medicina",
+      "level": 20,
+      "from": "LAB95_GEMINI_B",
+      "reduction": -0.27,
+      "rows": 16,
+      "maxRows": 13,
+      "letters": 730,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "4cc9759bdd143e316edc3d12e411ec01474ab8b983c17aa63c154c0d2185a834"
+    },
+    {
+      "key": "procedura|20|LAB95_GEMINI_A",
+      "source": "procedura",
+      "level": 20,
+      "from": "LAB95_GEMINI_A",
+      "reduction": -2.99,
+      "rows": 14,
+      "maxRows": 11,
+      "letters": 655,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "287dd3033c0d272c7458a6d71e29dc785e4acd3e5b6f1a8ab30a11b274b1bba9"
+    },
+    {
+      "key": "procedura|20|LAB95_GEMINI_B",
+      "source": "procedura",
+      "level": 20,
+      "from": "LAB95_GEMINI_B",
+      "reduction": -11.32,
+      "rows": 15,
+      "maxRows": 11,
+      "letters": 708,
+      "mathPass": false,
+      "relationAlerts": [
+        "reserved_return_even_if_unread"
+      ],
+      "textHash": "54ba76045c1c32c89433064dd4b3fbaffba6febd011a4b6e663fd7d3640d3dea"
+    },
+    {
+      "key": "concetto_sbilanciato|20|LAB95_GEMINI_A",
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "from": "LAB95_GEMINI_A",
+      "reduction": -3.88,
+      "rows": 15,
+      "maxRows": 12,
+      "letters": 696,
+      "mathPass": false,
+      "relationAlerts": [],
+      "textHash": "817e81726394c1da7984ab3414d4026398e7f4c480362153d5fb3df92db0855c"
+    },
+    {
+      "key": "scienze|20|LAB96_GEMINI",
+      "source": "scienze",
+      "level": 20,
+      "from": "LAB96_GEMINI",
+      "reduction": 32.39,
+      "rows": 9,
+      "maxRows": 11,
+      "letters": 405,
+      "mathPass": false,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "single_result_not_proof"
+      ],
+      "textHash": "34b7720081bce60d9a00b91f75f9eaa88a17b1757e1510d213eaf8bbb94adde8"
+    },
+    {
+      "key": "medicina|20|LAB96_GEMINI",
+      "source": "medicina",
+      "level": 20,
+      "from": "LAB96_GEMINI",
+      "reduction": 34.34,
+      "rows": 10,
+      "maxRows": 13,
+      "letters": 478,
+      "mathPass": false,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase"
+      ],
+      "textHash": "f7fc267880fe0c9c54bf58bf9f1ee8ffbb8a8b285361deb27bead56be5cc660f"
+    },
+    {
+      "key": "procedura|20|LAB96_GEMINI",
+      "source": "procedura",
+      "level": 20,
+      "from": "LAB96_GEMINI",
+      "reduction": 35.53,
+      "rows": 9,
+      "maxRows": 11,
+      "letters": 410,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "reserved_return_even_if_unread",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "textHash": "cb9c24c050b62cedbcf01201795c4f24e92f2f0f32b20ebe3badb5445bc1bc66"
+    },
+    {
+      "key": "concetto_sbilanciato|20|LAB96_GEMINI",
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "from": "LAB96_GEMINI",
+      "reduction": 32.54,
+      "rows": 10,
+      "maxRows": 12,
+      "letters": 452,
+      "mathPass": false,
+      "relationAlerts": [
+        "uncertainty_explicit",
+        "documented_not_proven"
+      ],
+      "textHash": "fd9147a6dc5c4038425328476ac47a5c4b730ac4f59a7fb5e7d0287c522cd616"
+    },
+    {
+      "key": "pagina_breve_continua|20|LAB96_GEMINI",
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "from": "LAB96_GEMINI",
+      "reduction": 18.06,
+      "rows": 3,
+      "maxRows": 5,
+      "letters": 127,
+      "mathPass": true,
+      "relationAlerts": [],
+      "textHash": "f9b127c9cc2dc8ab68df530404c389c0df3d24f0bd06bb198c9d2292f61e6ffa"
+    },
+    {
+      "key": "scienze|50|LAB96_GEMINI",
+      "source": "scienze",
+      "level": 50,
+      "from": "LAB96_GEMINI",
+      "reduction": 50.08,
+      "rows": 7,
+      "maxRows": 7,
+      "letters": 299,
+      "mathPass": true,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "2ac5b7759602c7bf10d6f48e2def628e4fcdcbb70d7aaddee6cc98c455578479"
+    },
+    {
+      "key": "medicina|50|LAB96_GEMINI",
+      "source": "medicina",
+      "level": 50,
+      "from": "LAB96_GEMINI",
+      "reduction": 52.88,
+      "rows": 8,
+      "maxRows": 8,
+      "letters": 343,
+      "mathPass": true,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "partial_pressure",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase",
+        "single_value_not_always_enough"
+      ],
+      "textHash": "d8c0d1db9b71bf12c0c08d239c47b69e21236a7f19979047f79c263940a675ba"
+    },
+    {
+      "key": "procedura|50|LAB96_GEMINI",
+      "source": "procedura",
+      "level": 50,
+      "from": "LAB96_GEMINI",
+      "reduction": 56.45,
+      "rows": 6,
+      "maxRows": 7,
+      "letters": 277,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "reserved_return_even_if_unread",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "textHash": "eb853257bce4dffd84b81ce118d0710496a0bfebad1d93c2fb7d7e6b1294dd94"
+    },
+    {
+      "key": "scienze|10|LAB96_GEMINI",
+      "source": "scienze",
+      "level": 10,
+      "from": "LAB96_GEMINI",
+      "reduction": 29.88,
+      "rows": 9,
+      "maxRows": 12,
+      "letters": 420,
+      "mathPass": false,
+      "relationAlerts": [
+        "eclipse_not_each_lunation"
+      ],
+      "textHash": "04f5f0da536ead0d86ca78b1b8a1f1a029de8f1caa660ba79d47f479ad5cec9a"
+    },
+    {
+      "key": "medicina|10|LAB96_GEMINI",
+      "source": "medicina",
+      "level": 10,
+      "from": "LAB96_GEMINI",
+      "reduction": 22.39,
+      "rows": 12,
+      "maxRows": 15,
+      "letters": 565,
+      "mathPass": false,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "effort_both_oxygen_and_co2"
+      ],
+      "textHash": "864ff9a1cfbed277edc43668701f2411f723cad4ae2045a91cad5a48fa95b39c"
+    },
+    {
+      "key": "scienze|30|LAB96_GEMINI",
+      "source": "scienze",
+      "level": 30,
+      "from": "LAB96_GEMINI",
+      "reduction": 40.07,
+      "rows": 8,
+      "maxRows": 10,
+      "letters": 359,
+      "mathPass": false,
+      "relationAlerts": [
+        "eclipse_not_each_lunation",
+        "seasons_not_distance",
+        "single_result_not_proof"
+      ],
+      "textHash": "3d5326ec633f2b1bcbce309dd32bcb9600862c8869e7bcbb31c0be0db3cab75f"
+    },
+    {
+      "key": "procedura|40|LAB96_GEMINI",
+      "source": "procedura",
+      "level": 40,
+      "from": "LAB96_GEMINI",
+      "reduction": 54.25,
+      "rows": 7,
+      "maxRows": 9,
+      "letters": 291,
+      "mathPass": false,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "register_who_and_when"
+      ],
+      "textHash": "2348130bc949532a5da64d3ef04d990265034c5626bf3b36f570ba75e4554682"
+    },
     {
       "key": "scienze|10|LAB97_GEMINI",
       "source": "scienze",
