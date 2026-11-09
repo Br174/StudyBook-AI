@@ -1,0 +1,56 @@
+name: StudyBook LAB102 six real reductions from LAB101 inventory
+on:
+  push:
+    branches:
+      - 'audit/studybook-six-real-levels-v102-*'
+    paths:
+      - '.github/workflows/studybook-lab102-real-six-reductions.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab102-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  science-six-levels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read-only syntax and source-fingerprint checks
+        run: |
+          node --check scripts/lab102-real-six-reductions.mjs
+          node scripts/lab102-real-six-reductions.mjs --self-test
+      - name: Six real science-page reductions using existing FREE Gemini secret
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+          LAB102_PAGE_SELECTION: scienze
+        run: node scripts/lab102-real-six-reductions.mjs
+      - name: Archive independent measurements and complete generated texts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB102-Science-Six-Real-Reductions
+          path: audit/reports/lab102-real-six-reductions.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Persist resumable evidence ONLY on isolated LAB102 audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab102-real-six-reductions.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab102-real-six-reductions.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB102): preserve six real science reductions and evidence'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
