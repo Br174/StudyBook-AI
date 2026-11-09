@@ -44,6 +44,38 @@ function add(source,level,from,text,meta={}){
   finalSemanticCertified:false,approvedForApp:false,meta
  });
 }
+// Complete historical sweep LAB85–96 before deciding any numerically closest
+// incumbent. Treat these as archived candidates; never mistake a prior math
+// success for an expert semantic certificate.
+const history=[
+ ['85','lab85-six-levels-real-gemini','records','text'],
+ ['86','lab86-six-levels-real-gemini','records','text'],
+ ['87','lab87-targeted-repair-real-gemini','records','repaired'],
+ ['89','lab89-proportional-real-gemini','records','validation.rawText'],
+ ['90','lab90-fluid-useful-elaboration-real','records','validation.text'],
+ ['92','lab92-stop-complete-real-gemini','results','check.rawText'],
+ ['93','lab93-real-atomic-fact-gemini','results','metrics.rawText'],
+ ['94','lab94-real-italian-facts-gemini','results','metrics.rawText'],
+ ['95','lab95-compact-facts-real','records','metrics.rawText'],
+ ['96','lab96-source-only-real-gemini','cases','metrics.text']
+];
+for(const [lab,file,key,textPath] of history){
+ const h=READ('audit/reports/'+file+'.json');
+ for(const v of h[key]||[]){
+  const actual=textPath.split('.').reduce((a,k)=>a?.[k],v);
+  if(typeof actual!=='string'||!actual.trim()||!Number.isInteger(v.level))continue;
+  if(v.valid===false||v.outputValid===false||v.textReturned===false)continue;
+  const src=originals.get(v.source);
+  if(!src)continue;
+  const sourceLetters=letters(src.concepts.join(' '));
+  const historicalLetters=v.originalLetters??v.validation?.originalLetters??v.metrics?.sourceLetters??v.check?.sourceLetters??v.plan?.originalLetters??v.plan?.sourceLetters;
+  if(historicalLetters!=null&&historicalLetters!==sourceLetters){
+   warnings.push({lab,source:v.source,level:v.level,reason:'SOURCE_LETTER_COUNT_MISMATCH',historicalLetters,sourceLetters});
+   continue;
+  }
+  add(v.source,v.level,'LAB'+lab+'_GEMINI'+(v.variant?'_'+v.variant:''),actual,{historicalRaw:true});
+ }
+}
 for(const x of old97.results||[])if(x.valid&&x.metrics?.text)add(x.source,x.level,'LAB97_GEMINI',x.metrics.text);
 for(const x of old98.results||[])if(x.valid&&x.metrics?.text)add(x.source,x.level,'LAB98_GEMINI',x.metrics.text);
 for(const x of old99.results||[])if(x.check?.newText&&x.check.acceptedMathematically)add(x.source,x.level,'LAB99_TARGETED_FIRST_'+x.caseId,x.check.newText,
@@ -59,6 +91,19 @@ for(const p of edits102sci.patches||[]){
  add('scienze',p.level,'LAB102_TARGETED_REVIEW_COPY',p.proposal.map(s=>s.text).join(' '),
   {originalGeminiUnchanged:true,editorialProposalNotModelOutput:true});
 }
+// Independent closest-to-target index across all archived real responses.
+// This does NOT replace curated winners or override semantic risk vetoes.
+const nearestMeasured=[65,50,40,30,20,10].map(level=>{
+ const eligible=candidates.filter(c=>c.level===level&&c.hardPass&&!c.percentExempt)
+ .sort((a,b)=>Math.abs(a.reduction-level)-Math.abs(b.reduction-level)
+   ||a.relationAlerts.length-b.relationAlerts.length
+   ||a.key.localeCompare(b.key,'it'));
+ const c=eligible[0];
+ return c?{level,key:c.key,source:c.source,reduction:c.reduction,rows:c.rows,maxRows:c.maxRows,
+  distancePoints:+Math.abs(c.reduction-level).toFixed(2),relationAlerts:c.relationAlerts,
+  semanticCertified:false}:null;
+});
+assert(nearestMeasured.every(Boolean),'ONE_LEVEL_WITHOUT_HISTORIC_NUMERIC_SUCCESS');
 const get=(s,l,f)=>{const c=candidates.find(x=>x.source===s&&x.level===l&&x.from===f);assert(c,'MISSING_BEST_'+s+'_'+l+'_'+f);return c};
 // Independently verified numeric baselines: chosen as examples of precise output,
 // not falsely represented as six levels of the same source.
@@ -173,10 +218,13 @@ const report={
  executedAt:new Date().toISOString(),
  scope:'OFFLINE historical-only, no Gemini requests, no APK/production changes',
  sourceOrigin:'LAB97,LAB98,LAB99,LAB101,LAB102 GitHub evidence',
- totals:{historicalRealCandidates:candidates.length,quantitativeIncumbents:pinnedQuantitative.length,
+ totals:{historicalRealCandidates:candidates.length,additionalOlderDatasets:history.length,
+  quantitativeIncumbents:pinnedQuantitative.length,
   semanticReviewCandidates:semanticCandidates.length,fullySemanticallyCertified:0,
   adversarialCases:adverse.length,oldGuardFalseNegatives:adverse.filter(x=>!x.oldGuardDetected).length,
   remainingCombinedGuardFalseNegatives:adverse.filter(x=>!x.combinedDetected).length},
+ nearestMeasured,
+ warnings,
  quantitativeIncumbents:pinnedQuantitative.map(x=>({key:x.key,source:x.source,level:x.level,
   reduction:x.reduction,rows:x.rows,maxRows:x.maxRows,letters:x.actualLetters,
   relationAlerts:x.relationAlerts,sourceHash:x.sourceHash,textHash:x.textHash,
