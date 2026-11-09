@@ -31,9 +31,14 @@ export function rebalanceSnapshotV67(previous,stage,status='running'){
 }
 export function canRebalanceBookV67(book){
  const snapshot=book?.editionsV36;
- return Boolean(snapshot?.complete&&snapshot?.draftComplete&&
-  snapshot?.checkpointPersistent!==false&&
-  snapshot?.publicationModeV66==='generated-text-quality-not-certified'&&
+ // LAB78 quality-notes has ALL six raw drafts durably saved but rightly
+ // refuses "complete" when a percentage is wrong. Such a book MUST remain
+ // eligible for targeted user-requested recalibration, without discarding
+ // its original source or previously valid variants.
+ const compatible=['generated-text-quality-not-certified',
+  'lab78-numeric-gate-semantic-unverified'].includes(snapshot?.publicationModeV66);
+ return Boolean(snapshot?.draftComplete&&
+  snapshot?.checkpointPersistent!==false&&compatible&&
   snapshot?.draftRowsV57&&originalFingerprint(book)&&
   snapshot?.sourceFingerprint===originalFingerprint(book));
 }
