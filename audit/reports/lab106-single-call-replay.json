@@ -1,0 +1,278 @@
+{
+  "name": "LAB106 one Gemini call per page block and level + deterministic StudyBook checks",
+  "createdAt": "2026-11-09T17:45:07.794Z",
+  "scope": "Replay of 12 unchanged REAL previous Gemini texts through new isolated coordinator",
+  "originalRealModelOutputs": 12,
+  "realModelRequestsThisRun": 0,
+  "providerSimulatedDispatches": 12,
+  "failuresWithoutSecondCall": 2,
+  "changedOrthography": 1,
+  "unchangedOriginalResponses": 12,
+  "sourceAnchoredPatchChecks": 2,
+  "regressionBlocks": 1,
+  "numericGridPass": 3,
+  "semanticCertified": 0,
+  "approvedForApp": 0,
+  "unexpected": [],
+  "cases": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "inputActualReduction": 23.87,
+      "originalMathConforming": false,
+      "finalReduction": 23.87,
+      "finalMathConforming": false,
+      "finalRows": 10,
+      "rowsCap": 12,
+      "selectedFrom": "LOCAL_ORTHOGRAPHY",
+      "localEdits": [
+        "poiche_accent",
+        "apostrophe_l_altra",
+        "apostrophe_dell_asse"
+      ],
+      "sourceWarnings": [],
+      "calls": 1,
+      "status": "NONCONFORMING_REQUIRES_EXPLICIT_REVIEW",
+      "semanticCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "inputActualReduction": 23.54,
+      "originalMathConforming": true,
+      "finalReduction": 23.54,
+      "finalMathConforming": true,
+      "finalRows": 10,
+      "rowsCap": 11,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [],
+      "calls": 1,
+      "status": "PRELIMINARY_REVIEW_REQUIRED",
+      "semanticCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "inputActualReduction": 37.73,
+      "originalMathConforming": false,
+      "finalReduction": 37.73,
+      "finalMathConforming": false,
+      "finalRows": 8,
+      "rowsCap": 10,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [
+        "RELATION_LEXICAL_WARNING"
+      ],
+      "calls": 1,
+      "status": "NONCONFORMING_REQUIRES_EXPLICIT_REVIEW",
+      "semanticCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "inputActualReduction": 46.58,
+      "originalMathConforming": false,
+      "finalReduction": 46.58,
+      "finalMathConforming": false,
+      "finalRows": 7,
+      "rowsCap": 8,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [
+        "RELATION_LEXICAL_WARNING"
+      ],
+      "calls": 1,
+      "status": "NONCONFORMING_REQUIRES_EXPLICIT_REVIEW",
+      "semanticCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "inputActualReduction": 35.39,
+      "originalMathConforming": false,
+      "finalReduction": 35.39,
+      "finalMathConforming": false,
+      "finalRows": 8,
+      "rowsCap": 7,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [
+        "RELATION_LEXICAL_WARNING"
+      ],
+      "calls": 1,
+      "status": "NONCONFORMING_REQUIRES_EXPLICIT_REVIEW",
+      "semanticCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "inputActualReduction": 60.43,
+      "originalMathConforming": false,
+      "finalReduction": 60.43,
+      "finalMathConforming": false,
+      "finalRows": 6,
+      "rowsCap": 5,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [
+        "RELATION_LEXICAL_WARNING"
+      ],
+      "calls": 1,
+      "status": "NONCONFORMING_REQUIRES_EXPLICIT_REVIEW",
+      "semanticCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "inputActualReduction": 25.47,
+      "originalMathConforming": false,
+      "finalReduction": 25.47,
+      "finalMathConforming": false,
+      "finalRows": 11,
+      "rowsCap": 13,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [
+        "RELATION_LEXICAL_WARNING"
+      ],
+      "calls": 1,
+      "status": "NONCONFORMING_REQUIRES_EXPLICIT_REVIEW",
+      "semanticCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "inputActualReduction": 35.38,
+      "originalMathConforming": false,
+      "finalReduction": 35.38,
+      "finalMathConforming": false,
+      "finalRows": 9,
+      "rowsCap": 11,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [
+        "RELATION_LEXICAL_WARNING"
+      ],
+      "calls": 1,
+      "status": "NONCONFORMING_REQUIRES_EXPLICIT_REVIEW",
+      "semanticCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "inputActualReduction": 36.01,
+      "originalMathConforming": false,
+      "finalReduction": 36.01,
+      "finalMathConforming": false,
+      "finalRows": 9,
+      "rowsCap": 10,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [
+        "RELATION_LEXICAL_WARNING"
+      ],
+      "calls": 1,
+      "status": "NONCONFORMING_REQUIRES_EXPLICIT_REVIEW",
+      "semanticCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "inputActualReduction": 41.04,
+      "originalMathConforming": true,
+      "finalReduction": 41.04,
+      "finalMathConforming": true,
+      "finalRows": 9,
+      "rowsCap": 9,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [
+        "RELATION_LEXICAL_WARNING"
+      ],
+      "calls": 1,
+      "status": "NUMERIC_PASS_SEMANTIC_REVIEW_REQUIRED",
+      "semanticCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "inputActualReduction": 47.64,
+      "originalMathConforming": true,
+      "finalReduction": 47.64,
+      "finalMathConforming": true,
+      "finalRows": 7,
+      "rowsCap": 7,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [
+        "RELATION_LEXICAL_WARNING"
+      ],
+      "calls": 1,
+      "status": "NUMERIC_PASS_SEMANTIC_REVIEW_REQUIRED",
+      "semanticCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "inputActualReduction": 62.11,
+      "originalMathConforming": false,
+      "finalReduction": 62.11,
+      "finalMathConforming": false,
+      "finalRows": 6,
+      "rowsCap": 5,
+      "selectedFrom": "ORIGINAL_GEMINI",
+      "localEdits": [],
+      "sourceWarnings": [
+        "RELATION_LEXICAL_WARNING"
+      ],
+      "calls": 1,
+      "status": "NONCONFORMING_REQUIRES_EXPLICIT_REVIEW",
+      "semanticCertified": false
+    }
+  ],
+  "adversarial": [
+    {
+      "test": "frozen_best_previous_numerical_and_editorial_candidate",
+      "passed": true
+    },
+    {
+      "test": "source-anchored apostrophe and Italian accent without model",
+      "passed": true
+    },
+    {
+      "test": "reject hallucinated edit and accept literal source evidence only",
+      "passed": true
+    },
+    {
+      "test": "HTTP429 has no automatic retry or paid fallback",
+      "passed": true
+    },
+    {
+      "test": "empty/truncated provider response rejected with one dispatch",
+      "passed": true
+    }
+  ],
+  "callsPerBlockExactlyOne": true,
+  "appIntegrated": false,
+  "androidBuilt": false,
+  "summaryPolicy": {
+    "historicalResearchTargetPercent": 65,
+    "historicalResearchRange": "60..70",
+    "existingProductionSummaryTargetPercent": 60,
+    "existingProductionSummaryRange": "55..65",
+    "resolvedForProduction": false,
+    "requirement": "One canonical policy must be chosen before APK promotion. Do not silently use research policy in production."
+  },
+  "evaluation": {
+    "inputMathPass": 3,
+    "freshModelGeneration": false,
+    "singleDispatchPerSourceBatchLevel": true,
+    "strictlyLocalCorrectionsOnly": true,
+    "trueSemanticValidation": "NOT_PROVEN",
+    "nativeAppBackendWiring": "PENDING",
+    "safeForExperimentalAPK": false,
+    "furtherNeeded": "Integration test must instrument actual fetch and disable legacy LAB75 plan+write/rebalance second calls on new mode."
+  }
+}
