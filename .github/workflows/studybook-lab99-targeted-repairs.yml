@@ -1,0 +1,61 @@
+name: StudyBook LAB99 relational guard and single-sentence repairs
+on:
+  push:
+    branches:
+      - 'audit/studybook-relational-targeted-repair-v99-*'
+    paths:
+      - '.github/workflows/studybook-lab99-targeted-repairs.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab99-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax for all scripts
+        run: |
+          node --check scripts/lab99-relational-guard.mjs
+          node --check scripts/lab99-targeted-sentence-patch.mjs
+          node --check scripts/test-lab99-relational-offline.mjs
+          node --check scripts/test-lab99-targeted-real-gemini.mjs
+      - name: Source-anchored relation checks and 20k offline cases
+        run: node scripts/test-lab99-relational-offline.mjs
+      - name: Real Gemini only four exact sentence patches with hard rollback
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab99-targeted-real-gemini.mjs
+      - name: Upload audit data even after provider blocking
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB99-Relational-TargetedRepair
+          path: |
+            audit/reports/lab99-relational-offline.json
+            audit/reports/lab99-gemini-sentence-repairs.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Preserve records in isolated LAB99 branch only
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab99-relational-offline.json audit/reports/lab99-gemini-sentence-repairs.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB99): preserve relational QA and bounded sentence-patch evidence'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
