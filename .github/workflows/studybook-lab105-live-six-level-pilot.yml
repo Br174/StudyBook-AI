@@ -1,0 +1,53 @@
+name: StudyBook LAB105 fresh free-Gemini 30-case six-level audit
+on:
+  push:
+    branches:
+      - 'audit/studybook-1000page-reliability-v105-*'
+    paths:
+      - '.github/workflows/studybook-lab105-live-six-level-pilot.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab105-live-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  genuine-model-answers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source-only generation syntax
+        run: node --check scripts/test-lab105-real-six-levels-pilot.mjs
+      - name: Up to 30 Gemini answers on existing free key, all six levels, five small fixtures
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab105-real-six-levels-pilot.mjs
+      - name: Retain partial or full real model evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB105-Real-Gemini-Six-Levels
+          path: audit/reports/lab105-real-six-levels-pilot.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit QA evidence only to isolated LAB105 branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab105-real-six-levels-pilot.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab105-real-six-levels-pilot.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB105): preserve actual free Gemini six-level answers even when partial'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
