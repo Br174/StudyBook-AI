@@ -41,3 +41,31 @@ Una copia di laboratorio locale ha superato **64 asserzioni offline**. Il risult
 - Prossimo passo sicuro: una prova limitata con 2–3 pagine autentiche di diversa lunghezza e sei livelli tramite vera richiesta Gemini, conservando originali e hash; confrontare banda ±5, righe, negazioni, fatti ed eccezioni. Promozione solo dopo risultati provati, senza disinstallazione e senza costi aggiuntivi.
 
 **Decisione:** NON fare un semplice scambio delle etichette: la media può sembrare precisa mentre il contenuto rimane tagliato. Preservare i pilastri didattici e gli incumbent migliori LAB103/104.
+
+## Collaudo Gemini REAL (10 novembre 2026): ESITO VERIFICATO
+
+- GitHub Actions: https://github.com/Br174/StudyBook-AI/actions/runs/42721187957 — **SUCCESS** (script completato, non qualita' didattica).
+- Risposte Gemini REALI: **12/12**, senza HTTP429, con **12 chiamate** usando la chiave gia' esistente, e nessun modello/servizio aggiuntivo a pagamento.
+- Due campioni gia' presenti nel repository: `scienze` (599 lettere originali) e `procedura` (636 lettere). **Non sono le 44 pagine del PDF di Bruno**.
+- Fascia percentuale e righe virtuali da 60 rispettate insieme: **5/12**. Griglia rispettata **11/12**. Segnalazioni preliminari di significato assenti in **1/12**, ma questo non prova fedelta' completa.
+- **Certificazione semantica: 0/12**; nessuna versione pubblicata o integrata.
+- Evidenza integrale, comprensiva dei testi prodotti: `audit/reports/lab107-real-gemini-calibration.json`.
+
+| Livello | Scienze: riduzione reale | Procedura: riduzione reale | Esito numerico+griglia |
+|---|---:|---:|---|
+| 10% | 22,04% | 24,37% | 0/2 |
+| 20% | 16,53% | 40,09% | 1/2 |
+| 30% | 29,38% | 33,49% | 2/2 |
+| 40% | 47,75% | 51,57% | 0/2 |
+| 50% | 46,08% | 55,50% | 1/2 |
+| Riassunto **app 60%** | 35,39% | 61,79% | 1/2 |
+
+L'ordine percentuale non e' monotono in tutti i casi: per esempio in `scienze` la versione 20% (16,53%) e' meno ridotta della 10% (22,04%), e il Riassunto (35,39%) e' meno corto della versione 50% (46,08%). Questo contraddice la conclusione di applicare la stessa curva aggregata a tutte le pagine.
+
+### Confronto con LAB105 e limiti di attribuzione
+LAB105 precedente: **3/12** conformi numericamente e a griglia, su due fonti uguali, ma aveva Riassunto al **65%**, prompt e generazione differenti. LAB107: **5/12**, con Riassunto a **60%** (politica app). Il miglioramento apparente di 2 casi e' insufficiente per attribuire una migliore affidabilita' alla sola calibrazione: pochi casi, target summary non identico, stocasticita' del modello e nessun giudizio didattico completo. Non promuovere per una statistica superficiale.
+
+### Decisione dopo la verifica
+La semplice **inversione di soglie non risolve** il problema. Il prompt che chiede esplicitamente quante lettere conservare e' promettente in parte ma non affidabile: il 10% e il 40% hanno **0/2** conformi. La priorita' e' evitare tagli eccessivi mantenendo lettera, griglia e fedelta' dei fatti, con test semantici prima di qualsiasi APK.
+
+**GATE PROMOZIONE: BLOCCATO**. Proseguire solo con una nuova modifica mirata e approvata al percorso reale di generazione, salvando originale, checkpoint, migliori versioni e firma. Nessun APK LAB107 e' stato compilato per non consegnare un generatore ancora non conforme.
