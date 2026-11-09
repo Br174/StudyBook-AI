@@ -1,0 +1,46 @@
+name: StudyBook LAB87 deterministic acceptance gate
+on:
+  push:
+    branches:
+      - 'audit/studybook-targeted-repair-v87-*'
+    paths:
+      - 'scripts/test-lab87-acceptance-gate.mjs'
+      - 'audit/reports/lab87-qualitative-review.json'
+      - '.github/workflows/studybook-lab87-acceptance-gate.yml'
+permissions:
+  contents: write
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify gate syntax
+        run: node --check scripts/test-lab87-acceptance-gate.mjs
+      - name: Verify every failed correction remains rejected
+        run: node scripts/test-lab87-acceptance-gate.mjs
+      - name: Upload QA gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB87-AcceptanceGate
+          path: audit/reports/lab87-acceptance-gate.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Persist QA seal
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab87-acceptance-gate.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab87-acceptance-gate.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB87): seal rejected repairs, no release'
+            git push origin "HEAD:${TARGET_REF}"
+          fi
