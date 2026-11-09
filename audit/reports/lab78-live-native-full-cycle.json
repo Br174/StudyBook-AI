@@ -1,0 +1,96 @@
+{
+  "study": "LAB78 true native Android study pipeline + actual Gemini Worker",
+  "startedAt": "2026-11-09T20:32:31.568Z",
+  "sourcePages": 2,
+  "sourceHash": "1c40637393d11173d8d425aa71ea3f1bd7cdb3c8267db07f53a68f330e2196aa",
+  "scope": "same client engine as LAB78 experimental APK, fake-indexeddb storage on Github runner; NOT real Android phone",
+  "phases": [
+    "draft"
+  ],
+  "modelGenerations": 1,
+  "providerErrors": 1,
+  "attempts": [
+    {
+      "level": "summary",
+      "phase": "draft-v74",
+      "sourceParts": 2,
+      "pageStart": 1,
+      "pageEnd": 2,
+      "status": 503,
+      "code": "AI_TEMPORARY_OVERLOAD",
+      "outputTokensUsed": null,
+      "outputTokenLimit": null,
+      "finishReason": null,
+      "observedReduction": null,
+      "pageBandPass": false,
+      "geometryRowsPass": false,
+      "geometryFullPass": false,
+      "sameWorkerVersion": false,
+      "elapsedMs": 1064
+    }
+  ],
+  "final": {
+    "status": "quota-paused",
+    "phase": "draft",
+    "complete": false,
+    "draftComplete": false,
+    "checkpointPersistent": true,
+    "draftsSaved": 0,
+    "booksUnchanged": true,
+    "levels": [
+      {
+        "level": "summary",
+        "reduction": null,
+        "sourcePageBandPass": false,
+        "geometryRowPass": false,
+        "both": false,
+        "availablePages": 0
+      },
+      {
+        "level": "50",
+        "reduction": null,
+        "sourcePageBandPass": false,
+        "geometryRowPass": false,
+        "both": false,
+        "availablePages": 0
+      },
+      {
+        "level": "40",
+        "reduction": null,
+        "sourcePageBandPass": false,
+        "geometryRowPass": false,
+        "both": false,
+        "availablePages": 0
+      },
+      {
+        "level": "30",
+        "reduction": null,
+        "sourcePageBandPass": false,
+        "geometryRowPass": false,
+        "both": false,
+        "availablePages": 0
+      },
+      {
+        "level": "20",
+        "reduction": null,
+        "sourcePageBandPass": false,
+        "geometryRowPass": false,
+        "both": false,
+        "availablePages": 0
+      },
+      {
+        "level": "10",
+        "reduction": null,
+        "sourcePageBandPass": false,
+        "geometryRowPass": false,
+        "both": false,
+        "availablePages": 0
+      }
+    ]
+  },
+  "allSixNumericAndGeometryPass": false,
+  "semanticCertified": false,
+  "userBookTested": false,
+  "paidServicesUsed": false,
+  "updatedAt": "2026-11-09T20:32:32.642Z"
+}
