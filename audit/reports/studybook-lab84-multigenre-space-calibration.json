@@ -1,0 +1,164 @@
+{
+  "experiment": "MotorLab StudyBook AI LAB84 multi-genre 100x60 space calibration",
+  "date": "2026-11-09",
+  "status": "completed offline measurement; no Gemini calls",
+  "standard": {
+    "rows": 100,
+    "widthCharacters": 60,
+    "totalSlotsEach": 6000,
+    "noBrokenWords": true,
+    "newlineNormalization": "Collapse source whitespace to one space; remove navigation headings/markdown markup; greedy wrap words at 60 characters; keep first 100 complete rows",
+    "sourceSelection": "from quoted content anchors; no cherry-picked interior windows",
+    "unicodeLetterCounter": "Unicode property L after NFC; exclude spaces, numbers, punctuation",
+    "justifiedSpaces": "existing intra-word separators + unused trailing positions; visual justification only"
+  },
+  "results": [
+    {
+      "kind": "Narrativa - I promessi sposi",
+      "url": "https://www.gutenberg.org/cache/epub/45334/pg45334.txt",
+      "anchor": "Quel ramo del lago di Como",
+      "spacesNatural": 876,
+      "spacesJustification": 320,
+      "spacesAll": 1196,
+      "letters": 4562,
+      "punctuation": 237,
+      "digits": 5,
+      "meanLetters": 45.62,
+      "meanSpaces": 11.96,
+      "windows15": {
+        "min": 658,
+        "max": 707,
+        "in2": 52,
+        "in5": 86
+      }
+    },
+    {
+      "kind": "Giuridico - Lezione sulla Costituzione",
+      "url": "https://it.wikiversity.org/wiki/La_Costituzione_italiana",
+      "anchor": "La Costituzione della Repubblica Italiana è la legge fondamentale",
+      "spacesNatural": 672,
+      "spacesJustification": 453,
+      "spacesAll": 1125,
+      "letters": 4708,
+      "punctuation": 126,
+      "digits": 41,
+      "meanLetters": 47.08,
+      "meanSpaces": 11.25,
+      "windows15": {
+        "min": 680,
+        "max": 729,
+        "in2": 77,
+        "in5": 86
+      },
+      "rowsToReach4562Letters": 97
+    },
+    {
+      "kind": "Teatrale - La locandiera Atto I",
+      "url": "https://it.wikisource.org/wiki/La_locandiera/Atto_I",
+      "anchor": "Marchese. Fra voi e me vi è qualche differenza.",
+      "spacesNatural": 861,
+      "spacesJustification": 325,
+      "spacesAll": 1186,
+      "letters": 4482,
+      "punctuation": 332,
+      "digits": 0,
+      "meanLetters": 44.82,
+      "meanSpaces": 11.86,
+      "windows15": {
+        "min": 648,
+        "max": 701,
+        "in2": 17,
+        "in5": 85
+      },
+      "rowsToReach4562Letters": 102
+    },
+    {
+      "kind": "Medico - Panoramica diabete mellito",
+      "url": "https://www.msdmanuals.com/it/casa/disturbi-ormonali-e-metabolici/diabete-mellito-e-bassi-livelli-di-zucchero-nel-sangue-ipoglicemia/panoramica-sul-diabete-mellito",
+      "anchor": "Il diabete mellito è un disturbo nel quale l’organismo non produce",
+      "spacesNatural": 773,
+      "spacesJustification": 370,
+      "spacesAll": 1143,
+      "letters": 4660,
+      "punctuation": 163,
+      "digits": 34,
+      "meanLetters": 46.6,
+      "meanSpaces": 11.43,
+      "windows15": {
+        "min": 672,
+        "max": 724,
+        "in2": 79,
+        "in5": 86
+      },
+      "rowsToReach4562Letters": 98
+    },
+    {
+      "kind": "Scolastico - Biologia metabolismo cellulare",
+      "url": "https://it.wikibooks.org/wiki/Biologia_per_il_liceo/Il_metabolismo_cellulare",
+      "anchor": "La membrana plasmatica inoltre non è un semplice contenitore.",
+      "spacesNatural": 740,
+      "spacesJustification": 361,
+      "spacesAll": 1101,
+      "letters": 4761,
+      "punctuation": 125,
+      "digits": 13,
+      "meanLetters": 47.61,
+      "meanSpaces": 11.01,
+      "windows15": {
+        "min": 698,
+        "max": 727,
+        "in2": 68,
+        "in5": 86
+      },
+      "rowsToReach4562Letters": 96
+    }
+  ],
+  "summary": {
+    "samples": 5,
+    "rows": 500,
+    "slots": 30000,
+    "letters": 23173,
+    "spaces": 5751,
+    "punctuation": 983,
+    "digits": 93,
+    "meanLetters": 46.346,
+    "meanSpaces": 11.502,
+    "meansRange": [
+      44.82,
+      47.61
+    ],
+    "targetSimulation": {
+      "hypotheticalOriginalLetters": 1000,
+      "reduction": 30,
+      "target": 700,
+      "within2Band": [
+        680,
+        720
+      ],
+      "within5Band": [
+        650,
+        750
+      ],
+      "windows15": 430,
+      "within2": 293,
+      "within5": 429
+    },
+    "sameLettersControl": {
+      "letters": 4562,
+      "manzoniRows": 100,
+      "legalRows": 97,
+      "theatreRows": 102,
+      "medicalRows": 98,
+      "schoolRows": 96
+    }
+  },
+  "limitations": [
+    "Anchored single excerpt per genre, not representative of all possible books",
+    "Overlapping 15-line windows are dependent; frequencies not predictive success rates",
+    "Stage script normalized to continuous text, unlike preserved screenplay line breaks",
+    "HTML headings and navigational Markdown removed; no syllabification or word breaks",
+    "Character slots are not screen pixel lengths or actual printed line measures",
+    "This does not test Gemini's ability to generate target-length content or preserve meaning",
+    "Use mean only for initial sizing. Post-generation Unicode letter counts remain authoritative."
+  ]
+}
