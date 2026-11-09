@@ -5,6 +5,7 @@ on:
       - 'audit/studybook-first-read-inventory-v100-*'
     paths:
       - '.github/workflows/studybook-lab100-safe-final.yml'
+      - 'scripts/test-lab100-safe-anchor-final.mjs'
 permissions:
   contents: write
 jobs:
