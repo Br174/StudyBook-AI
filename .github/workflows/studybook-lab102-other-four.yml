@@ -1,0 +1,62 @@
+name: StudyBook LAB102 targeted science review and other four genres
+on:
+  push:
+    branches:
+      - 'audit/studybook-six-real-levels-v102-*'
+    paths:
+      - '.github/workflows/studybook-lab102-other-four.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab102-extension-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  review-and-expand:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify scripts, six original versions and source integrity
+        run: |
+          node --check scripts/lab102-real-six-reductions.mjs
+          node --check scripts/lab102-science-targeted-review.mjs
+          node scripts/lab102-real-six-reductions.mjs --self-test
+      - name: Independently audit two targeted science-only review candidates
+        run: node scripts/lab102-science-targeted-review.mjs
+      - name: Run four additional genres with existing free Gemini key
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+          LAB102_PAGE_SELECTION: procedura,medicina,concetto_sbilanciato,pagina_breve_continua
+        run: node scripts/lab102-real-six-reductions.mjs
+      - name: Archive all new evidence regardless of provider status
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB102-TargetedReview-and-FourGenres
+          path: |
+            audit/reports/lab102-science-targeted-review.json
+            audit/reports/lab102-other-four-real-six-reductions.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit only audit evidence to isolated LAB102 branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab102-science-targeted-review.json audit/reports/lab102-other-four-real-six-reductions.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB102): preserve targeted science repair and four genres'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
