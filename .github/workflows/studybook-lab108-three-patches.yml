@@ -1,0 +1,46 @@
+name: StudyBook LAB108 - three source-literal patches without Gemini
+on:
+  push:
+    branches:
+      - audit/studybook-source-preserving-calibration-v108-20261110
+    paths:
+      - .github/workflows/studybook-lab108-three-patches.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  offline-source-anchored-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Zero provider calls, old drafts unchanged
+        run: node scripts/lab108-three-local-literal-patches.mjs
+      - name: Archive local patch evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB108-Three-Source-Literal-Patches
+          path: audit/reports/lab108-three-local-literal-patches.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Save isolated research evidence
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab108-three-local-literal-patches.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab108-three-local-literal-patches.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB108): retain 3 safe literal patches no provider'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
