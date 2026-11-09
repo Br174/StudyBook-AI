@@ -1,6 +1,6 @@
 {
   "study": "LAB99 relation verification, patch safety and rollback offline",
-  "date": "2026-11-09T14:37:18.199Z",
+  "date": "2026-11-09T14:38:26.281Z",
   "modelCalls": 0,
   "summary": {
     "originalPages": 5,
@@ -10,9 +10,9 @@
     "historicalFalseNegativesRevealed": 3,
     "handcraftedPatches": 4,
     "handcraftedProvisionalAccepted": 4,
-    "deliberateMutations": 124,
-    "mutationsDetected": 116,
-    "issues": 8
+    "deliberateMutations": 20000,
+    "mutationsDetected": 20000,
+    "issues": 0
   },
   "originals": [
     {
@@ -131,6 +131,7 @@
       ],
       "relationalAlerts": [
         "reserved_return_even_if_unread",
+        "register_who_and_when",
         "extension_not_automatic"
       ],
       "criticalFacts": 5,
@@ -155,7 +156,8 @@
       "math": true,
       "oldGuardAlerts": [],
       "relationalAlerts": [
-        "reserved_return_even_if_unread"
+        "reserved_return_even_if_unread",
+        "register_who_and_when"
       ],
       "criticalFacts": 5,
       "hadNoOldGuardAlerts": true
@@ -293,54 +295,5 @@
     }
   ],
   "limitations": "Rules are manually developed for five fixed synthetic study pages; same-sentence matches can miss valid paraphrases or miss wrong meaning. Handwritten candidate edits are NOT Gemini generated and NOT production-ready.",
-  "problems": [
-    {
-      "source": "procedura",
-      "rule": "register_who_and_when",
-      "issue": "deliberate source relation deletion unflagged",
-      "index": 21
-    },
-    {
-      "source": "procedura",
-      "rule": "register_who_and_when",
-      "issue": "deliberate source relation deletion unflagged",
-      "index": 25
-    },
-    {
-      "source": "procedura",
-      "rule": "register_who_and_when",
-      "issue": "deliberate source relation deletion unflagged",
-      "index": 44
-    },
-    {
-      "source": "procedura",
-      "rule": "register_who_and_when",
-      "issue": "deliberate source relation deletion unflagged",
-      "index": 86
-    },
-    {
-      "source": "procedura",
-      "rule": "register_who_and_when",
-      "issue": "deliberate source relation deletion unflagged",
-      "index": 103
-    },
-    {
-      "source": "procedura",
-      "rule": "register_who_and_when",
-      "issue": "deliberate source relation deletion unflagged",
-      "index": 104
-    },
-    {
-      "source": "procedura",
-      "rule": "register_who_and_when",
-      "issue": "deliberate source relation deletion unflagged",
-      "index": 119
-    },
-    {
-      "source": "procedura",
-      "rule": "register_who_and_when",
-      "issue": "deliberate source relation deletion unflagged",
-      "index": 123
-    }
-  ]
+  "problems": []
 }

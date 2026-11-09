@@ -1,0 +1,270 @@
+{
+  "study": "LAB99 real targeted Gemini sentence-only repairs",
+  "date": "2026-11-09T14:38:33.117Z",
+  "model": "gemini-3.5-flash-lite",
+  "provider": {
+    "attempts": 4,
+    "halt": false,
+    "reason": "",
+    "maxCalls": 5
+  },
+  "scope": "Four pre-selected sentences from real LAB98 synthetic outputs. A patch is local to one exact sentence. No book/A4 formatting tested.",
+  "policy": "One correction call per case; only repeated 503 may retry once. Never silently declare semantic certification. Exact other text remains unchanged.",
+  "controls": {
+    "productionEdited": false,
+    "mainEdited": false,
+    "APKCompiled": false,
+    "extrapaidService": false
+  },
+  "summary": {
+    "planned": 4,
+    "attemptedCases": 4,
+    "geminiReceived": 4,
+    "targetRelationRecovered": 4,
+    "provisionalAccepted": 3,
+    "rejected": 1,
+    "productionReady": 0
+  },
+  "results": [
+    {
+      "caseId": "tides_sole_scienze50",
+      "source": "scienze",
+      "level": 50,
+      "received": true,
+      "ms": 734,
+      "modelOutputSentence": "La Luna influisce sulle maree insieme al Sole.",
+      "check": {
+        "source": "scienze",
+        "level": 50,
+        "caseId": "tides_sole_scienze50",
+        "candidateValid": true,
+        "acceptedMathematically": true,
+        "approvedForApp": false,
+        "verdict": "PRELIMINARY_ACCEPT_NEEDS_SEMANTIC_REVIEW",
+        "preservedUnchangedPrefix": 170,
+        "preservedUnchangedSuffix": 159,
+        "oldText": "La rotazione terrestre causa giorno e notte. La rivoluzione dura circa un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre, non dalla distanza dal Sole. La Luna influisce sulle maree. Le eclissi non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili; un risultato isolato non basta per dimostrare una spiegazione.",
+        "newText": "La rotazione terrestre causa giorno e notte. La rivoluzione dura circa un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre, non dalla distanza dal Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili; un risultato isolato non basta per dimostrare una spiegazione.",
+        "originalTargetSentence": "La Luna influisce sulle maree.",
+        "replacementSentence": "La Luna influisce sulle maree insieme al Sole.",
+        "old": {
+          "letters": 299,
+          "reduction": 50.08,
+          "rows": 7,
+          "cap": 7,
+          "letterBand": true,
+          "relationAlerts": [
+            "tides_both_moon_and_sun",
+            "eclipse_alignment",
+            "observations_repeatable"
+          ],
+          "lexicalAlerts": [
+            "eclipses_alignment",
+            "repeatable_observations",
+            "cause_vs_description"
+          ]
+        },
+        "next": {
+          "letters": 312,
+          "reduction": 47.91,
+          "rows": 7,
+          "cap": 7,
+          "letterBand": true,
+          "relationAlerts": [
+            "eclipse_alignment",
+            "observations_repeatable"
+          ],
+          "lexicalAlerts": [
+            "eclipses_alignment",
+            "repeatable_observations",
+            "cause_vs_description"
+          ]
+        },
+        "targetRecovered": true,
+        "newRelationRegressions": [],
+        "lexicalRegressions": [],
+        "forbiddenReasons": [],
+        "disclaimer": "This replaces only an exact target sentence in a test copy. Numerical/lexical checks do not certify semantic correctness. Never publish automatically."
+      },
+      "usedTokens": 20,
+      "humanSemanticReview": "NOT_DONE",
+      "approvedForApp": false
+    },
+    {
+      "caseId": "hemoglobin_red_cells_medicina20",
+      "source": "medicina",
+      "level": 20,
+      "received": true,
+      "ms": 822,
+      "modelOutputSentence": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno.",
+      "check": {
+        "source": "medicina",
+        "level": 20,
+        "caseId": "hemoglobin_red_cells_medicina20",
+        "candidateValid": true,
+        "acceptedMathematically": true,
+        "approvedForApp": false,
+        "verdict": "PRELIMINARY_ACCEPT_NEEDS_SEMANTIC_REVIEW",
+        "preservedUnchangedPrefix": 370,
+        "preservedUnchangedSuffix": 266,
+        "oldText": "In un esempio didattico l'apparato respiratorio porta aria ai polmoni tramite le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume mentre nell'espirazione a riposo si rilassa. Negli alveoli l'ossigeno passa al sangue e l'anidride carbonica fa il percorso opposto grazie a differenze di pressione parziale attraverso pareti sottili. L'emoglobina trasporta gran parte dell'ossigeno. La frequenza respiratoria può aumentare sotto sforzo per maggiore consumo di ossigeno e produzione di anidride carbonica. Il medico valuta i disturbi considerando sintomi storia clinica ed esame obiettivo. Un singolo valore non basta e va interpretato nel contesto.",
+        "newText": "In un esempio didattico l'apparato respiratorio porta aria ai polmoni tramite le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume mentre nell'espirazione a riposo si rilassa. Negli alveoli l'ossigeno passa al sangue e l'anidride carbonica fa il percorso opposto grazie a differenze di pressione parziale attraverso pareti sottili. L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno. La frequenza respiratoria può aumentare sotto sforzo per maggiore consumo di ossigeno e produzione di anidride carbonica. Il medico valuta i disturbi considerando sintomi storia clinica ed esame obiettivo. Un singolo valore non basta e va interpretato nel contesto.",
+        "originalTargetSentence": "L'emoglobina trasporta gran parte dell'ossigeno.",
+        "replacementSentence": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno.",
+        "old": {
+          "letters": 573,
+          "reduction": 21.29,
+          "rows": 12,
+          "cap": 13,
+          "letterBand": true,
+          "relationAlerts": [
+            "hemoglobin_in_red_cells"
+          ],
+          "lexicalAlerts": [
+            "oxygen_consumption_co2_production",
+            "red_blood_cells",
+            "clinical_context"
+          ]
+        },
+        "next": {
+          "letters": 588,
+          "reduction": 19.23,
+          "rows": 13,
+          "cap": 13,
+          "letterBand": true,
+          "relationAlerts": [],
+          "lexicalAlerts": [
+            "oxygen_consumption_co2_production",
+            "clinical_context"
+          ]
+        },
+        "targetRecovered": true,
+        "newRelationRegressions": [],
+        "lexicalRegressions": [],
+        "forbiddenReasons": [],
+        "disclaimer": "This replaces only an exact target sentence in a test copy. Numerical/lexical checks do not certify semantic correctness. Never publish automatically."
+      },
+      "usedTokens": 25,
+      "humanSemanticReview": "NOT_DONE",
+      "approvedForApp": false
+    },
+    {
+      "caseId": "unread_reserved_procedura40",
+      "source": "procedura",
+      "level": 40,
+      "received": true,
+      "ms": 896,
+      "modelOutputSentence": "Se il libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura.",
+      "check": {
+        "source": "procedura",
+        "level": 40,
+        "caseId": "unread_reserved_procedura40",
+        "candidateValid": true,
+        "acceptedMathematically": false,
+        "approvedForApp": false,
+        "verdict": "REJECT_ROLLBACK",
+        "preservedUnchangedPrefix": 340,
+        "preservedUnchangedSuffix": 62,
+        "oldText": "In una biblioteca scolastica simulata del 2024, la regola interna 12 impone allo studente di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni. Il personale può concedere una proroga solo se il libro non è prenotato da altri; questa non è automatica e senza conferma scritta vale la scadenza iniziale. Se riservato, va restituito puntualmente. Il registro traccia prestiti e date senza opinioni personali.",
+        "newText": "In una biblioteca scolastica simulata del 2024, la regola interna 12 impone allo studente di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni. Il personale può concedere una proroga solo se il libro non è prenotato da altri; questa non è automatica e senza conferma scritta vale la scadenza iniziale. Se il libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura. Il registro traccia prestiti e date senza opinioni personali.",
+        "originalTargetSentence": "Se riservato, va restituito puntualmente.",
+        "replacementSentence": "Se il libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura.",
+        "old": {
+          "letters": 362,
+          "reduction": 43.08,
+          "rows": 8,
+          "cap": 9,
+          "letterBand": true,
+          "relationAlerts": [
+            "reserved_return_even_if_unread",
+            "register_who_and_when"
+          ],
+          "lexicalAlerts": [
+            "even_if_not_finished",
+            "register_who_when"
+          ]
+        },
+        "next": {
+          "letters": 417,
+          "reduction": 34.43,
+          "rows": 9,
+          "cap": 9,
+          "letterBand": false,
+          "relationAlerts": [
+            "register_who_and_when"
+          ],
+          "lexicalAlerts": [
+            "register_who_when"
+          ]
+        },
+        "targetRecovered": true,
+        "newRelationRegressions": [],
+        "lexicalRegressions": [],
+        "forbiddenReasons": [
+          "LETTER_BAND_OUTSIDE"
+        ],
+        "disclaimer": "This replaces only an exact target sentence in a test copy. Numerical/lexical checks do not certify semantic correctness. Never publish automatically."
+      },
+      "usedTokens": 34,
+      "humanSemanticReview": "NOT_DONE",
+      "approvedForApp": false
+    },
+    {
+      "caseId": "eclipses_lunation_scienze40",
+      "source": "scienze",
+      "level": 40,
+      "received": true,
+      "ms": 716,
+      "modelOutputSentence": "Le eclissi esigono allineamenti particolari e non avvengono a ogni lunazione.",
+      "check": {
+        "source": "scienze",
+        "level": 40,
+        "caseId": "eclipses_lunation_scienze40",
+        "candidateValid": true,
+        "acceptedMathematically": true,
+        "approvedForApp": false,
+        "verdict": "PRELIMINARY_ACCEPT_NEEDS_SEMANTIC_REVIEW",
+        "preservedUnchangedPrefix": 235,
+        "preservedUnchangedSuffix": 142,
+        "oldText": "La Terra ruota attorno al proprio asse causando il giorno e la notte, mentre la rivoluzione attorno al Sole dura un anno. Le stagioni dipendono dall'inclinazione asse, non dalla distanza solare. La Luna e il Sole influenzano le maree. Le eclissi esigono allineamenti particolari. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili; un risultato isolato non basta per dimostrare una spiegazione.",
+        "newText": "La Terra ruota attorno al proprio asse causando il giorno e la notte, mentre la rivoluzione attorno al Sole dura un anno. Le stagioni dipendono dall'inclinazione asse, non dalla distanza solare. La Luna e il Sole influenzano le maree. Le eclissi esigono allineamenti particolari e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili; un risultato isolato non basta per dimostrare una spiegazione.",
+        "originalTargetSentence": "Le eclissi esigono allineamenti particolari.",
+        "replacementSentence": "Le eclissi esigono allineamenti particolari e non avvengono a ogni lunazione.",
+        "old": {
+          "letters": 351,
+          "reduction": 41.4,
+          "rows": 8,
+          "cap": 8,
+          "letterBand": true,
+          "relationAlerts": [
+            "eclipse_not_each_lunation"
+          ],
+          "lexicalAlerts": [
+            "not_every_lunation",
+            "cause_vs_description"
+          ]
+        },
+        "next": {
+          "letters": 378,
+          "reduction": 36.89,
+          "rows": 8,
+          "cap": 8,
+          "letterBand": true,
+          "relationAlerts": [],
+          "lexicalAlerts": [
+            "cause_vs_description"
+          ]
+        },
+        "targetRecovered": true,
+        "newRelationRegressions": [],
+        "lexicalRegressions": [],
+        "forbiddenReasons": [],
+        "disclaimer": "This replaces only an exact target sentence in a test copy. Numerical/lexical checks do not certify semantic correctness. Never publish automatically."
+      },
+      "usedTokens": 25,
+      "humanSemanticReview": "NOT_DONE",
+      "approvedForApp": false
+    }
+  ],
+  "errors": []
+}
