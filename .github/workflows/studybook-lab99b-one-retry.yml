@@ -1,0 +1,48 @@
+name: StudyBook LAB99b one controlled sentence retry
+on:
+  push:
+    branches:
+      - 'audit/studybook-relational-targeted-repair-v99-*'
+    paths:
+      - '.github/workflows/studybook-lab99b-one-retry.yml'
+permissions:
+  contents: write
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check isolated retry syntax
+        run: node --check scripts/test-lab99-one-retry-gemini.mjs
+      - name: Exactly one optional retry after targeted LAB99 rejection
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab99-one-retry-gemini.mjs
+      - name: Upload retry evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB99b-OneSentenceRetry
+          path: audit/reports/lab99-one-retry-gemini.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Persist isolated retry evidence only
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab99-one-retry-gemini.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab99-one-retry-gemini.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB99b): save one bounded sentence retry result'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
