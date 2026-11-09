@@ -1,0 +1,59 @@
+name: StudyBook LAB97 level-specific editing and summary
+on:
+  push:
+    branches:
+      - 'audit/studybook-level-specific-v97-*'
+    paths:
+      - '.github/workflows/studybook-lab97-level-specific.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab97-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static syntax checks
+        run: |
+          node --check scripts/test-lab97-offline.mjs
+          node --check scripts/test-lab97-level-specific-gemini.mjs
+      - name: Offline invariants, negative checks and old replay
+        run: node scripts/test-lab97-offline.mjs
+      - name: Limited Gemini real evaluation of 3 modes
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab97-level-specific-gemini.mjs
+      - name: Upload evidence whether or not provider stops
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB97-LevelSpecific
+          path: |
+            audit/reports/lab97-offline-preflight.json
+            audit/reports/lab97-level-specific-real.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit audit files only on isolated branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab97-offline-preflight.json audit/reports/lab97-level-specific-real.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB97): preserve three-mode real Gemini evidence'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
