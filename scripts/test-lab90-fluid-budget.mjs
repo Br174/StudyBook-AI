@@ -215,7 +215,7 @@ async function request(s,level,key){
    const missingRubric=rubricFlags(s,validation);
    const flags=validation?.redFlags||{};
    const preliminary=!!validation.geometryAndLettersPass&&!flags.suspiciousSpelling&&!flags.hyphenSplit&&!flags.rawNewline&&
-    validation.missingTerms.length===0&&missingRubric.length===0;
+    (validation.missingTerms||[]).length===0&&missingRubric.length===0;
    const record={source:s.id,level,ms,validJson,plan:p,
     rawSections:validJson?parsed.sections:null,validation,missingRubric,preliminaryPass:preliminary,
     completionTokens:payload.usage?.completion_tokens??null};
