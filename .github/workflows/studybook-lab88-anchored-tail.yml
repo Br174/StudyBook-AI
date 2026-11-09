@@ -1,0 +1,45 @@
+name: StudyBook LAB88 anchored final lines feasibility
+on:
+  push:
+    branches:
+      - 'audit/studybook-sentence-anchored-tail-v88-*'
+    paths:
+      - 'scripts/test-lab88-anchored-tail-offline.mjs'
+      - '.github/workflows/studybook-lab88-anchored-tail.yml'
+permissions:
+  contents: write
+jobs:
+  feasibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax verify
+        run: node --check scripts/test-lab88-anchored-tail-offline.mjs
+      - name: Run local-only feasibility on LAB86 real outputs
+        run: node scripts/test-lab88-anchored-tail-offline.mjs
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB88-AnchoredTail-Offline
+          path: audit/reports/lab88-anchored-tail-offline.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Persist audit report
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab88-anchored-tail-offline.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab88-anchored-tail-offline.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(LAB88): preserve anchored tail feasibility data'
+            git push origin "HEAD:${TARGET_REF}"
+          fi
