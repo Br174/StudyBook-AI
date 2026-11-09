@@ -20,6 +20,7 @@ import {finalizeStudyQualityV66} from './studyQualityV66.js';
 import {buildUnitBudgetsV71} from './studyDraftProtocolV71.js';
 import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from './studyDraftProtocolV72.js';
 import {STUDY_DRAFT_PROTOCOL_V74,verifyStudyDraftResponseV74} from './studyDraftProtocolV74.js';
+import {studyGeometryReviewV78,STUDY_GEOMETRY_V78} from './studyGeometryV78.js';
 import {pageLetterBudgetsV74,pageLetterReviewV74,selectPageRepairUnitsV74} from './studyPageBudgetsV74.js';
 const clean=x=>typeof x==='string'?x.trim():'';
 const clone=x=>JSON.parse(JSON.stringify(x));
@@ -70,7 +71,20 @@ export async function rebalanceSavedStudyBookV67(book,{
   current=rebalanceSnapshotV67(current,stage,status);
   await onProgress(current);
  };
- const pending=planRebalanceV67(units,start.draftRowsV57);
+ // A whole-book percentage within ±5 may still hide a physical page
+ // outside its band or 60-cell virtual line cap. Include those levels.
+ const needsCorrection=(drafts)=>{
+  const global=planRebalanceV67(units,drafts);
+  for(const level of ['summary','50','40','30','20','10']){
+   const parts=units.map(u=>({id:u.id,
+     text:drafts?.[u.ci]?.[u.pi]?.editions?.[level]||''}));
+   const rowReview=studyGeometryReviewV78(units,parts,level);
+   if(!rowReview.complete&&!global.some(x=>x.level===level))
+     global.push(editionReductionV67(units,drafts,level));
+  }
+  return global;
+ };
+ const pending=needsCorrection(start.draftRowsV57);
  if(!pending.length){
   stage.status='all-levels-within-tolerance';
   await notify('complete');
@@ -91,11 +105,17 @@ export async function rebalanceSavedStudyBookV67(book,{
    text:clean(buffered[u.id])||
     clean(current.draftRowsV57?.[u.ci]?.[u.pi]?.editions?.[level])}));
   const pageSelection=selectPageRepairUnitsV74(units,currentParts,level);
-  for(const u of pageSelection.untouchedUnits){
+  const rowCheck=studyGeometryReviewV78(units,currentParts,level);
+  const problemIds=new Set(pageSelection.repairUnits.map(u=>u.id));
+  for(const g of rowCheck.groups.filter(x=>!x.pass))
+    for(const id of g.ids||[])problemIds.add(id);
+  const repairUnits=units.filter(u=>problemIds.has(u.id));
+  const untouchedUnits=units.filter(u=>!problemIds.has(u.id));
+  for(const u of untouchedUnits){
    const original=currentParts.find(p=>p.id===u.id);
    if(original?.text)buffered[u.id]=original.text;
   }
-  const blocks=planNaturalBlocksV51(pageSelection.repairUnits,level);
+  const blocks=planNaturalBlocksV51(repairUnits,level);
   // Two requests maximum per natural block. The second uses the first
   // candidate ONLY as a negative length example; the original remains the
   // sole source of meaning. No unbounded retry, no Gemini during QA.
@@ -135,7 +155,8 @@ export async function rebalanceSavedStudyBookV67(book,{
     const body={
       phase:fullPageRebuild?'recalibrate-v74':'repair-v72',
       draftProtocol:fullPageRebuild?STUDY_DRAFT_PROTOCOL_V74:STUDY_DRAFT_PROTOCOL_V72,
-      ...(fullPageRebuild?{pageBudgetsV74}:{}),
+      ...(fullPageRebuild?{pageBudgetsV74,
+        geometryPolicyV78:STUDY_GEOMETRY_V78}:{}),
       level,bookTitle:String(book.title||'').slice(0,140),
       targetLetters:level==='summary'?null:limit,
       summaryCapLetters:level==='summary'?limit:null,
@@ -220,7 +241,8 @@ export async function rebalanceSavedStudyBookV67(book,{
       const pageNumeric=pageLetterReviewV74(block,candidates,level);
       const blockNumeric=measureEditionLengthV72({level,originalLetters:originals,
        outputLetters,completeParts:true,finishReason:reply.finishReason||null});
-      if(blockNumeric.compliant&&pageNumeric.withinBand){
+      const virtualRows=studyGeometryReviewV78(block,candidates,level);
+      if(blockNumeric.compliant&&pageNumeric.withinBand&&virtualRows.complete){
        for(const p of candidates)buffered[p.id]=p.text;
        blockValidated=true;
        stage.errors[level]=null;
@@ -280,8 +302,16 @@ export async function rebalanceSavedStudyBookV67(book,{
   const after=editionReductionV67(units,nextDrafts,level);
   const afterPages=pageLetterReviewV74(units,units.map(u=>({
     id:u.id,text:nextDrafts?.[u.ci]?.[u.pi]?.editions?.[level]})),level);
+  const beforeGeometry=studyGeometryReviewV78(units,units.map(u=>({
+    id:u.id,text:current.draftRowsV57?.[u.ci]?.[u.pi]?.editions?.[level]
+  })),level);
+  const afterGeometry=studyGeometryReviewV78(units,units.map(u=>({
+    id:u.id,text:nextDrafts?.[u.ci]?.[u.pi]?.editions?.[level]
+  })),level);
   const accepts=moreProtectedLoss===0&&immutableDefects===0&&
-    afterPages.withinBand&&betterReductionV67(before,after);
+    afterPages.withinBand&&afterGeometry.complete&&
+    (betterReductionV67(before,after)||
+      (before.within&&after.within&&!beforeGeometry.complete));
   stage.attempted[level]=true;
   stage.completed[level]={
    accepted:accepts,previous:before.measured,measured:after.measured,
@@ -306,7 +336,7 @@ export async function rebalanceSavedStudyBookV67(book,{
   delete stage.buffers[level];
   await notify('running');
  }
- const still=planRebalanceV67(units,current.draftRowsV57);
+ const still=needsCorrection(current.draftRowsV57);
  stage.remaining=still.map(x=>({level:x.level,measured:x.measured,
   goal:x.goal,distance:x.distance}));
  await notify(stage.remaining.length?'complete-with-notes':'complete');
