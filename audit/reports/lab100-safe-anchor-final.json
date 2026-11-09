@@ -1,6 +1,6 @@
 {
   "study": "LAB100 safe evidence quote case reconciliation and six-level reuse",
-  "date": "2026-11-09T14:57:43.909Z",
+  "date": "2026-11-09T14:59:58.222Z",
   "modelCallsThisAudit": 0,
   "summary": {
     "sources": 5,
@@ -10,6 +10,7 @@
     "safeMetadataCorrections": 1,
     "finalAnchorValid": 5,
     "sixLevelPlans": 30,
+    "essentialFactsMarkedByGemini": 53,
     "manualRubricTotal": 64,
     "lexicalRubricMatched": 61,
     "negativeCases": 20000,
@@ -27,6 +28,7 @@
       "originalClaimHash": "75251e74012659411a9b9cb5f20c18e42ab036ee464fcf16bbfcc0862aac6c9b",
       "claimHashAfterFix": "75251e74012659411a9b9cb5f20c18e42ab036ee464fcf16bbfcc0862aac6c9b",
       "modelClaimsIntact": true,
+      "essentialTrue": 12,
       "modelFacts": 12,
       "referenceRubricItems": 16,
       "lexicalRubricMatches": 16,
@@ -45,6 +47,7 @@
       "originalClaimHash": "add2fcc56fdac5a645465109342db954853f042f8e855c9dd32a838caa909c44",
       "claimHashAfterFix": "add2fcc56fdac5a645465109342db954853f042f8e855c9dd32a838caa909c44",
       "modelClaimsIntact": true,
+      "essentialTrue": 11,
       "modelFacts": 11,
       "referenceRubricItems": 15,
       "lexicalRubricMatches": 15,
@@ -77,6 +80,7 @@
       "originalClaimHash": "6c7832a33e7359ffb03c406ab96405aec01b90314655cf048d6297da333a58e0",
       "claimHashAfterFix": "6c7832a33e7359ffb03c406ab96405aec01b90314655cf048d6297da333a58e0",
       "modelClaimsIntact": true,
+      "essentialTrue": 14,
       "modelFacts": 14,
       "referenceRubricItems": 17,
       "lexicalRubricMatches": 14,
@@ -101,6 +105,7 @@
       "originalClaimHash": "092de1251ab6d6545e61c8f213964f9bc62c2dea7355a16b950214a56e90a2cc",
       "claimHashAfterFix": "092de1251ab6d6545e61c8f213964f9bc62c2dea7355a16b950214a56e90a2cc",
       "modelClaimsIntact": true,
+      "essentialTrue": 13,
       "modelFacts": 13,
       "referenceRubricItems": 11,
       "lexicalRubricMatches": 11,
@@ -123,6 +128,7 @@
       "originalClaimHash": "a9ca9a21f31b8af30a2367ec9588bf40f8953487c80c6bdae6fba38fabc47381",
       "claimHashAfterFix": "a9ca9a21f31b8af30a2367ec9588bf40f8953487c80c6bdae6fba38fabc47381",
       "modelClaimsIntact": true,
+      "essentialTrue": 3,
       "modelFacts": 3,
       "referenceRubricItems": 5,
       "lexicalRubricMatches": 5,
@@ -344,6 +350,893 @@
       "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3",
       "letters": 54,
       "rows": 5
+    }
+  ],
+  "verifiedLedgers": [
+    {
+      "sourceId": "scienze",
+      "originalTextHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+      "fullSourceLetterCount": 599,
+      "immutableLedgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc",
+      "sourceSentences": [
+        {
+          "id": "S1",
+          "text": "La Terra ruota attorno al proprio asse.",
+          "length": 32
+        },
+        {
+          "id": "S2",
+          "text": "La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio.",
+          "length": 101
+        },
+        {
+          "id": "S3",
+          "text": "La rivoluzione attorno al Sole dura circa un anno.",
+          "length": 41
+        },
+        {
+          "id": "S4",
+          "text": "Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole.",
+          "length": 96
+        },
+        {
+          "id": "S5",
+          "text": "La Luna influisce sulle maree insieme al Sole.",
+          "length": 38
+        },
+        {
+          "id": "S6",
+          "text": "Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione.",
+          "length": 71
+        },
+        {
+          "id": "S7",
+          "text": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili.",
+          "length": 69
+        },
+        {
+          "id": "S8",
+          "text": "Un risultato isolato non basta per dimostrare una spiegazione.",
+          "length": 53
+        },
+        {
+          "id": "S9",
+          "text": "Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+          "length": 98
+        }
+      ],
+      "sourceFacts": [
+        {
+          "id": "F1",
+          "sourceSentence": "S1",
+          "evidence": "La Terra ruota attorno al proprio asse.",
+          "claim": "La Terra compie una rotazione attorno al proprio asse.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F2",
+          "sourceSentence": "S2",
+          "evidence": "La rotazione causa il giorno e la notte",
+          "claim": "La rotazione della Terra è la causa dell'alternanza tra giorno e notte.",
+          "kind": "causa",
+          "essential": true
+        },
+        {
+          "id": "F3",
+          "sourceSentence": "S2",
+          "evidence": "una parte della superficie riceve luce solare mentre l’altra rimane al buio",
+          "claim": "Durante la rotazione una parte della Terra riceve la luce del Sole e l'altra rimane al buio.",
+          "kind": "relazione",
+          "essential": true
+        },
+        {
+          "id": "F4",
+          "sourceSentence": "S3",
+          "evidence": "La rivoluzione attorno al Sole dura circa un anno.",
+          "claim": "Il movimento di rivoluzione della Terra intorno al Sole ha una durata di circa un anno.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F5",
+          "sourceSentence": "S4",
+          "evidence": "Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre",
+          "claim": "Le stagioni sono causate principalmente dall'inclinazione dell'asse terrestre.",
+          "kind": "causa",
+          "essential": true
+        },
+        {
+          "id": "F6",
+          "sourceSentence": "S4",
+          "evidence": "non dalla distanza tra la Terra e il Sole.",
+          "claim": "Le stagioni non dipendono dalla distanza tra la Terra e il Sole.",
+          "kind": "negazione",
+          "essential": true
+        },
+        {
+          "id": "F7",
+          "sourceSentence": "S5",
+          "evidence": "La Luna influisce sulle maree insieme al Sole.",
+          "claim": "Sia la Luna che il Sole esercitano un'influenza sulle maree.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F8",
+          "sourceSentence": "S6",
+          "evidence": "Le eclissi richiedono un allineamento particolare",
+          "claim": "Il verificarsi delle eclissi richiede la presenza di un allineamento particolare.",
+          "kind": "condizione",
+          "essential": true
+        },
+        {
+          "id": "F9",
+          "sourceSentence": "S6",
+          "evidence": "non avvengono a ogni lunazione.",
+          "claim": "Le eclissi non si verificano a ogni ciclo di lunazione.",
+          "kind": "negazione",
+          "essential": true
+        },
+        {
+          "id": "F10",
+          "sourceSentence": "S7",
+          "evidence": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili.",
+          "claim": "Il metodo scientifico si fonda su ipotesi verificabili e osservazioni ripetibili.",
+          "kind": "definizione",
+          "essential": true
+        },
+        {
+          "id": "F11",
+          "sourceSentence": "S8",
+          "evidence": "Un risultato isolato non basta per dimostrare una spiegazione.",
+          "claim": "Un singolo risultato isolato non è sufficiente per la dimostrazione di una spiegazione.",
+          "kind": "negazione",
+          "essential": true
+        },
+        {
+          "id": "F12",
+          "sourceSentence": "S9",
+          "evidence": "bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+          "claim": "È necessario operare una distinzione tra la descrizione del movimento e le cause delle variazioni osservate.",
+          "kind": "misura",
+          "essential": true
+        }
+      ],
+      "actualExtractionSource": "Gemini LAB100 first read; only case of evidence quote repaired",
+      "claimTextNeverModified": true,
+      "structuralValidation": {
+        "errors": [],
+        "warnings": [
+          "OVERBROAD_EVIDENCE_9"
+        ]
+      },
+      "reusePlans": [
+        {
+          "level": 10,
+          "targetLetters": 539,
+          "maxRows": 12,
+          "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc"
+        },
+        {
+          "level": 20,
+          "targetLetters": 479,
+          "maxRows": 11,
+          "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc"
+        },
+        {
+          "level": 30,
+          "targetLetters": 419,
+          "maxRows": 10,
+          "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc"
+        },
+        {
+          "level": 40,
+          "targetLetters": 359,
+          "maxRows": 8,
+          "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc"
+        },
+        {
+          "level": 50,
+          "targetLetters": 300,
+          "maxRows": 7,
+          "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc"
+        },
+        {
+          "level": 65,
+          "targetLetters": 210,
+          "maxRows": 5,
+          "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc"
+        }
+      ]
+    },
+    {
+      "sourceId": "procedura",
+      "originalTextHash": "7e4759f0f1a1c6344af4ebf2e026c1be5544c53b2527d722e67a90cef79ee2bd",
+      "fullSourceLetterCount": 636,
+      "immutableLedgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302",
+      "sourceSentences": [
+        {
+          "id": "S1",
+          "text": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura per richiedere i libri.",
+          "length": 90
+        },
+        {
+          "id": "S2",
+          "text": "La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni.",
+          "length": 112
+        },
+        {
+          "id": "S3",
+          "text": "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti.",
+          "length": 84
+        },
+        {
+          "id": "S4",
+          "text": "La proroga non è automatica: senza conferma scritta resta valida la data iniziale.",
+          "length": 68
+        },
+        {
+          "id": "S5",
+          "text": "Quando un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura.",
+          "length": 94
+        },
+        {
+          "id": "S6",
+          "text": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori.",
+          "length": 114
+        },
+        {
+          "id": "S7",
+          "text": "Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura.",
+          "length": 74
+        }
+      ],
+      "sourceFacts": [
+        {
+          "id": "F1",
+          "sourceSentence": "S1",
+          "evidence": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura per richiedere i libri.",
+          "claim": "Una biblioteca simulata in un esercizio del 2024 ha introdotto una procedura per la richiesta dei libri.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F2",
+          "sourceSentence": "S2",
+          "evidence": "La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito",
+          "claim": "La regola interna numero 12 obbliga lo studente a registrare il titolo prima del prestito.",
+          "kind": "obbligo",
+          "essential": true
+        },
+        {
+          "id": "F3",
+          "sourceSentence": "S2",
+          "evidence": "confermi la restituzione entro dieci giorni.",
+          "claim": "Lo studente deve confermare la restituzione entro dieci giorni.",
+          "kind": "obbligo",
+          "essential": true
+        },
+        {
+          "id": "F4",
+          "sourceSentence": "S3",
+          "evidence": "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti.",
+          "claim": "Il personale può concedere la proroga esclusivamente se il volume non risulta prenotato da altri studenti.",
+          "kind": "condizione",
+          "essential": true
+        },
+        {
+          "id": "F5",
+          "sourceSentence": "S4",
+          "evidence": "La proroga non è automatica",
+          "claim": "La proroga della restituzione non avviene in modo automatico.",
+          "kind": "negazione",
+          "essential": true
+        },
+        {
+          "id": "F6",
+          "sourceSentence": "S4",
+          "evidence": "senza conferma scritta resta valida la data iniziale.",
+          "claim": "In mancanza di conferma scritta, la data di restituzione iniziale rimane valida.",
+          "kind": "condizione",
+          "essential": true
+        },
+        {
+          "id": "F7",
+          "sourceSentence": "S5",
+          "evidence": "Quando un libro è già riservato, lo studente deve restituirlo alla scadenza",
+          "claim": "Se un libro è già riservato, lo studente ha l obbligo di restituirlo alla scadenza.",
+          "kind": "condizione",
+          "essential": true
+        },
+        {
+          "id": "F8",
+          "sourceSentence": "S5",
+          "evidence": "anche se non ha completato la lettura.",
+          "claim": "La restituzione alla scadenza è obbligatoria anche se la lettura non è stata completata.",
+          "kind": "eccezione",
+          "essential": true
+        },
+        {
+          "id": "F9",
+          "sourceSentence": "S6",
+          "evidence": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno",
+          "claim": "Il registro permette di identificare il destinatario del libro e il giorno di ricezione.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F10",
+          "sourceSentence": "S6",
+          "evidence": "ma non contiene dati sulle opinioni personali dei lettori.",
+          "claim": "Il registro non contiene informazioni riguardanti le opinioni personali dei lettori.",
+          "kind": "negazione",
+          "essential": true
+        },
+        {
+          "id": "F11",
+          "sourceSentence": "S7",
+          "evidence": "Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura.",
+          "claim": "Le condizioni e le eccezioni risultano fondamentali per la corretta applicazione della procedura.",
+          "kind": "fatto",
+          "essential": true
+        }
+      ],
+      "actualExtractionSource": "Gemini LAB100 first read; only case of evidence quote repaired",
+      "claimTextNeverModified": true,
+      "structuralValidation": {
+        "errors": [],
+        "warnings": [
+          "OVERBROAD_EVIDENCE_0",
+          "NONSTANDARD_KIND_1",
+          "NONSTANDARD_KIND_2",
+          "OVERBROAD_EVIDENCE_3",
+          "OVERBROAD_EVIDENCE_10",
+          "CRITICAL_MARKER_NOT_VISIBLE_S5:obligation"
+        ]
+      },
+      "reusePlans": [
+        {
+          "level": 10,
+          "targetLetters": 572,
+          "maxRows": 13,
+          "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302"
+        },
+        {
+          "level": 20,
+          "targetLetters": 509,
+          "maxRows": 11,
+          "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302"
+        },
+        {
+          "level": 30,
+          "targetLetters": 445,
+          "maxRows": 10,
+          "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302"
+        },
+        {
+          "level": 40,
+          "targetLetters": 382,
+          "maxRows": 9,
+          "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302"
+        },
+        {
+          "level": 50,
+          "targetLetters": 318,
+          "maxRows": 7,
+          "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302"
+        },
+        {
+          "level": 65,
+          "targetLetters": 223,
+          "maxRows": 5,
+          "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302"
+        }
+      ]
+    },
+    {
+      "sourceId": "medicina",
+      "originalTextHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+      "fullSourceLetterCount": 728,
+      "immutableLedgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07",
+      "sourceSentences": [
+        {
+          "id": "S1",
+          "text": "In un esempio didattico, l'apparato respiratorio porta aria ai polmoni attraverso le vie aeree.",
+          "length": 79
+        },
+        {
+          "id": "S2",
+          "text": "Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume; durante l'espirazione a riposo il diaframma si rilassa.",
+          "length": 110
+        },
+        {
+          "id": "S3",
+          "text": "Negli alveoli polmonari l'ossigeno passa dall'aria al sangue, mentre l'anidride carbonica compie il percorso opposto.",
+          "length": 98
+        },
+        {
+          "id": "S4",
+          "text": "Lo scambio avviene grazie a differenze di pressione parziale dei gas attraverso pareti molto sottili.",
+          "length": 86
+        },
+        {
+          "id": "S5",
+          "text": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue.",
+          "length": 65
+        },
+        {
+          "id": "S6",
+          "text": "La frequenza respiratoria può aumentare durante uno sforzo perché l'organismo consuma più ossigeno e produce più anidride carbonica.",
+          "length": 113
+        },
+        {
+          "id": "S7",
+          "text": "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo.",
+          "length": 86
+        },
+        {
+          "id": "S8",
+          "text": "Un singolo valore misurato non basta sempre per una diagnosi: deve essere interpretato nel contesto clinico.",
+          "length": 91
+        }
+      ],
+      "sourceFacts": [
+        {
+          "id": "F1",
+          "sourceSentence": "S1",
+          "evidence": "l'apparato respiratorio porta aria ai polmoni attraverso le vie aeree",
+          "claim": "L'apparato respiratorio trasporta aria ai polmoni per mezzo delle vie aeree.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F2",
+          "sourceSentence": "S2",
+          "evidence": "Durante l'inspirazione il diaframma si contrae",
+          "claim": "Durante l'inspirazione il diaframma subisce una contrazione.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F3",
+          "sourceSentence": "S2",
+          "evidence": "il torace aumenta di volume",
+          "claim": "Il torace registra un aumento di volume durante l'inspirazione.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F4",
+          "sourceSentence": "S2",
+          "evidence": "durante l'espirazione a riposo il diaframma si rilassa",
+          "claim": "Nella fase di espirazione a riposo il diaframma si rilassa.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F5",
+          "sourceSentence": "S3",
+          "evidence": "Negli alveoli polmonari l'ossigeno passa dall'aria al sangue",
+          "claim": "All'interno degli alveoli polmonari l'ossigeno si sposta dall'aria al sangue.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F6",
+          "sourceSentence": "S3",
+          "evidence": "l'anidride carbonica compie il percorso opposto",
+          "claim": "L'anidride carbonica segue il tragitto inverso rispetto all'ossigeno negli alveoli.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F7",
+          "sourceSentence": "S4",
+          "evidence": "Lo scambio avviene grazie a differenze di pressione parziale dei gas",
+          "claim": "Le differenze di pressione parziale dei gas determinano lo scambio gassoso.",
+          "kind": "causa",
+          "essential": true
+        },
+        {
+          "id": "F8",
+          "sourceSentence": "S4",
+          "evidence": "attraverso pareti molto sottili",
+          "claim": "Lo scambio gassoso avviene per mezzo di pareti molto sottili.",
+          "kind": "condizione",
+          "essential": true
+        },
+        {
+          "id": "F9",
+          "sourceSentence": "S5",
+          "evidence": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue",
+          "claim": "La maggior parte dell'ossigeno presente nel sangue viene trasportata dall'emoglobina dei globuli rossi.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F10",
+          "sourceSentence": "S6",
+          "evidence": "La frequenza respiratoria può aumentare durante uno sforzo",
+          "claim": "In presenza di uno sforzo la frequenza respiratoria ha la possibilità di aumentare.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F11",
+          "sourceSentence": "S6",
+          "evidence": "l'organismo consuma più ossigeno e produce più anidride carbonica",
+          "claim": "L'aumento della frequenza respiratoria è causato dal maggiore consumo di ossigeno e dalla maggiore produzione di anidride carbonica da parte dell'organismo.",
+          "kind": "causa",
+          "essential": true
+        },
+        {
+          "id": "F12",
+          "sourceSentence": "S7",
+          "evidence": "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo",
+          "claim": "La valutazione di un disturbo respiratorio da parte del medico prevede l'analisi di sintomi, storia clinica ed esame obiettivo.",
+          "kind": "misura",
+          "essential": true
+        },
+        {
+          "id": "F13",
+          "sourceSentence": "S8",
+          "evidence": "Un singolo valore misurato non basta sempre per una diagnosi",
+          "claim": "La misurazione di un singolo valore non è sempre sufficiente per formulare una diagnosi.",
+          "kind": "negazione",
+          "essential": true
+        },
+        {
+          "id": "F14",
+          "sourceSentence": "S8",
+          "evidence": "deve essere interpretato nel contesto clinico",
+          "claim": "Ogni singolo valore misurato deve obbligatoriamente ricevere un'interpretazione nel contesto clinico.",
+          "kind": "condizione",
+          "essential": true
+        }
+      ],
+      "actualExtractionSource": "Gemini LAB100 first read; only case of evidence quote repaired",
+      "claimTextNeverModified": true,
+      "structuralValidation": {
+        "errors": [],
+        "warnings": [
+          "OVERBROAD_EVIDENCE_8",
+          "OVERBROAD_EVIDENCE_11",
+          "CLAUSE_UNCOVERED_S6"
+        ]
+      },
+      "reusePlans": [
+        {
+          "level": 10,
+          "targetLetters": 655,
+          "maxRows": 15,
+          "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07"
+        },
+        {
+          "level": 20,
+          "targetLetters": 582,
+          "maxRows": 13,
+          "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07"
+        },
+        {
+          "level": 30,
+          "targetLetters": 510,
+          "maxRows": 12,
+          "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07"
+        },
+        {
+          "level": 40,
+          "targetLetters": 437,
+          "maxRows": 10,
+          "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07"
+        },
+        {
+          "level": 50,
+          "targetLetters": 364,
+          "maxRows": 8,
+          "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07"
+        },
+        {
+          "level": 65,
+          "targetLetters": 255,
+          "maxRows": 6,
+          "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07"
+        }
+      ]
+    },
+    {
+      "sourceId": "concetto_sbilanciato",
+      "originalTextHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+      "fullSourceLetterCount": 670,
+      "immutableLedgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2",
+      "sourceSentences": [
+        {
+          "id": "S1",
+          "text": "In un laboratorio di storia, gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti.",
+          "length": 113
+        },
+        {
+          "id": "S2",
+          "text": "La provenienza di ciascun documento aiuta a capire chi lo ha prodotto, quando e per quale scopo.",
+          "length": 78
+        },
+        {
+          "id": "S3",
+          "text": "Due testimonianze possono riferire lo stesso episodio in modo diverso, perché i loro autori hanno osservato aspetti differenti oppure hanno interessi particolari.",
+          "length": 139
+        },
+        {
+          "id": "S4",
+          "text": "Per verificare un'affermazione occorre confrontare più fonti indipendenti, distinguere un fatto da un'opinione e segnalare ciò che resta incerto.",
+          "length": 123
+        },
+        {
+          "id": "S5",
+          "text": "Una data isolata non spiega da sola le cause di un evento: bisogna studiarne il contesto e le conseguenze.",
+          "length": 86
+        },
+        {
+          "id": "S6",
+          "text": "Una fonte primaria è prodotta nel periodo studiato.",
+          "length": 43
+        },
+        {
+          "id": "S7",
+          "text": "Una fonte secondaria interpreta documenti precedenti.",
+          "length": 47
+        },
+        {
+          "id": "S8",
+          "text": "Le ipotesi vanno distinte dai fatti documentati.",
+          "length": 41
+        }
+      ],
+      "sourceFacts": [
+        {
+          "id": "F1",
+          "sourceSentence": "S1",
+          "evidence": "gli studenti confrontano lettere, cronache, carte geografiche e registri",
+          "claim": "In un laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri.",
+          "kind": "fatto",
+          "essential": true
+        },
+        {
+          "id": "F2",
+          "sourceSentence": "S1",
+          "evidence": "per ricostruire gli avvenimenti",
+          "claim": "I documenti sono confrontati per ricostruire gli avvenimenti.",
+          "kind": "causa",
+          "essential": true
+        },
+        {
+          "id": "F3",
+          "sourceSentence": "S2",
+          "evidence": "La provenienza di ciascun documento aiuta a capire chi lo ha prodotto, quando e per quale scopo.",
+          "claim": "La provenienza di un documento aiuta a comprenderne l'autore, la datazione e lo scopo.",
+          "kind": "relazione",
+          "essential": true
+        },
+        {
+          "id": "F4",
+          "sourceSentence": "S3",
+          "evidence": "Due testimonianze possono riferire lo stesso episodio in modo diverso",
+          "claim": "Due testimonianze possono riferire lo stesso episodio in modo differente.",
+          "kind": "possibilità",
+          "essential": true
+        },
+        {
+          "id": "F5",
+          "sourceSentence": "S3",
+          "evidence": "perché i loro autori hanno osservato aspetti differenti oppure hanno interessi particolari.",
+          "claim": "Le differenze nelle testimonianze dipendono da osservazioni diverse o interessi particolari degli autori.",
+          "kind": "causa",
+          "essential": true
+        },
+        {
+          "id": "F6",
+          "sourceSentence": "S4",
+          "evidence": "occorre confrontare più fonti indipendenti",
+          "claim": "Per verificare un'affermazione bisogna confrontare più fonti indipendenti.",
+          "kind": "condizione",
+          "essential": true
+        },
+        {
+          "id": "F7",
+          "sourceSentence": "S4",
+          "evidence": "distinguere un fatto da un'opinione",
+          "claim": "Per verificare un'affermazione bisogna distinguere un fatto da un'opinione.",
+          "kind": "condizione",
+          "essential": true
+        },
+        {
+          "id": "F8",
+          "sourceSentence": "S4",
+          "evidence": "segnalare ciò che resta incerto.",
+          "claim": "Per verificare un'affermazione bisogna segnalare ciò che resta incerto.",
+          "kind": "condizione",
+          "essential": true
+        },
+        {
+          "id": "F9",
+          "sourceSentence": "S5",
+          "evidence": "Una data isolata non spiega da sola le cause di un evento",
+          "claim": "Una data isolata non spiega da sola le cause di un evento.",
+          "kind": "negazione",
+          "essential": true
+        },
+        {
+          "id": "F10",
+          "sourceSentence": "S5",
+          "evidence": "bisogna studiarne il contesto e le conseguenze.",
+          "claim": "È necessario studiare il contesto e le conseguenze di un evento.",
+          "kind": "obbligo",
+          "essential": true
+        },
+        {
+          "id": "F11",
+          "sourceSentence": "S6",
+          "evidence": "Una fonte primaria è prodotta nel periodo studiato.",
+          "claim": "Una fonte primaria è prodotta nel periodo studiato.",
+          "kind": "definizione",
+          "essential": true
+        },
+        {
+          "id": "F12",
+          "sourceSentence": "S7",
+          "evidence": "Una fonte secondaria interpreta documenti precedenti.",
+          "claim": "Una fonte secondaria interpreta documenti precedenti.",
+          "kind": "definizione",
+          "essential": true
+        },
+        {
+          "id": "F13",
+          "sourceSentence": "S8",
+          "evidence": "Le ipotesi vanno distinte dai fatti documentati.",
+          "claim": "Le ipotesi devono essere distinte dai fatti documentati.",
+          "kind": "obbligo",
+          "essential": true
+        }
+      ],
+      "actualExtractionSource": "Gemini LAB100 first read; only case of evidence quote repaired",
+      "claimTextNeverModified": true,
+      "structuralValidation": {
+        "errors": [],
+        "warnings": [
+          "OVERBROAD_EVIDENCE_2",
+          "NONSTANDARD_KIND_3",
+          "NONSTANDARD_KIND_9",
+          "NONSTANDARD_KIND_12",
+          "CLAUSE_UNCOVERED_S4"
+        ]
+      },
+      "reusePlans": [
+        {
+          "level": 10,
+          "targetLetters": 603,
+          "maxRows": 14,
+          "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2"
+        },
+        {
+          "level": 20,
+          "targetLetters": 536,
+          "maxRows": 12,
+          "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2"
+        },
+        {
+          "level": 30,
+          "targetLetters": 469,
+          "maxRows": 11,
+          "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2"
+        },
+        {
+          "level": 40,
+          "targetLetters": 402,
+          "maxRows": 9,
+          "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2"
+        },
+        {
+          "level": 50,
+          "targetLetters": 335,
+          "maxRows": 8,
+          "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2"
+        },
+        {
+          "level": 65,
+          "targetLetters": 234,
+          "maxRows": 6,
+          "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2"
+        }
+      ]
+    },
+    {
+      "sourceId": "pagina_breve_continua",
+      "originalTextHash": "540ed34d3b6ab8ccf002699ae87a48463ca1a4a93f3f6aacb4a8458044041f12",
+      "fullSourceLetterCount": 155,
+      "immutableLedgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3",
+      "sourceSentences": [
+        {
+          "id": "S1",
+          "text": "Il termine perentorio per depositare le osservazioni è di 15 giorni dalla notifica.",
+          "length": 68
+        },
+        {
+          "id": "S2",
+          "text": "Se scade, la parte perde la possibilità di depositarle; resta però il diritto di conoscere la motivazione.",
+          "length": 87
+        }
+      ],
+      "sourceFacts": [
+        {
+          "id": "F1",
+          "sourceSentence": "S1",
+          "evidence": "termine perentorio per depositare le osservazioni è di 15 giorni dalla notifica",
+          "claim": "Il termine perentorio per depositare le osservazioni è di 15 giorni dalla notifica",
+          "kind": "definizione",
+          "essential": true
+        },
+        {
+          "id": "F2",
+          "sourceSentence": "S2",
+          "evidence": "Se scade, la parte perde la possibilità di depositarle",
+          "claim": "Se il termine scade, la parte perde la possibilità di depositare le osservazioni",
+          "kind": "condizione",
+          "essential": true
+        },
+        {
+          "id": "F3",
+          "sourceSentence": "S2",
+          "evidence": "resta però il diritto di conoscere la motivazione",
+          "claim": "Anche dopo la scadenza resta il diritto di conoscere la motivazione",
+          "kind": "fatto",
+          "essential": true
+        }
+      ],
+      "actualExtractionSource": "Gemini LAB100 first read; only case of evidence quote repaired",
+      "claimTextNeverModified": true,
+      "structuralValidation": {
+        "errors": [],
+        "warnings": [
+          "CRITICAL_MARKER_NOT_VISIBLE_S1:obligation"
+        ]
+      },
+      "reusePlans": [
+        {
+          "level": 10,
+          "targetLetters": 140,
+          "maxRows": 5,
+          "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3"
+        },
+        {
+          "level": 20,
+          "targetLetters": 124,
+          "maxRows": 5,
+          "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3"
+        },
+        {
+          "level": 30,
+          "targetLetters": 109,
+          "maxRows": 5,
+          "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3"
+        },
+        {
+          "level": 40,
+          "targetLetters": 93,
+          "maxRows": 5,
+          "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3"
+        },
+        {
+          "level": 50,
+          "targetLetters": 78,
+          "maxRows": 5,
+          "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3"
+        },
+        {
+          "level": 65,
+          "targetLetters": 54,
+          "maxRows": 5,
+          "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3"
+        }
+      ]
     }
   ],
   "errors": [],
