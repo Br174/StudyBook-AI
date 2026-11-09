@@ -1,0 +1,343 @@
+{
+  "date": "2026-11-09",
+  "study": "LAB89 cell-allocation feasibility after model output, offline only",
+  "note": "Counterfactual on previously-generated Gemini text. Cell quotas are weighted, with >=60 position floor per concept, not applied prior to these real outputs. Whole-page wrapping with word boundaries may consume more cells than bare raw text; no new Gemini calls.",
+  "source": "audit/reports/lab89-proportional-real-gemini.json",
+  "aggregates": {
+    "cases": 15,
+    "individualCellQuotaAndReductionPass": 3,
+    "overallCharactersBoundPass": 10
+  },
+  "records": [
+    {
+      "source": "scienze",
+      "level": 40,
+      "conceptCells": [
+        104,
+        112,
+        97,
+        164
+      ],
+      "actualConceptCharacters": [
+        93,
+        88,
+        86,
+        167
+      ],
+      "perConceptCellPass": false,
+      "overallCharactersIncludingSeparators": 437,
+      "totalCellPositions": 480,
+      "letterReductionPass": true,
+      "globallyPackedGridPass": true,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "conceptCells": [
+        71,
+        72,
+        69,
+        85
+      ],
+      "actualConceptCharacters": [
+        53,
+        62,
+        55,
+        115
+      ],
+      "perConceptCellPass": false,
+      "overallCharactersIncludingSeparators": 288,
+      "totalCellPositions": 300,
+      "letterReductionPass": true,
+      "globallyPackedGridPass": true,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "conceptCells": [
+        82,
+        85,
+        78,
+        112
+      ],
+      "actualConceptCharacters": [
+        69,
+        90,
+        80,
+        102
+      ],
+      "perConceptCellPass": false,
+      "overallCharactersIncludingSeparators": 344,
+      "totalCellPositions": 360,
+      "letterReductionPass": true,
+      "globallyPackedGridPass": true,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "conceptCells": [
+        115,
+        125,
+        106,
+        191
+      ],
+      "actualConceptCharacters": [
+        66,
+        72,
+        70,
+        145
+      ],
+      "perConceptCellPass": true,
+      "overallCharactersIncludingSeparators": 356,
+      "totalCellPositions": 540,
+      "letterReductionPass": false,
+      "globallyPackedGridPass": true,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "conceptCells": [
+        127,
+        138,
+        115,
+        217
+      ],
+      "actualConceptCharacters": [
+        143,
+        156,
+        152,
+        274
+      ],
+      "perConceptCellPass": false,
+      "overallCharactersIncludingSeparators": 728,
+      "totalCellPositions": 600,
+      "letterReductionPass": false,
+      "globallyPackedGridPass": false,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "conceptCells": [
+        149,
+        164,
+        134,
+        270
+      ],
+      "actualConceptCharacters": [
+        150,
+        160,
+        161,
+        290
+      ],
+      "perConceptCellPass": false,
+      "overallCharactersIncludingSeparators": 764,
+      "totalCellPositions": 720,
+      "letterReductionPass": false,
+      "globallyPackedGridPass": false,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "conceptCells": [
+        137,
+        123,
+        86,
+        131
+      ],
+      "actualConceptCharacters": [
+        135,
+        129,
+        97,
+        126
+      ],
+      "perConceptCellPass": false,
+      "overallCharactersIncludingSeparators": 490,
+      "totalCellPositions": 480,
+      "letterReductionPass": true,
+      "globallyPackedGridPass": false,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "conceptCells": [
+        79,
+        75,
+        66,
+        77
+      ],
+      "actualConceptCharacters": [
+        108,
+        54,
+        42,
+        67
+      ],
+      "perConceptCellPass": false,
+      "overallCharactersIncludingSeparators": 274,
+      "totalCellPositions": 300,
+      "letterReductionPass": true,
+      "globallyPackedGridPass": true,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "conceptCells": [
+        117,
+        107,
+        80,
+        113
+      ],
+      "actualConceptCharacters": [
+        126,
+        121,
+        59,
+        125
+      ],
+      "perConceptCellPass": false,
+      "overallCharactersIncludingSeparators": 434,
+      "totalCellPositions": 420,
+      "letterReductionPass": false,
+      "globallyPackedGridPass": false,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "conceptCells": [
+        176,
+        155,
+        99,
+        167
+      ],
+      "actualConceptCharacters": [
+        166,
+        124,
+        87,
+        130
+      ],
+      "perConceptCellPass": true,
+      "overallCharactersIncludingSeparators": 510,
+      "totalCellPositions": 600,
+      "letterReductionPass": true,
+      "globallyPackedGridPass": true,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "conceptCells": [
+        195,
+        171,
+        106,
+        185
+      ],
+      "actualConceptCharacters": [
+        170,
+        149,
+        99,
+        162
+      ],
+      "perConceptCellPass": true,
+      "overallCharactersIncludingSeparators": 583,
+      "totalCellPositions": 660,
+      "letterReductionPass": true,
+      "globallyPackedGridPass": true,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "conceptCells": [
+        215,
+        186,
+        113,
+        203
+      ],
+      "actualConceptCharacters": [
+        149,
+        134,
+        100,
+        150
+      ],
+      "perConceptCellPass": true,
+      "overallCharactersIncludingSeparators": 536,
+      "totalCellPositions": 720,
+      "letterReductionPass": false,
+      "globallyPackedGridPass": true,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "conceptCells": [
+        357,
+        60,
+        60,
+        60
+      ],
+      "actualConceptCharacters": [
+        287,
+        45,
+        52,
+        48
+      ],
+      "perConceptCellPass": true,
+      "overallCharactersIncludingSeparators": 435,
+      "totalCellPositions": 540,
+      "letterReductionPass": true,
+      "globallyPackedGridPass": true,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "conceptCells": [
+        117,
+        60,
+        60,
+        60
+      ],
+      "actualConceptCharacters": [
+        182,
+        45,
+        52,
+        49
+      ],
+      "perConceptCellPass": false,
+      "overallCharactersIncludingSeparators": 331,
+      "totalCellPositions": 300,
+      "letterReductionPass": false,
+      "globallyPackedGridPass": false,
+      "semanticNotCertified": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "conceptCells": [
+        596,
+        60,
+        61,
+        60
+      ],
+      "actualConceptCharacters": [
+        445,
+        42,
+        42,
+        36
+      ],
+      "perConceptCellPass": true,
+      "overallCharactersIncludingSeparators": 568,
+      "totalCellPositions": 780,
+      "letterReductionPass": false,
+      "globallyPackedGridPass": true,
+      "semanticNotCertified": true
+    }
+  ]
+}
