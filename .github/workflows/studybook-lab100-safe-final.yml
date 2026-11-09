@@ -1,0 +1,49 @@
+name: StudyBook LAB100b safe source quote replay, zero new Gemini calls
+on:
+  push:
+    branches:
+      - 'audit/studybook-first-read-inventory-v100-*'
+    paths:
+      - '.github/workflows/studybook-lab100-safe-final.yml'
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate scripts
+        run: |
+          node --check scripts/lab100-verify-evidence-case.mjs
+          node --check scripts/test-lab100-safe-anchor-final.mjs
+      - name: Replay five Gemini inventories and run 20k negative cases WITHOUT Gemini
+        run: node scripts/test-lab100-safe-anchor-final.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB100b-SafeQuoteReplay
+          path: audit/reports/lab100-safe-anchor-final.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Commit audit results only on experiment branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          test -f audit/reports/lab100-safe-anchor-final.json || exit 0
+          git add audit/reports/lab100-safe-anchor-final.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB100): preserve five case-safe inventories reused across 30 level plans'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
