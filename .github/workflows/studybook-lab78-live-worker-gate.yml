@@ -5,15 +5,12 @@ on:
       - 'lab/studybook-core-android-01-update-78-*'
     paths:
       - '.github/workflows/studybook-lab78-live-worker-gate.yml'
-      - 'scripts/test-lab78-real-worker-six-levels.mjs'
-      - 'src/lib/studyGeometryV78.js'
-      - 'src/lib/studyBestOfV76.js'
   workflow_dispatch:
 permissions:
   contents: write
 concurrency:
   group: studybook-lab78-live-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   real-model-parity:
     runs-on: ubuntu-latest
