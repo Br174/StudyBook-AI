@@ -1,0 +1,60 @@
+name: StudyBook LAB92 stop-complete real Gemini and offline audits
+on:
+  push:
+    branches:
+      - 'audit/studybook-stop-complete-v92-*'
+    paths:
+      - '.github/workflows/studybook-lab92-stop-complete.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab92-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check all LAB92 scripts
+        run: |
+          node --check scripts/lab92-stop-complete-engine.mjs
+          node --check scripts/test-lab92-offline.mjs
+          node --check scripts/test-lab92-real-gemini.mjs
+      - name: Stress arithmetic and replay prior model results (no quota)
+        run: node scripts/test-lab92-offline.mjs
+      - name: Real Gemini stop-on-complete no-padding tests
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab92-real-gemini.mjs
+      - name: Upload original audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB92-NoPadding-RealGemini
+          path: |
+            audit/reports/lab92-offline-stop-complete.json
+            audit/reports/lab92-stop-complete-real-gemini.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Preserve in isolated audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab92-offline-stop-complete.json audit/reports/lab92-stop-complete-real-gemini.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB92): preserve real no-padding Gemini output and offline evidence'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
