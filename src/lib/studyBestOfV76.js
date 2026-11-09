@@ -14,8 +14,10 @@ export function editionBestOfInstructionV76(level,sourceLetters,phase='draft-v74
  const name=String(level),policy=sourceLetterBudgetV74(sourceLetters,name);
  const m=name==='10'||name==='20'?'EDITING CONSERVATIVO':
    name==='30'||name==='40'?'RISCRITTURA MODERATA':'SINTESI DIDATTICA FEDELE';
- const goal=name==='10'||name==='20'
-   ?'Non trasformare una riduzione lieve in un riassunto: preserva tutti i fatti distinti, cause, definizioni e condizioni. Cambia le formulazioni superflue, non i concetti.'
+ const goal=name==='10'
+   ?'Riduzione del 10%: conserva circa 90 lettere alfabetiche ogni 100 dell originale. Preserva tutti i fatti distinti, cause, definizioni e condizioni; elimina soltanto ripetizioni, senza inventare.'
+   :name==='20'
+   ?'Riduzione del 20%: conserva circa 80 lettere alfabetiche ogni 100 dell originale, NON 90 o 95. Devi eliminare realmente circa un quinto delle lettere; riformula frasi ridondanti e conserva condizioni, cause, eccezioni, esempi essenziali e dettagli unici.'
    :name==='30'||name==='40'
    ?'Unisci soltanto ripetizioni e passaggi equivalenti; mantieni spiegazioni, distinzioni e condizioni fondamentali in prosa naturale.'
    :'Esprimi in frasi brevi ma complete tutti i concetti indispensabili. Non usare formule telegrafiche che alterano soggetto, causa o grado di certezza.';
