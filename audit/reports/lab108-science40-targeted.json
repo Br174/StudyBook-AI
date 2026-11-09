@@ -1,0 +1,71 @@
+{
+  "lab": "LAB108 narrow final science40 trial",
+  "date": "2026-11-09T23:47:45.947Z",
+  "model": "gemini-3.5-flash-lite",
+  "source": "scienze",
+  "level": "40",
+  "baseline": {
+    "letters": 410,
+    "reduction": 31.55,
+    "rows": 9,
+    "cap": 8
+  },
+  "planned": 2,
+  "attempted": 2,
+  "valid": 2,
+  "mathGridPass": 0,
+  "providerStopped": false,
+  "approvedForApp": false,
+  "semanticCertified": false,
+  "results": [
+    {
+      "arm": "SOURCE_SHORT_FIDELITY",
+      "letters": 304,
+      "reduction": 49.25,
+      "rows": 7,
+      "maxRows": 8,
+      "numericPass": false,
+      "gridPass": true,
+      "preliminaryWarnings": [
+        {
+          "id": "seasons_not_distance",
+          "reason": "Non confondere la causa delle stagioni con la distanza dal Sole.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        },
+        {
+          "id": "single_result_insufficient",
+          "reason": "Un singolo risultato non è sufficiente a dimostrare una spiegazione.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "approvedForApp": false,
+      "semanticCertified": false,
+      "outputText": "La Terra ruota sull asse e causa il giorno e la notte. La rivoluzione dura un anno e le stagioni dipendono dall inclinazione. Luna e Sole influiscono sulle maree. Le eclissi non a ogni lunazione. Ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non dimostra una spiegazione. Occorre distinguere descrizione del movimento e causa delle variazioni."
+    },
+    {
+      "arm": "SOURCE_GROUNDED_REPAIR",
+      "letters": 309,
+      "reduction": 48.41,
+      "rows": 7,
+      "maxRows": 8,
+      "numericPass": false,
+      "gridPass": true,
+      "preliminaryWarnings": [
+        {
+          "id": "single_result_insufficient",
+          "reason": "Un singolo risultato non è sufficiente a dimostrare una spiegazione.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "approvedForApp": false,
+      "semanticCertified": false,
+      "outputText": "La Terra ruota attorno al proprio asse causando giorno e notte. La rivoluzione dura un anno e le stagioni dipendono dall'inclinazione asse, non dalla distanza solare. La Luna e il Sole influiscono sulle maree. Le eclissi non avvengono a ogni lunazione. Un risultato isolato non dimostra. Bisogna distinguere fra descrizione del movimento e causa delle variazioni osservate."
+    }
+  ],
+  "errors": [],
+  "complete": true,
+  "finishedAt": "2026-11-09T23:47:48.833Z"
+}

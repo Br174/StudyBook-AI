@@ -1,0 +1,30 @@
+{
+  "lab": "LAB108 source-anchored local correction",
+  "source": "procedura",
+  "level": "20",
+  "method": "reuse localSourcePatchV106 with immutable original literal",
+  "fromOriginalAnswer": "LAB108 COPY_EDIT",
+  "sourcePolicyOwner": "studyPageBudgetsV74",
+  "before": {
+    "letters": 473,
+    "reduction": 25.63,
+    "rows": 10,
+    "preliminaryAlerts": 1
+  },
+  "after": {
+    "letters": 481,
+    "reduction": 24.37,
+    "rows": 11,
+    "maxRows": 11,
+    "numericPass": true,
+    "gridPass": true,
+    "preliminaryAlerts": [],
+    "semanticCertified": false,
+    "approvedForApp": false,
+    "outputText": "In un compito del 2024, una biblioteca simulata adotta una regola per i prestiti. La regola interna 12 richiede che lo studente registri il titolo prima del prestito e confermi il reso entro dieci giorni. Il personale concede una proroga solo se il libro non risulta prenotato da altri. Tale proroga non è automatica: senza conferma scritta vale la data iniziale. Se il volume è già riservato, va restituito alla scadenza pur se la lettura è incompleta. Il registro traccia i prestiti per data ma ignora le opinioni dei lettori. Regole ed eccezioni restano essenziali per applicare la procedura."
+  },
+  "realModelCallsInThisRepair": 0,
+  "originalGeminiUnmodifiedInArchive": true,
+  "noNewSourceFacts": true,
+  "publicationBlocked": true
+}
