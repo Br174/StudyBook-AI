@@ -13,7 +13,7 @@ import {mapSentencesToConcepts,priorityRiskAudit} from './lab101-concept-priorit
 import {relationshipGuard} from './lab99-relational-guard.mjs';
 
 const INPUT='audit/reports/lab101-real-priorities.json';
-const OUTPUT='audit/reports/lab102-real-six-reductions.json';
+const OUTPUT=(process.env.LAB102_PAGE_SELECTION||'scienze')==='scienze'?'audit/reports/lab102-real-six-reductions.json':'audit/reports/lab102-other-four-real-six-reductions.json';
 const SCHEMA={type:'json_schema',json_schema:{name:'lab102_page_sections',strict:true,
  schema:{type:'object',additionalProperties:false,properties:{
   sections:{type:'array',items:{type:'object',additionalProperties:false,
@@ -61,12 +61,14 @@ function createPrompt(ctx,plan){
  text.push('STUDYBOOK LAB102: scrivi una vera versione DI STUDIO in italiano di UNA sola pagina, conservando il significato originale.');
  text.push('RIDUZIONE RICHIESTA: '+(plan.level===65?'Riassunto circa 65%':plan.level+'%')+'. Fonte: '+plan.originalLetters+' lettere alfabetiche Unicode. Obiettivo '+plan.targetLetters+' lettere, fascia '+plan.band.low+'..'+plan.band.high+' lettere. Massimo '+plan.maxRows+' righe virtuali di 60 caratteri (spazi e segni compresi), senza spezzare parole. Non usare font più piccolo o altre pagine.');
  text.push('Sono richieste '+page.concepts.length+' unità C1...C'+page.concepts.length+'. Rispondi con sections, stessa sequenza, una stringa italiana per unità. Non spostare contenuti tra unità.');
+ const quotas=budget(page,plan.level).goalPerConcept;
+ text.push('PRE-PIANO PROPORZIONALE DELLE LETTERE, indicativo e fluido: '+quotas.map(x=>x.id+' ~'+x.softTargetLetters).join(', ')+'. Non aggiungere parole per riempire; tieni entro il limite massimo della pagina.');
  text.push('Conserva TUTTI i fatti fondamentali, compresi negazioni, cause, condizioni, numeri, possibilità e distinzioni; non far diventare «può» «deve», «non» una frase affermativa, o «documentato» «dimostrato». Se la percentuale è incompatibile con tutti i fatti, scrivi la versione più fedele possibile: non cancellare fatti per inseguire il numero.');
  text.push('Dai priorità al senso, poi alla quantità. Dal 50% al Riassunto espressione sintetica; al 10% testo quasi completo. Stile semplice ma conserva vocaboli tecnici indispensabili. Quando il pensiero finisce, FERMATI: niente riempitivi o completamento artificioso della riga. Niente parole spezzate.');
  if(plan.short)text.push('Pagina originale molto breve: nessun obbligo di percentuale, ma conservazione dei concetti e massima chiarezza.');
  for(let i=0;i<ctx.checks.length;i++){
-  const x=ctx.checks[i],essential=x.facts.filter(f=>f.priority==='fondamentale').map(f=>f.claim);
-  const support=x.facts.filter(f=>f.priority==='supporto').map(f=>f.claim);
+  const x=ctx.checks[i],essential=x.facts.filter(f=>f.priority==='fondamentale'||(ctx.source.id==='procedura'&&f.id==='F11')).map(f=>f.claim);
+  const support=x.facts.filter(f=>f.priority==='supporto'&&!(ctx.source.id==='procedura'&&f.id==='F11')).map(f=>f.claim);
   text.push(x.cid+' ORIGINALE: '+page.concepts[i]);
   // Reuse ranked LAB101 facts without quotes, full ledger, or second first-read API.
   text.push(x.cid+' FONDAMENTALI GIÀ VERIFICATI ALLA FONTE: '+essential.join(' | '));
@@ -180,6 +182,7 @@ async function main(){
   if(halted)break;
   const ctx=prepare(id);
   const page={source:id,sourceHash:ctx.sourceHash,inventoryHash:ctx.old.ledger.hash,
+   manualPriorityOverride:id==='procedura'?'F11 supporto→fondamentale, isolated proven LAB101 copy only':null,
    fundamentalFacts:ctx.old.ledger.hierarchy.fundamental.length,
    priorityFlags:ctx.risks.flags,originalRows:ctx.plans[0].originalRows,providerCalls:0,versions:[]};
   pages.push(page);
