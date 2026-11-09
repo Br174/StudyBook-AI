@@ -1,0 +1,43 @@
+{
+  "title": "StudyBook LAB99 four isolated sentence-only correction experiments",
+  "date": "2026-11-09",
+  "note": "Every case was recovered by direct reading of source and exact LAB98 output. Gemini may revise only the exact target sentence. All other content must remain byte-identical. All corrections are experimental and release-ineligible without semantic QA.",
+  "cases": [
+    {
+      "id": "tides_sole_scienze50",
+      "source": "scienze",
+      "level": 50,
+      "relationId": "tides_both_moon_and_sun",
+      "target": "La Luna influisce sulle maree.",
+      "evidence": "La Luna influisce sulle maree insieme al Sole.",
+      "objective": "Esprimere il contributo sia della Luna sia del Sole alle maree, senza aggiungere altri dettagli."
+    },
+    {
+      "id": "hemoglobin_red_cells_medicina20",
+      "source": "medicina",
+      "level": 20,
+      "relationId": "hemoglobin_in_red_cells",
+      "target": "L'emoglobina trasporta gran parte dell'ossigeno.",
+      "evidence": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue.",
+      "objective": "Conservare la collocazione dell'emoglobina nei globuli rossi mantenendo il resto del significato."
+    },
+    {
+      "id": "unread_reserved_procedura40",
+      "source": "procedura",
+      "level": 40,
+      "relationId": "reserved_return_even_if_unread",
+      "target": "Se riservato, va restituito puntualmente.",
+      "evidence": "Quando un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura.",
+      "objective": "Rendere chiaro che il volume prenotato va restituito alla scadenza anche se la lettura non è finita."
+    },
+    {
+      "id": "eclipses_lunation_scienze40",
+      "source": "scienze",
+      "level": 40,
+      "relationId": "eclipse_not_each_lunation",
+      "target": "Le eclissi esigono allineamenti particolari.",
+      "evidence": "Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione.",
+      "objective": "Restituire l'eccezione: le eclissi non si verificano a ogni lunazione, preservando la necessità dell'allineamento."
+    }
+  ]
+}
