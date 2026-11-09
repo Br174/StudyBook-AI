@@ -7,7 +7,7 @@ import {caseOnlyEvidenceFix,recheckSixPlans} from './lab100-verify-evidence-case
 import {sha256} from './lab100-first-read-ledger.mjs';
 const raw=JSON.parse(readFileSync('audit/reports/lab100-real-first-read.json','utf8'));
 const MANUAL=JSON.parse(readFileSync('audit/test-fixtures/lab93-atomic-fact-ledger.json','utf8')).sources;
-const errors=[],cases=[],plans=[];
+const errors=[],cases=[],plans=[],verifiedLedgers=[];
 for(const source of FIXTURES){
  const prior=raw.results.find(x=>x.source===source.id);
  const before=JSON.stringify(prior.rawModelFacts);
@@ -22,6 +22,15 @@ for(const source of FIXTURES){
  const sourceSignature=sha256(source.concepts.join(' ').normalize('NFC').replace(/\s+/gu,' ').trim());
  if(reuses?.plans.length!==6||reuses.plans.some(p=>p.ledgerSourceHash!==sourceSignature))
   errors.push({source:source.id,reason:'FINGERPRINT_OR_REUSE_INCORRECT'});
+ if(result.valid)verifiedLedgers.push({sourceId:source.id,originalTextHash:sourceSignature,
+   fullSourceLetterCount:result.ledger.completeness.sourceLetters,
+   immutableLedgerHash:reuses.factHash,
+   sourceSentences:result.ledger.sentences,
+   sourceFacts:result.ledger.facts,
+   actualExtractionSource:'Gemini LAB100 first read; only case of evidence quote repaired',
+   claimTextNeverModified:true,
+   structuralValidation:result.ledger.validation,
+   reusePlans:reuses.plans.map(p=>({level:p.level,targetLetters:p.targetLetters,maxRows:p.maxRows,ledgerHash:p.ledgerHash}))});
  for(const p of reuses?.plans||[])plans.push({source:source.id,level:p.level,ledgerHash:p.ledgerHash,
    letters:p.targetLetters,rows:p.maxRows});
  cases.push({
@@ -29,6 +38,7 @@ for(const source of FIXTURES){
   afterSafeMetadataFix:result.valid,caseOnlyChanges:result.changes,
   originalClaimHash:sha256(modelClaims),claimHashAfterFix:sha256(result.facts.map(f=>f.claim).join(' ')),
   modelClaimsIntact:result.facts.every((f,i)=>f.claim===prior.rawModelFacts[i].claim),
+  essentialTrue:result.facts.filter(f=>f.essential).length,
   modelFacts:result.facts.length,referenceRubricItems:reference.length,
   lexicalRubricMatches:reference.length-missing.length,missingRubricHints:missing,
   warnings:result.validationWarnings,
@@ -56,12 +66,13 @@ const summary={sources:cases.length,firstReadingGeminiCalls:raw.provider.attempt
  safeMetadataCorrections:cases.reduce((n,x)=>n+x.caseOnlyChanges.length,0),
  finalAnchorValid:cases.filter(x=>x.afterSafeMetadataFix).length,
  sixLevelPlans:plans.length,
+ essentialFactsMarkedByGemini:cases.reduce((n,x)=>n+x.essentialTrue,0),
  manualRubricTotal:cases.reduce((n,x)=>n+x.referenceRubricItems,0),
  lexicalRubricMatched:cases.reduce((n,x)=>n+x.lexicalRubricMatches,0),
  negativeCases:negative,negativeRejected,modelClaimsUnmodified:cases.every(x=>x.modelClaimsIntact),
  semanticallyCertified:0,errors:errors.length};
 const report={study:'LAB100 safe evidence quote case reconciliation and six-level reuse',
- date:new Date().toISOString(),modelCallsThisAudit:0,summary,cases,plans,errors,
+ date:new Date().toISOString(),modelCallsThisAudit:0,summary,cases,plans,verifiedLedgers,errors,
  caution:'Literal source quote and manually calibrated regex matching are not proof of semantic equivalence, and this test does not certify full-book PDF segmentation.'};
 mkdirSync('audit/reports',{recursive:true});
 writeFileSync('audit/reports/lab100-safe-anchor-final.json',JSON.stringify(report,null,2)+'\n');
