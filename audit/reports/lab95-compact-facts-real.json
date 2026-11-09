@@ -1,0 +1,1349 @@
+{
+  "experiment": "LAB95 Italian compact atomic facts with two one-pass prompt variants A/B",
+  "date": "2026-11-09T13:37:47.400Z",
+  "model": "gemini-3.5-flash-lite",
+  "limitations": "Synthetic presegmented pages, not PDF; 60-cell monospace research grid, not proof of physical A4; lexical coverage not proof of entailment. English heuristic may overflag foreign terms.",
+  "controls": {
+    "productionChanged": false,
+    "mainChanged": false,
+    "AndroidChanged": false,
+    "noOnDemandSimpleLanguageGeneration": true
+  },
+  "provider": {
+    "attempts": 8,
+    "stopped": true,
+    "reason": "HTTP_429",
+    "maxAttempts": 14
+  },
+  "stats": {
+    "scheduled": 13,
+    "attempted": 8,
+    "returned": 7,
+    "long": 7,
+    "longGrid": 0,
+    "longPercent": 0,
+    "longBoth": 0,
+    "longAllAlertsClear": 0,
+    "englishFlags": 0,
+    "byVariant": {
+      "A": {
+        "returned": 4,
+        "longBoth": 0
+      },
+      "B": {
+        "returned": 3,
+        "longBoth": 0
+      }
+    },
+    "paired20": [
+      {
+        "id": "scienze",
+        "variants": [
+          {
+            "mode": "A",
+            "pct": -3.67,
+            "grid": false,
+            "band": false,
+            "missing": 0
+          },
+          {
+            "mode": "B",
+            "pct": -3.17,
+            "grid": false,
+            "band": false,
+            "missing": 0
+          }
+        ]
+      },
+      {
+        "id": "medicina",
+        "variants": [
+          {
+            "mode": "A",
+            "pct": -4.67,
+            "grid": false,
+            "band": false,
+            "missing": 0
+          },
+          {
+            "mode": "B",
+            "pct": -0.27,
+            "grid": false,
+            "band": false,
+            "missing": 1
+          }
+        ]
+      },
+      {
+        "id": "procedura",
+        "variants": [
+          {
+            "mode": "A",
+            "pct": -2.99,
+            "grid": false,
+            "band": false,
+            "missing": 2
+          },
+          {
+            "mode": "B",
+            "pct": -11.32,
+            "grid": false,
+            "band": false,
+            "missing": 2
+          }
+        ]
+      },
+      {
+        "id": "concetto_sbilanciato",
+        "variants": [
+          {
+            "mode": "A",
+            "pct": -3.88,
+            "grid": false,
+            "band": false,
+            "missing": 1
+          }
+        ]
+      }
+    ]
+  },
+  "errors": [
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "variant": "B",
+      "status": 429,
+      "attempt": 8,
+      "ms": 180,
+      "message": "HTTP error"
+    }
+  ],
+  "records": [
+    {
+      "source": "scienze",
+      "level": 20,
+      "variant": "A",
+      "valid": true,
+      "ms": 1337,
+      "plan": {
+        "source": "scienze",
+        "level": 20,
+        "originalLetters": 599,
+        "originalRows": 13,
+        "short": false,
+        "targetLetters": 479,
+        "band": {
+          "low": 450,
+          "high": 509
+        },
+        "lineEquivalents": 10.335,
+        "targetCap": 11,
+        "toleranceCap": 11,
+        "expectedNaturalChars": 582,
+        "goalPerConcept": [
+          {
+            "id": "C1",
+            "sourceLetters": 133,
+            "softTargetLetters": 95,
+            "importance": 1,
+            "requiredFacts": [
+              "Rotazione terrestre: giorno e notte"
+            ],
+            "text": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio."
+          },
+          {
+            "id": "C2",
+            "sourceLetters": 137,
+            "softTargetLetters": 110,
+            "importance": 1.12,
+            "requiredFacts": [
+              "Rivoluzione annua; stagioni per inclinazione, non distanza"
+            ],
+            "text": "La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole."
+          },
+          {
+            "id": "C3",
+            "sourceLetters": 109,
+            "softTargetLetters": 89,
+            "importance": 1.15,
+            "requiredFacts": [
+              "Sole e Luna sulle maree; eclissi solo con allineamento, non ogni lunazione"
+            ],
+            "text": "La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione."
+          },
+          {
+            "id": "C4",
+            "sourceLetters": 220,
+            "softTargetLetters": 185,
+            "importance": 1.18,
+            "requiredFacts": [
+              "Ipotesi verificabili e osservazioni ripetibili; un solo risultato non basta; spiegazione delle cause"
+            ],
+            "text": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate."
+          }
+        ],
+        "maxWidth": 60
+      },
+      "metrics": {
+        "valid": true,
+        "letters": 621,
+        "sourceLetters": 599,
+        "targetLetters": 479,
+        "reduction": -3.67,
+        "deviationPoints": -23.67,
+        "strictBand": false,
+        "smallShortfall": false,
+        "missingLetters": 0,
+        "rows": 14,
+        "targetCap": 11,
+        "toleranceCap": 11,
+        "fitsTarget": false,
+        "fitsTolerance": false,
+        "strictCombined": false,
+        "toleranceCombined": false,
+        "lastRowUsed": 10,
+        "usedFractionalRows": 13.167,
+        "maxRowWidth": 59,
+        "wordIntegrity": true,
+        "spuriousMultipleSpaces": false,
+        "technicalMissing": [],
+        "missingRubric": [],
+        "possibleSemanticPass": true,
+        "rawText": "La Terra ruota attorno al proprio asse determinando il giorno e la notte, poichè una parte della superficie riceve la luce solare mentre l'altra resta al buio. La rivoluzione terrestre attorno al Sole dura circa un anno, e le stagioni dipendono soprattutto dall'inclinazione dell'asse terrestre e non dalla distanza tra la Terra e il Sole. La Luna e il Sole influiscono insieme sulle maree, mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, e un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra la descrizione del movimento e le cause delle variazioni osservate.",
+        "sections": [
+          "La Terra ruota attorno al proprio asse determinando il giorno e la notte, poichè una parte della superficie riceve la luce solare mentre l'altra resta al buio.",
+          "La rivoluzione terrestre attorno al Sole dura circa un anno, e le stagioni dipendono soprattutto dall'inclinazione dell'asse terrestre e non dalla distanza tra la Terra e il Sole.",
+          "La Luna e il Sole influiscono insieme sulle maree, mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione.",
+          "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, e un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra la descrizione del movimento e le cause delle variazioni osservate."
+        ],
+        "virtualRows": [
+          "La Terra ruota attorno al proprio asse determinando il",
+          "giorno e la notte, poichè una parte della superficie riceve",
+          "la luce solare mentre l'altra resta al buio. La rivoluzione",
+          "terrestre attorno al Sole dura circa un anno, e le stagioni",
+          "dipendono soprattutto dall'inclinazione dell'asse terrestre",
+          "e non dalla distanza tra la Terra e il Sole. La Luna e il",
+          "Sole influiscono insieme sulle maree, mentre le eclissi",
+          "richiedono un allineamento particolare e non avvengono a",
+          "ogni lunazione. Il metodo scientifico richiede ipotesi",
+          "verificabili e osservazioni ripetibili, e un risultato",
+          "isolato non basta per dimostrare una spiegazione. Per",
+          "comprendere il fenomeno bisogna distinguere fra la",
+          "descrizione del movimento e le cause delle variazioni",
+          "osservate."
+        ]
+      },
+      "coverage": {
+        "valid": true,
+        "required": 16,
+        "matched": 16,
+        "missingCount": 0,
+        "missing": [],
+        "details": [
+          {
+            "concept": "C1",
+            "wordCount": 27,
+            "content": "La Terra ruota attorno al proprio asse determinando il giorno e la notte, poichè una parte della superficie riceve la luce solare mentre l'altra resta al buio."
+          },
+          {
+            "concept": "C2",
+            "wordCount": 28,
+            "content": "La rivoluzione terrestre attorno al Sole dura circa un anno, e le stagioni dipendono soprattutto dall'inclinazione dell'asse terrestre e non dalla distanza tra la Terra e il Sole."
+          },
+          {
+            "concept": "C3",
+            "wordCount": 22,
+            "content": "La Luna e il Sole influiscono insieme sulle maree, mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione."
+          },
+          {
+            "concept": "C4",
+            "wordCount": 36,
+            "content": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, e un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra la descrizione del movimento e le cause delle variazioni osservate."
+          }
+        ],
+        "note": "A regex match is NOT proof that a proposition has the correct polarity, causality or conditions. Manual QA mandatory."
+      },
+      "englishFlag": false,
+      "sections": [
+        {
+          "id": "C1",
+          "text": "La Terra ruota attorno al proprio asse determinando il giorno e la notte, poichè una parte della superficie riceve la luce solare mentre l'altra resta al buio."
+        },
+        {
+          "id": "C2",
+          "text": "La rivoluzione terrestre attorno al Sole dura circa un anno, e le stagioni dipendono soprattutto dall'inclinazione dell'asse terrestre e non dalla distanza tra la Terra e il Sole."
+        },
+        {
+          "id": "C3",
+          "text": "La Luna e il Sole influiscono insieme sulle maree, mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione."
+        },
+        {
+          "id": "C4",
+          "text": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, e un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra la descrizione del movimento e le cause delle variazioni osservate."
+        }
+      ],
+      "preliminaryOnly": true,
+      "expertVerified": false
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "variant": "B",
+      "valid": true,
+      "ms": 1174,
+      "plan": {
+        "source": "scienze",
+        "level": 20,
+        "originalLetters": 599,
+        "originalRows": 13,
+        "short": false,
+        "targetLetters": 479,
+        "band": {
+          "low": 450,
+          "high": 509
+        },
+        "lineEquivalents": 10.335,
+        "targetCap": 11,
+        "toleranceCap": 11,
+        "expectedNaturalChars": 582,
+        "goalPerConcept": [
+          {
+            "id": "C1",
+            "sourceLetters": 133,
+            "softTargetLetters": 95,
+            "importance": 1,
+            "requiredFacts": [
+              "Rotazione terrestre: giorno e notte"
+            ],
+            "text": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio."
+          },
+          {
+            "id": "C2",
+            "sourceLetters": 137,
+            "softTargetLetters": 110,
+            "importance": 1.12,
+            "requiredFacts": [
+              "Rivoluzione annua; stagioni per inclinazione, non distanza"
+            ],
+            "text": "La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole."
+          },
+          {
+            "id": "C3",
+            "sourceLetters": 109,
+            "softTargetLetters": 89,
+            "importance": 1.15,
+            "requiredFacts": [
+              "Sole e Luna sulle maree; eclissi solo con allineamento, non ogni lunazione"
+            ],
+            "text": "La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione."
+          },
+          {
+            "id": "C4",
+            "sourceLetters": 220,
+            "softTargetLetters": 185,
+            "importance": 1.18,
+            "requiredFacts": [
+              "Ipotesi verificabili e osservazioni ripetibili; un solo risultato non basta; spiegazione delle cause"
+            ],
+            "text": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate."
+          }
+        ],
+        "maxWidth": 60
+      },
+      "metrics": {
+        "valid": true,
+        "letters": 618,
+        "sourceLetters": 599,
+        "targetLetters": 479,
+        "reduction": -3.17,
+        "deviationPoints": -23.17,
+        "strictBand": false,
+        "smallShortfall": false,
+        "missingLetters": 0,
+        "rows": 13,
+        "targetCap": 11,
+        "toleranceCap": 11,
+        "fitsTarget": false,
+        "fitsTolerance": false,
+        "strictCombined": false,
+        "toleranceCombined": false,
+        "lastRowUsed": 52,
+        "usedFractionalRows": 12.867,
+        "maxRowWidth": 60,
+        "wordIntegrity": true,
+        "spuriousMultipleSpaces": false,
+        "technicalMissing": [],
+        "missingRubric": [],
+        "possibleSemanticPass": true,
+        "rawText": "La Terra ruota attorno al proprio asse terrestre determinando il giorno e la notte, poichè una parte della superficie riceve la luce solare mentre l'altra resta al buio. La rivoluzione della Terra attorno al Sole dura circa un anno; le stagioni dipendono soprattutto dall'inclinazione dell'asse e non dalla distanza tra i due corpi celesti. La Luna e il Sole influiscono insieme sulle maree, mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni singola lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, poichè un risultato isolato non basta per dimostrare una spiegazione; bisogna inoltre distinguere fra la descrizione del movimento e le cause delle variazioni osservate.",
+        "sections": [
+          "La Terra ruota attorno al proprio asse terrestre determinando il giorno e la notte, poichè una parte della superficie riceve la luce solare mentre l'altra resta al buio.",
+          "La rivoluzione della Terra attorno al Sole dura circa un anno; le stagioni dipendono soprattutto dall'inclinazione dell'asse e non dalla distanza tra i due corpi celesti.",
+          "La Luna e il Sole influiscono insieme sulle maree, mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni singola lunazione.",
+          "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, poichè un risultato isolato non basta per dimostrare una spiegazione; bisogna inoltre distinguere fra la descrizione del movimento e le cause delle variazioni osservate."
+        ],
+        "virtualRows": [
+          "La Terra ruota attorno al proprio asse terrestre",
+          "determinando il giorno e la notte, poichè una parte della",
+          "superficie riceve la luce solare mentre l'altra resta al",
+          "buio. La rivoluzione della Terra attorno al Sole dura circa",
+          "un anno; le stagioni dipendono soprattutto dall'inclinazione",
+          "dell'asse e non dalla distanza tra i due corpi celesti. La",
+          "Luna e il Sole influiscono insieme sulle maree, mentre le",
+          "eclissi richiedono un allineamento particolare e non",
+          "avvengono a ogni singola lunazione. Il metodo scientifico",
+          "richiede ipotesi verificabili e osservazioni ripetibili,",
+          "poichè un risultato isolato non basta per dimostrare una",
+          "spiegazione; bisogna inoltre distinguere fra la descrizione",
+          "del movimento e le cause delle variazioni osservate."
+        ]
+      },
+      "coverage": {
+        "valid": true,
+        "required": 16,
+        "matched": 16,
+        "missingCount": 0,
+        "missing": [],
+        "details": [
+          {
+            "concept": "C1",
+            "wordCount": 28,
+            "content": "La Terra ruota attorno al proprio asse terrestre determinando il giorno e la notte, poichè una parte della superficie riceve la luce solare mentre l'altra resta al buio."
+          },
+          {
+            "concept": "C2",
+            "wordCount": 26,
+            "content": "La rivoluzione della Terra attorno al Sole dura circa un anno; le stagioni dipendono soprattutto dall'inclinazione dell'asse e non dalla distanza tra i due corpi celesti."
+          },
+          {
+            "concept": "C3",
+            "wordCount": 23,
+            "content": "La Luna e il Sole influiscono insieme sulle maree, mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni singola lunazione."
+          },
+          {
+            "concept": "C4",
+            "wordCount": 33,
+            "content": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, poichè un risultato isolato non basta per dimostrare una spiegazione; bisogna inoltre distinguere fra la descrizione del movimento e le cause delle variazioni osservate."
+          }
+        ],
+        "note": "A regex match is NOT proof that a proposition has the correct polarity, causality or conditions. Manual QA mandatory."
+      },
+      "englishFlag": false,
+      "sections": [
+        {
+          "id": "C1",
+          "text": "La Terra ruota attorno al proprio asse terrestre determinando il giorno e la notte, poichè una parte della superficie riceve la luce solare mentre l'altra resta al buio."
+        },
+        {
+          "id": "C2",
+          "text": "La rivoluzione della Terra attorno al Sole dura circa un anno; le stagioni dipendono soprattutto dall'inclinazione dell'asse e non dalla distanza tra i due corpi celesti."
+        },
+        {
+          "id": "C3",
+          "text": "La Luna e il Sole influiscono insieme sulle maree, mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni singola lunazione."
+        },
+        {
+          "id": "C4",
+          "text": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, poichè un risultato isolato non basta per dimostrare una spiegazione; bisogna inoltre distinguere fra la descrizione del movimento e le cause delle variazioni osservate."
+        }
+      ],
+      "preliminaryOnly": true,
+      "expertVerified": false
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "variant": "A",
+      "valid": true,
+      "ms": 1339,
+      "plan": {
+        "source": "medicina",
+        "level": 20,
+        "originalLetters": 728,
+        "originalRows": 16,
+        "short": false,
+        "targetLetters": 582,
+        "band": {
+          "low": 546,
+          "high": 618
+        },
+        "lineEquivalents": 12.558,
+        "targetCap": 13,
+        "toleranceCap": 14,
+        "expectedNaturalChars": 708,
+        "goalPerConcept": [
+          {
+            "id": "C1",
+            "sourceLetters": 189,
+            "softTargetLetters": 131,
+            "importance": 1,
+            "requiredFacts": [
+              "Inspirazione diaframma contratto, espirazione diaframma rilassato"
+            ],
+            "text": "In un esempio didattico, l'apparato respiratorio porta aria ai polmoni attraverso le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume; durante l'espirazione a riposo il diaframma si rilassa."
+          },
+          {
+            "id": "C2",
+            "sourceLetters": 184,
+            "softTargetLetters": 166,
+            "importance": 1.3,
+            "requiredFacts": [
+              "Negli alveoli ossigeno nel sangue e anidride carbonica nell'aria; pressioni parziali"
+            ],
+            "text": "Negli alveoli polmonari l'ossigeno passa dall'aria al sangue, mentre l'anidride carbonica compie il percorso opposto. Lo scambio avviene grazie a differenze di pressione parziale dei gas attraverso pareti molto sottili."
+          },
+          {
+            "id": "C3",
+            "sourceLetters": 178,
+            "softTargetLetters": 136,
+            "importance": 1.1,
+            "requiredFacts": [
+              "Emoglobina trasporta ossigeno; sforzo aumenta respirazione per scambi gassosi"
+            ],
+            "text": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue. La frequenza respiratoria può aumentare durante uno sforzo perché l'organismo consuma più ossigeno e produce più anidride carbonica."
+          },
+          {
+            "id": "C4",
+            "sourceLetters": 177,
+            "softTargetLetters": 149,
+            "importance": 1.22,
+            "requiredFacts": [
+              "Diagnosi richiede sintomi, storia ed esame, non un solo valore isolato"
+            ],
+            "text": "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi: deve essere interpretato nel contesto clinico."
+          }
+        ],
+        "maxWidth": 60
+      },
+      "metrics": {
+        "valid": true,
+        "letters": 762,
+        "sourceLetters": 728,
+        "targetLetters": 582,
+        "reduction": -4.67,
+        "deviationPoints": -24.67,
+        "strictBand": false,
+        "smallShortfall": false,
+        "missingLetters": 0,
+        "rows": 16,
+        "targetCap": 13,
+        "toleranceCap": 14,
+        "fitsTarget": false,
+        "fitsTolerance": false,
+        "strictCombined": false,
+        "toleranceCombined": false,
+        "lastRowUsed": 41,
+        "usedFractionalRows": 15.683,
+        "maxRowWidth": 60,
+        "wordIntegrity": false,
+        "spuriousMultipleSpaces": false,
+        "technicalMissing": [],
+        "missingRubric": [],
+        "possibleSemanticPass": false,
+        "rawText": "In un esempio didattico l apparato respiratorio trasporta aria ai polmoni attraverso le vie aeree. Durante l inspirazione il diaframma si contrae e il torace aumenta di volume, mentre durante l espirazione a riposo il diaframma si rilassa. Negli alveoli polmonari le cui pareti sono molto sottili l ossigeno passa dall aria al sangue, l anidride carbonica compie il percorso opposto dal sangue verso l aria e lo scambio avviene per differenze di pressione parziale dei gas. L emoglobina presente nei globuli rossi trasporta gran parte dell ossigeno nel sangue. Durante lo sforzo la frequenza respiratoria può aumentare perché l organismo consuma più ossigeno e produce più anidride carbonica. Per valutare un disturbo respiratorio il medico considera sintomi storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi ma deve essere sempre interpretato nel contesto clinico.",
+        "sections": [
+          "In un esempio didattico l apparato respiratorio trasporta aria ai polmoni attraverso le vie aeree. Durante l inspirazione il diaframma si contrae e il torace aumenta di volume, mentre durante l espirazione a riposo il diaframma si rilassa.",
+          "Negli alveoli polmonari le cui pareti sono molto sottili l ossigeno passa dall aria al sangue, l anidride carbonica compie il percorso opposto dal sangue verso l aria e lo scambio avviene per differenze di pressione parziale dei gas.",
+          "L emoglobina presente nei globuli rossi trasporta gran parte dell ossigeno nel sangue. Durante lo sforzo la frequenza respiratoria può aumentare perché l organismo consuma più ossigeno e produce più anidride carbonica.",
+          "Per valutare un disturbo respiratorio il medico considera sintomi storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi ma deve essere sempre interpretato nel contesto clinico."
+        ],
+        "virtualRows": [
+          "In un esempio didattico l apparato respiratorio trasporta",
+          "aria ai polmoni attraverso le vie aeree. Durante l",
+          "inspirazione il diaframma si contrae e il torace aumenta di",
+          "volume, mentre durante l espirazione a riposo il diaframma",
+          "si rilassa. Negli alveoli polmonari le cui pareti sono molto",
+          "sottili l ossigeno passa dall aria al sangue, l anidride",
+          "carbonica compie il percorso opposto dal sangue verso l aria",
+          "e lo scambio avviene per differenze di pressione parziale",
+          "dei gas. L emoglobina presente nei globuli rossi trasporta",
+          "gran parte dell ossigeno nel sangue. Durante lo sforzo la",
+          "frequenza respiratoria può aumentare perché l organismo",
+          "consuma più ossigeno e produce più anidride carbonica. Per",
+          "valutare un disturbo respiratorio il medico considera",
+          "sintomi storia clinica ed esame obiettivo. Un singolo valore",
+          "misurato non basta sempre per una diagnosi ma deve essere",
+          "sempre interpretato nel contesto clinico."
+        ]
+      },
+      "coverage": {
+        "valid": true,
+        "required": 17,
+        "matched": 17,
+        "missingCount": 0,
+        "missing": [],
+        "details": [
+          {
+            "concept": "C1",
+            "wordCount": 38,
+            "content": "In un esempio didattico l apparato respiratorio trasporta aria ai polmoni attraverso le vie aeree. Durante l inspirazione il diaframma si contrae e il torace aumenta di volume, mentre durante l espirazione a riposo il diaframma si rilassa."
+          },
+          {
+            "concept": "C2",
+            "wordCount": 39,
+            "content": "Negli alveoli polmonari le cui pareti sono molto sottili l ossigeno passa dall aria al sangue, l anidride carbonica compie il percorso opposto dal sangue verso l aria e lo scambio avviene per differenze di pressione parziale dei gas."
+          },
+          {
+            "concept": "C3",
+            "wordCount": 32,
+            "content": "L emoglobina presente nei globuli rossi trasporta gran parte dell ossigeno nel sangue. Durante lo sforzo la frequenza respiratoria può aumentare perché l organismo consuma più ossigeno e produce più anidride carbonica."
+          },
+          {
+            "concept": "C4",
+            "wordCount": 32,
+            "content": "Per valutare un disturbo respiratorio il medico considera sintomi storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi ma deve essere sempre interpretato nel contesto clinico."
+          }
+        ],
+        "note": "A regex match is NOT proof that a proposition has the correct polarity, causality or conditions. Manual QA mandatory."
+      },
+      "englishFlag": false,
+      "sections": [
+        {
+          "id": "C1",
+          "text": "In un esempio didattico l apparato respiratorio trasporta aria ai polmoni attraverso le vie aeree. Durante l inspirazione il diaframma si contrae e il torace aumenta di volume, mentre durante l espirazione a riposo il diaframma si rilassa."
+        },
+        {
+          "id": "C2",
+          "text": "Negli alveoli polmonari le cui pareti sono molto sottili l ossigeno passa dall aria al sangue, l anidride carbonica compie il percorso opposto dal sangue verso l aria e lo scambio avviene per differenze di pressione parziale dei gas."
+        },
+        {
+          "id": "C3",
+          "text": "L emoglobina presente nei globuli rossi trasporta gran parte dell ossigeno nel sangue. Durante lo sforzo la frequenza respiratoria può aumentare perché l organismo consuma più ossigeno e produce più anidride carbonica."
+        },
+        {
+          "id": "C4",
+          "text": "Per valutare un disturbo respiratorio il medico considera sintomi storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi ma deve essere sempre interpretato nel contesto clinico."
+        }
+      ],
+      "preliminaryOnly": true,
+      "expertVerified": false
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "variant": "B",
+      "valid": true,
+      "ms": 1173,
+      "plan": {
+        "source": "medicina",
+        "level": 20,
+        "originalLetters": 728,
+        "originalRows": 16,
+        "short": false,
+        "targetLetters": 582,
+        "band": {
+          "low": 546,
+          "high": 618
+        },
+        "lineEquivalents": 12.558,
+        "targetCap": 13,
+        "toleranceCap": 14,
+        "expectedNaturalChars": 708,
+        "goalPerConcept": [
+          {
+            "id": "C1",
+            "sourceLetters": 189,
+            "softTargetLetters": 131,
+            "importance": 1,
+            "requiredFacts": [
+              "Inspirazione diaframma contratto, espirazione diaframma rilassato"
+            ],
+            "text": "In un esempio didattico, l'apparato respiratorio porta aria ai polmoni attraverso le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume; durante l'espirazione a riposo il diaframma si rilassa."
+          },
+          {
+            "id": "C2",
+            "sourceLetters": 184,
+            "softTargetLetters": 166,
+            "importance": 1.3,
+            "requiredFacts": [
+              "Negli alveoli ossigeno nel sangue e anidride carbonica nell'aria; pressioni parziali"
+            ],
+            "text": "Negli alveoli polmonari l'ossigeno passa dall'aria al sangue, mentre l'anidride carbonica compie il percorso opposto. Lo scambio avviene grazie a differenze di pressione parziale dei gas attraverso pareti molto sottili."
+          },
+          {
+            "id": "C3",
+            "sourceLetters": 178,
+            "softTargetLetters": 136,
+            "importance": 1.1,
+            "requiredFacts": [
+              "Emoglobina trasporta ossigeno; sforzo aumenta respirazione per scambi gassosi"
+            ],
+            "text": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue. La frequenza respiratoria può aumentare durante uno sforzo perché l'organismo consuma più ossigeno e produce più anidride carbonica."
+          },
+          {
+            "id": "C4",
+            "sourceLetters": 177,
+            "softTargetLetters": 149,
+            "importance": 1.22,
+            "requiredFacts": [
+              "Diagnosi richiede sintomi, storia ed esame, non un solo valore isolato"
+            ],
+            "text": "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi: deve essere interpretato nel contesto clinico."
+          }
+        ],
+        "maxWidth": 60
+      },
+      "metrics": {
+        "valid": true,
+        "letters": 730,
+        "sourceLetters": 728,
+        "targetLetters": 582,
+        "reduction": -0.27,
+        "deviationPoints": -20.27,
+        "strictBand": false,
+        "smallShortfall": false,
+        "missingLetters": 0,
+        "rows": 16,
+        "targetCap": 13,
+        "toleranceCap": 14,
+        "fitsTarget": false,
+        "fitsTolerance": false,
+        "strictCombined": false,
+        "toleranceCombined": false,
+        "lastRowUsed": 17,
+        "usedFractionalRows": 15.283,
+        "maxRowWidth": 60,
+        "wordIntegrity": true,
+        "spuriousMultipleSpaces": false,
+        "technicalMissing": [],
+        "missingRubric": [],
+        "possibleSemanticPass": true,
+        "rawText": "L'apparato respiratorio trasporta l'aria ai polmoni attraverso le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume, mentre durante l'espirazione a riposo il diaframma si rilassa. Negli alveoli polmonari, dotati di pareti molto sottili, l'ossigeno passa dall'aria al sangue e l'anidride carbonica compie il percorso opposto; questo scambio avviene grazie a differenze di pressione parziale. Gran parte dell'ossigeno nel sangue è trasportata dall'emoglobina presente nei globuli rossi. Durante lo sforzo la frequenza respiratoria può aumentare perché l'organismo consuma più ossigeno e produce più anidride carbonica. Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi e deve essere sempre interpretato nel contesto clinico.",
+        "sections": [
+          "L'apparato respiratorio trasporta l'aria ai polmoni attraverso le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume, mentre durante l'espirazione a riposo il diaframma si rilassa.",
+          "Negli alveoli polmonari, dotati di pareti molto sottili, l'ossigeno passa dall'aria al sangue e l'anidride carbonica compie il percorso opposto; questo scambio avviene grazie a differenze di pressione parziale.",
+          "Gran parte dell'ossigeno nel sangue è trasportata dall'emoglobina presente nei globuli rossi. Durante lo sforzo la frequenza respiratoria può aumentare perché l'organismo consuma più ossigeno e produce più anidride carbonica.",
+          "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi e deve essere sempre interpretato nel contesto clinico."
+        ],
+        "virtualRows": [
+          "L'apparato respiratorio trasporta l'aria ai polmoni",
+          "attraverso le vie aeree. Durante l'inspirazione il diaframma",
+          "si contrae e il torace aumenta di volume, mentre durante",
+          "l'espirazione a riposo il diaframma si rilassa. Negli",
+          "alveoli polmonari, dotati di pareti molto sottili,",
+          "l'ossigeno passa dall'aria al sangue e l'anidride carbonica",
+          "compie il percorso opposto; questo scambio avviene grazie a",
+          "differenze di pressione parziale. Gran parte dell'ossigeno",
+          "nel sangue è trasportata dall'emoglobina presente nei",
+          "globuli rossi. Durante lo sforzo la frequenza respiratoria",
+          "può aumentare perché l'organismo consuma più ossigeno e",
+          "produce più anidride carbonica. Per valutare un disturbo",
+          "respiratorio il medico considera sintomi, storia clinica ed",
+          "esame obiettivo. Un singolo valore misurato non basta sempre",
+          "per una diagnosi e deve essere sempre interpretato nel",
+          "contesto clinico."
+        ]
+      },
+      "coverage": {
+        "valid": true,
+        "required": 17,
+        "matched": 16,
+        "missingCount": 1,
+        "missing": [
+          {
+            "concept": "C3",
+            "fact": "hemoglobin_transports_oxygen",
+            "type": "core",
+            "sourceEvidence": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue. La frequenza respiratoria può aumentare durante uno sforzo perché l'organismo consuma più ossigeno e p"
+          }
+        ],
+        "details": [
+          {
+            "concept": "C1",
+            "wordCount": 31,
+            "content": "L'apparato respiratorio trasporta l'aria ai polmoni attraverso le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume, mentre durante l'espirazione a riposo il diaframma si rilassa."
+          },
+          {
+            "concept": "C2",
+            "wordCount": 29,
+            "content": "Negli alveoli polmonari, dotati di pareti molto sottili, l'ossigeno passa dall'aria al sangue e l'anidride carbonica compie il percorso opposto; questo scambio avviene grazie a differenze di pressione parziale."
+          },
+          {
+            "concept": "C3",
+            "wordCount": 30,
+            "content": "Gran parte dell'ossigeno nel sangue è trasportata dall'emoglobina presente nei globuli rossi. Durante lo sforzo la frequenza respiratoria può aumentare perché l'organismo consuma più ossigeno e produce più anidride carbonica."
+          },
+          {
+            "concept": "C4",
+            "wordCount": 32,
+            "content": "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi e deve essere sempre interpretato nel contesto clinico."
+          }
+        ],
+        "note": "A regex match is NOT proof that a proposition has the correct polarity, causality or conditions. Manual QA mandatory."
+      },
+      "englishFlag": false,
+      "sections": [
+        {
+          "id": "C1",
+          "text": "L'apparato respiratorio trasporta l'aria ai polmoni attraverso le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume, mentre durante l'espirazione a riposo il diaframma si rilassa."
+        },
+        {
+          "id": "C2",
+          "text": "Negli alveoli polmonari, dotati di pareti molto sottili, l'ossigeno passa dall'aria al sangue e l'anidride carbonica compie il percorso opposto; questo scambio avviene grazie a differenze di pressione parziale."
+        },
+        {
+          "id": "C3",
+          "text": "Gran parte dell'ossigeno nel sangue è trasportata dall'emoglobina presente nei globuli rossi. Durante lo sforzo la frequenza respiratoria può aumentare perché l'organismo consuma più ossigeno e produce più anidride carbonica."
+        },
+        {
+          "id": "C4",
+          "text": "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi e deve essere sempre interpretato nel contesto clinico."
+        }
+      ],
+      "preliminaryOnly": true,
+      "expertVerified": false
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "variant": "A",
+      "valid": true,
+      "ms": 1989,
+      "plan": {
+        "source": "procedura",
+        "level": 20,
+        "originalLetters": 636,
+        "originalRows": 14,
+        "short": false,
+        "targetLetters": 509,
+        "band": {
+          "low": 477,
+          "high": 540
+        },
+        "lineEquivalents": 10.983,
+        "targetCap": 11,
+        "toleranceCap": 12,
+        "expectedNaturalChars": 619,
+        "goalPerConcept": [
+          {
+            "id": "C1",
+            "sourceLetters": 202,
+            "softTargetLetters": 151,
+            "importance": 1.08,
+            "requiredFacts": [
+              "Esercizio 2024; regola 12; titolo prima del prestito; restituzione entro dieci giorni"
+            ],
+            "text": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura per richiedere i libri. La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni."
+          },
+          {
+            "id": "C2",
+            "sourceLetters": 152,
+            "softTargetLetters": 137,
+            "importance": 1.3,
+            "requiredFacts": [
+              "Proroga soltanto se non prenotato; non automatica; senza conferma scritta vale la data iniziale"
+            ],
+            "text": "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data iniziale."
+          },
+          {
+            "id": "C3",
+            "sourceLetters": 94,
+            "softTargetLetters": 78,
+            "importance": 1.2,
+            "requiredFacts": [
+              "Il libro prenotato va restituito alla scadenza anche se non si è finito di leggerlo"
+            ],
+            "text": "Quando un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura."
+          },
+          {
+            "id": "C4",
+            "sourceLetters": 188,
+            "softTargetLetters": 143,
+            "importance": 1.1,
+            "requiredFacts": [
+              "Il registro contiene chi e quando, ma non opinioni; essenziali eccezioni e condizioni"
+            ],
+            "text": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori. Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura."
+          }
+        ],
+        "maxWidth": 60
+      },
+      "metrics": {
+        "valid": true,
+        "letters": 655,
+        "sourceLetters": 636,
+        "targetLetters": 509,
+        "reduction": -2.99,
+        "deviationPoints": -22.99,
+        "strictBand": false,
+        "smallShortfall": false,
+        "missingLetters": 0,
+        "rows": 14,
+        "targetCap": 11,
+        "toleranceCap": 12,
+        "fitsTarget": false,
+        "fitsTolerance": false,
+        "strictCombined": false,
+        "toleranceCombined": false,
+        "lastRowUsed": 31,
+        "usedFractionalRows": 13.517,
+        "maxRowWidth": 60,
+        "wordIntegrity": true,
+        "spuriousMultipleSpaces": false,
+        "technicalMissing": [
+          "regola 12"
+        ],
+        "missingRubric": [],
+        "possibleSemanticPass": false,
+        "rawText": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura basata sulla regola interna numero 12, stabilendo che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni. Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti; questa non è automatica e necessita di una conferma scritta, poiché senza di essa resta valida la data iniziale. Quando un libro è già riservato, lo studente deve restituirlo tassativamente alla scadenza del prestito, anche se non ha completato la lettura. Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori, ricordando che le condizioni e le eccezioni sono essenziali.",
+        "sections": [
+          "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura basata sulla regola interna numero 12, stabilendo che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni.",
+          "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti; questa non è automatica e necessita di una conferma scritta, poiché senza di essa resta valida la data iniziale.",
+          "Quando un libro è già riservato, lo studente deve restituirlo tassativamente alla scadenza del prestito, anche se non ha completato la lettura.",
+          "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori, ricordando che le condizioni e le eccezioni sono essenziali."
+        ],
+        "virtualRows": [
+          "In un esercizio scolastico del 2024, una biblioteca simulata",
+          "ha introdotto una procedura basata sulla regola interna",
+          "numero 12, stabilendo che lo studente registri il titolo",
+          "prima del prestito e confermi la restituzione entro dieci",
+          "giorni. Il personale può concedere una proroga soltanto se",
+          "il volume non è stato prenotato da altri studenti; questa",
+          "non è automatica e necessita di una conferma scritta, poiché",
+          "senza di essa resta valida la data iniziale. Quando un libro",
+          "è già riservato, lo studente deve restituirlo tassativamente",
+          "alla scadenza del prestito, anche se non ha completato la",
+          "lettura. Il registro consente di ricostruire chi ha ricevuto",
+          "il libro e in quale giorno, ma non contiene dati sulle",
+          "opinioni personali dei lettori, ricordando che le condizioni",
+          "e le eccezioni sono essenziali."
+        ]
+      },
+      "coverage": {
+        "valid": true,
+        "required": 15,
+        "matched": 13,
+        "missingCount": 2,
+        "missing": [
+          {
+            "concept": "C2",
+            "fact": "not_automatic",
+            "type": "core",
+            "sourceEvidence": "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data inizi"
+          },
+          {
+            "concept": "C2",
+            "fact": "initial_date_without_confirmation",
+            "type": "core",
+            "sourceEvidence": "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data inizi"
+          }
+        ],
+        "details": [
+          {
+            "concept": "C1",
+            "wordCount": 36,
+            "content": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura basata sulla regola interna numero 12, stabilendo che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni."
+          },
+          {
+            "concept": "C2",
+            "wordCount": 36,
+            "content": "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti; questa non è automatica e necessita di una conferma scritta, poiché senza di essa resta valida la data iniziale."
+          },
+          {
+            "concept": "C3",
+            "wordCount": 22,
+            "content": "Quando un libro è già riservato, lo studente deve restituirlo tassativamente alla scadenza del prestito, anche se non ha completato la lettura."
+          },
+          {
+            "concept": "C4",
+            "wordCount": 32,
+            "content": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori, ricordando che le condizioni e le eccezioni sono essenziali."
+          }
+        ],
+        "note": "A regex match is NOT proof that a proposition has the correct polarity, causality or conditions. Manual QA mandatory."
+      },
+      "englishFlag": false,
+      "sections": [
+        {
+          "id": "C1",
+          "text": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura basata sulla regola interna numero 12, stabilendo che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni."
+        },
+        {
+          "id": "C2",
+          "text": "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti; questa non è automatica e necessita di una conferma scritta, poiché senza di essa resta valida la data iniziale."
+        },
+        {
+          "id": "C3",
+          "text": "Quando un libro è già riservato, lo studente deve restituirlo tassativamente alla scadenza del prestito, anche se non ha completato la lettura."
+        },
+        {
+          "id": "C4",
+          "text": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori, ricordando che le condizioni e le eccezioni sono essenziali."
+        }
+      ],
+      "preliminaryOnly": true,
+      "expertVerified": false
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "variant": "B",
+      "valid": true,
+      "ms": 1292,
+      "plan": {
+        "source": "procedura",
+        "level": 20,
+        "originalLetters": 636,
+        "originalRows": 14,
+        "short": false,
+        "targetLetters": 509,
+        "band": {
+          "low": 477,
+          "high": 540
+        },
+        "lineEquivalents": 10.983,
+        "targetCap": 11,
+        "toleranceCap": 12,
+        "expectedNaturalChars": 619,
+        "goalPerConcept": [
+          {
+            "id": "C1",
+            "sourceLetters": 202,
+            "softTargetLetters": 151,
+            "importance": 1.08,
+            "requiredFacts": [
+              "Esercizio 2024; regola 12; titolo prima del prestito; restituzione entro dieci giorni"
+            ],
+            "text": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura per richiedere i libri. La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni."
+          },
+          {
+            "id": "C2",
+            "sourceLetters": 152,
+            "softTargetLetters": 137,
+            "importance": 1.3,
+            "requiredFacts": [
+              "Proroga soltanto se non prenotato; non automatica; senza conferma scritta vale la data iniziale"
+            ],
+            "text": "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data iniziale."
+          },
+          {
+            "id": "C3",
+            "sourceLetters": 94,
+            "softTargetLetters": 78,
+            "importance": 1.2,
+            "requiredFacts": [
+              "Il libro prenotato va restituito alla scadenza anche se non si è finito di leggerlo"
+            ],
+            "text": "Quando un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura."
+          },
+          {
+            "id": "C4",
+            "sourceLetters": 188,
+            "softTargetLetters": 143,
+            "importance": 1.1,
+            "requiredFacts": [
+              "Il registro contiene chi e quando, ma non opinioni; essenziali eccezioni e condizioni"
+            ],
+            "text": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori. Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura."
+          }
+        ],
+        "maxWidth": 60
+      },
+      "metrics": {
+        "valid": true,
+        "letters": 708,
+        "sourceLetters": 636,
+        "targetLetters": 509,
+        "reduction": -11.32,
+        "deviationPoints": -31.32,
+        "strictBand": false,
+        "smallShortfall": false,
+        "missingLetters": 0,
+        "rows": 15,
+        "targetCap": 11,
+        "toleranceCap": 12,
+        "fitsTarget": false,
+        "fitsTolerance": false,
+        "strictCombined": false,
+        "toleranceCombined": false,
+        "lastRowUsed": 43,
+        "usedFractionalRows": 14.717,
+        "maxRowWidth": 60,
+        "wordIntegrity": true,
+        "spuriousMultipleSpaces": false,
+        "technicalMissing": [
+          "regola 12"
+        ],
+        "missingRubric": [],
+        "possibleSemanticPass": false,
+        "rawText": "Durante un esercizio scolastico del 2024, una biblioteca simulata ha adottato una procedura basata sulla regola interna numero 12, stabilendo che lo studente debba registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni. Il personale può concedere una proroga soltanto se il volume non risulta prenotato da altri, ma tale estensione non è automatica e richiede una conferma scritta, poiché in mancanza di essa resta valida la data iniziale. Se un libro è già riservato, lo studente deve obbligatoriamente restituirlo alla scadenza, anche qualora non avesse ancora completato la lettura. Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non raccoglie le opinioni personali dei lettori; perciò le condizioni e le eccezioni risultano essenziali per applicare correttamente l'intera procedura.",
+        "sections": [
+          "Durante un esercizio scolastico del 2024, una biblioteca simulata ha adottato una procedura basata sulla regola interna numero 12, stabilendo che lo studente debba registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni.",
+          "Il personale può concedere una proroga soltanto se il volume non risulta prenotato da altri, ma tale estensione non è automatica e richiede una conferma scritta, poiché in mancanza di essa resta valida la data iniziale.",
+          "Se un libro è già riservato, lo studente deve obbligatoriamente restituirlo alla scadenza, anche qualora non avesse ancora completato la lettura.",
+          "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non raccoglie le opinioni personali dei lettori; perciò le condizioni e le eccezioni risultano essenziali per applicare correttamente l'intera procedura."
+        ],
+        "virtualRows": [
+          "Durante un esercizio scolastico del 2024, una biblioteca",
+          "simulata ha adottato una procedura basata sulla regola",
+          "interna numero 12, stabilendo che lo studente debba",
+          "registrare il titolo prima del prestito e confermare la",
+          "restituzione entro dieci giorni. Il personale può concedere",
+          "una proroga soltanto se il volume non risulta prenotato da",
+          "altri, ma tale estensione non è automatica e richiede una",
+          "conferma scritta, poiché in mancanza di essa resta valida la",
+          "data iniziale. Se un libro è già riservato, lo studente deve",
+          "obbligatoriamente restituirlo alla scadenza, anche qualora",
+          "non avesse ancora completato la lettura. Il registro",
+          "consente di ricostruire chi ha ricevuto il libro e in quale",
+          "giorno, ma non raccoglie le opinioni personali dei lettori;",
+          "perciò le condizioni e le eccezioni risultano essenziali per",
+          "applicare correttamente l'intera procedura."
+        ]
+      },
+      "coverage": {
+        "valid": true,
+        "required": 15,
+        "matched": 13,
+        "missingCount": 2,
+        "missing": [
+          {
+            "concept": "C2",
+            "fact": "not_automatic",
+            "type": "core",
+            "sourceEvidence": "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data inizi"
+          },
+          {
+            "concept": "C2",
+            "fact": "initial_date_without_confirmation",
+            "type": "core",
+            "sourceEvidence": "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data inizi"
+          }
+        ],
+        "details": [
+          {
+            "concept": "C1",
+            "wordCount": 37,
+            "content": "Durante un esercizio scolastico del 2024, una biblioteca simulata ha adottato una procedura basata sulla regola interna numero 12, stabilendo che lo studente debba registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni."
+          },
+          {
+            "concept": "C2",
+            "wordCount": 36,
+            "content": "Il personale può concedere una proroga soltanto se il volume non risulta prenotato da altri, ma tale estensione non è automatica e richiede una conferma scritta, poiché in mancanza di essa resta valida la data iniziale."
+          },
+          {
+            "concept": "C3",
+            "wordCount": 21,
+            "content": "Se un libro è già riservato, lo studente deve obbligatoriamente restituirlo alla scadenza, anche qualora non avesse ancora completato la lettura."
+          },
+          {
+            "concept": "C4",
+            "wordCount": 35,
+            "content": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non raccoglie le opinioni personali dei lettori; perciò le condizioni e le eccezioni risultano essenziali per applicare correttamente l'intera procedura."
+          }
+        ],
+        "note": "A regex match is NOT proof that a proposition has the correct polarity, causality or conditions. Manual QA mandatory."
+      },
+      "englishFlag": false,
+      "sections": [
+        {
+          "id": "C1",
+          "text": "Durante un esercizio scolastico del 2024, una biblioteca simulata ha adottato una procedura basata sulla regola interna numero 12, stabilendo che lo studente debba registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni."
+        },
+        {
+          "id": "C2",
+          "text": "Il personale può concedere una proroga soltanto se il volume non risulta prenotato da altri, ma tale estensione non è automatica e richiede una conferma scritta, poiché in mancanza di essa resta valida la data iniziale."
+        },
+        {
+          "id": "C3",
+          "text": "Se un libro è già riservato, lo studente deve obbligatoriamente restituirlo alla scadenza, anche qualora non avesse ancora completato la lettura."
+        },
+        {
+          "id": "C4",
+          "text": "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non raccoglie le opinioni personali dei lettori; perciò le condizioni e le eccezioni risultano essenziali per applicare correttamente l'intera procedura."
+        }
+      ],
+      "preliminaryOnly": true,
+      "expertVerified": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "variant": "A",
+      "valid": true,
+      "ms": 2206,
+      "plan": {
+        "source": "concetto_sbilanciato",
+        "level": 20,
+        "originalLetters": 670,
+        "originalRows": 15,
+        "short": false,
+        "targetLetters": 536,
+        "band": {
+          "low": 503,
+          "high": 569
+        },
+        "lineEquivalents": 11.565,
+        "targetCap": 12,
+        "toleranceCap": 13,
+        "expectedNaturalChars": 652,
+        "goalPerConcept": [
+          {
+            "id": "C1",
+            "sourceLetters": 539,
+            "softTargetLetters": 439,
+            "importance": 1.1,
+            "requiredFacts": [
+              "Fonti storiche diverse; provenienza e interessi; confronto e verifica; contesto e cause"
+            ],
+            "text": "In un laboratorio di storia, gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. La provenienza di ciascun documento aiuta a capire chi lo ha prodotto, quando e per quale scopo. Due testimonianze possono riferire lo stesso episodio in modo diverso, perché i loro autori hanno osservato aspetti differenti oppure hanno interessi particolari. Per verificare un'affermazione occorre confrontare più fonti indipendenti, distinguere un fatto da un'opinione e segnalare ciò che resta incerto. Una data isolata non spiega da sola le cause di un evento: bisogna studiarne il contesto e le conseguenze."
+          },
+          {
+            "id": "C2",
+            "sourceLetters": 43,
+            "softTargetLetters": 32,
+            "importance": 1,
+            "requiredFacts": [
+              "Fonte primaria nel periodo studiato"
+            ],
+            "text": "Una fonte primaria è prodotta nel periodo studiato."
+          },
+          {
+            "id": "C3",
+            "sourceLetters": 47,
+            "softTargetLetters": 35,
+            "importance": 1,
+            "requiredFacts": [
+              "Fonte secondaria interpreta documenti precedenti"
+            ],
+            "text": "Una fonte secondaria interpreta documenti precedenti."
+          },
+          {
+            "id": "C4",
+            "sourceLetters": 41,
+            "softTargetLetters": 30,
+            "importance": 1,
+            "requiredFacts": [
+              "Distinguere ipotesi da fatti documentati"
+            ],
+            "text": "Le ipotesi vanno distinte dai fatti documentati."
+          }
+        ],
+        "maxWidth": 60
+      },
+      "metrics": {
+        "valid": true,
+        "letters": 696,
+        "sourceLetters": 670,
+        "targetLetters": 536,
+        "reduction": -3.88,
+        "deviationPoints": -23.88,
+        "strictBand": false,
+        "smallShortfall": false,
+        "missingLetters": 0,
+        "rows": 15,
+        "targetCap": 12,
+        "toleranceCap": 13,
+        "fitsTarget": false,
+        "fitsTolerance": false,
+        "strictCombined": false,
+        "toleranceCombined": false,
+        "lastRowUsed": 22,
+        "usedFractionalRows": 14.367,
+        "maxRowWidth": 60,
+        "wordIntegrity": true,
+        "spuriousMultipleSpaces": false,
+        "technicalMissing": [],
+        "missingRubric": [],
+        "possibleSemanticPass": true,
+        "rawText": "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. Valutare provenienza, autore, periodo e scopo di ogni documento è essenziale poiché testimonianze diverse dipendono dai punti di osservazione e dagli interessi degli autori. Per verificare un'affermazione occorre usare più fonti indipendenti, distinguere i fatti dalle opinioni, segnalare ciò che resta incerto e analizzare il contesto, le cause e le conseguenze degli eventi. Una fonte primaria è un documento prodotto direttamente nel periodo storico che si sta studiando. Una fonte secondaria consiste in un'interpretazione successiva basata su documenti precedenti. Nel corso della ricerca, le ipotesi formulate dagli studiosi vanno sempre tenute distinte dai fatti realmente documentati.",
+        "sections": [
+          "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. Valutare provenienza, autore, periodo e scopo di ogni documento è essenziale poiché testimonianze diverse dipendono dai punti di osservazione e dagli interessi degli autori. Per verificare un'affermazione occorre usare più fonti indipendenti, distinguere i fatti dalle opinioni, segnalare ciò che resta incerto e analizzare il contesto, le cause e le conseguenze degli eventi.",
+          "Una fonte primaria è un documento prodotto direttamente nel periodo storico che si sta studiando.",
+          "Una fonte secondaria consiste in un'interpretazione successiva basata su documenti precedenti.",
+          "Nel corso della ricerca, le ipotesi formulate dagli studiosi vanno sempre tenute distinte dai fatti realmente documentati."
+        ],
+        "virtualRows": [
+          "Nel laboratorio di storia gli studenti confrontano lettere,",
+          "cronache, carte geografiche e registri per ricostruire gli",
+          "avvenimenti. Valutare provenienza, autore, periodo e scopo",
+          "di ogni documento è essenziale poiché testimonianze diverse",
+          "dipendono dai punti di osservazione e dagli interessi degli",
+          "autori. Per verificare un'affermazione occorre usare più",
+          "fonti indipendenti, distinguere i fatti dalle opinioni,",
+          "segnalare ciò che resta incerto e analizzare il contesto, le",
+          "cause e le conseguenze degli eventi. Una fonte primaria è un",
+          "documento prodotto direttamente nel periodo storico che si",
+          "sta studiando. Una fonte secondaria consiste in",
+          "un'interpretazione successiva basata su documenti",
+          "precedenti. Nel corso della ricerca, le ipotesi formulate",
+          "dagli studiosi vanno sempre tenute distinte dai fatti",
+          "realmente documentati."
+        ]
+      },
+      "coverage": {
+        "valid": true,
+        "required": 11,
+        "matched": 10,
+        "missingCount": 1,
+        "missing": [
+          {
+            "concept": "C1",
+            "fact": "compare_documents",
+            "type": "core",
+            "sourceEvidence": "In un laboratorio di storia, gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. La provenienza di ciascun documento aiuta a c"
+          }
+        ],
+        "details": [
+          {
+            "concept": "C1",
+            "wordCount": 70,
+            "content": "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. Valutare provenienza, autore, periodo e scopo di ogni documento è essenziale poiché testimonianze diverse dipendono dai punti di osservazione e dagli interessi degli autori. Per verificare un'affermazione occorre usare più fonti indipendenti, distinguere i fatti dalle opinioni, segnalare ciò che resta incerto e analizzare il contesto, le cause e le conseguenze degli eventi."
+          },
+          {
+            "concept": "C2",
+            "wordCount": 15,
+            "content": "Una fonte primaria è un documento prodotto direttamente nel periodo storico che si sta studiando."
+          },
+          {
+            "concept": "C3",
+            "wordCount": 11,
+            "content": "Una fonte secondaria consiste in un'interpretazione successiva basata su documenti precedenti."
+          },
+          {
+            "concept": "C4",
+            "wordCount": 17,
+            "content": "Nel corso della ricerca, le ipotesi formulate dagli studiosi vanno sempre tenute distinte dai fatti realmente documentati."
+          }
+        ],
+        "note": "A regex match is NOT proof that a proposition has the correct polarity, causality or conditions. Manual QA mandatory."
+      },
+      "englishFlag": false,
+      "sections": [
+        {
+          "id": "C1",
+          "text": "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. Valutare provenienza, autore, periodo e scopo di ogni documento è essenziale poiché testimonianze diverse dipendono dai punti di osservazione e dagli interessi degli autori. Per verificare un'affermazione occorre usare più fonti indipendenti, distinguere i fatti dalle opinioni, segnalare ciò che resta incerto e analizzare il contesto, le cause e le conseguenze degli eventi."
+        },
+        {
+          "id": "C2",
+          "text": "Una fonte primaria è un documento prodotto direttamente nel periodo storico che si sta studiando."
+        },
+        {
+          "id": "C3",
+          "text": "Una fonte secondaria consiste in un'interpretazione successiva basata su documenti precedenti."
+        },
+        {
+          "id": "C4",
+          "text": "Nel corso della ricerca, le ipotesi formulate dagli studiosi vanno sempre tenute distinte dai fatti realmente documentati."
+        }
+      ],
+      "preliminaryOnly": true,
+      "expertVerified": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "variant": "B",
+      "valid": false,
+      "error": {
+        "source": "concetto_sbilanciato",
+        "level": 20,
+        "variant": "B",
+        "status": 429,
+        "attempt": 8,
+        "ms": 180,
+        "message": "HTTP error"
+      }
+    }
+  ]
+}

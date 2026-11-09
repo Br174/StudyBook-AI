@@ -1,0 +1,114 @@
+{
+  "study": "LAB95 feasibility before asking Gemini",
+  "type": "offline",
+  "note": "The two good 20 percent examples were manually written, not model generated. Atomic lexical checks can miss semantic errors.",
+  "golden": [
+    {
+      "source": "scienze",
+      "authoredBy": "manual editorial reference",
+      "level": 20,
+      "targetLetters": 479,
+      "actual": 498,
+      "actualReduction": 16.86,
+      "rows": 11,
+      "cap": 11,
+      "mathPass": true,
+      "atomicAlerts": 0,
+      "englishSourceLeak": false,
+      "potentialSemanticPass": true
+    },
+    {
+      "source": "medicina",
+      "authoredBy": "manual editorial reference",
+      "level": 20,
+      "targetLetters": 582,
+      "actual": 609,
+      "actualReduction": 16.35,
+      "rows": 13,
+      "cap": 13,
+      "mathPass": true,
+      "atomicAlerts": 0,
+      "englishSourceLeak": false,
+      "potentialSemanticPass": true
+    }
+  ],
+  "baseline": [
+    {
+      "lab": "LAB92",
+      "source": "scienze",
+      "percentage": 31.39,
+      "rows": 9,
+      "band": false,
+      "combined": false
+    },
+    {
+      "lab": "LAB92",
+      "source": "procedura",
+      "percentage": 36.48,
+      "rows": 9,
+      "band": false,
+      "combined": false
+    },
+    {
+      "lab": "LAB92",
+      "source": "medicina",
+      "percentage": 50.27,
+      "rows": 8,
+      "band": false,
+      "combined": false
+    },
+    {
+      "lab": "LAB92",
+      "source": "concetto_sbilanciato",
+      "percentage": 37.76,
+      "rows": 9,
+      "band": false,
+      "combined": false
+    },
+    {
+      "lab": "LAB94",
+      "source": "medicina",
+      "percentage": 8.52,
+      "rows": 14,
+      "band": false,
+      "combined": false
+    },
+    {
+      "lab": "LAB94",
+      "source": "procedura",
+      "percentage": 10.06,
+      "rows": 12,
+      "band": false,
+      "combined": false
+    },
+    {
+      "lab": "LAB94",
+      "source": "scienze",
+      "percentage": 2.17,
+      "rows": 13,
+      "band": false,
+      "combined": false
+    },
+    {
+      "lab": "LAB94",
+      "source": "concetto_sbilanciato",
+      "percentage": 21.04,
+      "rows": 11,
+      "band": true,
+      "combined": true
+    }
+  ],
+  "mutations": {
+    "count": 4000,
+    "detected": 4000
+  },
+  "errors": [],
+  "summary": {
+    "goldSamples": 2,
+    "goldConforming": 2,
+    "baselineCases": 8,
+    "negativeTests": 4000,
+    "negativeDetected": 4000,
+    "failures": 0
+  }
+}
