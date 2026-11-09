@@ -7,6 +7,7 @@ import {FIXTURES} from './lab93-semantic-gate.mjs';
 import {budget,letters,wrap} from './lab92-stop-complete-engine.mjs';
 import {normalize,sha256} from './lab100-first-read-ledger.mjs';
 import {relationshipGuard} from './lab99-relational-guard.mjs';
+import {oxygenDirectionRisk} from './lab103-source-direction-risk.mjs';
 const READ=p=>JSON.parse(readFileSync(p,'utf8'));
 const old97=READ('audit/reports/lab97-level-specific-real.json');
 const old98=READ('audit/reports/lab98-real-gemini.json');
@@ -141,6 +142,7 @@ for(const c of semanticCandidates){
  });
 }
 const adverse=[];
+const targetedDirectionRisks=[];
 for(const {source,level,from,editId,original,replacement} of [
  {source:'medicina',level:10,from:'LAB102_GEMINI',editId:'may_to_must',original:'può aumentare',replacement:'deve aumentare'},
  {source:'concetto_sbilanciato',level:20,from:'LAB102_GEMINI',editId:'documented_to_proven',original:'fatti documentati',replacement:'fatti dimostrati'},
@@ -150,12 +152,22 @@ for(const {source,level,from,editId,original,replacement} of [
  const c=get(source,level,from);
  assert(c.text.includes(original),'MISSING_NEGATIVE_TEST_SOURCE');
  const mutant=c.text.replace(original,replacement);
- const guard=relationshipGuard(source,normalize(originals.get(source).concepts.join(' ')),mutant);
+ const srcText=normalize(originals.get(source).concepts.join(' '));
+ const guard=relationshipGuard(source,srcText,mutant);
  const detected=guard.alerts.length>c.relationAlerts.length||guard.alerts.some(a=>!c.relationAlerts.includes(a.id));
- adverse.push({editId,source,level,guardDetected:detected,alerts:guard.alerts.map(x=>x.id),
-  warning:!detected?'KNOWN_SEMANTIC_FALSE_NEGATIVE_KEEP_PROMOTION_BLOCKED':null});
+ const extra=oxygenDirectionRisk(source,srcText,mutant);
+ const targetedDetected=extra.directionReversal;
+ adverse.push({editId,source,level,oldGuardDetected:detected,targetedDirectionDetected:targetedDetected,
+  combinedDetected:detected||targetedDetected,alerts:guard.alerts.map(x=>x.id),
+  warning:!detected&&!targetedDetected?'KNOWN_FALSE_NEGATIVE_KEEP_PROMOTION_BLOCKED':null});
 }
-assert(adverse.some(x=>!x.guardDetected),'NEEDS_RECORDED_FALSE_NEGATIVE');
+assert(adverse.some(x=>!x.oldGuardDetected),'OLD_GUARD_LIMIT_NOT_DOCUMENTED');
+assert(adverse.every(x=>x.combinedDetected),'TARGETED_FIX_DID_NOT_CATCH_NEGATIVE');
+const medWinner=get('medicina',10,'LAB102_GEMINI');
+const medDirection=oxygenDirectionRisk('medicina',normalize(originals.get('medicina').concepts.join(' ')),medWinner.text);
+assert.equal(medDirection.sourceSupportedDirection,true,'VALID_MEDICINE_WINNER_DIRECTION_FLAGGED');
+assert.equal(medDirection.requiresReview,false,'VALID_MEDICINE_WINNER_FALSE_POSITIVE');
+targetedDirectionRisks.push({candidate:medWinner.key,sourceSupportedDirection:true,reversal:false});
 const report={
  name:'MotorLab StudyBook LAB103 incumbent no-regression baseline',
  executedAt:new Date().toISOString(),
@@ -163,13 +175,15 @@ const report={
  sourceOrigin:'LAB97,LAB98,LAB99,LAB101,LAB102 GitHub evidence',
  totals:{historicalRealCandidates:candidates.length,quantitativeIncumbents:pinnedQuantitative.length,
   semanticReviewCandidates:semanticCandidates.length,fullySemanticallyCertified:0,
-  adversarialCases:adverse.length,knownGuardFalseNegatives:adverse.filter(x=>!x.guardDetected).length},
+  adversarialCases:adverse.length,oldGuardFalseNegatives:adverse.filter(x=>!x.oldGuardDetected).length,
+  remainingCombinedGuardFalseNegatives:adverse.filter(x=>!x.combinedDetected).length},
  quantitativeIncumbents:pinnedQuantitative.map(x=>({key:x.key,source:x.source,level:x.level,
   reduction:x.reduction,rows:x.rows,maxRows:x.maxRows,letters:x.actualLetters,
   relationAlerts:x.relationAlerts,sourceHash:x.sourceHash,textHash:x.textHash,
   quantitativePass:x.hardPass,semanticCertified:false})),
  semanticReviewCandidates:reviewed,
  adversarialChecks:adverse,
+ targetedDirectionRisks,
  candidateIndex:candidates.map(x=>({key:x.key,source:x.source,level:x.level,from:x.from,
   reduction:x.reduction,rows:x.rows,maxRows:x.maxRows,letters:x.actualLetters,
   mathPass:x.hardPass,relationAlerts:x.relationAlerts,textHash:x.textHash})),
