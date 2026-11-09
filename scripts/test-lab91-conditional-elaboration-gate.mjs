@@ -1,24 +1,27 @@
-// MotorLab LAB91: deterministic gate for source-grounded expansion vs compression.
-// NEVER calls Gemini; exercises all real LAB89/90 outputs and 20k synthetic budgets.
+// MotorLab LAB91: deterministic STOP-ON-COMPLETE gate; no padding or expansion for letter budget.
+// NEVER calls Gemini; checks no-padding decisions against real LAB89/90 outputs and 20k cases.
 // This is a gate/plan test, not evidence that Gemini can obey it.
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 const a=JSON.parse(readFileSync('audit/reports/lab89-proportional-real-gemini.json','utf8'));
 const b=JSON.parse(readFileSync('audit/reports/lab90-fluid-useful-elaboration-real.json','utf8'));
 const L=46.346,WIDTH=60;
 const sum=a=>a.reduce((x,y)=>x+y,0);
-function choose({original,level,letters,rows,maxRows,semanticsClear=false}){
+function choose({original,level,letters,rows,maxRows}){
  if(!Number.isFinite(original)||original<=0||!Number.isFinite(letters)||letters<0)throw Error('invalid letters');
  if(![10,20,30,40,50,65].includes(level))throw Error('invalid level');
  const lower=Math.ceil(original*(1-(level+5)/100)),upper=Math.floor(original*(1-(level-5)/100));
  const desired=Math.round(original*(1-level/100));
- const spareRows=Math.max(0,maxRows-rows);
- // No expansion if it is already within the band, or semantically finished.
+ const spareRows=Math.max(0,maxRows-rows), deficit=desired-letters;
+ // Never increase text merely to fill the last row or letter gap.
+ // A small shortfall outside ±5 points is flagged, not silently passed.
  let action;
- if(letters>upper)action='SHORTEN_WITHOUT_LOSING_ESSENTIALS';
- else if(letters<lower){
-  action=(spareRows>0&&!semanticsClear)?'EXPAND_ONLY_FROM_UNEXPRESSED_SOURCE_DETAILS':'REPHRASE_WITH_FULL_SEMANTIC_GUARD';
- }else action='DO_NOT_EXPAND';
- return{action,desired,lower,upper,delta:desired-letters,spareRows};
+ if(letters>upper)action='REVIEW_FOR_SAFE_SHORTENING';
+ else if(letters>=lower)action='KEEP_COMPLETE_TEXT_NO_PADDING';
+ else if(deficit<=Math.ceil(L))action='REVIEW_SMALL_SHORTFALL_NO_PADDING';
+ else action='REVIEW_LARGE_SHORTFALL_NO_PADDING';
+ return{action,desired,lower,upper,deficit,spareRows,
+  quantitativeBandPass:letters>=lower&&letters<=upper,
+  paddingForbidden:true,contentFidelityRequiresIndependentReview:true};
 }
 const actual=[];
 for(const r of a.records.filter(x=>x.textReturned&&x.validation?.structurallyValid&&!x.plan.short)){
@@ -43,22 +46,22 @@ for(let i=0;i<20000;i++){
  const maxRows=Math.max(1,Math.ceil(desired/L));
  const output=choose({original,level,letters:actualLetters,rows,maxRows,semanticsClear:false});
  try{
-  if(actualLetters>output.upper&&output.action!=='SHORTEN_WITHOUT_LOSING_ESSENTIALS')throw Error('overshoot elaboration');
-  if(actualLetters>=output.lower&&actualLetters<=output.upper&&output.action!=='DO_NOT_EXPAND')throw Error('expand inside band');
-  if(output.action==='EXPAND_ONLY_FROM_UNEXPRESSED_SOURCE_DETAILS'&&(actualLetters>=output.lower||rows>=maxRows))throw Error('expand without space');
+  if(actualLetters>output.upper&&output.action!=='REVIEW_FOR_SAFE_SHORTENING')throw Error('overband not flagged');
+  if(actualLetters>=output.lower&&actualLetters<=output.upper&&output.action!=='KEEP_COMPLETE_TEXT_NO_PADDING')throw Error('inband altered');
+  if(actualLetters<output.lower&&output.action!=='REVIEW_SMALL_SHORTFALL_NO_PADDING'&&output.action!=='REVIEW_LARGE_SHORTFALL_NO_PADDING')throw Error('shortfall not flagged');
+  if(!output.paddingForbidden)throw Error('padding ever allowed');
+  if(output.action.includes('EXPAND'))throw Error('expansion forbidden');
  }catch(e){errors.push({i,error:String(e),output});if(errors.length>=10)break}
 }
 const aggregate={realCases:actual.length,lab90Cases:actual.filter(x=>x.source==='LAB90').length,
- lab90Shorten:actual.filter(x=>x.source==='LAB90'&&x.action==='SHORTEN_WITHOUT_LOSING_ESSENTIALS').length,
- lab90Expand:actual.filter(x=>x.source==='LAB90'&&x.action==='EXPAND_ONLY_FROM_UNEXPRESSED_SOURCE_DETAILS').length,
- lab89Expand:actual.filter(x=>x.source==='LAB89'&&x.action==='EXPAND_ONLY_FROM_UNEXPRESSED_SOURCE_DETAILS').length,
- lab89Shorten:actual.filter(x=>x.source==='LAB89'&&x.action==='SHORTEN_WITHOUT_LOSING_ESSENTIALS').length,
+ lab90ShorteningReview:actual.filter(x=>x.source==='LAB90'&&x.action==='REVIEW_FOR_SAFE_SHORTENING').length,
+ allRealPaddingForbidden:actual.every(x=>x.paddingForbidden),
  randomCases:20000,failed:errors.length};
-const output={date:'2026-11-09',experiment:'LAB91 conditional deficit gate for useful elaboration',
- status:'offline guard only; no model called; no application production changes',
- rules:'May expand source-grounded content only when text is BELOW the letter band and free grid capacity exists, and only if concepts require elaboration. Above band must shorten without losing semantic essentials; inside band do not expand. Short original pages use separate didactic simplification policy.',
- limitation:'This controller cannot revise live Gemini output during a single completion without model streaming/control APIs. It is a preflight/postflight gate and next-prompt blueprint, not a real-time interaction with the model.',
+const output={date:'2026-11-09',experiment:'LAB91 stop-on-complete no-padding gate',
+ status:'offline audit only; no provider calls, no application production change',
+ rules:'Stop once every essential thought is complete. Never expand or add words to fill half/one empty row or a target-letter deficit. Prefer modest shortness over padding. ±5 points remains the measured ideal; small deviations are flagged separately, and content correctness must be independently reviewed. Correct missing essential ideas, never add facts for length.',
+ limitation:'The gate cannot verify semantic completeness itself. Under-target results are not automatically certified. The virtual 60-cell research grid does not prove physical A4 rendering.',
  aggregate,realObservations:actual,errors};
 mkdirSync('audit/reports',{recursive:true});writeFileSync('audit/reports/lab91-conditional-elaboration-guard.json',JSON.stringify(output,null,2)+'\n');
 console.log('LAB91_OFFLINE_RESULT',JSON.stringify(aggregate));
-if(errors.length||aggregate.lab90Shorten!==aggregate.lab90Cases)process.exitCode=1;
+if(errors.length||!aggregate.allRealPaddingForbidden)process.exitCode=1;
