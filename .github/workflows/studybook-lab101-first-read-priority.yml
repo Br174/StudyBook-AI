@@ -1,0 +1,60 @@
+name: StudyBook LAB101 one-pass fact priority and six-level plans
+on:
+  push:
+    branches:
+      - 'audit/studybook-priority-first-read-v101-*'
+    paths:
+      - '.github/workflows/studybook-lab101-first-read-priority.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab101-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks before model use
+        run: |
+          node --check scripts/lab101-priority-ledger.mjs
+          node --check scripts/test-lab101-priority-offline.mjs
+          node --check scripts/test-lab101-real-priority-gemini.mjs
+      - name: Offline 24k ledger checks and six-level reuse
+        run: node scripts/test-lab101-priority-offline.mjs
+      - name: Real first-reading priorities with existing free Gemini key
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab101-real-priority-gemini.mjs
+      - name: Preserve all evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB101-FirstReadPriority
+          path: |
+            audit/reports/lab101-priority-offline.json
+            audit/reports/lab101-real-priorities.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit evidence only in audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab101-priority-offline.json audit/reports/lab101-real-priorities.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB101): preserve ranked first reads and 24k checks'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
