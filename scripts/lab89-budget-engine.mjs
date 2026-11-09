@@ -74,7 +74,7 @@ export function validate(source,plan,sections){
  const per=sections.map((s,i)=>{
   const original=String(s.text||'');
   const layout=wrap(original),limit=plan.segments[i].maxRows;
-  const broken=/\p{L}-\s*\n\s*\p{L}/u.test(original)||/(\p{L})\s*\n\s*(\p{L})/u.test(original);
+  const broken=/\p{L}-\s*\n\s*\p{L}/u.test(original);
   const malformed=/\b(?:dall|all|l|un)\s+(?:asse|inclinazione|aria|altra)\b/iu.test(original);
   const maxLine=layout.lines.length?Math.max(...layout.lines.map(x=>[...x].length)):0;
   return{id:s.id,rawText:original,rows:layout.lines.length,limit,gridPass:layout.lines.length<=limit&&!layout.longWord,
