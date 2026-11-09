@@ -1,0 +1,958 @@
+{
+  "study": "MotorLab LAB104 exact source-backed fact-by-fact review",
+  "stage": "isolated editorial inspection; NOT independent academic certification",
+  "date": "2026-11-09T16:45:28.787Z",
+  "candidates": [
+    {
+      "source": "medicina",
+      "level": 10,
+      "provenance": "LAB102_BEST_REAL_GEMINI",
+      "baseline": {
+        "letters": 660,
+        "reductionPercent": 9.34,
+        "originalLetters": 728,
+        "band": {
+          "low": 619,
+          "high": 691
+        },
+        "rows": 14,
+        "maxRows": 15,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+        "textHash": "110927185aa7e2d17f22f2945de472da9933b0ab8cb2d82a1a4b8842d3ff78eb",
+        "noSplitWords": true
+      },
+      "latest": {
+        "letters": 660,
+        "reductionPercent": 9.34,
+        "originalLetters": 728,
+        "band": {
+          "low": 619,
+          "high": 691
+        },
+        "rows": 14,
+        "maxRows": 15,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d",
+        "textHash": "110927185aa7e2d17f22f2945de472da9933b0ab8cb2d82a1a4b8842d3ff78eb",
+        "noSplitWords": true
+      },
+      "edits": 0,
+      "sourceFacts": 15,
+      "reviewCounts": {
+        "FULL": 12,
+        "PARTIAL": 2,
+        "OPTIONAL_OMITTED": 1
+      },
+      "fundamentalStillPartial": [
+        "F10"
+      ],
+      "ledgerEvidence": [
+        {
+          "factId": "F1",
+          "sourceClaim": "Il contesto descritto è un esempio didattico.",
+          "sourceQuote": "In un esempio didattico",
+          "priority": "contesto",
+          "status": "OPTIONAL_OMITTED",
+          "evidenceExcerpt": null,
+          "note": "Didactic introduction omitted: context, not a fundamental mechanism.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F2",
+          "sourceClaim": "L'apparato respiratorio trasporta l'aria ai polmoni per mezzo delle vie aeree.",
+          "sourceQuote": "l'apparato respiratorio porta aria ai polmoni attraverso le vie aeree.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "L'apparato respiratorio porta aria ai polmoni tramite le vie aeree",
+          "note": "Airways and direction preserved.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F3",
+          "sourceClaim": "Durante l'inspirazione il diaframma subisce una contrazione.",
+          "sourceQuote": "Durante l'inspirazione il diaframma si contrae",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Durante l'inspirazione il diaframma si contrae",
+          "note": "Inspiratory contraction preserved.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F4",
+          "sourceClaim": "Durante l'inspirazione il volume del torace aumenta.",
+          "sourceQuote": "e il torace aumenta di volume",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "il torace aumenta di volume",
+          "note": "Thoracic volume increase preserved.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F5",
+          "sourceClaim": "Durante l'espirazione a riposo il diaframma si rilassa.",
+          "sourceQuote": "durante l'espirazione a riposo il diaframma si rilassa.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "durante l'espirazione a riposo il diaframma si rilassa",
+          "note": "Resting exhalation qualifier retained.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F6",
+          "sourceClaim": "Negli alveoli polmonari l'ossigeno si sposta dall'aria al sangue.",
+          "sourceQuote": "Negli alveoli polmonari l'ossigeno passa dall'aria al sangue",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Negli alveoli polmonari l'ossigeno passa dall'aria al sangue",
+          "note": "Oxygen direction correct.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F7",
+          "sourceClaim": "L'anidride carbonica si sposta dal sangue all'aria negli alveoli polmonari.",
+          "sourceQuote": "mentre l'anidride carbonica compie il percorso opposto.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "mentre l'anidride carbonica fa il percorso inverso",
+          "note": "Inverse path refers to blood-to-air; antecedent preserved.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F8",
+          "sourceClaim": "Lo scambio gassoso è causato da differenze di pressione parziale dei gas.",
+          "sourceQuote": "Lo scambio avviene grazie a differenze di pressione parziale dei gas",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Lo scambio avviene per differenze di pressione parziale",
+          "note": "Partial pressures preserved.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F9",
+          "sourceClaim": "Lo scambio gassoso avviene attraverso pareti molto sottili.",
+          "sourceQuote": "attraverso pareti molto sottili.",
+          "priority": "supporto",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "attraverso pareti sottili",
+          "note": "Original says molto sottili; mild support-level qualifier omitted.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F10",
+          "sourceClaim": "L'emoglobina presente nei globuli rossi si occupa del trasporto della maggior parte dell'ossigeno nel sangue.",
+          "sourceQuote": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue.",
+          "priority": "fondamentale",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno",
+          "note": "The explicit words nel sangue are absent, though nearby alveolar context implies blood.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F11",
+          "sourceClaim": "La frequenza respiratoria ha la possibilità di aumentare durante uno sforzo fisico.",
+          "sourceQuote": "La frequenza respiratoria può aumentare durante uno sforzo",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "La frequenza respiratoria può aumentare nello sforzo",
+          "note": "May, not must, preserved.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F12",
+          "sourceClaim": "L'aumento della frequenza respiratoria è causato dal maggiore consumo di ossigeno e maggiore produzione di anidride carbonica da parte dell'organismo.",
+          "sourceQuote": "perché l'organismo consuma più ossigeno e produce più anidride carbonica.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "l'organismo consuma più ossigeno e produce più anidride carbonica",
+          "note": "Both changes and causal linkage with preceding perché preserved.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F13",
+          "sourceClaim": "Per la valutazione di un disturbo respiratorio il medico prende in esame sintomi, storia clinica ed esame obiettivo.",
+          "sourceQuote": "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "il medico valuta sintomi, storia clinica ed esame obiettivo",
+          "note": "Three diagnostic inputs preserved.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F14",
+          "sourceClaim": "Un singolo valore misurato non è sempre sufficiente per formulare una diagnosi.",
+          "sourceQuote": "Un singolo valore misurato non basta sempre per una diagnosi",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Un singolo valore misurato non basta sempre per la diagnosi",
+          "note": "Not always, not an absolute no, preserved.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        },
+        {
+          "factId": "F15",
+          "sourceClaim": "Un singolo valore misurato ha l'obbligo di essere interpretato all'interno del contesto clinico.",
+          "sourceQuote": "deve essere interpretato nel contesto clinico.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "va interpretato nel contesto clinico",
+          "note": "Obligation to interpret clinically preserved.",
+          "sourceHash": "8e8f8d052fd676a8c0911fc8b3e08201117d458b41cc75316f1236c26306b28d"
+        }
+      ],
+      "sourceText": "In un esempio didattico, l'apparato respiratorio porta aria ai polmoni attraverso le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume; durante l'espirazione a riposo il diaframma si rilassa. Negli alveoli polmonari l'ossigeno passa dall'aria al sangue, mentre l'anidride carbonica compie il percorso opposto. Lo scambio avviene grazie a differenze di pressione parziale dei gas attraverso pareti molto sottili. L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue. La frequenza respiratoria può aumentare durante uno sforzo perché l'organismo consuma più ossigeno e produce più anidride carbonica. Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi: deve essere interpretato nel contesto clinico.",
+      "finalText": "L'apparato respiratorio porta aria ai polmoni tramite le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume; durante l'espirazione a riposo il diaframma si rilassa. Negli alveoli polmonari l'ossigeno passa dall'aria al sangue, mentre l'anidride carbonica fa il percorso inverso. Lo scambio avviene per differenze di pressione parziale attraverso pareti sottili. L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno. La frequenza respiratoria può aumentare nello sforzo perché l'organismo consuma più ossigeno e produce più anidride carbonica. Per valutare un disturbo respiratorio il medico valuta sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per la diagnosi: va interpretato nel contesto clinico.",
+      "semanticCertified": false,
+      "approvedForApp": false,
+      "independentExpertReviewStillNeeded": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "provenance": "LAB103_TARGETED_HISTORY_COPY",
+      "baseline": {
+        "letters": 548,
+        "reductionPercent": 18.21,
+        "originalLetters": 670,
+        "band": {
+          "low": 503,
+          "high": 569
+        },
+        "rows": 12,
+        "maxRows": 12,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+        "textHash": "5875fa87e11ab8e21f0229d44ccf3360ad8d16b863048ece7d67119d26166aa6",
+        "noSplitWords": true
+      },
+      "latest": {
+        "letters": 545,
+        "reductionPercent": 18.66,
+        "originalLetters": 670,
+        "band": {
+          "low": 503,
+          "high": 569
+        },
+        "rows": 12,
+        "maxRows": 12,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+        "textHash": "fc1e0a07072a51db74561e1d83e53d9a28bc588744a1e02f43d9abfce6c80367",
+        "noSplitWords": true
+      },
+      "edits": 1,
+      "sourceFacts": 13,
+      "reviewCounts": {
+        "FULL": 13,
+        "PARTIAL": 0,
+        "OPTIONAL_OMITTED": 0
+      },
+      "fundamentalStillPartial": [],
+      "ledgerEvidence": [
+        {
+          "factId": "F1",
+          "sourceClaim": "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri.",
+          "sourceQuote": "gli studenti confrontano lettere, cronache, carte geografiche e registri",
+          "priority": "supporto",
+          "status": "FULL",
+          "evidenceExcerpt": "lettere, cronache, carte geografiche e registri",
+          "note": "Four source types retained.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F2",
+          "sourceClaim": "Lo scopo del confronto di documenti in un laboratorio di storia è ricostruire gli avvenimenti.",
+          "sourceQuote": "per ricostruire gli avvenimenti",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "per ricostruire gli avvenimenti",
+          "note": "Historical aim retained.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F3",
+          "sourceClaim": "La provenienza di un documento aiuta a comprenderne l'autore, il tempo di produzione e lo scopo.",
+          "sourceQuote": "La provenienza di ciascun documento aiuta a capire chi lo ha prodotto, quando e per quale scopo",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "La provenienza aiuta a capire autore, tempo e scopo",
+          "note": "Origin, author, chronology and purpose retained.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F4",
+          "sourceClaim": "Due testimonianze possono riferire lo stesso episodio in modo differente.",
+          "sourceQuote": "Due testimonianze possono riferire lo stesso episodio in modo diverso",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Testimonianze sullo stesso episodio possono differire",
+          "note": "Same event and modality preserved.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F5",
+          "sourceClaim": "Le differenze tra testimonianze dipendono dal fatto che gli autori hanno osservato aspetti differenti o hanno interessi particolari.",
+          "sourceQuote": "perché i loro autori hanno osservato aspetti differenti oppure hanno interessi particolari",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "per aspetti osservati o interessi degli autori",
+          "note": "Observation versus authors interests preserved in concise form.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F6",
+          "sourceClaim": "Per verificare un'affermazione è necessario confrontare più fonti indipendenti.",
+          "sourceQuote": "occorre confrontare più fonti indipendenti",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "confrontare fonti indipendenti",
+          "note": "Plural sources and independence retained.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F7",
+          "sourceClaim": "Per verificare un'affermazione bisogna distinguere un fatto da un'opinione.",
+          "sourceQuote": "distinguere un fatto da un'opinione",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "distinguere fatti da opinioni",
+          "note": "Fact versus opinion retained.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F8",
+          "sourceClaim": "Per verificare un'affermazione bisogna segnalare ciò che resta incerto.",
+          "sourceQuote": "segnalare ciò che resta incerto",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "segnalare l'incertezza",
+          "note": "Uncertain claims flagged.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F9",
+          "sourceClaim": "Una data isolata non è sufficiente a spiegare le cause di un evento.",
+          "sourceQuote": "Una data isolata non spiega da sola le cause di un evento",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Una data isolata non spiega le cause",
+          "note": "Date by itself insufficient.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F10",
+          "sourceClaim": "Per comprendere un evento bisogna studiarne il contesto e le conseguenze.",
+          "sourceQuote": "bisogna studiarne il contesto e le conseguenze",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "serve studiare contesto e conseguenze",
+          "note": "Context and consequences preserved.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F11",
+          "sourceClaim": "Una fonte primaria è definita come un documento prodotto nel periodo studiato.",
+          "sourceQuote": "Una fonte primaria è prodotta nel periodo studiato",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Una fonte primaria è prodotta nel periodo studiato",
+          "note": "Primary source definition preserved.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F12",
+          "sourceClaim": "Una fonte secondaria è definita come un'opera che interpreta documenti precedenti.",
+          "sourceQuote": "Una fonte secondaria interpreta documenti precedenti",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Una fonte secondaria interpreta documenti precedenti",
+          "note": "Secondary source definition preserved.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        },
+        {
+          "factId": "F13",
+          "sourceClaim": "È necessario distinguere le ipotesi dai fatti documentati.",
+          "sourceQuote": "Le ipotesi vanno distinte dai fatti documentati",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Le ipotesi vanno distinte dai fatti documentati",
+          "note": "Documented not demonstrated preserved.",
+          "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82"
+        }
+      ],
+      "sourceText": "In un laboratorio di storia, gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. La provenienza di ciascun documento aiuta a capire chi lo ha prodotto, quando e per quale scopo. Due testimonianze possono riferire lo stesso episodio in modo diverso, perché i loro autori hanno osservato aspetti differenti oppure hanno interessi particolari. Per verificare un'affermazione occorre confrontare più fonti indipendenti, distinguere un fatto da un'opinione e segnalare ciò che resta incerto. Una data isolata non spiega da sola le cause di un evento: bisogna studiarne il contesto e le conseguenze. Una fonte primaria è prodotta nel periodo studiato. Una fonte secondaria interpreta documenti precedenti. Le ipotesi vanno distinte dai fatti documentati.",
+      "finalText": "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. La provenienza aiuta a capire autore, tempo e scopo. Testimonianze sullo stesso episodio possono differire per aspetti osservati o interessi degli autori. Per verificare un'affermazione occorre confrontare fonti indipendenti, distinguere fatti da opinioni e segnalare l'incertezza. Una data isolata non spiega le cause: serve studiare contesto e conseguenze. Una fonte primaria è prodotta nel periodo studiato. Una fonte secondaria interpreta documenti precedenti. Le ipotesi vanno distinte dai fatti documentati.",
+      "semanticCertified": false,
+      "approvedForApp": false,
+      "independentExpertReviewStillNeeded": true
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "provenance": "LAB102_TARGETED_REVIEW_COPY",
+      "baseline": {
+        "letters": 233,
+        "reductionPercent": 61.1,
+        "originalLetters": 599,
+        "band": {
+          "low": 180,
+          "high": 239
+        },
+        "rows": 5,
+        "maxRows": 5,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+        "textHash": "6048a5387b29f7f59cfdcc3b11b77c4a3b274c320a958a0f67910ffc72c0ed0a",
+        "noSplitWords": true
+      },
+      "latest": {
+        "letters": 233,
+        "reductionPercent": 61.1,
+        "originalLetters": 599,
+        "band": {
+          "low": 180,
+          "high": 239
+        },
+        "rows": 5,
+        "maxRows": 5,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [
+          "single_result_not_proof"
+        ],
+        "directionRisk": null,
+        "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+        "textHash": "ca75a1c72ae7e404b995116935dd02b14ccd871c352ecf86b06f7fc298a6add0",
+        "noSplitWords": true
+      },
+      "edits": 2,
+      "sourceFacts": 12,
+      "reviewCounts": {
+        "FULL": 3,
+        "PARTIAL": 8,
+        "OPTIONAL_OMITTED": 1
+      },
+      "fundamentalStillPartial": [
+        "F1",
+        "F2",
+        "F4",
+        "F5",
+        "F6",
+        "F8",
+        "F11",
+        "F12"
+      ],
+      "ledgerEvidence": [
+        {
+          "factId": "F1",
+          "sourceClaim": "La Terra compie una rotazione attorno al proprio asse.",
+          "sourceQuote": "La Terra ruota attorno al proprio asse.",
+          "priority": "fondamentale",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "La Terra ruota",
+          "note": "Missing explicit rotation about its axis.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F2",
+          "sourceClaim": "La rotazione terrestre è la causa del giorno e della notte.",
+          "sourceQuote": "La rotazione causa il giorno e la notte",
+          "priority": "fondamentale",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "giorno e notte",
+          "note": "Cause between rotation and day/night is elliptical.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F3",
+          "sourceClaim": "Durante la rotazione, una parte della superficie riceve luce solare mentre l'altra rimane al buio.",
+          "sourceQuote": "una parte della superficie riceve luce solare mentre l’altra rimane al buio.",
+          "priority": "supporto",
+          "status": "OPTIONAL_OMITTED",
+          "evidenceExcerpt": null,
+          "note": "Lit hemisphere and shaded hemisphere support detail omitted.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F4",
+          "sourceClaim": "La rivoluzione della Terra attorno al Sole ha una durata di circa un anno.",
+          "sourceQuote": "La rivoluzione attorno al Sole dura circa un anno.",
+          "priority": "fondamentale",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "Orbita attorno al Sole in un anno",
+          "note": "Source qualifies duration circa un anno.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F5",
+          "sourceClaim": "Le stagioni dipendono principalmente dall'inclinazione dell'asse terrestre.",
+          "sourceQuote": "Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre",
+          "priority": "fondamentale",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "Stagioni: asse inclinato",
+          "note": "Relationship is telegraphic, axis not explicitly terrestre.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F6",
+          "sourceClaim": "Le stagioni non dipendono dalla distanza tra la Terra e il Sole.",
+          "sourceQuote": "non dalla distanza tra la Terra e il Sole.",
+          "priority": "fondamentale",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "non distanza",
+          "note": "Sun-Earth distance referent omitted.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F7",
+          "sourceClaim": "La Luna, insieme al Sole, esercita un'influenza sulle maree.",
+          "sourceQuote": "La Luna influisce sulle maree insieme al Sole.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Maree: Luna e Sole influiscono",
+          "note": "Influence not full causation, both bodies retained.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F8",
+          "sourceClaim": "Il verificarsi delle eclissi richiede un allineamento particolare.",
+          "sourceQuote": "Le eclissi richiedono un allineamento particolare",
+          "priority": "fondamentale",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "Eclissi: allineamento",
+          "note": "Source says alignment is required; still elliptical.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F9",
+          "sourceClaim": "Le eclissi non avvengono ad ogni lunazione.",
+          "sourceQuote": "non avvengono a ogni lunazione.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "non ogni lunazione",
+          "note": "Explicit not every lunation retained.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F10",
+          "sourceClaim": "Il metodo scientifico richiede la presenza di ipotesi verificabili e osservazioni ripetibili.",
+          "sourceQuote": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Metodo: ipotesi verificabili, osservazioni ripetibili",
+          "note": "Verifiable hypotheses and repeatable observations retained.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F11",
+          "sourceClaim": "Un risultato isolato è insufficiente a dimostrare una spiegazione.",
+          "sourceQuote": "Un risultato isolato non basta per dimostrare una spiegazione.",
+          "priority": "fondamentale",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "un esito isolato non basta",
+          "note": "Missing object: not enough to demonstrate a scientific explanation.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F12",
+          "sourceClaim": "La comprensione del fenomeno richiede la distinzione tra la descrizione del movimento e le cause delle variazioni osservate.",
+          "sourceQuote": "Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+          "priority": "fondamentale",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "Distinguere moti e cause",
+          "note": "Missing contrast between description and causes of observed changes.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        }
+      ],
+      "sourceText": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+      "finalText": "La Terra ruota: giorno e notte. Orbita attorno al Sole in un anno. Stagioni: asse inclinato, non distanza. Maree: Luna e Sole influiscono. Eclissi: allineamento, non ogni lunazione. Metodo: ipotesi verificabili, osservazioni ripetibili; un esito isolato non basta. Distinguere moti e cause.",
+      "semanticCertified": false,
+      "approvedForApp": false,
+      "independentExpertReviewStillNeeded": true
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "provenance": "LAB102_TARGETED_REVIEW_COPY",
+      "baseline": {
+        "letters": 448,
+        "reductionPercent": 25.21,
+        "originalLetters": 599,
+        "band": {
+          "low": 390,
+          "high": 449
+        },
+        "rows": 10,
+        "maxRows": 10,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+        "textHash": "aeef250c468277d5ff02253a4afc29c4ce63f4bfe6d417a92e2fb51f7b24ed79",
+        "noSplitWords": true
+      },
+      "latest": {
+        "letters": 448,
+        "reductionPercent": 25.21,
+        "originalLetters": 599,
+        "band": {
+          "low": 390,
+          "high": 449
+        },
+        "rows": 10,
+        "maxRows": 10,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+        "textHash": "f1b99742e83f3bd229fcde014349494dca5df522605e9fea63e1b2f70f8df31e",
+        "noSplitWords": true
+      },
+      "edits": 1,
+      "sourceFacts": 12,
+      "reviewCounts": {
+        "FULL": 11,
+        "PARTIAL": 1,
+        "OPTIONAL_OMITTED": 0
+      },
+      "fundamentalStillPartial": [
+        "F12"
+      ],
+      "ledgerEvidence": [
+        {
+          "factId": "F1",
+          "sourceClaim": "La Terra compie una rotazione attorno al proprio asse.",
+          "sourceQuote": "La Terra ruota attorno al proprio asse.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "La Terra ruota attorno al proprio asse",
+          "note": "Axis rotation retained.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F2",
+          "sourceClaim": "La rotazione terrestre è la causa del giorno e della notte.",
+          "sourceQuote": "La rotazione causa il giorno e la notte",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "La rotazione causa il giorno e la notte",
+          "note": "Causation retained.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F3",
+          "sourceClaim": "Durante la rotazione, una parte della superficie riceve luce solare mentre l'altra rimane al buio.",
+          "sourceQuote": "una parte della superficie riceve luce solare mentre l’altra rimane al buio.",
+          "priority": "supporto",
+          "status": "FULL",
+          "evidenceExcerpt": "una parte riceve luce e l'altra resta al buio",
+          "note": "Day/night illumination relation kept.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F4",
+          "sourceClaim": "La rivoluzione della Terra attorno al Sole ha una durata di circa un anno.",
+          "sourceQuote": "La rivoluzione attorno al Sole dura circa un anno.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "La rivoluzione attorno al Sole dura circa un anno",
+          "note": "About one year retained.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F5",
+          "sourceClaim": "Le stagioni dipendono principalmente dall'inclinazione dell'asse terrestre.",
+          "sourceQuote": "Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Le stagioni dipendono dall'inclinazione dell'asse terrestre",
+          "note": "Season tilt dependence kept.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F6",
+          "sourceClaim": "Le stagioni non dipendono dalla distanza tra la Terra e il Sole.",
+          "sourceQuote": "non dalla distanza tra la Terra e il Sole.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "e non dalla distanza",
+          "note": "Negative distance qualification linked to preceding solar orbit.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F7",
+          "sourceClaim": "La Luna, insieme al Sole, esercita un'influenza sulle maree.",
+          "sourceQuote": "La Luna influisce sulle maree insieme al Sole.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "La Luna influisce sulle maree insieme al Sole",
+          "note": "Influence relationship preserved.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F8",
+          "sourceClaim": "Il verificarsi delle eclissi richiede un allineamento particolare.",
+          "sourceQuote": "Le eclissi richiedono un allineamento particolare",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Le eclissi richiedono un allineamento particolare",
+          "note": "Alignment necessary, not sufficient, retained.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F9",
+          "sourceClaim": "Le eclissi non avvengono ad ogni lunazione.",
+          "sourceQuote": "non avvengono a ogni lunazione.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "non avvengono a ogni lunazione",
+          "note": "Not every lunation retained.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F10",
+          "sourceClaim": "Il metodo scientifico richiede la presenza di ipotesi verificabili e osservazioni ripetibili.",
+          "sourceQuote": "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "Metodo: ipotesi verificabili, osservazioni ripetibili",
+          "note": "Verifiable and repeatable both retained.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F11",
+          "sourceClaim": "Un risultato isolato è insufficiente a dimostrare una spiegazione.",
+          "sourceQuote": "Un risultato isolato non basta per dimostrare una spiegazione.",
+          "priority": "fondamentale",
+          "status": "FULL",
+          "evidenceExcerpt": "un solo risultato non dimostra una spiegazione",
+          "note": "A single result does not establish the explanation.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        },
+        {
+          "factId": "F12",
+          "sourceClaim": "La comprensione del fenomeno richiede la distinzione tra la descrizione del movimento e le cause delle variazioni osservate.",
+          "sourceQuote": "Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+          "priority": "fondamentale",
+          "status": "PARTIAL",
+          "evidenceExcerpt": "Distinguere moto e cause delle variazioni",
+          "note": "Source specifically contrasts description of movement and causes of observed variations.",
+          "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd"
+        }
+      ],
+      "sourceText": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate.",
+      "finalText": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte poiché una parte riceve luce e l'altra resta al buio. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre e non dalla distanza. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Metodo: ipotesi verificabili, osservazioni ripetibili; un solo risultato non dimostra una spiegazione. Distinguere moto e cause delle variazioni.",
+      "semanticCertified": false,
+      "approvedForApp": false,
+      "independentExpertReviewStillNeeded": true
+    }
+  ],
+  "patches": [
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "edits": [
+        {
+          "old": "Due testimonianze sullo stesso episodio possono differire per aspetti osservati o interessi particolari.",
+          "replacement": "Testimonianze sullo stesso episodio possono differire per aspetti osservati o interessi degli autori.",
+          "reason": "Make interests belong to authors while preserving possibility and same episode."
+        }
+      ],
+      "before": {
+        "letters": 548,
+        "reductionPercent": 18.21,
+        "originalLetters": 670,
+        "band": {
+          "low": 503,
+          "high": 569
+        },
+        "rows": 12,
+        "maxRows": 12,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+        "textHash": "5875fa87e11ab8e21f0229d44ccf3360ad8d16b863048ece7d67119d26166aa6",
+        "noSplitWords": true
+      },
+      "after": {
+        "letters": 545,
+        "reductionPercent": 18.66,
+        "originalLetters": 670,
+        "band": {
+          "low": 503,
+          "high": 569
+        },
+        "rows": 12,
+        "maxRows": 12,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+        "textHash": "fc1e0a07072a51db74561e1d83e53d9a28bc588744a1e02f43d9abfce6c80367",
+        "noSplitWords": true
+      },
+      "synonymAdjudications": [],
+      "guardedNetNewAlerts": [],
+      "sourceIntact": true,
+      "untouchedOtherPhrases": true,
+      "verdict": "TARGETED_MATH_GRID_PASS_SEMANTIC_REVIEW_OPEN"
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "edits": [
+        {
+          "old": "Luna e Sole causano maree.",
+          "replacement": "Maree: Luna e Sole influiscono.",
+          "reason": "Do not strengthen source influence into definite cause."
+        },
+        {
+          "old": "un risultato isolato non basta",
+          "replacement": "un esito isolato non basta",
+          "reason": "Synonymous compact wording offsets letters without padding; still needs explicit proof object."
+        }
+      ],
+      "before": {
+        "letters": 233,
+        "reductionPercent": 61.1,
+        "originalLetters": 599,
+        "band": {
+          "low": 180,
+          "high": 239
+        },
+        "rows": 5,
+        "maxRows": 5,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+        "textHash": "6048a5387b29f7f59cfdcc3b11b77c4a3b274c320a958a0f67910ffc72c0ed0a",
+        "noSplitWords": true
+      },
+      "after": {
+        "letters": 233,
+        "reductionPercent": 61.1,
+        "originalLetters": 599,
+        "band": {
+          "low": 180,
+          "high": 239
+        },
+        "rows": 5,
+        "maxRows": 5,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [
+          "single_result_not_proof"
+        ],
+        "directionRisk": null,
+        "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+        "textHash": "ca75a1c72ae7e404b995116935dd02b14ccd871c352ecf86b06f7fc298a6add0",
+        "noSplitWords": true
+      },
+      "synonymAdjudications": [
+        {
+          "warning": "single_result_not_proof",
+          "sourceAnchor": "Un risultato isolato non basta",
+          "equivalentForm": "un esito isolato non basta",
+          "advisoryOnly": true
+        }
+      ],
+      "guardedNetNewAlerts": [],
+      "sourceIntact": true,
+      "untouchedOtherPhrases": true,
+      "verdict": "TARGETED_MATH_GRID_PASS_SEMANTIC_REVIEW_OPEN"
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "edits": [
+        {
+          "old": "Metodo scientifico: ipotesi verificabili e osservazioni ripetibili; un solo risultato non basta. Distinguere movimenti e cause delle variazioni.",
+          "replacement": "Metodo: ipotesi verificabili, osservazioni ripetibili; un solo risultato non dimostra una spiegazione. Distinguere moto e cause delle variazioni.",
+          "reason": "Explicitly restore what a single result cannot demonstrate. Keep the rest of page identical."
+        }
+      ],
+      "before": {
+        "letters": 448,
+        "reductionPercent": 25.21,
+        "originalLetters": 599,
+        "band": {
+          "low": 390,
+          "high": 449
+        },
+        "rows": 10,
+        "maxRows": 10,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+        "textHash": "aeef250c468277d5ff02253a4afc29c4ce63f4bfe6d417a92e2fb51f7b24ed79",
+        "noSplitWords": true
+      },
+      "after": {
+        "letters": 448,
+        "reductionPercent": 25.21,
+        "originalLetters": 599,
+        "band": {
+          "low": 390,
+          "high": 449
+        },
+        "rows": 10,
+        "maxRows": 10,
+        "percentPass": true,
+        "gridPass": true,
+        "relationAlerts": [],
+        "directionRisk": null,
+        "sourceHash": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+        "textHash": "f1b99742e83f3bd229fcde014349494dca5df522605e9fea63e1b2f70f8df31e",
+        "noSplitWords": true
+      },
+      "synonymAdjudications": [],
+      "guardedNetNewAlerts": [],
+      "sourceIntact": true,
+      "untouchedOtherPhrases": true,
+      "verdict": "TARGETED_MATH_GRID_PASS_SEMANTIC_REVIEW_OPEN"
+    }
+  ],
+  "semanticCertified": 0,
+  "certifiedForApp": 0,
+  "geminiCalls": 0,
+  "addedCostEuro": 0,
+  "source": "LAB101 citation-anchored ledger + LAB103 best-quality candidates",
+  "rationale": "Evaluate best existing outputs, never regenerate six versions or accept a numerically perfect but semantically weak output.",
+  "summary": {
+    "factRecordsReviewed": 52,
+    "full": 39,
+    "partial": 11,
+    "optionalOmitted": 2,
+    "allNumericGridConforming": true,
+    "targetsPatched": 3,
+    "sourceAnchorsChecked": 52,
+    "remainingFundamentalReview": 10,
+    "semanticCertifications": 0,
+    "corpusType": "controlled pre-segmented synthetic pages",
+    "actualA4PdfTest": false,
+    "versionPromotion": false
+  }
+}
