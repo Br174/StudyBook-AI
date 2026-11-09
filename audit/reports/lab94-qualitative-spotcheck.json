@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-09",
+  "reviewer": "assistant review of full generated response against original synthetic fixture, not licensed clinical/legal certification",
+  "summary": {
+    "reviewed": 5,
+    "englishLeak": 0,
+    "numberAndGridPass": 2,
+    "approvedForApp": 0,
+    "heuristicFalsePositiveExamples": 3
+  },
+  "reminder": "Regex coverage is a warning, not semantic proof. English fact IDs must NEVER be shown to Gemini. A compact plan is preferable to one full sentence per atom. No app changes.",
+  "reviews": [
+    {
+      "source": "medicina",
+      "level": 20,
+      "mathAndGridPass": false,
+      "englishLeak": false,
+      "automaticMissingFacts": [
+        "co2_opposite"
+      ],
+      "analysis": [
+        "Spiega le componenti principali e i dettagli tecnici, ma riduce solo dell'8,52% e usa 14 righe su 13.",
+        "L'allarme automatico sulla direzione dell'anidride carbonica è un falso positivo: il testo scrive «percorso inverso».",
+        "Da sintetizzare con clausole più compatte, senza sacrificare vie aeree, scambi, emoglobina e valutazione clinica."
+      ],
+      "humanApproved": false
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "mathAndGridPass": false,
+      "englishLeak": false,
+      "automaticMissingFacts": [
+        "initial_date_without_confirmation"
+      ],
+      "analysis": [
+        "Mantiene regola 12, condizioni di proroga, conferma scritta, scadenza, restituzione e contenuto del registro.",
+        "L'allarme sulla data iniziale è un falso positivo: «senza di essa resta valida la data iniziale» richiama correttamente la conferma scritta.",
+        "Riduzione 10,06% invece del 20%; 12 righe anziché massimo 11."
+      ],
+      "humanApproved": false
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "mathAndGridPass": false,
+      "englishLeak": false,
+      "automaticMissingFacts": [],
+      "analysis": [
+        "Conserva tutti i concetti indispensabili verificati, inclusa la negazione sulla distanza e l'assenza di eclissi a ogni lunazione.",
+        "Ripete molte frasi della checklist come frasi autonome, riducendo soltanto il 2,17%; 13 righe contro 11.",
+        "Rendere più compatto unendo proposizioni, non eliminando fatti."
+      ],
+      "humanApproved": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "mathAndGridPass": true,
+      "englishLeak": false,
+      "automaticMissingFacts": [
+        "compare_documents"
+      ],
+      "analysis": [
+        "Riduzione 21,04% e 11 righe su 12: target geometrico e numerico centrato.",
+        "Il controllo «confronto documenti» segnala un falso positivo: il testo dice che gli studenti confrontano lettere, cronache, carte e registri.",
+        "Manca un accento in «Una fonte primaria e prodotta» e c'è punteggiatura insufficiente: testo non ancora didatticamente approvabile."
+      ],
+      "humanApproved": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "mathAndGridPass": true,
+      "englishLeak": false,
+      "automaticMissingFacts": [],
+      "analysis": [
+        "Conserva termine perentorio di 15 giorni, perdita della facoltà di deposito e diritto alla motivazione.",
+        "È una pagina breve (4 righe generate su 5 ammesse), perciò la percentuale è libera, ma il testo è stato allungato del 14,19%.",
+        "Il testo resta comprensibile, ma l'allungamento non è necessario per una pagina già chiara."
+      ],
+      "humanApproved": false
+    }
+  ]
+}
