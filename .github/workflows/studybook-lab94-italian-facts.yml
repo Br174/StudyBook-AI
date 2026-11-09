@@ -1,0 +1,58 @@
+name: StudyBook LAB94 Italian semantic fact pilot
+on:
+  push:
+    branches:
+      - 'audit/studybook-italian-fact-ledger-v94-*'
+    paths:
+      - '.github/workflows/studybook-lab94-italian-facts.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab94-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check script syntax
+        run: |
+          node --check scripts/test-lab94-italian-ledger-offline.mjs
+          node --check scripts/test-lab94-real-italian-facts.mjs
+      - name: Verify all 64 Italian fact descriptions without Gemini
+        run: node scripts/test-lab94-italian-ledger-offline.mjs
+      - name: Bounded real Gemini with Italian-only atomic facts
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab94-real-italian-facts.mjs
+      - name: Upload all data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB94-ItalianFacts
+          path: |
+            audit/reports/lab94-italian-fact-ledger-offline.json
+            audit/reports/lab94-real-italian-facts-gemini.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Persist reports in audit branch only
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab94-italian-fact-ledger-offline.json audit/reports/lab94-real-italian-facts-gemini.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(LAB94): preserve Italian-only semantic fact benchmark'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
