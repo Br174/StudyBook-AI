@@ -1,0 +1,43 @@
+name: StudyBook LAB77 44-page overload recovery and no-regression
+on:
+  push:
+    branches:
+      - 'lab/studybook-core-android-01-update-77-*'
+    paths:
+      - '.github/workflows/studybook-lab77-503-throughput.yml'
+      - 'src/lib/geminiThroughputV77.js'
+      - 'src/lib/geminiCadenceV58.js'
+      - 'src/lib/draftFirstV57.js'
+      - 'scripts/test-lab77-503-throughput-recovery.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: studybook-lab77-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing project packages without lockfile churn
+        run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: Reproduce 44/44 summary and 50%, then 503, resume 40, 30, 20, 10
+        run: node scripts/test-lab77-503-throughput-recovery.mjs
+      - name: LAB58 no regression to one-block large source or 429 scheduler
+        run: node scripts/test-lab58-large-block-cadence.mjs
+      - name: LAB55 checkpoint recovery, timing and 503 classification
+        run: node scripts/test-lab55-503-resume.mjs
+      - name: LAB76 quantitative and source-meaning golden safeguards
+        run: node scripts/test-lab76-best-of.mjs
+      - name: Build experimental app and no-cost isolated Worker locally
+        env:
+          VITE_NATIVE_API_BASE: https://studybook-ai-lab76-bestof.brunoverlezza.workers.dev
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          npm run build
+          npx wrangler deploy --dry-run --config wrangler.lab76-bestof.jsonc
