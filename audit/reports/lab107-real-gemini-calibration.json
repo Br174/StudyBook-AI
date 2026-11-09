@@ -1,0 +1,373 @@
+{
+  "lab": "LAB107 real limited pilot",
+  "date": "2026-11-09T23:31:56.912Z",
+  "model": "gemini-3.5-flash-lite",
+  "sourceType": "synthetic existing fixture, not real user PDF",
+  "planned": 12,
+  "attempted": 12,
+  "responses": 12,
+  "stopped": false,
+  "stopReason": null,
+  "callsToPaidService": 0,
+  "certifiedSemanticPages": 0,
+  "approvedForApp": false,
+  "results": [
+    {
+      "id": "scienze",
+      "level": "10",
+      "valid": true,
+      "originalLetters": 599,
+      "targetLetters": 539,
+      "minLetters": 510,
+      "maxLetters": 569,
+      "originalRows": 13,
+      "maxRows": 12,
+      "outputText": "La Terra ruota attorno al proprio asse. Tale rotazione determina il giorno e la notte poiché una metà riceve luce mentre l'altra resta al buio. La rivoluzione intorno al Sole richiede circa un anno. Le stagioni derivano dall'inclinazione dell'asse terrestre e non dalla distanza dal Sole. La Luna influenza le maree con il Sole. Le eclissi esigono un allineamento specifico e non avvengono a ogni lunazione. Il metodo scientifico necessita di ipotesi verificabili e osservazioni ripetibili. Un dato isolato non basta. Occorre distinguere la descrizione dalle cause.",
+      "outputLetters": 467,
+      "observedReduction": 22.04,
+      "numericPass": false,
+      "gridPass": true,
+      "prelimSemanticWarnings": [
+        {
+          "id": "single_result_insufficient",
+          "reason": "Un singolo risultato non è sufficiente a dimostrare una spiegazione.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 1171
+    },
+    {
+      "id": "scienze",
+      "level": "20",
+      "valid": true,
+      "originalLetters": 599,
+      "targetLetters": 479,
+      "minLetters": 450,
+      "maxLetters": 509,
+      "originalRows": 13,
+      "maxRows": 11,
+      "outputText": "La Terra ruota attorno al proprio asse causando alternanza tra giorno e buio poichè una meta riceve luce e l altra resta in ombra. La rivoluzione solare dura un anno e le stagioni dipendono dall inclinazione asse terrestre non dalla distanza Sole. La Luna influenza le maree con il Sole e le eclissi richiedono allineamento specifico senza avvenire ogni lunazione. Il metodo scientifico esige ipotesi verificabili osservazioni ripetibili e un dato isolato non basta. Per comprendere fenomeni serve distinguere la descrizione del movimento dalle cause delle variazioni osservate senza eccezioni.",
+      "outputLetters": 500,
+      "observedReduction": 16.53,
+      "numericPass": true,
+      "gridPass": true,
+      "prelimSemanticWarnings": [
+        {
+          "id": "eclipses_not_every_lunation",
+          "reason": "Preservare la negazione: non ogni lunazione comporta una eclissi.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        },
+        {
+          "id": "single_result_insufficient",
+          "reason": "Un singolo risultato non è sufficiente a dimostrare una spiegazione.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 1047
+    },
+    {
+      "id": "scienze",
+      "level": "30",
+      "valid": true,
+      "originalLetters": 599,
+      "targetLetters": 419,
+      "minLetters": 390,
+      "maxLetters": 449,
+      "originalRows": 13,
+      "maxRows": 10,
+      "outputText": "La Terra ruota attorno al proprio asse causando il giorno e la notte poiché metà riceve luce e metà resta al buio. La rivoluzione dura un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre e non dalla distanza dal Sole. La Luna e il Sole influenzano le maree. Le eclissi esigono un allineamento particolare senza verificarsi a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta. Occorre distinguere descrizione e cause.",
+      "outputLetters": 423,
+      "observedReduction": 29.38,
+      "numericPass": true,
+      "gridPass": true,
+      "prelimSemanticWarnings": [
+        {
+          "id": "eclipses_not_every_lunation",
+          "reason": "Preservare la negazione: non ogni lunazione comporta una eclissi.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 853
+    },
+    {
+      "id": "scienze",
+      "level": "40",
+      "valid": true,
+      "originalLetters": 599,
+      "targetLetters": 359,
+      "minLetters": 330,
+      "maxLetters": 389,
+      "originalRows": 13,
+      "maxRows": 8,
+      "outputText": "La Terra ruota sullasse generando giorno e notte per luce e buio. La rivoluzione dura un anno. Le stagioni dipendono dallinclinazione asse, non dalla distanza solare. La Luna causa maree col Sole. Le eclissi esigono allineamento specifico. Il metodo scientifico richiede ipotesi verificabili e prove ripetibili; un dato isolato non basta. Occorre distinguere movimento e cause.",
+      "outputLetters": 313,
+      "observedReduction": 47.75,
+      "numericPass": false,
+      "gridPass": true,
+      "prelimSemanticWarnings": [
+        {
+          "id": "eclipses_not_every_lunation",
+          "reason": "Preservare la negazione: non ogni lunazione comporta una eclissi.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        },
+        {
+          "id": "single_result_insufficient",
+          "reason": "Un singolo risultato non è sufficiente a dimostrare una spiegazione.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 908
+    },
+    {
+      "id": "scienze",
+      "level": "50",
+      "valid": true,
+      "originalLetters": 599,
+      "targetLetters": 300,
+      "minLetters": 270,
+      "maxLetters": 329,
+      "originalRows": 13,
+      "maxRows": 7,
+      "outputText": "La Terra ruota attorno al proprio asse causando giorno e notte. La rivoluzione dura un anno. Le stagioni dipendono dall'asse terrestre, non dalla distanza solare. La Luna influisce sulle maree. Le eclissi non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta. Occorre distinguere descrizione e cause.",
+      "outputLetters": 323,
+      "observedReduction": 46.08,
+      "numericPass": true,
+      "gridPass": true,
+      "prelimSemanticWarnings": [],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 902
+    },
+    {
+      "id": "scienze",
+      "level": "summary",
+      "valid": true,
+      "originalLetters": 599,
+      "targetLetters": 240,
+      "minLetters": 210,
+      "maxLetters": 269,
+      "originalRows": 13,
+      "maxRows": 6,
+      "outputText": "La Terra ruota attorno al proprio asse causando il giorno e la notte per la luce solare alternata al buio. La rivoluzione dura un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre e non dalla distanza dal Sole. La Luna influisce sulle maree. Le eclissi richiedono un allineamento particolare. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta. Bisogna distinguere fra descrizione e cause.",
+      "outputLetters": 387,
+      "observedReduction": 35.39,
+      "numericPass": false,
+      "gridPass": false,
+      "prelimSemanticWarnings": [
+        {
+          "id": "eclipses_not_every_lunation",
+          "reason": "Preservare la negazione: non ogni lunazione comporta una eclissi.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 722
+    },
+    {
+      "id": "procedura",
+      "level": "10",
+      "valid": true,
+      "originalLetters": 636,
+      "targetLetters": 572,
+      "minLetters": 541,
+      "maxLetters": 604,
+      "originalRows": 14,
+      "maxRows": 13,
+      "outputText": "In un compito del 2024, una biblioteca simulata ha adottato una prassi per i prestiti. La norma interna numero 12 impone che l'alunno annoti il titolo prima del prelievo e validi il reso entro dieci giorni. Gli addetti autorizzano una proroga solo se il testo non risulta prenotato da terzi. Il rinvio non è automatico: senza conferma scritta vale il termine originario. Se il volume è già opzionato, il ragazzo deve renderlo alla scadenza pur non avendo ultimato la lettura. Il registro traccia i beneficiari e le date, ma ignora i giudizi personali dei lettori. Regole ed eccezioni sono cruciali.",
+      "outputLetters": 481,
+      "observedReduction": 24.37,
+      "numericPass": false,
+      "gridPass": true,
+      "prelimSemanticWarnings": [
+        {
+          "id": "internal_rule_not_generic_norm",
+          "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 1288
+    },
+    {
+      "id": "procedura",
+      "level": "20",
+      "valid": true,
+      "originalLetters": 636,
+      "targetLetters": 509,
+      "minLetters": 477,
+      "maxLetters": 540,
+      "originalRows": 14,
+      "maxRows": 11,
+      "outputText": "Nel 2024 una biblioteca ha introdotto una procedura per i prestiti librari. La regola 12 impone allo studente di registrare il titolo e confermare la restituzione in dieci giorni. Il personale concede una proroga solo se il volume non risulta prenotato da altri utenti. Senza conferma scritta resta valida la scadenza iniziale. Se il libro è riservato, lo studente deve restituirlo puntualmente. Il registro traccia prestiti e date, escludendo le opinioni personali.",
+      "outputLetters": 381,
+      "observedReduction": 40.09,
+      "numericPass": false,
+      "gridPass": true,
+      "prelimSemanticWarnings": [
+        {
+          "id": "internal_rule_not_generic_norm",
+          "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        },
+        {
+          "id": "extension_not_automatic",
+          "reason": "La proroga richiede verifica e non è automatica.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 912
+    },
+    {
+      "id": "procedura",
+      "level": "30",
+      "valid": true,
+      "originalLetters": 636,
+      "targetLetters": 445,
+      "minLetters": 414,
+      "maxLetters": 477,
+      "originalRows": 14,
+      "maxRows": 10,
+      "outputText": "Nel 2024 una biblioteca scolastica ha introdotto una procedura per i prestiti. La regola 12 impone allo studente di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni. Il personale concede una proroga solo se il volume non e prenotato da altri. La proroga non e automatica senza conferma scritta. Se un libro e gia riservato va restituito alla scadenza pur se non letto. Il registro traccia prestiti e date ma non le opinioni dei lettori. Tali condizioni ed eccezioni sono essenziali.",
+      "outputLetters": 423,
+      "observedReduction": 33.49,
+      "numericPass": true,
+      "gridPass": true,
+      "prelimSemanticWarnings": [
+        {
+          "id": "internal_rule_not_generic_norm",
+          "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        },
+        {
+          "id": "written_confirmation_initial_deadline",
+          "reason": "Senza conferma scritta resta la scadenza iniziale.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 1173
+    },
+    {
+      "id": "procedura",
+      "level": "40",
+      "valid": true,
+      "originalLetters": 636,
+      "targetLetters": 382,
+      "minLetters": 350,
+      "maxLetters": 413,
+      "originalRows": 14,
+      "maxRows": 9,
+      "outputText": "Nella biblioteca scolastica 2024, regola 12: lo studente registra il titolo prima del prestito e restituisce entro dieci giorni. Proroga concessa solo se nessun altro ha prenotato; non è automatica e senza conferma scritta vale la scadenza iniziale. Con prenotazione altrui, va restituito alla scadenza anche se incompleto. Il registro traccia solo prestiti e date, non opinioni.",
+      "outputLetters": 308,
+      "observedReduction": 51.57,
+      "numericPass": false,
+      "gridPass": true,
+      "prelimSemanticWarnings": [
+        {
+          "id": "internal_rule_not_generic_norm",
+          "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 1158
+    },
+    {
+      "id": "procedura",
+      "level": "50",
+      "valid": true,
+      "originalLetters": 636,
+      "targetLetters": 318,
+      "minLetters": 287,
+      "maxLetters": 349,
+      "originalRows": 14,
+      "maxRows": 7,
+      "outputText": "La regola 12 della biblioteca 2024 richiede di registrare il titolo e confermare la restituzione entro dieci giorni. Il personale concede una proroga solo se nessuno ha prenotato il volume; essa non è automatica senza conferma scritta. Se riservato, va restituito alla scadenza anche se incompleto. Il registro traccia prestiti e date, non opinioni.",
+      "outputLetters": 283,
+      "observedReduction": 55.5,
+      "numericPass": false,
+      "gridPass": true,
+      "prelimSemanticWarnings": [
+        {
+          "id": "internal_rule_not_generic_norm",
+          "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        },
+        {
+          "id": "written_confirmation_initial_deadline",
+          "reason": "Senza conferma scritta resta la scadenza iniziale.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 914
+    },
+    {
+      "id": "procedura",
+      "level": "summary",
+      "valid": true,
+      "originalLetters": 636,
+      "targetLetters": 254,
+      "minLetters": 223,
+      "maxLetters": 286,
+      "originalRows": 14,
+      "maxRows": 6,
+      "outputText": "La regola 12 della biblioteca 2024 impone di registrare il titolo e restituire entro dieci giorni. Il personale concede proroga solo se nessuno ha prenotato. Senza conferma scritta vale la scadenza iniziale. Se riservato, va restituito puntualmente. Il registro traccia prestiti e date, non opinioni.",
+      "outputLetters": 243,
+      "observedReduction": 61.79,
+      "numericPass": true,
+      "gridPass": true,
+      "prelimSemanticWarnings": [
+        {
+          "id": "internal_rule_not_generic_norm",
+          "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        },
+        {
+          "id": "extension_not_automatic",
+          "reason": "La proroga richiede verifica e non è automatica.",
+          "severity": "high",
+          "verifiedBy": "regex heuristic only"
+        }
+      ],
+      "semanticCertified": false,
+      "actualApproved": false,
+      "elapsedMs": 1023
+    }
+  ],
+  "errors": [],
+  "complete": true,
+  "mathGridPass": 5,
+  "semanticCertification": "NOT_PERFORMED"
+}
