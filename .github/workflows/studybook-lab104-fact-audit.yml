@@ -53,3 +53,5 @@ jobs:
             git rebase "origin/${TARGET_REF}"
             git push origin "HEAD:${TARGET_REF}"
           fi
+
+# Re-run after exact source-provenance hash comparison fix; no new provider requests.
