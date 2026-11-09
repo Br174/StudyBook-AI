@@ -27,6 +27,7 @@ import {measureEditionLengthV72} from './studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from './studyDraftProtocolV72.js';
 import {STUDY_DRAFT_PROTOCOL_V74,verifyStudyDraftResponseV74} from './studyDraftProtocolV74.js';
 import {pageLetterBudgetsV74,pageLetterReviewV74} from './studyPageBudgetsV74.js';
+import {STUDY_GEOMETRY_V78} from './studyGeometryV78.js';
 import {initialStudyOutputLimitV73,safeNetworkSplitV73,isRecoverableNetworkV73,
  minimumFullPageOutputV73}
  from './studyNetworkRecoveryV73.js';
@@ -190,7 +191,7 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
  const isNewDraft=phase==='draft';
  const usePageBudgetV74=isNewDraft||phase==='repair'||phase==='rewrite';
  const body={phase:usePageBudgetV74?(isNewDraft?'draft-v74':'recalibrate-v74'):phase,
-   ...(usePageBudgetV74?{draftProtocol:STUDY_DRAFT_PROTOCOL_V74}:{}),
+   ...(usePageBudgetV74?{draftProtocol:STUDY_DRAFT_PROTOCOL_V74,geometryPolicyV78:STUDY_GEOMETRY_V78}:{}),
    ...(usePageBudgetV74?{pageBudgetsV74:pageLetterBudgetsV74(block,level)}:{}),
    // Approximate individual targets guide Gemini without interrupting first-pass creation.
    unitBudgets:buildUnitBudgetsV71(block,level),
@@ -239,6 +240,12 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
    throw Object.assign(new Error(data?.error||'Risposta Gemini non disponibile'),{
      code,quota:data?.quota||null,diagnostic:data?.diagnostic||null});
  }
+ // The LAB78 Android binary MUST reach the LAB78 Worker, not an older best-of endpoint.
+ if(import.meta.env?.VITE_STUDYBOOK_GEOMETRY_V78==='1'&&usePageBudgetV74&&
+    (data?.geometryPolicyV78!==STUDY_GEOMETRY_V78||
+      data?.geometryReviewV78?.policy!==STUDY_GEOMETRY_V78))
+   throw Object.assign(new Error('Worker geometrico LAB78 non verificato: bozze conservate'),
+    {code:'AI_GEOMETRY_BACKEND_VERSION_MISMATCH'});
  if(data?.engine!=='ai'||data?.version!=='integral-v51'||data?.level!==level)
    throw Object.assign(new Error('Provenienza risposta Gemini non verificata'),{code:'INVALID_EDITION_RESPONSE'});
  // LAB70: reject stale LAB67 Worker deployments before storing new drafts.
