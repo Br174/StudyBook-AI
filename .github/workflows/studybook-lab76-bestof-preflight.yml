@@ -1,0 +1,50 @@
+name: StudyBook LAB76 best-of preflight (no Gemini, no APK)
+on:
+  push:
+    branches:
+      - 'lab/studybook-core-android-01-update-76-*'
+    paths:
+      - '.github/workflows/studybook-lab76-bestof-preflight.yml'
+      - 'src/lib/studyBestOfV76.js'
+      - 'src/lib/studyQualityV66.js'
+      - 'api/editionsBulkV51.js'
+      - 'scripts/test-lab76-best-of.mjs'
+      - 'wrangler.lab76-bestof.jsonc'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: studybook-lab76-preflight-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing free dependencies, never change project lockfile
+        run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: Verify 4 LAB104 golden texts, 5 adversarial factual regressions, 44-page large blocks
+        run: |
+          node scripts/test-lab76-best-of.mjs
+          node scripts/test-lab74-page-letter-budgets.mjs
+          node scripts/test-lab74-selective-pages.mjs
+          node scripts/test-lab58-large-block-cadence.mjs
+          node scripts/test-fidelity-engine.mjs
+      - name: Build actual StudyBook Android web assets with isolated backend address
+        env:
+          VITE_NATIVE_API_BASE: https://studybook-ai-lab76-bestof.brunoverlezza.workers.dev
+        run: npm run build
+      - name: Verify separate Cloudflare Worker bundle without deployment
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: npx wrangler deploy --dry-run --config wrangler.lab76-bestof.jsonc
+      - name: Keep immutable QA source proof
+        run: |
+          test -f src/lib/studyBestOfV76.js
+          test -f .motorlab/active-family.json
+          test -f .motorlab/scudo360-contracts.json
+          echo "LAB76 preflight verifies compiler and source contracts, not Android installation nor live Gemini semantic generalization."
