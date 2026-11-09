@@ -1,0 +1,341 @@
+{
+  "study": "LAB98 semantic source guard offline",
+  "date": "2026-11-09T14:16:37.400Z",
+  "limits": "Regex alerts are risk indicators; synonymy may cause false positives, matched words may hide semantic reversal. No automatic factual repair or certification.",
+  "sourceProtection": "No edits to source text or previous Gemini generations, only deterministic re-evaluation.",
+  "summary": {
+    "originalSources": 5,
+    "originalFalseAlerts": 0,
+    "historicalReplays": 16,
+    "manualExamples": 2,
+    "historicalLAB97CriticalRisksCaught": 4,
+    "seededMutations": 16,
+    "mutationsDetected": 16,
+    "failures": 1
+  },
+  "originals": [
+    {
+      "source": "scienze",
+      "totalApplicable": 3,
+      "alerts": []
+    },
+    {
+      "source": "procedura",
+      "totalApplicable": 3,
+      "alerts": []
+    },
+    {
+      "source": "medicina",
+      "totalApplicable": 3,
+      "alerts": []
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "totalApplicable": 3,
+      "alerts": []
+    },
+    {
+      "source": "pagina_breve_continua",
+      "totalApplicable": 1,
+      "alerts": []
+    }
+  ],
+  "manualGold": [
+    {
+      "source": "scienze",
+      "kind": "MANUAL_NOT_GEMINI",
+      "totalApplicable": 3,
+      "alerts": []
+    },
+    {
+      "source": "medicina",
+      "kind": "MANUAL_NOT_GEMINI",
+      "totalApplicable": 3,
+      "alerts": []
+    }
+  ],
+  "pastResults": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "lab": "LAB97",
+      "percent": 15.03,
+      "strictCombined": false,
+      "alerts": [
+        "eclipses_not_every_lunation",
+        "single_result_insufficient"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "lab": "LAB97",
+      "percent": 9.34,
+      "strictCombined": true,
+      "alerts": [
+        "possible_increase_not_certainty"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "lab": "LAB97",
+      "percent": 9.91,
+      "strictCombined": true,
+      "alerts": [
+        "internal_rule_not_generic_norm"
+      ],
+      "orthography": [
+        "Apostrofo assente dopo l"
+      ],
+      "semanticCertified": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "lab": "LAB97",
+      "percent": 12.39,
+      "strictCombined": true,
+      "alerts": [
+        "documented_not_proven"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "lab": "LAB96",
+      "percent": 32.39,
+      "strictCombined": false,
+      "alerts": [
+        "eclipses_not_every_lunation",
+        "single_result_insufficient"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "lab": "LAB96",
+      "percent": 34.34,
+      "strictCombined": false,
+      "alerts": [
+        "possible_increase_not_certainty"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "lab": "LAB96",
+      "percent": 35.53,
+      "strictCombined": false,
+      "alerts": [
+        "internal_rule_not_generic_norm",
+        "extension_not_automatic"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "lab": "LAB96",
+      "percent": 32.54,
+      "strictCombined": false,
+      "alerts": [
+        "documented_not_proven"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "lab": "LAB96",
+      "percent": 18.06,
+      "strictCombined": true,
+      "alerts": [],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "lab": "LAB96",
+      "percent": 50.08,
+      "strictCombined": true,
+      "alerts": [
+        "seasons_not_distance",
+        "eclipses_not_every_lunation",
+        "single_result_insufficient"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "lab": "LAB96",
+      "percent": 52.88,
+      "strictCombined": true,
+      "alerts": [
+        "possible_increase_not_certainty",
+        "pressure_is_partial",
+        "single_value_not_always_sufficient"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "lab": "LAB96",
+      "percent": 56.45,
+      "strictCombined": false,
+      "alerts": [
+        "internal_rule_not_generic_norm",
+        "extension_not_automatic"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "lab": "LAB96",
+      "percent": 29.88,
+      "strictCombined": false,
+      "alerts": [
+        "eclipses_not_every_lunation"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "lab": "LAB96",
+      "percent": 22.39,
+      "strictCombined": false,
+      "alerts": [],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "lab": "LAB96",
+      "percent": 40.07,
+      "strictCombined": false,
+      "alerts": [
+        "seasons_not_distance",
+        "eclipses_not_every_lunation",
+        "single_result_insufficient"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "lab": "LAB96",
+      "percent": 54.25,
+      "strictCombined": false,
+      "alerts": [
+        "internal_rule_not_generic_norm",
+        "written_confirmation_initial_deadline"
+      ],
+      "orthography": [],
+      "semanticCertified": false
+    }
+  ],
+  "mutationCases": [
+    {
+      "source": "scienze",
+      "name": "not avvengono",
+      "expect": "eclipses_not_every_lunation"
+    },
+    {
+      "source": "scienze",
+      "name": "distance not",
+      "expect": "seasons_not_distance"
+    },
+    {
+      "source": "scienze",
+      "name": "isolated result insufficient",
+      "expect": "single_result_insufficient"
+    },
+    {
+      "source": "medicina",
+      "name": "modality",
+      "expect": "possible_increase_not_certainty"
+    },
+    {
+      "source": "medicina",
+      "name": "partial pressure",
+      "expect": "pressure_is_partial"
+    },
+    {
+      "source": "medicina",
+      "name": "single diagnostic measure",
+      "expect": "single_value_not_always_sufficient"
+    },
+    {
+      "source": "procedura",
+      "name": "internal library rule",
+      "expect": "internal_rule_not_generic_norm"
+    },
+    {
+      "source": "procedura",
+      "name": "extension not automatic",
+      "expect": "extension_not_automatic"
+    },
+    {
+      "source": "procedura",
+      "name": "confirmation",
+      "expect": "written_confirmation_initial_deadline"
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "name": "documented not proven",
+      "expect": "documented_not_proven"
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "name": "fact opinion",
+      "expect": "fact_vs_opinion"
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "name": "uncertainty",
+      "expect": "source_uncertainty"
+    },
+    {
+      "source": "pagina_breve_continua",
+      "name": "peremptory",
+      "expect": "peremptory_term"
+    },
+    {
+      "source": "pagina_breve_continua",
+      "name": "motivation right",
+      "expect": "right_to_motivation_remains"
+    }
+  ],
+  "issues": [
+    {
+      "n": 16,
+      "source": "pagina_breve_continua",
+      "name": "motivation right",
+      "reason": "mutation source text not found",
+      "from": "resta il diritto alla motivazione"
+    }
+  ]
+}
