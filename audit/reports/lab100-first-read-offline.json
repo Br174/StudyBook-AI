@@ -1,0 +1,352 @@
+{
+  "study": "LAB100 deterministic first-read integrity and six-level reuse",
+  "date": "2026-11-09T14:54:38.106Z",
+  "scope": "Five benchmark pages, synthetic literal source-as-ledger reference, not model understanding.",
+  "summary": {
+    "sources": 5,
+    "levelPlans": 30,
+    "seededCases": 30000,
+    "stableReuse": true,
+    "syntaxDefects": 0,
+    "sourceEvidenceWarnings": 1,
+    "modelCalls": 0
+  },
+  "originals": [
+    {
+      "source": "scienze",
+      "sourceSentences": 9,
+      "clauses": 9,
+      "sourceLetters": 599,
+      "anchorValidation": true,
+      "warnings": 5,
+      "sameInventoryAcrossSixLevels": true
+    },
+    {
+      "source": "procedura",
+      "sourceSentences": 7,
+      "clauses": 8,
+      "sourceLetters": 636,
+      "anchorValidation": true,
+      "warnings": 7,
+      "sameInventoryAcrossSixLevels": true
+    },
+    {
+      "source": "medicina",
+      "sourceSentences": 8,
+      "clauses": 10,
+      "sourceLetters": 728,
+      "anchorValidation": true,
+      "warnings": 8,
+      "sameInventoryAcrossSixLevels": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "sourceSentences": 8,
+      "clauses": 9,
+      "sourceLetters": 670,
+      "anchorValidation": true,
+      "warnings": 5,
+      "sameInventoryAcrossSixLevels": true
+    },
+    {
+      "source": "pagina_breve_continua",
+      "sourceSentences": 2,
+      "clauses": 3,
+      "sourceLetters": 155,
+      "anchorValidation": true,
+      "warnings": 3,
+      "sameInventoryAcrossSixLevels": true
+    }
+  ],
+  "plans": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "letters": 539,
+      "maxRows": 12,
+      "hash": "21819f2bf1b539c18da3abd929630e68de33aa9be356d689cf7b1f4791edf799"
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "letters": 479,
+      "maxRows": 11,
+      "hash": "21819f2bf1b539c18da3abd929630e68de33aa9be356d689cf7b1f4791edf799"
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "letters": 419,
+      "maxRows": 10,
+      "hash": "21819f2bf1b539c18da3abd929630e68de33aa9be356d689cf7b1f4791edf799"
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "letters": 359,
+      "maxRows": 8,
+      "hash": "21819f2bf1b539c18da3abd929630e68de33aa9be356d689cf7b1f4791edf799"
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "letters": 300,
+      "maxRows": 7,
+      "hash": "21819f2bf1b539c18da3abd929630e68de33aa9be356d689cf7b1f4791edf799"
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "letters": 210,
+      "maxRows": 5,
+      "hash": "21819f2bf1b539c18da3abd929630e68de33aa9be356d689cf7b1f4791edf799"
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "letters": 572,
+      "maxRows": 13,
+      "hash": "74b4ba11f7a62d4a297d0224e22fe7df095041d04a43825ecbaab9a278a837b4"
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "letters": 509,
+      "maxRows": 11,
+      "hash": "74b4ba11f7a62d4a297d0224e22fe7df095041d04a43825ecbaab9a278a837b4"
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "letters": 445,
+      "maxRows": 10,
+      "hash": "74b4ba11f7a62d4a297d0224e22fe7df095041d04a43825ecbaab9a278a837b4"
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "letters": 382,
+      "maxRows": 9,
+      "hash": "74b4ba11f7a62d4a297d0224e22fe7df095041d04a43825ecbaab9a278a837b4"
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "letters": 318,
+      "maxRows": 7,
+      "hash": "74b4ba11f7a62d4a297d0224e22fe7df095041d04a43825ecbaab9a278a837b4"
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "letters": 223,
+      "maxRows": 5,
+      "hash": "74b4ba11f7a62d4a297d0224e22fe7df095041d04a43825ecbaab9a278a837b4"
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "letters": 655,
+      "maxRows": 15,
+      "hash": "102ef58cdfc28a7286d980a2c106cf89f2497750f0d97758c8aba40364fbb0dc"
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "letters": 582,
+      "maxRows": 13,
+      "hash": "102ef58cdfc28a7286d980a2c106cf89f2497750f0d97758c8aba40364fbb0dc"
+    },
+    {
+      "source": "medicina",
+      "level": 30,
+      "letters": 510,
+      "maxRows": 12,
+      "hash": "102ef58cdfc28a7286d980a2c106cf89f2497750f0d97758c8aba40364fbb0dc"
+    },
+    {
+      "source": "medicina",
+      "level": 40,
+      "letters": 437,
+      "maxRows": 10,
+      "hash": "102ef58cdfc28a7286d980a2c106cf89f2497750f0d97758c8aba40364fbb0dc"
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "letters": 364,
+      "maxRows": 8,
+      "hash": "102ef58cdfc28a7286d980a2c106cf89f2497750f0d97758c8aba40364fbb0dc"
+    },
+    {
+      "source": "medicina",
+      "level": 65,
+      "letters": 255,
+      "maxRows": 6,
+      "hash": "102ef58cdfc28a7286d980a2c106cf89f2497750f0d97758c8aba40364fbb0dc"
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "letters": 603,
+      "maxRows": 14,
+      "hash": "7b471d7b9461b226fcb36ac952cddd55f950f548231f28d84aba1641a48ed7be"
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "letters": 536,
+      "maxRows": 12,
+      "hash": "7b471d7b9461b226fcb36ac952cddd55f950f548231f28d84aba1641a48ed7be"
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 30,
+      "letters": 469,
+      "maxRows": 11,
+      "hash": "7b471d7b9461b226fcb36ac952cddd55f950f548231f28d84aba1641a48ed7be"
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "letters": 402,
+      "maxRows": 9,
+      "hash": "7b471d7b9461b226fcb36ac952cddd55f950f548231f28d84aba1641a48ed7be"
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "letters": 335,
+      "maxRows": 8,
+      "hash": "7b471d7b9461b226fcb36ac952cddd55f950f548231f28d84aba1641a48ed7be"
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "letters": 234,
+      "maxRows": 6,
+      "hash": "7b471d7b9461b226fcb36ac952cddd55f950f548231f28d84aba1641a48ed7be"
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 10,
+      "letters": 140,
+      "maxRows": 5,
+      "hash": "5a4ec45287186446a390c67f6953b0c2597fe176e1ac6db954690969a41b6a13"
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "letters": 124,
+      "maxRows": 5,
+      "hash": "5a4ec45287186446a390c67f6953b0c2597fe176e1ac6db954690969a41b6a13"
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 30,
+      "letters": 109,
+      "maxRows": 5,
+      "hash": "5a4ec45287186446a390c67f6953b0c2597fe176e1ac6db954690969a41b6a13"
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 40,
+      "letters": 93,
+      "maxRows": 5,
+      "hash": "5a4ec45287186446a390c67f6953b0c2597fe176e1ac6db954690969a41b6a13"
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "letters": 78,
+      "maxRows": 5,
+      "hash": "5a4ec45287186446a390c67f6953b0c2597fe176e1ac6db954690969a41b6a13"
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 65,
+      "letters": 54,
+      "maxRows": 5,
+      "hash": "5a4ec45287186446a390c67f6953b0c2597fe176e1ac6db954690969a41b6a13"
+    }
+  ],
+  "representativeTampering": [
+    {
+      "source": "scienze",
+      "operation": 0,
+      "detected": true
+    },
+    {
+      "source": "medicina",
+      "operation": 1,
+      "detected": true
+    },
+    {
+      "source": "scienze",
+      "operation": 2,
+      "detected": true
+    },
+    {
+      "source": "pagina_breve_continua",
+      "operation": 3,
+      "detected": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "operation": 4,
+      "detected": true
+    },
+    {
+      "source": "medicina",
+      "operation": 0,
+      "detected": true
+    },
+    {
+      "source": "scienze",
+      "operation": 1,
+      "detected": true
+    },
+    {
+      "source": "pagina_breve_continua",
+      "operation": 2,
+      "detected": true
+    },
+    {
+      "source": "procedura",
+      "operation": 3,
+      "detected": true
+    },
+    {
+      "source": "pagina_breve_continua",
+      "operation": 4,
+      "detected": true
+    },
+    {
+      "source": "scienze",
+      "operation": 0,
+      "detected": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "operation": 1,
+      "detected": true
+    },
+    {
+      "source": "scienze",
+      "operation": 2,
+      "detected": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "operation": 3,
+      "detected": true
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "operation": 4,
+      "detected": true
+    }
+  ],
+  "errors": [],
+  "caution": "Letter and source-anchor completeness cannot certify semantic correctness. A source sentence with two facts can still be incompletely represented by one model-generated claim."
+}
