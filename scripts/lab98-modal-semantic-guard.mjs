@@ -64,7 +64,7 @@ export const RULES={
    output:/termine.{0,15}perentor/iu,
    reason:'Termine perentorio non equivale a scadenza indicativa.'},
   {id:'right_to_motivation_remains',severity:'high',
-   source:/resta il diritto alla motivazione/iu,
+   source:/resta.{0,60}diritto.{0,70}motivaz/iu,
    output:/(?:rest|manten|rimane|conserv).{0,60}(?:motivaz|ragion)|(?:motivaz|ragion).{0,60}(?:rest|manten|rimane|conserv)/iu,
    reason:'Il diritto alla motivazione permane anche dopo la scadenza.'}
  ]
