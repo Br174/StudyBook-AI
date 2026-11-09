@@ -1,0 +1,176 @@
+{
+  "name": "LAB89 controlled semantic first-reading fixtures",
+  "note": "Sentence grouping into coherent concepts supplied in advance to isolate the effect of proportional allocation; automatic first-reading detection is NOT tested here. Sample medical/history text authored only for the benchmark.",
+  "sources": [
+    {
+      "id": "scienze",
+      "category": "Scienze: fenomeni astronomici",
+      "concepts": [
+        "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio.",
+        "La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole.",
+        "La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione.",
+        "Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate."
+      ],
+      "importance": [
+        1,
+        1.12,
+        1.15,
+        1.18
+      ],
+      "keyPoints": [
+        [
+          "Rotazione terrestre: giorno e notte"
+        ],
+        [
+          "Rivoluzione annua; stagioni per inclinazione, non distanza"
+        ],
+        [
+          "Sole e Luna sulle maree; eclissi solo con allineamento, non ogni lunazione"
+        ],
+        [
+          "Ipotesi verificabili e osservazioni ripetibili; un solo risultato non basta; spiegazione delle cause"
+        ]
+      ],
+      "flags": [
+        "inclinazione",
+        "maree",
+        "eclissi",
+        "ipotesi verificabili"
+      ]
+    },
+    {
+      "id": "procedura",
+      "category": "Procedura giuridica scolastica",
+      "concepts": [
+        "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura per richiedere i libri. La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni.",
+        "Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data iniziale.",
+        "Quando un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura.",
+        "Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori. Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura."
+      ],
+      "importance": [
+        1.08,
+        1.3,
+        1.2,
+        1.1
+      ],
+      "keyPoints": [
+        [
+          "Esercizio 2024; regola 12; titolo prima del prestito; restituzione entro dieci giorni"
+        ],
+        [
+          "Proroga soltanto se non prenotato; non automatica; senza conferma scritta vale la data iniziale"
+        ],
+        [
+          "Il libro prenotato va restituito alla scadenza anche se non si è finito di leggerlo"
+        ],
+        [
+          "Il registro contiene chi e quando, ma non opinioni; essenziali eccezioni e condizioni"
+        ]
+      ],
+      "flags": [
+        "proroga",
+        "scadenza",
+        "regola 12"
+      ]
+    },
+    {
+      "id": "medicina",
+      "category": "Didattica dell'apparato respiratorio",
+      "concepts": [
+        "In un esempio didattico, l'apparato respiratorio porta aria ai polmoni attraverso le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume; durante l'espirazione a riposo il diaframma si rilassa.",
+        "Negli alveoli polmonari l'ossigeno passa dall'aria al sangue, mentre l'anidride carbonica compie il percorso opposto. Lo scambio avviene grazie a differenze di pressione parziale dei gas attraverso pareti molto sottili.",
+        "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno nel sangue. La frequenza respiratoria può aumentare durante uno sforzo perché l'organismo consuma più ossigeno e produce più anidride carbonica.",
+        "Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi: deve essere interpretato nel contesto clinico."
+      ],
+      "importance": [
+        1,
+        1.3,
+        1.1,
+        1.22
+      ],
+      "keyPoints": [
+        [
+          "Inspirazione diaframma contratto, espirazione diaframma rilassato"
+        ],
+        [
+          "Negli alveoli ossigeno nel sangue e anidride carbonica nell'aria; pressioni parziali"
+        ],
+        [
+          "Emoglobina trasporta ossigeno; sforzo aumenta respirazione per scambi gassosi"
+        ],
+        [
+          "Diagnosi richiede sintomi, storia ed esame, non un solo valore isolato"
+        ]
+      ],
+      "flags": [
+        "diaframma",
+        "alveoli",
+        "emoglobina",
+        "diagnosi"
+      ]
+    },
+    {
+      "id": "concetto_sbilanciato",
+      "category": "Metodo storico, concetto lungo e tre brevi",
+      "concepts": [
+        "In un laboratorio di storia, gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. La provenienza di ciascun documento aiuta a capire chi lo ha prodotto, quando e per quale scopo. Due testimonianze possono riferire lo stesso episodio in modo diverso, perché i loro autori hanno osservato aspetti differenti oppure hanno interessi particolari. Per verificare un'affermazione occorre confrontare più fonti indipendenti, distinguere un fatto da un'opinione e segnalare ciò che resta incerto. Una data isolata non spiega da sola le cause di un evento: bisogna studiarne il contesto e le conseguenze.",
+        "Una fonte primaria è prodotta nel periodo studiato.",
+        "Una fonte secondaria interpreta documenti precedenti.",
+        "Le ipotesi vanno distinte dai fatti documentati."
+      ],
+      "importance": [
+        1.1,
+        1,
+        1,
+        1
+      ],
+      "keyPoints": [
+        [
+          "Fonti storiche diverse; provenienza e interessi; confronto e verifica; contesto e cause"
+        ],
+        [
+          "Fonte primaria nel periodo studiato"
+        ],
+        [
+          "Fonte secondaria interpreta documenti precedenti"
+        ],
+        [
+          "Distinguere ipotesi da fatti documentati"
+        ]
+      ],
+      "flags": [
+        "fonte primaria",
+        "fonte secondaria",
+        "ipotesi"
+      ]
+    },
+    {
+      "id": "pagina_breve_continua",
+      "category": "Procedura breve: seguito dell'articolo",
+      "concepts": [
+        "Il termine perentorio per depositare le osservazioni è di 15 giorni dalla notifica.",
+        "Se scade, la parte perde la possibilità di depositarle; resta però il diritto di conoscere la motivazione."
+      ],
+      "importance": [
+        1,
+        1.4
+      ],
+      "keyPoints": [
+        [
+          "Termine perentorio di 15 giorni dalla notifica per depositare osservazioni"
+        ],
+        [
+          "Decadenza dal deposito, ma resta diritto alla motivazione"
+        ]
+      ],
+      "flags": [
+        "termine perentorio",
+        "notifica"
+      ],
+      "contextOnly": {
+        "before": "La procedura inizia con una fase istruttoria dedicata alla richiesta di accesso agli atti.",
+        "after": "La motivazione viene comunicata successivamente secondo le modalità organizzative dell'ufficio."
+      }
+    }
+  ]
+}
