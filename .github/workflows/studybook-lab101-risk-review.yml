@@ -1,0 +1,49 @@
+name: StudyBook LAB101b review concept priority before deployment
+on:
+  push:
+    branches:
+      - 'audit/studybook-priority-first-read-v101-*'
+    paths:
+      - '.github/workflows/studybook-lab101-risk-review.yml'
+permissions:
+  contents: write
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check source and runner syntax
+        run: |
+          node --check scripts/lab101-concept-priority-gate.mjs
+          node --check scripts/test-lab101-priority-risk-offline.mjs
+      - name: Replay saved model priorities with 20k mutations, no new Gemini calls
+        run: node scripts/test-lab101-priority-risk-offline.mjs
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB101b-PriorityRisk
+          path: audit/reports/lab101-priority-risk-review.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit audit report on experimental branch only
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          test -f audit/reports/lab101-priority-risk-review.json || exit 0
+          git add audit/reports/lab101-priority-risk-review.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB101): archive risky downgraded core/modality cases'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
