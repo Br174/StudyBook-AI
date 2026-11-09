@@ -51,7 +51,7 @@ const checks={
    words:[/(?:senza|mancanz|assenza)/iu,/(?:conferma|autorizzaz)/iu,/(?:data|scadenza)/iu,/(?:inizial|originari)/iu],
    why:'Senza conferma scritta resta valida la data iniziale.'},
   {id:'reserved_return_even_if_unread',orig:/restituirlo alla scadenza anche se non ha completato la lettura/iu,
-   words:[/(?:prenot|riserv)/iu,/(?:restitu|rendere|render|riport)/iu,/(?:anche se|pur|nonostante|senza)/iu,/(?:finito|completat|terminat|letto|lettura|legger)/iu],
+   words:[/(?:prenot|riserv)/iu,/(?:restitu|rendere|render|riport|\breso\b|\bresa\b)/iu,/(?:anche se|pur|nonostante|senza)/iu,/(?:finito|completat|terminat|letto|lettura|legger)/iu],
    why:'Il libro prenotato va restituito anche se lo studente non ha finito di leggerlo.'},
   {id:'register_who_and_when',orig:/ricostruire chi ha ricevuto il libro e in quale giorno/iu,
    words:[/\bregistro\b/iu,/(?:\bchi\b|student|lettor|destinatar)/iu,/(?:giorn|data|quando)/iu],
