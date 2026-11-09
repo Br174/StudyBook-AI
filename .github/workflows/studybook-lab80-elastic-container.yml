@@ -1,0 +1,51 @@
+name: StudyBook LAB80 isolated real Gemini elastic container experiment
+on:
+  push:
+    branches:
+      - 'audit/studybook-elastic-container-v80-*'
+    paths:
+      - 'scripts/test-lab80-elastic-container.mjs'
+      - '.github/workflows/studybook-lab80-elastic-container.yml'
+permissions:
+  contents: write
+concurrency:
+  group: lab80-container-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify test script syntax without changing app
+        run: node --check scripts/test-lab80-elastic-container.mjs
+      - name: Bounded 12 calls maximum, real free Gemini, two sources x three levels
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab80-elastic-container.mjs
+      - name: Upload complete or partial test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB80-ElasticContainer-RealGemini
+          path: audit/reports/lab80-container-real-gemini.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Preserve test evidence on isolated audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab80-container-real-gemini.json || exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audit/reports/lab80-container-real-gemini.json
+          if ! git diff --cached --quiet; then
+            git commit -m "test(LAB80): preserve bounded Gemini elastic-container evidence"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
