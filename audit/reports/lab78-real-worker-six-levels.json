@@ -1,0 +1,273 @@
+{
+  "label": "StudyBook LAB78 true Gemini Worker E2E, six levels for one synthetic two-page textbook",
+  "executedAt": "2026-11-09T20:21:19.842Z",
+  "backend": "https://studybook-ai-lab78-geometry.brunoverlezza.workers.dev",
+  "geometryPolicy": "lab78-real-worker-60-cell-source-pages-v1",
+  "sourceHash": "33e500f9adf58b49a503376208e19aa93b7a0bbf5b3216ac1b06d40066182dad",
+  "fullRealUserBook": false,
+  "sourcePages": 2,
+  "levelsExpected": [
+    "summary",
+    "50",
+    "40",
+    "30",
+    "20",
+    "10"
+  ],
+  "results": [
+    {
+      "level": "summary",
+      "httpStatus": 200,
+      "code": null,
+      "phase": null,
+      "elapsedMs": 1313,
+      "model": "gemini-3.5-flash-lite",
+      "inputTokens": 1456,
+      "outputTokensUsed": 139,
+      "outputTokenLimit": 4096,
+      "finishReason": "stop",
+      "originalLetters": 947,
+      "observedLetters": 317,
+      "reductionPercent": 66.5,
+      "bookBandPassed": false,
+      "pageBandsPassed": false,
+      "pageRow60Passed": true,
+      "geometryComplete": false,
+      "complete": false,
+      "semanticCertified": false,
+      "pageChecks": [
+        {
+          "pageStart": 1,
+          "outputLetters": 158,
+          "minLetters": 166,
+          "maxLetters": 212,
+          "rows": 4,
+          "maxRows": 5,
+          "pass": false
+        },
+        {
+          "pageStart": 2,
+          "outputLetters": 159,
+          "minLetters": 166,
+          "maxLetters": 213,
+          "rows": 4,
+          "maxRows": 5,
+          "pass": false
+        }
+      ]
+    },
+    {
+      "level": "50",
+      "httpStatus": 200,
+      "code": null,
+      "phase": null,
+      "elapsedMs": 1678,
+      "model": "gemini-3.5-flash-lite",
+      "inputTokens": 1458,
+      "outputTokensUsed": 187,
+      "outputTokenLimit": 4096,
+      "finishReason": "stop",
+      "originalLetters": 947,
+      "observedLetters": 514,
+      "reductionPercent": 45.7,
+      "bookBandPassed": false,
+      "pageBandsPassed": false,
+      "pageRow60Passed": true,
+      "geometryComplete": false,
+      "complete": false,
+      "semanticCertified": false,
+      "pageChecks": [
+        {
+          "pageStart": 1,
+          "outputLetters": 262,
+          "minLetters": 213,
+          "maxLetters": 260,
+          "rows": 6,
+          "maxRows": 6,
+          "pass": false
+        },
+        {
+          "pageStart": 2,
+          "outputLetters": 252,
+          "minLetters": 214,
+          "maxLetters": 260,
+          "rows": 6,
+          "maxRows": 6,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "level": "40",
+      "httpStatus": 200,
+      "code": null,
+      "phase": null,
+      "elapsedMs": 1502,
+      "model": "gemini-3.5-flash-lite",
+      "inputTokens": 1448,
+      "outputTokensUsed": 167,
+      "outputTokenLimit": 4096,
+      "finishReason": "stop",
+      "originalLetters": 947,
+      "observedLetters": 598,
+      "reductionPercent": 36.9,
+      "bookBandPassed": true,
+      "pageBandsPassed": true,
+      "pageRow60Passed": true,
+      "geometryComplete": true,
+      "complete": true,
+      "semanticCertified": false,
+      "pageChecks": [
+        {
+          "pageStart": 1,
+          "outputLetters": 295,
+          "minLetters": 261,
+          "maxLetters": 307,
+          "rows": 6,
+          "maxRows": 7,
+          "pass": true
+        },
+        {
+          "pageStart": 2,
+          "outputLetters": 303,
+          "minLetters": 261,
+          "maxLetters": 308,
+          "rows": 7,
+          "maxRows": 7,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "level": "30",
+      "httpStatus": 200,
+      "code": null,
+      "phase": null,
+      "elapsedMs": 1962,
+      "model": "gemini-3.5-flash-lite",
+      "inputTokens": 1448,
+      "outputTokensUsed": 182,
+      "outputTokenLimit": 4096,
+      "finishReason": "stop",
+      "originalLetters": 947,
+      "observedLetters": 684,
+      "reductionPercent": 27.8,
+      "bookBandPassed": false,
+      "pageBandsPassed": false,
+      "pageRow60Passed": true,
+      "geometryComplete": false,
+      "complete": false,
+      "semanticCertified": false,
+      "pageChecks": [
+        {
+          "pageStart": 1,
+          "outputLetters": 358,
+          "minLetters": 308,
+          "maxLetters": 354,
+          "rows": 8,
+          "maxRows": 8,
+          "pass": false
+        },
+        {
+          "pageStart": 2,
+          "outputLetters": 326,
+          "minLetters": 309,
+          "maxLetters": 355,
+          "rows": 7,
+          "maxRows": 8,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "level": "20",
+      "httpStatus": 200,
+      "code": null,
+      "phase": null,
+      "elapsedMs": 1529,
+      "model": "gemini-3.5-flash-lite",
+      "inputTokens": 1463,
+      "outputTokensUsed": 265,
+      "outputTokenLimit": 4096,
+      "finishReason": "stop",
+      "originalLetters": 947,
+      "observedLetters": 882,
+      "reductionPercent": 6.9,
+      "bookBandPassed": false,
+      "pageBandsPassed": false,
+      "pageRow60Passed": false,
+      "geometryComplete": false,
+      "complete": false,
+      "semanticCertified": false,
+      "pageChecks": [
+        {
+          "pageStart": 1,
+          "outputLetters": 454,
+          "minLetters": 355,
+          "maxLetters": 402,
+          "rows": 10,
+          "maxRows": 9,
+          "pass": false
+        },
+        {
+          "pageStart": 2,
+          "outputLetters": 428,
+          "minLetters": 356,
+          "maxLetters": 402,
+          "rows": 9,
+          "maxRows": 9,
+          "pass": false
+        }
+      ]
+    },
+    {
+      "level": "10",
+      "httpStatus": 200,
+      "code": null,
+      "phase": null,
+      "elapsedMs": 1452,
+      "model": "gemini-3.5-flash-lite",
+      "inputTokens": 1465,
+      "outputTokensUsed": 260,
+      "outputTokenLimit": 4096,
+      "finishReason": "stop",
+      "originalLetters": 947,
+      "observedLetters": 861,
+      "reductionPercent": 9.1,
+      "bookBandPassed": true,
+      "pageBandsPassed": true,
+      "pageRow60Passed": true,
+      "geometryComplete": true,
+      "complete": true,
+      "semanticCertified": false,
+      "pageChecks": [
+        {
+          "pageStart": 1,
+          "outputLetters": 442,
+          "minLetters": 403,
+          "maxLetters": 449,
+          "rows": 10,
+          "maxRows": 10,
+          "pass": true
+        },
+        {
+          "pageStart": 2,
+          "outputLetters": 419,
+          "minLetters": 403,
+          "maxLetters": 450,
+          "rows": 9,
+          "maxRows": 10,
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "attemptedProviderModelGenerations": 6,
+  "modelResponses": 6,
+  "sixLevelMathAndGeometrySuccess": false,
+  "semanticCertificates": 0,
+  "additionalPaidCostEuro": 0,
+  "noGuaranteedSuccessOnUnknownBooks": true,
+  "finishedAt": "2026-11-09T20:22:49.318Z",
+  "blocked": false
+}
