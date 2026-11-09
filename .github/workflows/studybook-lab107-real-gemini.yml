@@ -1,0 +1,53 @@
+name: StudyBook LAB107 - real 12-case free Gemini calibration
+on:
+  push:
+    branches:
+      - audit/studybook-inverse-calibration-v107-20261110
+    paths:
+      - .github/workflows/studybook-lab107-real-gemini.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab107-real
+  cancel-in-progress: false
+jobs:
+  bounded-real-gemini:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax before provider requests
+        run: node --check scripts/test-lab107-real-gemini.mjs
+      - name: Run at most 12 real Gemini calls on two synthetic pages
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab107-real-gemini.mjs
+      - name: Keep real response evidence even if free quota stops test
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB107-Gemini-Evidence
+          path: audit/reports/lab107-real-gemini-calibration.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Preserve report in isolated branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab107-real-gemini-calibration.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab107-real-gemini-calibration.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB107): preserve capped real Gemini results'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
