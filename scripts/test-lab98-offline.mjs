@@ -21,7 +21,7 @@ const mutate=[
  ['concetto_sbilanciato','fact opinion',"distinguere un fatto da un'opinione",'non distinguere informazioni','fact_vs_opinion'],
  ['concetto_sbilanciato','uncertainty','segnalare ciò che resta incerto','segnalare i dettagli','source_uncertainty'],
  ['pagina_breve_continua','peremptory','termine perentorio','termine indicativo','peremptory_term'],
- ['pagina_breve_continua','motivation right','resta il diritto alla motivazione','il diritto alla motivazione non continua','right_to_motivation_remains']
+ ['pagina_breve_continua','motivation right','resta però il diritto di conoscere la motivazione','è abolito il diritto di conoscere la motivazione','right_to_motivation_remains']
 ];
 const issues=[],originals=[],benchmarks=[];
 for(const src of FIXTURES){
