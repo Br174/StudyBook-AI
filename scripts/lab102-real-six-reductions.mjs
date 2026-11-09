@@ -1,7 +1,7 @@
 // StudyBook AI / MotorLab LAB102. Experimental six real reductions, not Android code.
 // Source authority: immutable LAB101 first-reading ledgers; only a copy of each
 // reduced text is generated. This runner is free-tier bounded and checkpointed.
-import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync,existsSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {performance} from 'node:perf_hooks';
@@ -30,7 +30,8 @@ const selection=(process.env.LAB102_PAGE_SELECTION||'scienze').split(',').map(x=
 const chosen=selection.includes('all')?FIXTURES.map(s=>s.id):selection;
 const perPageLimit=8; // Six real versions plus at most two recoverable 503 retries.
 let attempts=0,halted=false,haltReason=null;
-const errors=[],pages=[];
+const previous=existsSync(OUTPUT)?JSON.parse(readFileSync(OUTPUT,'utf8')):null;
+const errors=[...(previous?.scope?.join(',')===((process.env.LAB102_PAGE_SELECTION||'scienze'))?previous.errors||[]:[])],pages=[];
 
 function prepare(id){
  const source=fixturesById.get(id),old=audits.get(id);
@@ -181,12 +182,18 @@ async function main(){
  for(const id of chosen){
   if(halted)break;
   const ctx=prepare(id);
+  const oldPage=previous?.pages?.find(p=>p.source===id&&p.sourceHash===ctx.sourceHash&&p.inventoryHash===ctx.old.ledger.hash);
   const page={source:id,sourceHash:ctx.sourceHash,inventoryHash:ctx.old.ledger.hash,
    manualPriorityOverride:id==='procedura'?'F11 supporto→fondamentale, isolated proven LAB101 copy only':null,
    fundamentalFacts:ctx.old.ledger.hierarchy.fundamental.length,
-   priorityFlags:ctx.risks.flags,originalRows:ctx.plans[0].originalRows,providerCalls:0,versions:[]};
+   priorityFlags:ctx.risks.flags,originalRows:ctx.plans[0].originalRows,providerCalls:0,
+   versions:(oldPage?.versions||[]).filter(v=>v.providerOk&&ctx.plans.some(p=>p.level===v.level))};
   pages.push(page);
   for(const plan of ctx.plans){
+   if(page.versions.some(v=>v.level===plan.level&&v.providerOk)){
+    console.log('LAB102_REUSE',JSON.stringify({page:id,level:plan.level,sourceHash:ctx.sourceHash}));
+    continue;
+   }
    if(halted||page.providerCalls>=perPageLimit)break;
    const version=await request(ctx,plan,page);
    page.versions.push(version);
