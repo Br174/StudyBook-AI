@@ -14,6 +14,7 @@ on:
       - 'scripts/test-lab66-nonblocking-quality.mjs'
       - 'src/lib/studyRebalanceV67.js'
       - 'src/lib/editionViewV36.js'
+      - 'src/lib/studyPhaseProgressV59.js'
   workflow_dispatch:
 permissions:
   contents: read
