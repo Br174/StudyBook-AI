@@ -8,6 +8,7 @@ import {apiEndpoint} from './apiEndpoint.js';
 import {runtimeHash} from './motorLabRuntime.js';
 import {loadRuntimeUnitResults,saveRuntimeUnitResults} from './resumeStore.js';
 import {readGeminiPause,registerGeminiPause,clearGeminiPause} from './geminiQuotaControllerV36.js';
+import {registerGeminiOverloadV77} from './geminiThroughputV77.js';
 import {bookUnitsV51,planNaturalBlocksV51,bisectAtNaturalBoundaryV51,
   blockLetterTargetV51,BULK_OUTPUT_TOKEN_CEILING} from './integralPlannerV51.js';
 import {restoredLargeBlockLimitV58,learnGeminiCadenceV58,
@@ -231,6 +232,10 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
      if(response.status===429)await learnGeminiCadenceV58(data.quota,{
        inputTokens:data?.diagnostic?.inputTokens||0});
    }
+   // LAB77: actual 503 is a signal for slower subsequent dispatches,
+   // NOT evidence that a whole-book block should be fragmented.
+   // Local-only record; never adds another provider call or a scheduler.
+   if(response.status===503)await registerGeminiOverloadV77();
    throw Object.assign(new Error(data?.error||'Risposta Gemini non disponibile'),{
      code,quota:data?.quota||null,diagnostic:data?.diagnostic||null});
  }
