@@ -56,10 +56,16 @@ export function studyGeometryPlanV78(units,level){
   const rowCap=short?5:Math.ceil(p.targetLetters/STUDY_AVG_V78.letters);
   const unitTargets=largestRemainderV78(p.targetLetters,sourceParts.map(studyLetters));
   const targetNaturalSpaces=Math.round(rowCap*STUDY_AVG_V78.naturalSpaces);
+  // Aiming toward the CENTER (±2 points) leaves room for model variance;
+  // the contractual acceptance band remains user-approved ±5 points.
+  const reduction=String(level)==='summary'?60:Number(level);
+  const innerMin=Math.ceil(p.originalLetters*(1-(reduction+2)/100));
+  const innerMax=Math.floor(p.originalLetters*(1-(reduction-2)/100));
   return{
    pageStart:p.pageStart,pageEnd:p.pageEnd,
    ids:p.unitIds,sourceLetters:p.originalLetters,
    targetLetters:p.targetLetters,minLetters:p.minLetters,maxLetters:p.maxLetters,
+   aimLowLetters:Math.max(p.minLetters,innerMin),aimHighLetters:Math.min(p.maxLetters,innerMax),
    rowWidth:STUDY_ROW_WIDTH_V78,maxRows:rowCap,originalRows:sourceLayout.rows,
    shortSource:short,
    targetNaturalSpaces, // empirical estimate, never filler requirement
@@ -75,7 +81,7 @@ export function studyGeometryPromptV78(plan){
   'METODO DI IMPAGINAZIONE LAB78, UGUALE A QUELLO DELLE PROVE MIGLIORI: 60 posizioni per riga monospaziata virtuale.',
   'Per ogni pagina originale o intervallo inseparabile il prospetto qui sotto indica il numero MASSIMO di righe, il bersaglio e la fascia di LETTERE conservate. Una riga contiene lettere, spazi, segni e cifre; nel calcolo della percentuale si contano SOLO le lettere Unicode.',
   'Scrivi testo naturale CONTINUO per ciascun id, SENZA andare a capo e SENZA spezzare parole. StudyBook dispone le parole nelle righe virtuali da 60 posizioni. NON aggiungere spazi multipli o testo di riempimento per completare le righe.',
-  'Per le pagine normali mira al NUMERO CENTRALE di lettere, non a un riassunto brevissimo; la fascia ±5 punti e le righe massime sono entrambe necessarie. Nel 10% preserva circa il 90% delle lettere, nel 20% circa l 80%, nel 50% circa la metà, nel Riassunto applicativo circa il 40%.',
+  'Per le pagine normali mira al NUMERO CENTRALE di lettere, non al minimo né al massimo. Per evitare sforamenti, un intervallo più stretto di ±2 punti è suggerito SOLO come bersaglio, mentre la verifica ufficiale resta ±5 punti. Nel 10% preserva circa il 90% delle lettere, nel 20% circa l 80%, nel 50% circa la metà, nel Riassunto applicativo circa il 40%.',
   'La stima di capienza dalla ricerca è circa 46,346 lettere e 7,844 spazi naturali per riga da 60 posizioni, più punteggiatura e cifre. Sono MEDIE di previsione, NON una richiesta di spazi vuoti. Mantieni parole intere, grammatica, fatti e condizioni.',
   'Per ogni gruppo le quote dei paragrafi sono una distribuzione proporzionale indicativa, non autorizzano a perdere un concetto. Il budget del gruppo di pagina ha precedenza.',
   'PROSPETTO CALCOLATO DAL TESTO ORIGINALE (riga per gruppo pagina):'
@@ -84,7 +90,8 @@ export function studyGeometryPromptV78(plan){
   const part=g.ids.length>1?' ('+g.ids.length+' paragrafi indivisibili)':'';
   guidance.push('Pagina '+g.pageStart+(g.pageEnd>g.pageStart?'-'+g.pageEnd:'')+
    ': origine '+g.sourceLetters+' lettere, conserva circa '+g.targetLetters+
-   ' (accettabili '+g.minLetters+'-'+g.maxLetters+'), max '+g.maxRows+
+   ' (MIRA '+g.aimLowLetters+'-'+g.aimHighLetters+
+   '; limiti accettabili '+g.minLetters+'-'+g.maxLetters+'), max '+g.maxRows+
    ' righe di 60 posizioni'+part+'.');
  }
  return guidance.join('\n');
