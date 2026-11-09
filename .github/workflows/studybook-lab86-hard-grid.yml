@@ -1,0 +1,51 @@
+name: StudyBook LAB86 hard-grid six-level real Gemini experiment
+on:
+  push:
+    branches:
+      - 'audit/studybook-hard-grid-lines-v86-*'
+    paths:
+      - 'scripts/test-lab86-hard-grid-lines.mjs'
+      - '.github/workflows/studybook-lab86-hard-grid.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab86-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify test source syntax
+        run: node --check scripts/test-lab86-hard-grid-lines.mjs
+      - name: Enforce fixed 60-cell row grid on Gemini six-level outputs
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab86-hard-grid-lines.mjs
+      - name: Upload full or partial JSON evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB86-SixLevels-RealGemini
+          path: audit/reports/lab86-six-levels-real-gemini.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Preserve JSON on isolated audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab86-six-levels-real-gemini.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab86-six-levels-real-gemini.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(LAB86): persist real Gemini six-level evidence'
+            git push origin "HEAD:${TARGET_REF}"
+          fi
