@@ -5,6 +5,7 @@ on:
       - 'audit/studybook-source-fact-review-v104-*'
     paths:
       - '.github/workflows/studybook-lab104-fact-audit.yml'
+      - 'scripts/lab104-fact-by-fact-editorial-review.mjs'
   workflow_dispatch:
 permissions:
   contents: write
