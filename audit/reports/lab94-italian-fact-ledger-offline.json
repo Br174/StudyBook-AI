@@ -1,0 +1,9 @@
+{
+  "study": "LAB94 italian atomic facts for one-pass StudyBook prompts",
+  "totalValidated": 64,
+  "failed": 0,
+  "internalFactCodesAppearInPrompt": false,
+  "language": "it",
+  "errors": [],
+  "warning": "This test checks phrase language and completeness, not semantic entailment nor Gemini quality."
+}
