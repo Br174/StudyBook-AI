@@ -1,0 +1,1008 @@
+{
+  "experiment": "LAB105 conservative semantic guard, minimal caution prompt",
+  "date": "2026-11-09T17:21:35.434Z",
+  "model": "gemini-3.5-flash-lite",
+  "notes": "Five pre-segmented synthetic source pages; a fresh 30-case real Gemini pilot across six levels, not a 1000-page book. Real PDF ingestion and physical A4 proportional font not tested. Regex semantic flags are warnings, not semantic certification.",
+  "controls": {
+    "sourceAppUnchanged": true,
+    "productionUnchanged": true,
+    "APKUnchanged": true,
+    "zeroExtraPaidServices": true,
+    "oneGenerationPerCase": true
+  },
+  "provider": {
+    "attempts": 13,
+    "stopped": true,
+    "stopReason": "HTTP_429",
+    "maxCalls": 36
+  },
+  "summary": {
+    "scheduled": 30,
+    "attemptedCases": 13,
+    "valid": 12,
+    "byLevel": {
+      "10": {
+        "validResponses": 2,
+        "regularPageResponses": 2,
+        "numericGridPass": 0,
+        "fullSemanticCertificates": 0,
+        "shortPagePercentExempt": 0
+      },
+      "20": {
+        "validResponses": 2,
+        "regularPageResponses": 2,
+        "numericGridPass": 1,
+        "fullSemanticCertificates": 0,
+        "shortPagePercentExempt": 0
+      },
+      "30": {
+        "validResponses": 2,
+        "regularPageResponses": 2,
+        "numericGridPass": 0,
+        "fullSemanticCertificates": 0,
+        "shortPagePercentExempt": 0
+      },
+      "40": {
+        "validResponses": 2,
+        "regularPageResponses": 2,
+        "numericGridPass": 1,
+        "fullSemanticCertificates": 0,
+        "shortPagePercentExempt": 0
+      },
+      "50": {
+        "validResponses": 2,
+        "regularPageResponses": 2,
+        "numericGridPass": 1,
+        "fullSemanticCertificates": 0,
+        "shortPagePercentExempt": 0
+      },
+      "65": {
+        "validResponses": 2,
+        "regularPageResponses": 2,
+        "numericGridPass": 0,
+        "fullSemanticCertificates": 0,
+        "shortPagePercentExempt": 0
+      }
+    },
+    "long": 12,
+    "short": 0,
+    "longGrid": 9,
+    "longBand": 5,
+    "longBoth": 3,
+    "longBothAndNoSemanticAlerts": 1,
+    "byMode": {
+      "EDITING_CONSERVATIVO": {
+        "completed": 4,
+        "grid": 4,
+        "band": 1,
+        "both": 1,
+        "noSemanticAlerts": 2,
+        "mathAndNoAlerts": 1
+      },
+      "RISCRITTURA_MODERATA": {
+        "completed": 4,
+        "grid": 4,
+        "band": 1,
+        "both": 1,
+        "noSemanticAlerts": 0,
+        "mathAndNoAlerts": 0
+      },
+      "SINTESI_FEDELE": {
+        "completed": 4,
+        "grid": 1,
+        "band": 3,
+        "both": 1,
+        "noSemanticAlerts": 0,
+        "mathAndNoAlerts": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "mode": "EDITING_CONSERVATIVO",
+      "valid": true,
+      "ms": 982,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 539,
+        "actualLetters": 456,
+        "reduction": 23.87,
+        "band": {
+          "low": 510,
+          "high": 569,
+          "passes": false
+        },
+        "grid": {
+          "rows": 10,
+          "maxRows": 12,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 27,
+          "fractionalEquivalent": 9.45
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 16,
+          "matched": 15,
+          "missing": [
+            {
+              "fact": "cause_vs_description",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota attorno al proprio asse causando il giorno e la notte poiche una parte riceve luce e l altra resta al buio. La rivoluzione intorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall inclinazione dell asse terrestre non dalla distanza dal Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione.",
+        "words": 85
+      },
+      "guard": {
+        "sourceId": "scienze",
+        "level": 10,
+        "totalApplicable": 3,
+        "matched": 3,
+        "alerts": [],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 124,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "mode": "EDITING_CONSERVATIVO",
+      "valid": true,
+      "ms": 1223,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 479,
+        "actualLetters": 458,
+        "reduction": 23.54,
+        "band": {
+          "low": 450,
+          "high": 509,
+          "passes": true
+        },
+        "grid": {
+          "rows": 10,
+          "maxRows": 11,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 27,
+          "fractionalEquivalent": 9.45
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 16,
+          "matched": 15,
+          "missing": [
+            {
+              "fact": "cause_vs_description",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota attorno al proprio asse causando il giorno e la notte poiché una parte riceve luce mentre l'altra resta al buio. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall'inclinazione dell'asse terrestre e non dalla distanza dal Sole. La Luna influisce sulle maree con il Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione.",
+        "words": 83
+      },
+      "guard": {
+        "sourceId": "scienze",
+        "level": 20,
+        "totalApplicable": 3,
+        "matched": 3,
+        "alerts": [],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 127,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "mode": "RISCRITTURA_MODERATA",
+      "valid": true,
+      "ms": 1329,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 419,
+        "actualLetters": 373,
+        "reduction": 37.73,
+        "band": {
+          "low": 390,
+          "high": 449,
+          "passes": false
+        },
+        "grid": {
+          "rows": 8,
+          "maxRows": 10,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 47,
+          "fractionalEquivalent": 7.783
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 13,
+          "matched": 10,
+          "missing": [
+            {
+              "fact": "not_every_lunation",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "testable_hypotheses",
+              "importance": "core",
+              "concept": "C4"
+            },
+            {
+              "fact": "isolated_result_insufficient",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota sull'asse causando il giorno e la notte e compie la rivoluzione annua attorno al Sole. Le stagioni dipendono dall'inclinazione dell'asse e non dalla distanza. La Luna e il Sole generano le maree, mentre le eclissi richiedono un preciso allineamento e non avvengono sempre. Il metodo scientifico richiede ipotesi e osservazioni ripetibili, poiché un risultato isolato non dimostra nulla. Bisogna distinguere la descrizione dalle cause.",
+        "words": 67
+      },
+      "guard": {
+        "sourceId": "scienze",
+        "level": 30,
+        "totalApplicable": 3,
+        "matched": 1,
+        "alerts": [
+          {
+            "id": "eclipses_not_every_lunation",
+            "reason": "Preservare la negazione: non ogni lunazione comporta una eclissi.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          },
+          {
+            "id": "single_result_insufficient",
+            "reason": "Un singolo risultato non è sufficiente a dimostrare una spiegazione.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          }
+        ],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 113,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "mode": "RISCRITTURA_MODERATA",
+      "valid": true,
+      "ms": 1185,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 359,
+        "actualLetters": 320,
+        "reduction": 46.58,
+        "band": {
+          "low": 330,
+          "high": 389,
+          "passes": false
+        },
+        "grid": {
+          "rows": 7,
+          "maxRows": 8,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 38,
+          "fractionalEquivalent": 6.633
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 13,
+          "matched": 10,
+          "missing": [
+            {
+              "fact": "not_every_lunation",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "isolated_result_insufficient",
+              "importance": "core",
+              "concept": "C4"
+            },
+            {
+              "fact": "cause_vs_description",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La rotazione terrestre genera il ciclo di giorno e notte mentre la rivoluzione attorno al Sole dura un anno. Le stagioni dipendono dall'inclinazione dell'asse e non dalla distanza. La Luna e il Sole influenzano le maree. Le eclissi esigono un allineamento specifico. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili senza basarsi su un risultato isolato.",
+        "words": 57
+      },
+      "guard": {
+        "sourceId": "scienze",
+        "level": 40,
+        "totalApplicable": 3,
+        "matched": 1,
+        "alerts": [
+          {
+            "id": "eclipses_not_every_lunation",
+            "reason": "Preservare la negazione: non ogni lunazione comporta una eclissi.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          },
+          {
+            "id": "single_result_insufficient",
+            "reason": "Un singolo risultato non è sufficiente a dimostrare una spiegazione.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          }
+        ],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 90,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "mode": "SINTESI_FEDELE",
+      "valid": true,
+      "ms": 898,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 300,
+        "actualLetters": 387,
+        "reduction": 35.39,
+        "band": {
+          "low": 270,
+          "high": 329,
+          "passes": false
+        },
+        "grid": {
+          "rows": 8,
+          "maxRows": 7,
+          "passes": false,
+          "maxActualWidth": 59,
+          "lastRowCells": 59,
+          "fractionalEquivalent": 7.983
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 13,
+          "matched": 11,
+          "missing": [
+            {
+              "fact": "not_every_lunation",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "cause_vs_description",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La rotazione terrestre attorno al proprio asse genera il giorno e la notte, mentre la rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono dall'inclinazione dell'asse e non dalla distanza dal Sole. La Luna e il Sole influenzano le maree, mentre le eclissi richiedono un allineamento specifico. Il metodo scientifico esige ipotesi verificabili e osservazioni ripetibili, poiché un singolo risultato isolato non basta per dimostrare una spiegazione.",
+        "words": 69
+      },
+      "guard": {
+        "sourceId": "scienze",
+        "level": 50,
+        "totalApplicable": 3,
+        "matched": 2,
+        "alerts": [
+          {
+            "id": "eclipses_not_every_lunation",
+            "reason": "Preservare la negazione: non ogni lunazione comporta una eclissi.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          }
+        ],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 107,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "mode": "SINTESI_FEDELE",
+      "valid": true,
+      "ms": 1409,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 210,
+        "actualLetters": 237,
+        "reduction": 60.43,
+        "band": {
+          "low": 180,
+          "high": 239,
+          "passes": true
+        },
+        "grid": {
+          "rows": 6,
+          "maxRows": 5,
+          "passes": false,
+          "maxActualWidth": 60,
+          "lastRowCells": 10,
+          "fractionalEquivalent": 5.167
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 13,
+          "matched": 8,
+          "missing": [
+            {
+              "fact": "not_distance",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "eclipses_alignment",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "testable_hypotheses",
+              "importance": "core",
+              "concept": "C4"
+            },
+            {
+              "fact": "repeatable_observations",
+              "importance": "core",
+              "concept": "C4"
+            },
+            {
+              "fact": "cause_vs_description",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La rotazione terrestre causa il giorno e la notte. La rivoluzione dura un anno e le stagioni dipendono dall'inclinazione dell'asse. La Luna e il Sole influenzano le maree. Le eclissi non avvengono a ogni lunazione. Il metodo scientifico richiede verifiche e un risultato isolato non basta.",
+        "words": 46
+      },
+      "guard": {
+        "sourceId": "scienze",
+        "level": 65,
+        "totalApplicable": 3,
+        "matched": 2,
+        "alerts": [
+          {
+            "id": "seasons_not_distance",
+            "reason": "Non confondere la causa delle stagioni con la distanza dal Sole.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          }
+        ],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 76,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "mode": "EDITING_CONSERVATIVO",
+      "valid": true,
+      "ms": 1563,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 572,
+        "actualLetters": 474,
+        "reduction": 25.47,
+        "band": {
+          "low": 541,
+          "high": 604,
+          "passes": false
+        },
+        "grid": {
+          "rows": 11,
+          "maxRows": 13,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 26,
+          "fractionalEquivalent": 10.433
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 15,
+          "matched": 15,
+          "missing": []
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un esercizio del 2024, una biblioteca simulata ha introdotto una procedura per i libri. La regola 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni. Il personale può concedere una proroga solo se il volume non è prenotato da altri. La proroga non è automatica: senza conferma scritta resta valida la data iniziale. Se riservato, va restituito alla scadenza anche senza aver completato la lettura. Il registro mostra chi ha ricevuto il libro e quando, ma non le opinioni personali. Condizioni ed eccezioni sono essenziali.",
+        "words": 95
+      },
+      "guard": {
+        "sourceId": "procedura",
+        "level": 10,
+        "totalApplicable": 3,
+        "matched": 2,
+        "alerts": [
+          {
+            "id": "internal_rule_not_generic_norm",
+            "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          }
+        ],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 137,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "mode": "EDITING_CONSERVATIVO",
+      "valid": true,
+      "ms": 1687,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 509,
+        "actualLetters": 411,
+        "reduction": 35.38,
+        "band": {
+          "low": 477,
+          "high": 540,
+          "passes": false
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 11,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 58,
+          "fractionalEquivalent": 8.967
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 15,
+          "matched": 13,
+          "missing": [
+            {
+              "fact": "even_if_not_finished",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "conditions_exceptions",
+              "importance": "support",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un esercizio del 2024, una biblioteca simulata ha introdotto una procedura per i libri. La regola 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni. Il personale può concedere una proroga solo se il volume non è prenotato da altri. La proroga non è automatica: senza conferma scritta resta valida la data iniziale. Se un libro è riservato, va restituito alla scadenza. Il registro traccia prestiti e date, ma non le opinioni personali dei lettori.",
+        "words": 85
+      },
+      "guard": {
+        "sourceId": "procedura",
+        "level": 20,
+        "totalApplicable": 3,
+        "matched": 2,
+        "alerts": [
+          {
+            "id": "internal_rule_not_generic_norm",
+            "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          }
+        ],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 126,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "mode": "RISCRITTURA_MODERATA",
+      "valid": true,
+      "ms": 1283,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 445,
+        "actualLetters": 407,
+        "reduction": 36.01,
+        "band": {
+          "low": 414,
+          "high": 477,
+          "passes": false
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 10,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 31,
+          "fractionalEquivalent": 8.517
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 11,
+          "matched": 8,
+          "missing": [
+            {
+              "fact": "title_before_loan",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "even_if_not_finished",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "register_who_when",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura per i prestiti. La regola numero dodici prevede che lo studente registri il titolo e confermi la restituzione entro dieci giorni. Il personale può concedere una proroga soltanto se il volume non è prenotato da altri. La proroga non è automatica e senza conferma scritta resta la data iniziale. Se riservato, va restituito alla scadenza. Il registro traccia i prestiti ma non le opinioni personali dei lettori.",
+        "words": 80
+      },
+      "guard": {
+        "sourceId": "procedura",
+        "level": 30,
+        "totalApplicable": 3,
+        "matched": 2,
+        "alerts": [
+          {
+            "id": "internal_rule_not_generic_norm",
+            "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          }
+        ],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 120,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "mode": "RISCRITTURA_MODERATA",
+      "valid": true,
+      "ms": 991,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 382,
+        "actualLetters": 375,
+        "reduction": 41.04,
+        "band": {
+          "low": 350,
+          "high": 413,
+          "passes": true
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 9,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 10,
+          "fractionalEquivalent": 8.167
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 8,
+          "missing": [
+            {
+              "fact": "title_before_loan",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "even_if_not_finished",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "register_who_when",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In una biblioteca simulata del 2024, la regola 12 richiede che lo studente registri il titolo e confermi la restituzione entro dieci giorni. Il personale può concedere una proroga solo se il libro non è prenotato da altri; la proroga non è automatica e senza conferma scritta vale la scadenza iniziale. Se riservato, va restituito puntualmente. Il registro traccia prestiti e date senza opinioni personali, rispettando condizioni ed eccezioni della procedura.",
+        "words": 71
+      },
+      "guard": {
+        "sourceId": "procedura",
+        "level": 40,
+        "totalApplicable": 3,
+        "matched": 2,
+        "alerts": [
+          {
+            "id": "internal_rule_not_generic_norm",
+            "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          }
+        ],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 109,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "mode": "SINTESI_FEDELE",
+      "valid": true,
+      "ms": 960,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 318,
+        "actualLetters": 333,
+        "reduction": 47.64,
+        "band": {
+          "low": 287,
+          "high": 349,
+          "passes": true
+        },
+        "grid": {
+          "rows": 7,
+          "maxRows": 7,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 60,
+          "fractionalEquivalent": 7
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 9,
+          "missing": [
+            {
+              "fact": "even_if_not_finished",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "register_who_when",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La regola 12 della biblioteca simulata del 2024 impone di registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni. Il personale può prorogare il termine solo se il libro non è prenotato da altri, ma la proroga non è automatica e senza conferma scritta vale la data iniziale. Se riservato, va restituito alla scadenza. Il registro traccia prestiti e date, non le opinioni personali.",
+        "words": 68
+      },
+      "guard": {
+        "sourceId": "procedura",
+        "level": 50,
+        "totalApplicable": 3,
+        "matched": 2,
+        "alerts": [
+          {
+            "id": "internal_rule_not_generic_norm",
+            "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          }
+        ],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 104,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "mode": "SINTESI_FEDELE",
+      "valid": true,
+      "ms": 1250,
+      "metrics": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 223,
+        "actualLetters": 241,
+        "reduction": 62.11,
+        "band": {
+          "low": 191,
+          "high": 254,
+          "passes": true
+        },
+        "grid": {
+          "rows": 6,
+          "maxRows": 5,
+          "passes": false,
+          "maxActualWidth": 59,
+          "lastRowCells": 9,
+          "fractionalEquivalent": 5.15
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 7,
+          "missing": [
+            {
+              "fact": "title_before_loan",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "even_if_not_finished",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "register_who_when",
+              "importance": "core",
+              "concept": "C4"
+            },
+            {
+              "fact": "no_opinions",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nel 2024 la regola 12 della biblioteca simulata richiede la registrazione del titolo e la restituzione entro dieci giorni. Il personale può concedere una proroga solo se il volume non è prenotato. La proroga non è automatica senza conferma scritta e il libro riservato va restituito alla scadenza.",
+        "words": 48
+      },
+      "guard": {
+        "sourceId": "procedura",
+        "level": 65,
+        "totalApplicable": 3,
+        "matched": 1,
+        "alerts": [
+          {
+            "id": "internal_rule_not_generic_norm",
+            "reason": "Non trasformare la regola interna della biblioteca in una norma generale.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          },
+          {
+            "id": "written_confirmation_initial_deadline",
+            "reason": "Senza conferma scritta resta la scadenza iniziale.",
+            "severity": "high",
+            "verifiedBy": "regex heuristic only"
+          }
+        ],
+        "skipped": [],
+        "orthography": [],
+        "use": "Review alerts after generation. Do not correct meaning mechanically; compare with original source.",
+        "semanticCertified": false
+      },
+      "tokens": 71,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "mode": "EDITING_CONSERVATIVO",
+      "valid": false,
+      "error": {
+        "source": "medicina",
+        "level": 10,
+        "mode": "EDITING_CONSERVATIVO",
+        "attempt": 13,
+        "status": 429,
+        "ms": 143,
+        "details": "HTTP error"
+      }
+    }
+  ],
+  "errors": [
+    {
+      "source": "medicina",
+      "level": 10,
+      "mode": "EDITING_CONSERVATIVO",
+      "attempt": 13,
+      "status": 429,
+      "ms": 143,
+      "details": "HTTP error"
+    }
+  ]
+}
