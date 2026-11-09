@@ -1,0 +1,36 @@
+{
+  "study": "LAB95 offline prior to Gemini",
+  "date": "2026-11-09T13:37:30.199Z",
+  "plannedComparisons": 11,
+  "manualReferenceChecks": 2,
+  "warning": "Two GOLDEN references are authored manually for feasibility ONLY, not evidence of generated success nor independent expert review.",
+  "checks": [
+    {
+      "source": "scienze",
+      "level": 20,
+      "manualReferenceNotGemini": true,
+      "letters": 498,
+      "reduction": 16.86,
+      "rows": 11,
+      "limit": 11,
+      "band": true,
+      "geometry": true,
+      "factLexicalSignalsMissing": 0,
+      "languageEnglishDetected": false
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "manualReferenceNotGemini": true,
+      "letters": 609,
+      "reduction": 16.35,
+      "rows": 13,
+      "limit": 13,
+      "band": true,
+      "geometry": true,
+      "factLexicalSignalsMissing": 0,
+      "languageEnglishDetected": false
+    }
+  ],
+  "passed": true
+}
