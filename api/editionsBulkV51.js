@@ -2,6 +2,7 @@
 // No images, no OCR changes, no silent fallback, no paid-model routing.
 import {studyLetters} from '../src/lib/studyPillarV38.js';
 import {editionBestOfInstructionV76,STUDY_BEST_OF_V76} from '../src/lib/studyBestOfV76.js';
+import {STUDY_GEOMETRY_V78,studyGeometryPlanV78,studyGeometryReviewV78} from '../src/lib/studyGeometryV78.js';
 import {STUDY_TARGET_V67,measureEditionLengthV72} from '../src/lib/studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {STUDY_DRAFT_PROTOCOL_V71,buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
@@ -248,9 +249,9 @@ export function editionPageBudgetInstructionV74(level,sourceLetters,phase='draft
  ].join('\n');
 }
 
-function instructions(level,target,cap,phase='repair',sourceLetters=0,feedback=null){
+function instructions(level,target,cap,phase='repair',sourceLetters=0,feedback=null,geometryV78=null){
   if(phase==='draft-v74'||phase==='recalibrate-v74')
-    return editionBestOfInstructionV76(level,sourceLetters,phase);
+    return editionBestOfInstructionV76(level,sourceLetters,phase,geometryV78);
   if(phase==='repair-v72')return editionTargetedRepairInstructionV72(level,sourceLetters);
   if(phase==='draft-v72'||phase==='recalibrate-v72'||
      phase==='draft-v71'||phase==='recalibrate-v71'||phase==='repair-v71')
@@ -404,6 +405,11 @@ export default async function handler(req,res){
   const protocolRequested=protocolV75||protocolV74||protocolV72||protocolV71||protocolV70;
   if(protocolRequested&&req.body?.draftProtocol!==(protocolV75?STUDY_DRAFT_PROTOCOL_V75:protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:STUDY_DRAFT_PROTOCOL_V70))
     return fail(res,409,'AI_DRAFT_PROTOCOL_MISMATCH','Versione motore Gemini non corrispondente alla LAB70.');
+  // Only the LAB78 experimental Worker accepts the LAB74 draft route.
+  // A stale client may not silently skip the 60-cell generation contract.
+  if(protocolV74&&req.body?.geometryPolicyV78!==STUDY_GEOMETRY_V78)
+    return fail(res,409,'AI_GEOMETRY_PROTOCOL_REQUIRED',
+      'Aggiornamento StudyBook LAB78 necessario per la generazione fedele.');
   // Experiment budget: one original page group per planning operation where
   // possible. Never multiply 674 source paragraphs by two model calls.
   if(protocolV75&&safe.length>PLANNING_MAX_UNITS_V75)
@@ -482,11 +488,12 @@ export default async function handler(req,res){
   const desired=level==='summary'?Math.round(originalLetters*.40):target;
   const feedback=(protocolV72&&phase==='repair-v72'||protocolV71&&phase==='repair-v71')&&observed>0
     ?{observedLetters:observed,desiredLetters:desired,gapLetters:desired-observed}:null;
+  const geometryV78=protocolV74?studyGeometryPlanV78(safe,level):null;
   const stageInstruction=protocolV75
     ?phase==='plan-v75'
       ?planningInstructionV75(level,originalLetters,STUDY_TARGET_V67[level])
       :writingInstructionV75(level,originalLetters,STUDY_TARGET_V67[level])
-    :instructions(level,target,cap,phase,originalLetters,feedback);
+    :instructions(level,target,cap,phase,originalLetters,feedback,geometryV78);
   const messages=[{role:'system',content:stageInstruction},
     {role:'user',content:user}];
   const outputTokens=bounded(req.body?.maxOutputTokens,4096,OUTPUT_LIMIT,OUTPUT_LIMIT);
@@ -610,6 +617,7 @@ export default async function handler(req,res){
     const totalLetters=parts.reduce((n,p)=>n+studyLetters(p.text),0);
     const finishReason=payload?.choices?.[0]?.finish_reason||null;
     const pageReviewV74=protocolV75||protocolV74?pageLetterReviewV74(safe,parts,level):null;
+    const geometryReviewV78=protocolV74?studyGeometryReviewV78(safe,parts,level):null;
     const numericAudit=measureEditionLengthV72({
       level,originalLetters,outputLetters:totalLetters,
       completeParts:parts.length===safe.length,finishReason
@@ -628,6 +636,8 @@ export default async function handler(req,res){
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
       bestOfInstruction:protocolV74?STUDY_BEST_OF_V76:null,
+      geometryPolicyV78:protocolV74?STUDY_GEOMETRY_V78:null,
+      geometryReviewV78,
       draftProtocol:protocolV75?STUDY_DRAFT_PROTOCOL_V75:protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:protocolV70?STUDY_DRAFT_PROTOCOL_V70:null,
       lengthReview:{exact:hasExactLength,
         withinBand:numericAudit.withinBand,
