@@ -145,7 +145,12 @@ export async function runSingleCallV106({
   if(a.numeric.numericGridPass!==b.numeric.numericGridPass)return Number(b.numeric.numericGridPass)-Number(a.numeric.numericGridPass);
   if(a.semanticWarnings.length!==b.semanticWarnings.length)return a.semanticWarnings.length-b.semanticWarnings.length;
   const target=a.numeric.targetReductionPercent;
-  return Math.abs(a.numeric.actualReductionPercent-target)-Math.abs(b.numeric.actualReductionPercent-target);
+  const delta=Math.abs(a.numeric.actualReductionPercent-target)-Math.abs(b.numeric.actualReductionPercent-target);
+  if(delta!==0)return delta;
+  // Prefer safe punctuation/orthography-only local correction on an exact tie.
+  // Source-literal content replacements never win ties on typography alone.
+  const order={LOCAL_ORTHOGRAPHY:0,ORIGINAL_GEMINI:1,LOCAL_SOURCE_LITERAL:2};
+  return(order[a.kind]??3)-(order[b.kind]??3);
  };
  const available=measured.sort(sort);
  const candidate=available[0];
