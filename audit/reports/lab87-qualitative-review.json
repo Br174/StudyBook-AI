@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-09",
+  "method": "Focused assistant review of every generated correction; not an independent subject-matter expert audit",
+  "scope": "LAB87 same eight corrections from real Gemini",
+  "policy": "Never promote repaired content on mathematical conformance alone; preserve source and last unmodified candidate if semantic review fails",
+  "reviewed": 8,
+  "approved": 0,
+  "reviewer": "assistant spot check",
+  "reviews": [
+    {
+      "source": "scienze",
+      "level": 50,
+      "severity": "alta",
+      "issues": [
+        "La frase «Maree eclissi allineamenti e metodo scientifico sano» non spiega relazioni o condizioni scientifiche.",
+        "Il riferimento alla «quota» non equivale chiaramente alla distanza Terra-Sole.",
+        "Mancano alcuni concetti indispensabili; lingua innaturale."
+      ],
+      "decision": "REJECT"
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "severity": "alta",
+      "issues": [
+        "La riduzione è del 24,71%, fuori dalla fascia 5–15%.",
+        "Non compare più la verifica delle ipotesi né la ripetibilità delle osservazioni, contenuti richiesti."
+      ],
+      "decision": "REJECT"
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "severity": "alta",
+      "issues": [
+        "«Mareee» è un errore ortografico.",
+        "La sintesi non spiega esplicitamente giorno e notte e non conserva chiaramente l'allineamento per le eclissi.",
+        "Non distingue più descrizione del fenomeno e cause."
+      ],
+      "decision": "REJECT"
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "severity": "alta",
+      "issues": [
+        "«proro\\nga» rompe la parola «proroga» fra due righe senza spazio o punteggiatura.",
+        "Manca la restituzione entro dieci giorni e il riferimento all'anno 2024.",
+        "Il registro non specifica chiaramente chi riceve il libro e quando; frase poco naturale."
+      ],
+      "decision": "REJECT"
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "severity": "alta",
+      "issues": [
+        "Sono necessarie 10 righe invece delle 8 consentite.",
+        "La riduzione effettiva è 30,97%, fuori dalla fascia 35–45%.",
+        "La conferma scritta e la non automaticità della proroga non sono espresse con precisione."
+      ],
+      "decision": "REJECT"
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "severity": "alta",
+      "issues": [
+        "Frasi malformate: «in dieci di», «prenotato da», «data prima», «ed vere».",
+        "Manca l'informazione che il registro non contiene opinioni personali.",
+        "Non conserva con precisione tutte le condizioni della procedura."
+      ],
+      "decision": "REJECT"
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "severity": "alta",
+      "issues": [
+        "La frase «generando il di e la notte» è errata e compromette la comprensione di giorno/notte.",
+        "L'aggiustamento grammaticale non può essere approvato solo perché il conteggio delle lettere rientra."
+      ],
+      "decision": "REJECT"
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "severity": "alta",
+      "issues": [
+        "La riduzione è 45,91%, fuori dalla fascia 25–35%.",
+        "Introduce terminologia «cinematica/dinamica» assente dal testo originale e modifica il significato.",
+        "Formulazione «la Terra ... rivoluziona sul Sole» scorretta e omette durata di un anno e alternanza giorno/notte.",
+        "Confonde condizioni di maree ed eclissi."
+      ],
+      "decision": "REJECT"
+    }
+  ]
+}
