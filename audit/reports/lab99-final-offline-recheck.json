@@ -1,0 +1,111 @@
+{
+  "study": "LAB99 final offline model-output recheck with synonym correction",
+  "date": "2026-11-09T14:43:02.168Z",
+  "note": "All five Gemini outputs are preserved from first experiment and one follow-up; this run makes ZERO provider calls. Four patched sentences may be mathematically valid but all entire pages still have unchecked/known missing facts and are NOT release-ready.",
+  "summary": {
+    "realFirstPass": 4,
+    "distinctModelPatchTargets": 4,
+    "firstPassMathematical": 3,
+    "additionalModelAttempts": 1,
+    "finalPreliminaryPatches": 4,
+    "remainingPagesCertifiedForStudy": 0,
+    "originalFalseAlerts": 0,
+    "seededMutationChecks": 10000,
+    "seededDetected": 10000,
+    "issues": 0
+  },
+  "results": [
+    {
+      "caseId": "tides_sole_scienze50",
+      "level": 50,
+      "subject": "scienze",
+      "priorFirstPassAccepted": true,
+      "followUpAttempted": false,
+      "followUpAccepted": null,
+      "finalPreliminaryAccepted": true,
+      "acceptedModelSentence": "La Luna influisce sulle maree insieme al Sole.",
+      "remainingRelationalAlerts": [
+        "eclipse_alignment",
+        "observations_repeatable"
+      ],
+      "otherContentsStillRequireQA": true,
+      "productionEligible": false,
+      "firstReasons": [],
+      "followUpReasons": null,
+      "finalMath": {
+        "letters": 312,
+        "reduction": 47.91,
+        "rows": 7,
+        "cap": 7
+      }
+    },
+    {
+      "caseId": "hemoglobin_red_cells_medicina20",
+      "level": 20,
+      "subject": "medicina",
+      "priorFirstPassAccepted": true,
+      "followUpAttempted": false,
+      "followUpAccepted": null,
+      "finalPreliminaryAccepted": true,
+      "acceptedModelSentence": "L'emoglobina nei globuli rossi trasporta gran parte dell'ossigeno.",
+      "remainingRelationalAlerts": [],
+      "otherContentsStillRequireQA": true,
+      "productionEligible": false,
+      "firstReasons": [],
+      "followUpReasons": null,
+      "finalMath": {
+        "letters": 588,
+        "reduction": 19.23,
+        "rows": 13,
+        "cap": 13
+      }
+    },
+    {
+      "caseId": "unread_reserved_procedura40",
+      "level": 40,
+      "subject": "procedura",
+      "priorFirstPassAccepted": false,
+      "followUpAttempted": true,
+      "followUpAccepted": true,
+      "finalPreliminaryAccepted": true,
+      "acceptedModelSentence": "Se prenotato, va reso alla scadenza pur se la lettura non è finita.",
+      "remainingRelationalAlerts": [
+        "register_who_and_when"
+      ],
+      "otherContentsStillRequireQA": true,
+      "productionEligible": false,
+      "firstReasons": [
+        "LETTER_BAND_OUTSIDE"
+      ],
+      "followUpReasons": [],
+      "finalMath": {
+        "letters": 380,
+        "reduction": 40.25,
+        "rows": 9,
+        "cap": 9
+      }
+    },
+    {
+      "caseId": "eclipses_lunation_scienze40",
+      "level": 40,
+      "subject": "scienze",
+      "priorFirstPassAccepted": true,
+      "followUpAttempted": false,
+      "followUpAccepted": null,
+      "finalPreliminaryAccepted": true,
+      "acceptedModelSentence": "Le eclissi esigono allineamenti particolari e non avvengono a ogni lunazione.",
+      "remainingRelationalAlerts": [],
+      "otherContentsStillRequireQA": true,
+      "productionEligible": false,
+      "firstReasons": [],
+      "followUpReasons": null,
+      "finalMath": {
+        "letters": 378,
+        "reduction": 36.89,
+        "rows": 8,
+        "cap": 8
+      }
+    }
+  ],
+  "issues": []
+}
