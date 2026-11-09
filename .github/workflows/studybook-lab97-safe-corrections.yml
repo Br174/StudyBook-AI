@@ -1,0 +1,47 @@
+name: StudyBook LAB97 deterministic QA after real Gemini
+on:
+  push:
+    branches:
+      - 'audit/studybook-level-specific-v97-*'
+    paths:
+      - '.github/workflows/studybook-lab97-safe-corrections.yml'
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check corrections syntax
+        run: node --check scripts/test-lab97-safe-corrections.mjs
+      - name: Check 15000 safe formatting variants and semantic risk flags
+        run: node scripts/test-lab97-safe-corrections.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB97-RepairQA
+          path: audit/reports/lab97-safe-fixes-and-semantic-risks.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Preserve report on audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab97-safe-fixes-and-semantic-risks.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab97-safe-fixes-and-semantic-risks.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB97): save deterministic fixes and review-only risk signals'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
