@@ -1,0 +1,101 @@
+{
+  "experiment": "LAB82 real Gemini virtual line comparison",
+  "timestamp": "2026-11-09T08:00:14.837Z",
+  "model": "gemini-3.5-flash-lite",
+  "source": "same two synthetic LAB80 pages",
+  "maxCalls": 18,
+  "calls": 2,
+  "stoppedOn429Or503": true,
+  "quotaMayNotBeCauseOf503": true,
+  "resultsComplete": false,
+  "completedTriples": 0,
+  "lineSizeLetters": 50,
+  "counting": "Unicode NFC alphabetic, excludes punctuation, spaces, digits",
+  "tolerance": "±2 percentage points of original source length",
+  "warning": "Virtual lines are only prompt guidance; actual text length must be calculated programmatically. Numeric-token checks are heuristics, not full semantic tests.",
+  "summary": {
+    "target_rows": {
+      "completePairs": 0,
+      "withinBand": 0,
+      "meanAbsErrorLetters": null,
+      "meanResponseMs": null,
+      "meanOutputTokens": null,
+      "actualRequestedLines": 0
+    },
+    "remove_rows": {
+      "completePairs": 0,
+      "withinBand": 0,
+      "meanAbsErrorLetters": null,
+      "meanResponseMs": null,
+      "meanOutputTokens": null,
+      "actualRequestedLines": 0
+    },
+    "letters_control": {
+      "completePairs": 0,
+      "withinBand": 0,
+      "meanAbsErrorLetters": null,
+      "meanResponseMs": null,
+      "meanOutputTokens": null,
+      "actualRequestedLines": null
+    }
+  },
+  "paired": [],
+  "runs": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "mode": "target_rows",
+      "budget": {
+        "original": 599,
+        "level": 10,
+        "target": 539,
+        "min": 528,
+        "max": 551,
+        "sourceRows": 12,
+        "targetRows": 11,
+        "removedRows": 1,
+        "averageLettersPerTargetRow": 49
+      },
+      "letters": 419,
+      "lineCount": 11,
+      "withinBand": false,
+      "actualReduction": 30.05,
+      "letterError": -120,
+      "requestedLineCountMatched": true,
+      "lineLengths": [
+        39,
+        36,
+        40,
+        36,
+        37,
+        38,
+        39,
+        39,
+        40,
+        38,
+        37
+      ],
+      "numericMissing": [],
+      "outputTokens": 130,
+      "responseMs": 1255,
+      "output": "La Terra ruota attorno al proprio asse creando\nil ciclo alternato del giorno e della notte.\nLa rivoluzione solare dura invece circa un anno.\nLe stagioni dipendono dall'asse inclinato\ne non dalla distanza rispetto al nostro Sole.\nLa Luna e il Sole influenzano insieme le maree.\nLe eclissi esigono un allineamento specifico\nche non accade regolarmente ad ogni lunazione.\nLa scienza richiede ipotesi e prove ripetibili.\nUn singolo risultato isolato non fa una prova.\nBisogna sempre distinguere moto e sue cause."
+    }
+  ],
+  "errors": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "mode": "remove_rows",
+      "status": 503,
+      "reason": "HTTP 503",
+      "responseMs": 833
+    }
+  ],
+  "offlinePreflight": {
+    "sameTargetRowsForBothLineModes": true,
+    "formulaVerified": true
+  },
+  "appModified": false,
+  "productionModified": false,
+  "androidBuild": false
+}
