@@ -1,0 +1,51 @@
+name: StudyBook LAB103 best-of-all no-regression offline evidence
+on:
+  push:
+    branches:
+      - 'audit/studybook-best-of-all-qa-v103-*'
+    paths:
+      - '.github/workflows/studybook-lab103-incumbents.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab103-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  incumbent-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate offline reference scripts
+        run: node --check scripts/lab103-incumbent-no-regression.mjs
+      - name: Audit saved historical percent/geometry winners and semantic candidates
+        run: node scripts/lab103-incumbent-no-regression.mjs
+      - name: Preserve complete evidence regardless of step status
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB103-BestOfAll-NoRegression-Offline
+          path: audit/reports/lab103-incumbent-no-regression.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit evidence only to isolated LAB103 research branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab103-incumbent-no-regression.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab103-incumbent-no-regression.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB103): pin best numerical and qualitative incumbents'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
