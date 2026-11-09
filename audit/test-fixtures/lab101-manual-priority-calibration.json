@@ -1,0 +1,71 @@
+{
+  "schema": "LAB101_MANUAL_CALIBRATION_V1",
+  "date": "2026-11-09",
+  "purpose": "Hand-labeled priorities of LAB100 baseline facts for evaluation only; never send this calibration to Gemini. Subjective editorial categories, not gold semantic truth.",
+  "rule": "Fundamental = loss changes an independent concept, condition, negation, essential causal link or definition. Support = detail helping explanation but shorter versions may express compactly; never remove distinct fundamental concepts. Context = background framing, not a mandatory study concept. User's six-level didactic pillar supersedes any model priority.",
+  "labels": {
+    "scienze": [
+      "fondamentale",
+      "fondamentale",
+      "supporto",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale"
+    ],
+    "procedura": [
+      "contesto",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "supporto",
+      "supporto"
+    ],
+    "medicina": [
+      "fondamentale",
+      "fondamentale",
+      "supporto",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "supporto",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale"
+    ],
+    "concetto_sbilanciato": [
+      "fondamentale",
+      "supporto",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale",
+      "supporto",
+      "fondamentale",
+      "fondamentale",
+      "fondamentale"
+    ],
+    "pagina_breve_continua": [
+      "fondamentale",
+      "fondamentale",
+      "fondamentale"
+    ]
+  }
+}
