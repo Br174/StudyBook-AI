@@ -1,0 +1,50 @@
+name: StudyBook LAB78 real code parity and deterministic geometry gate
+on:
+  push:
+    branches:
+      - 'lab/studybook-core-android-01-update-78-*'
+    paths:
+      - '.github/workflows/studybook-lab78-geometry-preflight.yml'
+      - 'src/lib/studyGeometryV78.js'
+      - 'src/lib/studyBestOfV76.js'
+      - 'src/lib/studyQualityV66.js'
+      - 'src/lib/draftFirstV57.js'
+      - 'api/editionsBulkV51.js'
+      - 'scripts/test-lab78-real-worker-parity.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: studybook-lab78-preflight-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test-real-path:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install declared packages without lockfile changes
+        run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: Actual Worker handler and native quality gate, fresh synthetic book
+        run: |
+          node scripts/test-lab78-real-worker-parity.mjs
+          node scripts/test-lab76-best-of.mjs
+          node scripts/test-lab77-503-throughput-recovery.mjs
+          node scripts/test-lab58-large-block-cadence.mjs
+          node scripts/test-lab55-503-resume.mjs
+          node scripts/test-fidelity-engine.mjs
+      - name: Compile real StudyBook web core with LAB78 mandatory handshake
+        env:
+          VITE_NATIVE_API_BASE: https://studybook-ai-lab78-geometry.brunoverlezza.workers.dev
+          VITE_STUDYBOOK_GEOMETRY_V78: '1'
+        run: |
+          npm run build
+          grep -rl 'lab78-real-worker-60-cell-source-pages-v1' dist/assets/
+          grep -rl 'studybook-ai-lab78-geometry' dist/assets/
+      - name: Compile separate Worker without Cloudflare deployment
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: npx wrangler deploy --dry-run --config wrangler.lab78-geometry.jsonc
