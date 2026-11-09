@@ -1,0 +1,1138 @@
+{
+  "date": "2026-11-09T10:32:19.454Z",
+  "context": "LAB89 proportional semantic budgeting offline only (no Gemini calls)",
+  "calibration": {
+    "width": 60,
+    "lettersPerRow": 46.346
+  },
+  "fixtureCases": 30,
+  "fixtureFeasible": 30,
+  "randomizedCases": 9000,
+  "feasibleRandom": 8640,
+  "infeasibleRandom": 360,
+  "failures": [],
+  "deliberateSkewCheck": {
+    "weights": [
+      9,
+      0,
+      0,
+      0
+    ],
+    "totalRows": 10,
+    "allocated": [
+      7,
+      1,
+      1,
+      1
+    ]
+  },
+  "fixtureChecks": [
+    {
+      "source": "scienze",
+      "level": 65,
+      "originalLetters": 599,
+      "originalRows": 13,
+      "rows": 5,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 133,
+          "rows": 1,
+          "suggestedLetters": 47
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 137,
+          "rows": 1,
+          "suggestedLetters": 48
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 109,
+          "rows": 1,
+          "suggestedLetters": 38
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 220,
+          "rows": 2,
+          "suggestedLetters": 77
+        }
+      ],
+      "riskSignals": []
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "originalLetters": 599,
+      "originalRows": 13,
+      "rows": 6,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 133,
+          "rows": 1,
+          "suggestedLetters": 67
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 137,
+          "rows": 2,
+          "suggestedLetters": 69
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 109,
+          "rows": 1,
+          "suggestedLetters": 54
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 220,
+          "rows": 2,
+          "suggestedLetters": 110
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high",
+        "C3:estimated density high",
+        "C4:estimated density high"
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "originalLetters": 599,
+      "originalRows": 13,
+      "rows": 8,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 133,
+          "rows": 2,
+          "suggestedLetters": 80
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 137,
+          "rows": 2,
+          "suggestedLetters": 82
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 109,
+          "rows": 1,
+          "suggestedLetters": 65
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 220,
+          "rows": 3,
+          "suggestedLetters": 132
+        }
+      ],
+      "riskSignals": [
+        "C3:estimated density high"
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "originalLetters": 599,
+      "originalRows": 13,
+      "rows": 9,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 133,
+          "rows": 2,
+          "suggestedLetters": 93
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 137,
+          "rows": 2,
+          "suggestedLetters": 96
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 109,
+          "rows": 2,
+          "suggestedLetters": 76
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 220,
+          "rows": 3,
+          "suggestedLetters": 154
+        }
+      ],
+      "riskSignals": [
+        "C4:estimated density high"
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "originalLetters": 599,
+      "originalRows": 13,
+      "rows": 10,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 133,
+          "rows": 2,
+          "suggestedLetters": 106
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 137,
+          "rows": 2,
+          "suggestedLetters": 110
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 109,
+          "rows": 2,
+          "suggestedLetters": 87
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 220,
+          "rows": 4,
+          "suggestedLetters": 176
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high",
+        "C2:estimated density high"
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "originalLetters": 599,
+      "originalRows": 13,
+      "rows": 12,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 133,
+          "rows": 2,
+          "suggestedLetters": 120
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 137,
+          "rows": 3,
+          "suggestedLetters": 123
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 109,
+          "rows": 2,
+          "suggestedLetters": 98
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 220,
+          "rows": 5,
+          "suggestedLetters": 198
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high",
+        "C3:estimated density high"
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "originalLetters": 636,
+      "originalRows": 14,
+      "rows": 5,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 202,
+          "rows": 2,
+          "suggestedLetters": 71
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 152,
+          "rows": 1,
+          "suggestedLetters": 53
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 94,
+          "rows": 1,
+          "suggestedLetters": 33
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 188,
+          "rows": 1,
+          "suggestedLetters": 66
+        }
+      ],
+      "riskSignals": [
+        "C2:estimated density high",
+        "C4:estimated density high"
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "originalLetters": 636,
+      "originalRows": 14,
+      "rows": 7,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 202,
+          "rows": 2,
+          "suggestedLetters": 101
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 152,
+          "rows": 2,
+          "suggestedLetters": 76
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 94,
+          "rows": 1,
+          "suggestedLetters": 47
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 188,
+          "rows": 2,
+          "suggestedLetters": 94
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high"
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "originalLetters": 636,
+      "originalRows": 14,
+      "rows": 8,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 202,
+          "rows": 2,
+          "suggestedLetters": 121
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 152,
+          "rows": 2,
+          "suggestedLetters": 91
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 94,
+          "rows": 2,
+          "suggestedLetters": 57
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 188,
+          "rows": 2,
+          "suggestedLetters": 113
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high",
+        "C4:estimated density high"
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "originalLetters": 636,
+      "originalRows": 14,
+      "rows": 10,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 202,
+          "rows": 3,
+          "suggestedLetters": 141
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 152,
+          "rows": 2,
+          "suggestedLetters": 106
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 94,
+          "rows": 2,
+          "suggestedLetters": 66
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 188,
+          "rows": 3,
+          "suggestedLetters": 132
+        }
+      ],
+      "riskSignals": [
+        "C2:estimated density high"
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "originalLetters": 636,
+      "originalRows": 14,
+      "rows": 11,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 202,
+          "rows": 3,
+          "suggestedLetters": 162
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 152,
+          "rows": 3,
+          "suggestedLetters": 122
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 94,
+          "rows": 2,
+          "suggestedLetters": 75
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 188,
+          "rows": 3,
+          "suggestedLetters": 150
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high",
+        "C4:estimated density high"
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "originalLetters": 636,
+      "originalRows": 14,
+      "rows": 12,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 202,
+          "rows": 4,
+          "suggestedLetters": 182
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 152,
+          "rows": 3,
+          "suggestedLetters": 137
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 94,
+          "rows": 2,
+          "suggestedLetters": 84
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 188,
+          "rows": 3,
+          "suggestedLetters": 169
+        }
+      ],
+      "riskSignals": [
+        "C4:estimated density high"
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 65,
+      "originalLetters": 728,
+      "originalRows": 16,
+      "rows": 6,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 189,
+          "rows": 1,
+          "suggestedLetters": 66
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 184,
+          "rows": 2,
+          "suggestedLetters": 65
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 178,
+          "rows": 1,
+          "suggestedLetters": 62
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 177,
+          "rows": 2,
+          "suggestedLetters": 62
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high",
+        "C3:estimated density high"
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "originalLetters": 728,
+      "originalRows": 16,
+      "rows": 8,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 189,
+          "rows": 2,
+          "suggestedLetters": 95
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 184,
+          "rows": 2,
+          "suggestedLetters": 92
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 178,
+          "rows": 2,
+          "suggestedLetters": 89
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 177,
+          "rows": 2,
+          "suggestedLetters": 88
+        }
+      ],
+      "riskSignals": []
+    },
+    {
+      "source": "medicina",
+      "level": 40,
+      "originalLetters": 728,
+      "originalRows": 16,
+      "rows": 9,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 189,
+          "rows": 2,
+          "suggestedLetters": 114
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 184,
+          "rows": 3,
+          "suggestedLetters": 110
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 178,
+          "rows": 2,
+          "suggestedLetters": 107
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 177,
+          "rows": 2,
+          "suggestedLetters": 106
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high",
+        "C3:estimated density high",
+        "C4:estimated density high"
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 30,
+      "originalLetters": 728,
+      "originalRows": 16,
+      "rows": 11,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 189,
+          "rows": 2,
+          "suggestedLetters": 132
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 184,
+          "rows": 3,
+          "suggestedLetters": 129
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 178,
+          "rows": 3,
+          "suggestedLetters": 125
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 177,
+          "rows": 3,
+          "suggestedLetters": 124
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high"
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "originalLetters": 728,
+      "originalRows": 16,
+      "rows": 13,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 189,
+          "rows": 3,
+          "suggestedLetters": 151
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 184,
+          "rows": 4,
+          "suggestedLetters": 147
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 178,
+          "rows": 3,
+          "suggestedLetters": 142
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 177,
+          "rows": 3,
+          "suggestedLetters": 142
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high"
+      ]
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "originalLetters": 728,
+      "originalRows": 16,
+      "rows": 14,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 189,
+          "rows": 3,
+          "suggestedLetters": 170
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 184,
+          "rows": 4,
+          "suggestedLetters": 166
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 178,
+          "rows": 3,
+          "suggestedLetters": 160
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 177,
+          "rows": 4,
+          "suggestedLetters": 159
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high",
+        "C3:estimated density high"
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "originalLetters": 670,
+      "originalRows": 15,
+      "rows": 5,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 539,
+          "rows": 2,
+          "suggestedLetters": 189
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 43,
+          "rows": 1,
+          "suggestedLetters": 15
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 47,
+          "rows": 1,
+          "suggestedLetters": 17
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 41,
+          "rows": 1,
+          "suggestedLetters": 14
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high"
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "originalLetters": 670,
+      "originalRows": 15,
+      "rows": 7,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 539,
+          "rows": 4,
+          "suggestedLetters": 270
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 43,
+          "rows": 1,
+          "suggestedLetters": 21
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 47,
+          "rows": 1,
+          "suggestedLetters": 24
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 41,
+          "rows": 1,
+          "suggestedLetters": 20
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high"
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "originalLetters": 670,
+      "originalRows": 15,
+      "rows": 9,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 539,
+          "rows": 6,
+          "suggestedLetters": 323
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 43,
+          "rows": 1,
+          "suggestedLetters": 26
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 47,
+          "rows": 1,
+          "suggestedLetters": 28
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 41,
+          "rows": 1,
+          "suggestedLetters": 25
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high"
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 30,
+      "originalLetters": 670,
+      "originalRows": 15,
+      "rows": 10,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 539,
+          "rows": 7,
+          "suggestedLetters": 377
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 43,
+          "rows": 1,
+          "suggestedLetters": 30
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 47,
+          "rows": 1,
+          "suggestedLetters": 33
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 41,
+          "rows": 1,
+          "suggestedLetters": 29
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high"
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "originalLetters": 670,
+      "originalRows": 15,
+      "rows": 12,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 539,
+          "rows": 9,
+          "suggestedLetters": 431
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 43,
+          "rows": 1,
+          "suggestedLetters": 34
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 47,
+          "rows": 1,
+          "suggestedLetters": 38
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 41,
+          "rows": 1,
+          "suggestedLetters": 33
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high"
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "originalLetters": 670,
+      "originalRows": 15,
+      "rows": 13,
+      "short": false,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 539,
+          "rows": 10,
+          "suggestedLetters": 485
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 43,
+          "rows": 1,
+          "suggestedLetters": 39
+        },
+        {
+          "id": "C3",
+          "sourceLetters": 47,
+          "rows": 1,
+          "suggestedLetters": 42
+        },
+        {
+          "id": "C4",
+          "sourceLetters": 41,
+          "rows": 1,
+          "suggestedLetters": 37
+        }
+      ],
+      "riskSignals": [
+        "C1:estimated density high"
+      ]
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 65,
+      "originalLetters": 155,
+      "originalRows": 4,
+      "rows": 5,
+      "short": true,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 68,
+          "rows": 2,
+          "suggestedLetters": null
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 87,
+          "rows": 3,
+          "suggestedLetters": null
+        }
+      ],
+      "riskSignals": []
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "originalLetters": 155,
+      "originalRows": 4,
+      "rows": 5,
+      "short": true,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 68,
+          "rows": 2,
+          "suggestedLetters": null
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 87,
+          "rows": 3,
+          "suggestedLetters": null
+        }
+      ],
+      "riskSignals": []
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 40,
+      "originalLetters": 155,
+      "originalRows": 4,
+      "rows": 5,
+      "short": true,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 68,
+          "rows": 2,
+          "suggestedLetters": null
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 87,
+          "rows": 3,
+          "suggestedLetters": null
+        }
+      ],
+      "riskSignals": []
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 30,
+      "originalLetters": 155,
+      "originalRows": 4,
+      "rows": 5,
+      "short": true,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 68,
+          "rows": 2,
+          "suggestedLetters": null
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 87,
+          "rows": 3,
+          "suggestedLetters": null
+        }
+      ],
+      "riskSignals": []
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "originalLetters": 155,
+      "originalRows": 4,
+      "rows": 5,
+      "short": true,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 68,
+          "rows": 2,
+          "suggestedLetters": null
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 87,
+          "rows": 3,
+          "suggestedLetters": null
+        }
+      ],
+      "riskSignals": []
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 10,
+      "originalLetters": 155,
+      "originalRows": 4,
+      "rows": 5,
+      "short": true,
+      "feasible": true,
+      "reason": null,
+      "allocations": [
+        {
+          "id": "C1",
+          "sourceLetters": 68,
+          "rows": 2,
+          "suggestedLetters": null
+        },
+        {
+          "id": "C2",
+          "sourceLetters": 87,
+          "rows": 3,
+          "suggestedLetters": null
+        }
+      ],
+      "riskSignals": []
+    }
+  ],
+  "examples": [
+    {
+      "id": 0,
+      "reason": "ESSENTIAL_CONCEPTS_REQUIRE_MORE_ROWS_THAN_PAGE_BUDGET"
+    },
+    {
+      "id": 30,
+      "reason": "ESSENTIAL_CONCEPTS_REQUIRE_MORE_ROWS_THAN_PAGE_BUDGET"
+    },
+    {
+      "id": 63,
+      "reason": "ESSENTIAL_CONCEPTS_REQUIRE_MORE_ROWS_THAN_PAGE_BUDGET"
+    }
+  ]
+}

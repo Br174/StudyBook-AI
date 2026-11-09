@@ -1,0 +1,530 @@
+{
+  "name": "StudyBook LAB89 shared-line deterministic repacking of real proportional Gemini sections",
+  "date": "2026-11-09T10:32:19.571Z",
+  "source": "audit/reports/lab89-proportional-real-gemini.json",
+  "noFurtherGeminiCalls": true,
+  "kind": "OFFLINE_GEOMETRY_EXPERIMENT",
+  "warning": "No semantic fixes. Sharing a physical line effectively relaxes the strict exclusive row budget per concept. Future generation must allocate flexible cell slots before calling Gemini, while retaining whole-page grid, semantic coverage and Unicode-letter targets.",
+  "aggregate": {
+    "cases": 15,
+    "strictPerSectionGridPass": 5,
+    "wholePageSharedLineGridPass": 10,
+    "percentPass": 8,
+    "strictAndPercent": 2,
+    "sharedAndPercent": 7,
+    "cumulativeRowsRecovered": 19,
+    "letterOrTextChanged": 0
+  },
+  "records": [
+    {
+      "source": "scienze",
+      "level": 40,
+      "targetRows": 8,
+      "proportionalAssignedRows": [
+        2,
+        2,
+        1,
+        3
+      ],
+      "independentRows": [
+        2,
+        2,
+        2,
+        3
+      ],
+      "sumIndependentRows": 9,
+      "strictIndividualCapPass": false,
+      "totalPackedRows": 8,
+      "totalSavedRows": 1,
+      "packedGlobalPageCapPass": true,
+      "percentPass": true,
+      "bothPackedAndPercentPass": true,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 2,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "targetRows": 5,
+      "proportionalAssignedRows": [
+        1,
+        1,
+        1,
+        2
+      ],
+      "independentRows": [
+        1,
+        2,
+        1,
+        3
+      ],
+      "sumIndependentRows": 7,
+      "strictIndividualCapPass": false,
+      "totalPackedRows": 5,
+      "totalSavedRows": 2,
+      "packedGlobalPageCapPass": true,
+      "percentPass": true,
+      "bothPackedAndPercentPass": true,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 5,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "targetRows": 6,
+      "proportionalAssignedRows": [
+        1,
+        2,
+        1,
+        2
+      ],
+      "independentRows": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "sumIndependentRows": 8,
+      "strictIndividualCapPass": false,
+      "totalPackedRows": 6,
+      "totalSavedRows": 2,
+      "packedGlobalPageCapPass": true,
+      "percentPass": true,
+      "bothPackedAndPercentPass": true,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 3,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "targetRows": 9,
+      "proportionalAssignedRows": [
+        2,
+        2,
+        2,
+        3
+      ],
+      "independentRows": [
+        2,
+        2,
+        2,
+        3
+      ],
+      "sumIndependentRows": 9,
+      "strictIndividualCapPass": true,
+      "totalPackedRows": 7,
+      "totalSavedRows": 2,
+      "packedGlobalPageCapPass": true,
+      "percentPass": false,
+      "bothPackedAndPercentPass": false,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 2,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "targetRows": 10,
+      "proportionalAssignedRows": [
+        2,
+        2,
+        2,
+        4
+      ],
+      "independentRows": [
+        3,
+        3,
+        3,
+        5
+      ],
+      "sumIndependentRows": 14,
+      "strictIndividualCapPass": false,
+      "totalPackedRows": 13,
+      "totalSavedRows": 1,
+      "packedGlobalPageCapPass": false,
+      "percentPass": false,
+      "bothPackedAndPercentPass": false,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 1,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "targetRows": 12,
+      "proportionalAssignedRows": [
+        2,
+        3,
+        2,
+        5
+      ],
+      "independentRows": [
+        3,
+        3,
+        3,
+        6
+      ],
+      "sumIndependentRows": 15,
+      "strictIndividualCapPass": false,
+      "totalPackedRows": 14,
+      "totalSavedRows": 1,
+      "packedGlobalPageCapPass": false,
+      "percentPass": false,
+      "bothPackedAndPercentPass": false,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 0,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "targetRows": 8,
+      "proportionalAssignedRows": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "independentRows": [
+        3,
+        3,
+        2,
+        3
+      ],
+      "sumIndependentRows": 11,
+      "strictIndividualCapPass": false,
+      "totalPackedRows": 9,
+      "totalSavedRows": 2,
+      "packedGlobalPageCapPass": false,
+      "percentPass": true,
+      "bothPackedAndPercentPass": false,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 0,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "targetRows": 5,
+      "proportionalAssignedRows": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "independentRows": [
+        2,
+        1,
+        1,
+        2
+      ],
+      "sumIndependentRows": 6,
+      "strictIndividualCapPass": false,
+      "totalPackedRows": 5,
+      "totalSavedRows": 1,
+      "packedGlobalPageCapPass": true,
+      "percentPass": true,
+      "bothPackedAndPercentPass": true,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 2,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "targetRows": 7,
+      "proportionalAssignedRows": [
+        2,
+        2,
+        1,
+        2
+      ],
+      "independentRows": [
+        3,
+        3,
+        1,
+        3
+      ],
+      "sumIndependentRows": 10,
+      "strictIndividualCapPass": false,
+      "totalPackedRows": 8,
+      "totalSavedRows": 2,
+      "packedGlobalPageCapPass": false,
+      "percentPass": false,
+      "bothPackedAndPercentPass": false,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 1,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "targetRows": 10,
+      "proportionalAssignedRows": [
+        3,
+        2,
+        2,
+        3
+      ],
+      "independentRows": [
+        3,
+        3,
+        2,
+        3
+      ],
+      "sumIndependentRows": 11,
+      "strictIndividualCapPass": false,
+      "totalPackedRows": 9,
+      "totalSavedRows": 2,
+      "packedGlobalPageCapPass": true,
+      "percentPass": true,
+      "bothPackedAndPercentPass": true,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 1,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "targetRows": 11,
+      "proportionalAssignedRows": [
+        3,
+        3,
+        2,
+        3
+      ],
+      "independentRows": [
+        3,
+        3,
+        2,
+        3
+      ],
+      "sumIndependentRows": 11,
+      "strictIndividualCapPass": true,
+      "totalPackedRows": 11,
+      "totalSavedRows": 0,
+      "packedGlobalPageCapPass": true,
+      "percentPass": true,
+      "bothPackedAndPercentPass": true,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 2,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "targetRows": 12,
+      "proportionalAssignedRows": [
+        4,
+        3,
+        2,
+        3
+      ],
+      "independentRows": [
+        3,
+        3,
+        2,
+        3
+      ],
+      "sumIndependentRows": 11,
+      "strictIndividualCapPass": true,
+      "totalPackedRows": 10,
+      "totalSavedRows": 1,
+      "packedGlobalPageCapPass": true,
+      "percentPass": false,
+      "bothPackedAndPercentPass": false,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 1,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "targetRows": 9,
+      "proportionalAssignedRows": [
+        6,
+        1,
+        1,
+        1
+      ],
+      "independentRows": [
+        5,
+        1,
+        1,
+        1
+      ],
+      "sumIndependentRows": 8,
+      "strictIndividualCapPass": true,
+      "totalPackedRows": 8,
+      "totalSavedRows": 0,
+      "packedGlobalPageCapPass": true,
+      "percentPass": true,
+      "bothPackedAndPercentPass": true,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 0,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "targetRows": 5,
+      "proportionalAssignedRows": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "independentRows": [
+        4,
+        1,
+        1,
+        1
+      ],
+      "sumIndependentRows": 7,
+      "strictIndividualCapPass": false,
+      "totalPackedRows": 6,
+      "totalSavedRows": 1,
+      "packedGlobalPageCapPass": false,
+      "percentPass": false,
+      "bothPackedAndPercentPass": false,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 1,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "targetRows": 13,
+      "proportionalAssignedRows": [
+        10,
+        1,
+        1,
+        1
+      ],
+      "independentRows": [
+        8,
+        1,
+        1,
+        1
+      ],
+      "sumIndependentRows": 11,
+      "strictIndividualCapPass": true,
+      "totalPackedRows": 10,
+      "totalSavedRows": 1,
+      "packedGlobalPageCapPass": true,
+      "percentPass": false,
+      "bothPackedAndPercentPass": false,
+      "sectionCapPassAfterSharedLayout": "NOT_EVALUATED_AS_FIXED_EXCLUSIVE_ROWS",
+      "unchangedAlphabeticLetters": true,
+      "unchangedNormalizedText": true,
+      "semanticQualityCertified": false,
+      "heuristicQualitySignals": 0,
+      "warnings": [
+        "No changes to Gemini wording, facts, punctuation or source-page boundaries.",
+        "A shared line may include the end of a concept and the beginning of the next concept.",
+        "This validates global capacity only, not the previously assigned exclusive per-concept row maximum."
+      ]
+    }
+  ]
+}
