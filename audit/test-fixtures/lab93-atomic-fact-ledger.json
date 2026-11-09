@@ -1,0 +1,392 @@
+{
+  "version": "LAB93_ATOMIC_LEDGER_V1",
+  "date": "2026-11-09",
+  "method": "Predefined atomic facts are split from known synthetic page sources in advance. This tests downstream one-pass generation and provisional QA, not automatic AI-based extraction from PDF.",
+  "rules": "all levels preserve atomic core facts. Versions at 10%,20% also preserve listed support facts. Never insert facts not in the original source. Semantic regexes are cheap detection hints; their failure may be false positive and pass is NOT proof of semantic equivalence.",
+  "sources": {
+    "scienze": [
+      {
+        "id": "C1",
+        "core": [
+          {
+            "id": "earth_rotates",
+            "re": "rotaz|ruot"
+          },
+          {
+            "id": "day_night",
+            "re": "giorno.{0,25}notte|notte.{0,25}giorno"
+          }
+        ],
+        "support": [
+          {
+            "id": "axis",
+            "re": "ass"
+          },
+          {
+            "id": "light_dark",
+            "re": "luce|illumina|buio"
+          }
+        ]
+      },
+      {
+        "id": "C2",
+        "core": [
+          {
+            "id": "revolution",
+            "re": "rivoluz|orbita"
+          },
+          {
+            "id": "year",
+            "re": "ann"
+          },
+          {
+            "id": "seasons_axis_tilt",
+            "re": "stagion.{0,100}inclin|inclin.{0,100}stagion"
+          },
+          {
+            "id": "not_distance",
+            "re": "non.{0,50}distanza|distanza.{0,50}non|anziche.{0,40}distanza|non.{0,35}vicinan"
+          }
+        ],
+        "support": [
+          {
+            "id": "earth_around_sun",
+            "re": "sole"
+          }
+        ]
+      },
+      {
+        "id": "C3",
+        "core": [
+          {
+            "id": "tides_lunar_solar",
+            "re": "maree.{0,100}luna.{0,100}sole|luna.{0,100}sole.{0,100}maree|sole.{0,100}luna.{0,100}maree"
+          },
+          {
+            "id": "eclipses_alignment",
+            "re": "ecliss.{0,70}alline|alline.{0,70}ecliss"
+          },
+          {
+            "id": "not_every_lunation",
+            "re": "non.{0,55}(ogni|sempre).{0,55}lunaz|non.{0,55}lunaz|non.{0,55}ogni mese|non.{0,55}ogni volta"
+          }
+        ],
+        "support": []
+      },
+      {
+        "id": "C4",
+        "core": [
+          {
+            "id": "testable_hypotheses",
+            "re": "ipotes.{0,50}verific|verific.{0,50}ipotes"
+          },
+          {
+            "id": "repeatable_observations",
+            "re": "osservaz.{0,50}ripet|ripet.{0,50}osservaz|prove.{0,50}ripet"
+          },
+          {
+            "id": "isolated_result_insufficient",
+            "re": "singol.{0,55}non basta|isolat.{0,55}non basta|un.{0,20}risultat.{0,55}non.{0,40}suffic|non basta.{0,55}risultat"
+          },
+          {
+            "id": "cause_vs_description",
+            "re": "caus.{0,100}descriz|descriz.{0,100}caus|moto.{0,80}caus|moviment.{0,80}caus"
+          }
+        ],
+        "support": []
+      }
+    ],
+    "procedura": [
+      {
+        "id": "C1",
+        "core": [
+          {
+            "id": "regulation_12",
+            "re": "(?:regol|norm).{0,20}(?:12|dodici)"
+          },
+          {
+            "id": "title_before_loan",
+            "re": "titolo.{0,60}prima.{0,45}prestito|prima.{0,45}prestito.{0,50}titolo"
+          },
+          {
+            "id": "return_ten_days",
+            "re": "restitu.{0,65}(10|dieci).{0,15}giorn|(?:10|dieci).{0,15}giorn.{0,65}restitu"
+          }
+        ],
+        "support": [
+          {
+            "id": "year_2024",
+            "re": "2024|duemilaventiquattro"
+          },
+          {
+            "id": "simulated_library",
+            "re": "bibliotec|esercizio"
+          }
+        ]
+      },
+      {
+        "id": "C2",
+        "core": [
+          {
+            "id": "extension_only_if_unreserved",
+            "re": "prorog.{0,80}(?:non.{0,20}prenot|nessun.{0,20}prenot|non.{0,20}riserv)|non.{0,40}prenot.{0,60}prorog"
+          },
+          {
+            "id": "not_automatic",
+            "re": "prorog.{0,60}non.{0,30}automatic|non.{0,30}automatic.{0,40}prorog"
+          },
+          {
+            "id": "written_confirmation",
+            "re": "conferma.{0,20}scritt|scritt.{0,40}conferma"
+          },
+          {
+            "id": "initial_date_without_confirmation",
+            "re": "(?:senza|mancanz).{0,45}conferma.{0,90}(?:inizial|scaden)|(?:inizial|scaden).{0,90}(?:senza|mancanz).{0,40}conferma"
+          }
+        ],
+        "support": []
+      },
+      {
+        "id": "C3",
+        "core": [
+          {
+            "id": "reserved_return_on_deadline",
+            "re": "prenot|riserv"
+          },
+          {
+            "id": "even_if_not_finished",
+            "re": "anche se.{0,30}(?:non|finito)|pur.{0,50}non|senza.{0,40}(?:finir|termin|complet)|non.{0,50}(?:complet|terminat).{0,40}lettur"
+          }
+        ],
+        "support": [
+          {
+            "id": "deadline",
+            "re": "scaden|data"
+          }
+        ]
+      },
+      {
+        "id": "C4",
+        "core": [
+          {
+            "id": "register_who_when",
+            "re": "registr.{0,80}(?:chi|lettor|student).{0,100}(?:quando|giorn|dat)|registr.{0,80}(?:quando|giorn|dat).{0,100}(?:chi|lettor|student)"
+          },
+          {
+            "id": "no_opinions",
+            "re": "(?:non|senza|esclud).{0,65}opinion|opinion.{0,65}non"
+          }
+        ],
+        "support": [
+          {
+            "id": "conditions_exceptions",
+            "re": "condizion|eccezion"
+          }
+        ]
+      }
+    ],
+    "medicina": [
+      {
+        "id": "C1",
+        "core": [
+          {
+            "id": "respiratory_route",
+            "re": "aria.{0,80}polmon|polmon.{0,80}aria"
+          },
+          {
+            "id": "inspiration_contracts_diaphragm",
+            "re": "inspir.{0,60}diaframm.{0,50}contra|diaframm.{0,60}contra.{0,50}inspir"
+          },
+          {
+            "id": "expiration_relaxes",
+            "re": "espir.{0,70}rilass|rilass.{0,60}espir"
+          }
+        ],
+        "support": [
+          {
+            "id": "airways",
+            "re": "vie aeree"
+          },
+          {
+            "id": "thorax_expands",
+            "re": "torac.{0,80}(?:aument|espand|allarg)"
+          }
+        ]
+      },
+      {
+        "id": "C2",
+        "core": [
+          {
+            "id": "oxygen_to_blood",
+            "re": "ossigen.{0,80}sangu"
+          },
+          {
+            "id": "co2_opposite",
+            "re": "anidride carbonica.{0,90}(?:oppost|contrar|aria|espuls)|oppost.{0,90}anidride carbonica"
+          },
+          {
+            "id": "partial_pressure",
+            "re": "pression.{0,30}parzial"
+          }
+        ],
+        "support": [
+          {
+            "id": "alveoli",
+            "re": "alveol"
+          },
+          {
+            "id": "thin_wall",
+            "re": "paret.{0,50}sottil"
+          }
+        ]
+      },
+      {
+        "id": "C3",
+        "core": [
+          {
+            "id": "hemoglobin_transports_oxygen",
+            "re": "emoglobin.{0,90}ossigen"
+          },
+          {
+            "id": "effort_increases_breathing",
+            "re": "(?:sforz|eserciz).{0,100}(?:respir|frequenz)|(?:respir|frequenz).{0,100}(?:sforz|eserciz)"
+          },
+          {
+            "id": "oxygen_consumption_co2_production",
+            "re": "(?:consum|usa).{0,80}ossigen.{0,100}(?:produc|aument).{0,80}anidride carbonica"
+          }
+        ],
+        "support": [
+          {
+            "id": "red_blood_cells",
+            "re": "globul.{0,30}ross"
+          }
+        ]
+      },
+      {
+        "id": "C4",
+        "core": [
+          {
+            "id": "diagnostic_triad",
+            "re": "sintom.{0,100}(?:storia|anamnes).{0,100}(?:esame|obiett)|(?:esame|obiett).{0,120}sintom"
+          },
+          {
+            "id": "single_measurement_not_enough",
+            "re": "(?:singol|un solo).{0,60}(?:valore|misur).{0,60}(?:non|insuff|basta)|(?:non|basta).{0,80}(?:singol|un solo).{0,50}(?:valore|misur)"
+          }
+        ],
+        "support": [
+          {
+            "id": "clinical_context",
+            "re": "contest.{0,25}clinic"
+          }
+        ]
+      }
+    ],
+    "concetto_sbilanciato": [
+      {
+        "id": "C1",
+        "core": [
+          {
+            "id": "compare_documents",
+            "re": "confront.{0,90}(?:font|document|testimon)|(?:font|document|testimon).{0,90}confront"
+          },
+          {
+            "id": "provenance_purpose",
+            "re": "provenienz|provenien|origini"
+          },
+          {
+            "id": "different_perspectives_interests",
+            "re": "(?:interess|punto di vista|prospettiv|osservat).{0,100}(?:divers|differen)|(?:divers|differen).{0,100}(?:interess|punto di vista|prospettiv|osservat)"
+          },
+          {
+            "id": "distinguish_fact_opinion",
+            "re": "fatt.{0,80}opinion|opinion.{0,80}fatt"
+          },
+          {
+            "id": "uncertainty",
+            "re": "incert|non accertat|non sicur"
+          },
+          {
+            "id": "context_causes",
+            "re": "contest.{0,100}caus|caus.{0,100}contest"
+          }
+        ],
+        "support": [
+          {
+            "id": "independent_sources",
+            "re": "indipendent"
+          },
+          {
+            "id": "consequences",
+            "re": "conseguenz"
+          }
+        ]
+      },
+      {
+        "id": "C2",
+        "core": [
+          {
+            "id": "primary_source_period",
+            "re": "font.{0,20}primari.{0,70}(?:period|epoc)|(?:period|epoc).{0,70}font.{0,20}primari"
+          }
+        ],
+        "support": []
+      },
+      {
+        "id": "C3",
+        "core": [
+          {
+            "id": "secondary_source_interprets",
+            "re": "font.{0,20}secondari.{0,90}interpret|interpret.{0,70}font.{0,20}secondari"
+          }
+        ],
+        "support": []
+      },
+      {
+        "id": "C4",
+        "core": [
+          {
+            "id": "hypothesis_vs_facts",
+            "re": "ipotes.{0,60}fatt|fatt.{0,60}ipotes"
+          }
+        ],
+        "support": []
+      }
+    ],
+    "pagina_breve_continua": [
+      {
+        "id": "C1",
+        "core": [
+          {
+            "id": "peremptory_deadline",
+            "re": "termine.{0,20}perentorio"
+          },
+          {
+            "id": "15_days_from_notification",
+            "re": "(?:15|quindici).{0,12}giorn.{0,40}notific|notific.{0,40}(?:15|quindici).{0,12}giorn"
+          },
+          {
+            "id": "observations_filing",
+            "re": "deposit.{0,50}osservaz|osservaz.{0,50}deposit"
+          }
+        ],
+        "support": []
+      },
+      {
+        "id": "C2",
+        "core": [
+          {
+            "id": "loss_right_to_file",
+            "re": "(?:decad|perd|non pu[oò]).{0,100}deposit|deposit.{0,90}(?:decad|perd|non pu[oò])"
+          },
+          {
+            "id": "right_to_reasons_remains",
+            "re": "(?:rest|conserv|manten|rimane).{0,100}(?:motivaz|ragion)|(?:motivaz|ragion).{0,100}(?:rest|conserv|manten|rimane)"
+          }
+        ],
+        "support": []
+      }
+    ]
+  }
+}
