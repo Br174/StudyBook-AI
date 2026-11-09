@@ -1,0 +1,48 @@
+{
+  "name": "StudyBook LAB81 adaptive container direct and targeted hybrid",
+  "model": "gemini-3.5-flash-lite",
+  "at": "2026-11-09T07:44:36.463Z",
+  "calls": 1,
+  "maxCalls": 18,
+  "quotaStopped": true,
+  "expectedPairs": 6,
+  "pairs": 0,
+  "summary": {
+    "direct": {
+      "pairs": 0,
+      "pass": 0,
+      "averageAiMs": null,
+      "avgOutputTokens": null
+    },
+    "container": {
+      "pairs": 0,
+      "pass": 0,
+      "averageAiMs": null,
+      "avgOutputTokens": null
+    },
+    "hybrid": {
+      "pairs": 0,
+      "pass": 0,
+      "averageAiMs": null,
+      "avgOutputTokens": null
+    }
+  },
+  "methodology": "same 2 LAB80 synthetic sources, same free model, 3 reductions 10 30 50, ±2 percentage points, numbers protected",
+  "semanticAssessment": "Unverified. Numeric preservation is NOT a full semantic evaluation.",
+  "noAppChanges": true,
+  "noProductionChanges": true,
+  "negative": {
+    "impossibleCombinationRejected": true
+  },
+  "paired": [],
+  "results": [],
+  "failures": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "mode": "direct",
+      "status": 503,
+      "reason": "HTTP 503"
+    }
+  ]
+}
