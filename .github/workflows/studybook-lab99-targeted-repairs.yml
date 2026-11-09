@@ -1,4 +1,5 @@
 name: StudyBook LAB99 relational guard and single-sentence repairs
+# Rerun after separating registro noun from registri verb in who/when relation
 on:
   push:
     branches:
