@@ -60,3 +60,5 @@ jobs:
             git rebase "origin/${TARGET_REF}"
             git push origin "HEAD:${TARGET_REF}"
           fi
+
+# LAB102 bounded 503 recovery: reuse previously saved versions by exact source/inventory hashes.
