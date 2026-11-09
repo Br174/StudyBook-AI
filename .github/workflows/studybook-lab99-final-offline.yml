@@ -1,0 +1,48 @@
+name: StudyBook LAB99 final no-provider recheck
+on:
+  push:
+    branches:
+      - 'audit/studybook-relational-targeted-repair-v99-*'
+    paths:
+      - '.github/workflows/studybook-lab99-final-offline.yml'
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check no-provider test code
+        run: |
+          node --check scripts/lab99-relational-guard.mjs
+          node --check scripts/test-lab99-final-offline.mjs
+      - name: Replay four plus one Gemini sentences, 10k adversarial tests
+        run: node scripts/test-lab99-final-offline.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB99-Final-Recheck
+          path: audit/reports/lab99-final-offline-recheck.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Commit evidence only on audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          test -f audit/reports/lab99-final-offline-recheck.json || exit 0
+          git add audit/reports/lab99-final-offline-recheck.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB99): preserve offline final recheck with no additional model calls'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
