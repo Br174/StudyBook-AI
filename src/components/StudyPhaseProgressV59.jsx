@@ -8,11 +8,16 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null}){
    compression:'Fase 2 · Compressione',
    correction:'Fase 3 · Verifica e correzione',
    quality:'Fase 3 · Controllo qualità'};
- const row=(key,label,done,total)=>(
+ const row=(key,label,done,total,conformant=null)=>(
    <div key={key} className="sb-v59-page-row" style={{marginTop:10}}>
      <div style={{display:'flex',justifyContent:'space-between',gap:8,fontSize:13}}>
-       <strong>{label}</strong><span>{done}/{total} pagine</span>
+       <strong>{label}</strong>
+       <span>{done}/{total} pagine {conformant!==null?'esaminate':'salvate'}</span>
      </div>
+     {conformant!==null&&
+       <small style={{display:'block',color:conformant===total?'#166534':'#a33a2a'}}>
+         {conformant}/{total} pagine nei margini di lettere e righe
+       </small>}
      <div className="sb-download-progress-track sb-ia-progress-track"
        role="progressbar" aria-label={label+': pagine completate'}
        aria-valuemin={0} aria-valuemax={total||100} aria-valuenow={done}
@@ -27,14 +32,15 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null}){
    <strong>{labels[progress.phase]}</strong>
    {progress.phase==='acquisition'
      ?row('source','Pagine originali',progress.acquired,progress.pageCount)
-     :progress.levels.map(x=>row(x.id,x.label,x.completed,x.total))}
+     :progress.levels.map(x=>row(x.id,x.label,x.completed,x.total,
+       progress.phase==='quality'?x.conformant:null))}
    <small style={{display:'block',marginTop:8}}>
      {progress.phase==='acquisition'
        ?'Acquisizione del testo originale; nessuna compressione ancora avviata.'
        :progress.phase==='compression'
          ?'Bozze salvate per pagina. Prima Riassunto, poi 50%, 40%, 30%, 20% e 10%; nessuna correzione durante la creazione.'
          :progress.phase==='quality'
-           ?'Controllo locale completato senza chiamate Gemini. Gli avvisi non bloccano la lettura delle versioni complete e non certificano la correttezza semantica.'
+           ?'Tutte le pagine salvate sono state esaminate. Le pagine fuori margine NON sono considerate approvate: premi «Migliora percentuali e chiarezza» per la ricalibrazione mirata. Nessuna chiamata Gemini automatica. La fedeltà del significato richiede verifica separata.'
            :'Pagine controllate e approvate; si correggono soltanto quelle che ne hanno bisogno.'}
    </small>
    {progress.phase==='quality'&&
@@ -43,7 +49,8 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null}){
        <div style={{paddingTop:8}}>
          {progress.levels.map(x=>
            <p key={x.id} style={{margin:'5px 0'}}>
-             <strong>{x.label}</strong>: {x.available}/{x.total} pagine disponibili;
+             <strong>{x.label}</strong>: {x.available}/{x.total} bozze salvate;
+             {' '}{x.conformant}/{x.total} pagine entro i margini;
              {' '}{x.warnings} segnalazioni;
              {' '}riduzione misurata {Number.isFinite(x.actualReduction)
                ?x.actualReduction+'%':'non disponibile'}.
