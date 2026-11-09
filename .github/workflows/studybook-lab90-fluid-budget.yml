@@ -1,0 +1,57 @@
+name: StudyBook LAB90 fluid budgets with useful concept elaboration
+on:
+  push:
+    branches:
+      - 'audit/studybook-fluid-useful-elaboration-v90-*'
+    paths:
+      - '.github/workflows/studybook-lab90-fluid-budget.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab90-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate budget script syntax
+        run: node --check scripts/test-lab90-fluid-budget.mjs
+      - name: Offline deterministic 12k allocations and 15 LAB89 replays
+        run: node scripts/test-lab90-fluid-budget.mjs --offline
+      - name: Real Gemini single-pass cases with free quota stop
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab90-fluid-budget.mjs --real
+      - name: Upload evidence even after provider block
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB90-Fluid-Useful-Elaboration
+          path: |
+            audit/reports/lab90-fluid-budget-offline.json
+            audit/reports/lab90-fluid-useful-elaboration-real.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Persist audit reports only in isolated branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab90-fluid-budget-offline.json audit/reports/lab90-fluid-useful-elaboration-real.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(LAB90): preserve bounded real Gemini results and math stress'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
