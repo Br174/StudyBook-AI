@@ -51,7 +51,7 @@ function prepare(id){
   const actual=budget(source,level);
   if(!saved||saved.targetLetters!==actual.targetLetters||saved.maxRows!==actual.targetCap)
    throw Error('PLAN_DRIFT_'+id+'_'+level);
-  return{...saved,originalRows:actual.originalRows,short:actual.short};
+  return{...saved,originalRows:actual.originalRows,short:actual.short,targetCap:actual.targetCap,toleranceCap:actual.toleranceCap};
  });
  return{source,old,risks,checks,plans,sourceHash:old.ledger.sourceHash};
 }
