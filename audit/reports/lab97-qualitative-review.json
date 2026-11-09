@@ -1,0 +1,99 @@
+{
+  "study": "LAB97 focused assistant review of four genuine 10% Gemini outputs",
+  "reviewer": "Assistant compared complete texts to synthetic sources; not independent domain expert certification.",
+  "summary": {
+    "reviewed": 4,
+    "mathConforming": 3,
+    "approvedForApp": 0,
+    "knownQualityDefects": 4,
+    "blockedProvider": "2 consecutive HTTP 503, stop"
+  },
+  "caution": "Do not auto-promote semantically imperfect output. Regex lexical false positives are explicitly separated from confirmed semantic issues.",
+  "reviews": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "percent": 15.03,
+      "gridPass": true,
+      "bandPass": false,
+      "mathPass": false,
+      "semanticDisposition": "REJECT_UNTIL_CLARIFIED",
+      "confirmedConcerns": [
+        "La proposizione «allineamento specifico che esclude ogni lunazione» è ambigua e può far pensare erroneamente che le eclissi siano incompatibili con le lunazioni; l'originale dice semplicemente che non si verificano a ogni lunazione.",
+        "«Rifiutando prove isolate» non esplicita con sufficiente precisione che un singolo risultato non basta a dimostrare una spiegazione."
+      ],
+      "lexicalFalsePositiveExamples": [],
+      "orthographyFixes": [],
+      "overallJudgement": "Non confermata",
+      "proposedCorrection": "Conservare esplicitamente la negazione non a ogni lunazione e la cautela sul singolo risultato, senza estendere il testo per riempimento.",
+      "approvedForApp": false
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "percent": 9.34,
+      "gridPass": true,
+      "bandPass": true,
+      "mathPass": true,
+      "semanticDisposition": "POTENTIALLY_CORRECT_WITH_MODALITY_FIX",
+      "confirmedConcerns": [
+        "La fonte dice che la frequenza respiratoria PUÒ aumentare durante uno sforzo; il risultato dice che «sale sotto sforzo», rendendo certa una possibilità. Occorre preservare la modalità."
+      ],
+      "lexicalFalsePositiveExamples": [
+        "«espandendo il torace» esprime l'aumento del volume toracico.",
+        "«l'anidride carbonica fa il percorso inverso» esprime la direzione opposta.",
+        "«consuma più ossigeno e genera più anidride carbonica» conserva il meccanismo dello sforzo."
+      ],
+      "orthographyFixes": [],
+      "overallJudgement": "Buona copertura dei concetti, ma la modalità deve essere conservata",
+      "proposedCorrection": "Evitare sostituzioni che rendono certe affermazioni in origine probabilistiche; non serve una riscrittura globale.",
+      "approvedForApp": false
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "percent": 9.91,
+      "gridPass": true,
+      "bandPass": true,
+      "mathPass": true,
+      "semanticDisposition": "REJECT_UNTIL_ORTHOGRAPHY_FIXED",
+      "confirmedConcerns": [
+        "«l alunno» e «l iscritto» sono graficamente errati: vanno corretti in «l'alunno» e «l'iscritto».",
+        "«norma 12» sostituisce «regola interna numero 12» e può suggerire un riferimento normativo più forte del contenuto originale."
+      ],
+      "lexicalFalsePositiveExamples": [
+        "«norma 12» conserva il numero 12.",
+        "«resa entro dieci giorni» preserva la durata.",
+        "«non è automatico», data originaria, e opinioni personali sono presenti in formulazioni diverse."
+      ],
+      "orthographyFixes": [
+        "l alunno",
+        "l iscritto"
+      ],
+      "overallJudgement": "Fatti sostanziali in gran parte presenti; precisione e grafia ancora da verificare",
+      "proposedCorrection": "Postcorrezione ortografica solo con regole sicure, più controllo dei termini «regola interna» e «prestito».",
+      "approvedForApp": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "percent": 12.39,
+      "gridPass": true,
+      "bandPass": true,
+      "mathPass": true,
+      "semanticDisposition": "REVIEW_TERMINOLOGY",
+      "confirmedConcerns": [
+        "«Fatti dimostrati» non è equivalente a «fatti documentati» nel linguaggio storico: la certezza risulta rafforzata indebitamente."
+      ],
+      "lexicalFalsePositiveExamples": [
+        "«origine di ogni documento» esprime la provenienza.",
+        "«evidenziare i dubbi» rende il concetto di incertezza.",
+        "«effetti» può rendere conseguenze; «una secondaria rielabora scritti passati» coglie almeno in parte la definizione."
+      ],
+      "orthographyFixes": [],
+      "overallJudgement": "Quasi tutti i concetti presenti, ma una sfumatura epistemica importante cambia",
+      "proposedCorrection": "Preservare espressioni epistemiche: documentato non significa necessariamente dimostrato.",
+      "approvedForApp": false
+    }
+  ]
+}
