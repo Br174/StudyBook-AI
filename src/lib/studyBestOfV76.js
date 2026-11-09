@@ -64,7 +64,7 @@ function sourceScopedWarnings(source,output){
    /\b(?:luna|sole).{0,40}\bcausano\b.{0,30}\bmaree\b/iu]
  ];
  for(const [id,whenSource,wrongOutput] of checks){
-  if(id==='not-every-lunation' && /\\bnon (?:avvengono|accadono|si verificano) a ogni lunazione\\b/iu.test(dest))continue;
+  if(id==='not-every-lunation' && /\bnon (?:avvengono|accadono|si verificano) a ogni lunazione\b/iu.test(dest))continue;
   if(whenSource.test(src)&&wrongOutput.test(dest))warnings.push(id);
  }
  return warnings;
