@@ -1,0 +1,60 @@
+name: StudyBook LAB98 semantic caution with modal guard
+on:
+  push:
+    branches:
+      - 'audit/studybook-semantic-modal-guard-v98-*'
+    paths:
+      - '.github/workflows/studybook-lab98-semantic-guard.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab98-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and fixture checks
+        run: |
+          node --check scripts/lab98-modal-semantic-guard.mjs
+          node --check scripts/test-lab98-offline.mjs
+          node --check scripts/test-lab98-real-gemini.mjs
+      - name: Offline 16k semantic adversarial tests and historical replays
+        run: node scripts/test-lab98-offline.mjs
+      - name: Real Gemini level specific trial, capped at sixteen provider calls
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab98-real-gemini.mjs
+      - name: Save reports for audit even if provider unavailable
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB98-SemanticGuard
+          path: |
+            audit/reports/lab98-offline-semantic-guard.json
+            audit/reports/lab98-real-gemini.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit audit evidence only to LAB branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab98-offline-semantic-guard.json audit/reports/lab98-real-gemini.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB98): record semantic guard and bounded Gemini experiment'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
