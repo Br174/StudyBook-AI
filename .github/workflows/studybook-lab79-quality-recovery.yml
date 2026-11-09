@@ -1,0 +1,57 @@
+name: StudyBook LAB79 verified quality recovery and no-loop
+on:
+  push:
+    branches:
+      - 'lab/studybook-core-android-01-update-79-*'
+    paths:
+      - '.github/workflows/studybook-lab79-quality-recovery.yml'
+      - 'src/lib/studyQualityRecoveryV79.js'
+      - 'src/lib/studyAutoResumeV45.js'
+      - 'src/lib/studyPhaseProgressV59.js'
+      - 'src/lib/studyRebalanceV67.js'
+      - 'src/lib/studyGeometryV78.js'
+      - 'src/components/StudyPhaseProgressV59.jsx'
+      - 'src/components/AppScreens.jsx'
+      - 'src/components/HomeDashboardV16.jsx'
+      - 'src/AppV15.jsx'
+      - 'scripts/test-lab79-quality-no-loop.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: studybook-lab79-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing project packages
+        run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: Source-anchored LAB79 44x6 regression, no provider calls
+        run: node scripts/test-lab79-quality-no-loop.mjs
+      - name: Previous quality and targeted correction safeguards
+        run: |
+          node scripts/test-lab66-nonblocking-quality.mjs
+          node scripts/test-lab67-simplified-precise-rebalance.mjs
+          node scripts/test-lab59-three-phase-progress.mjs
+          node scripts/test-lab78-real-worker-parity.mjs
+          node scripts/test-lab77-503-throughput-recovery.mjs
+          node scripts/StudyBookLab72Targeted.mjs
+          node scripts/StudyBookLab74PageBudget.mjs
+      - name: Build actual LAB79 Android web assets
+        env:
+          VITE_NATIVE_API_BASE: https://studybook-ai-lab78-geometry.brunoverlezza.workers.dev
+          VITE_STUDYBOOK_GEOMETRY_V78: '1'
+        run: |
+          npm run build
+          grep -rl 'lab79-audited-drafts-targeted-recalibration-v1' dist/assets/
+          grep -rl 'studybook-ai-lab78-geometry' dist/assets/
+      - name: Existing free Worker no change, bundle consistency
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: npx wrangler deploy --dry-run --config wrangler.lab78-geometry.jsonc
