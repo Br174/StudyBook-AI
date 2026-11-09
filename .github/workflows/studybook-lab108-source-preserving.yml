@@ -1,0 +1,58 @@
+name: StudyBook LAB108 - source preservation A/B (bounded Gemini)
+on:
+  push:
+    branches:
+      - audit/studybook-source-preserving-calibration-v108-20261110
+    paths:
+      - .github/workflows/studybook-lab108-source-preserving.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab108-one-experiment
+  cancel-in-progress: false
+jobs:
+  offline-then-real:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact isolated source
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify syntax and offline tests, zero provider calls
+        run: |
+          node --check src/lib/studySourcePreservingV108.js
+          node --check scripts/test-lab108-real-gemini.mjs
+          node scripts/test-lab108-offline.mjs
+      - name: At most 12 free Gemini calls, two sources three levels two variants
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab108-real-gemini.mjs
+      - name: Save evidence even if provider quota stops
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB108-Source-Preserving-Real-Answers
+          path: audit/reports/lab108-real-source-preserving.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Preserve report only in LAB108 branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab108-real-source-preserving.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab108-real-source-preserving.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB108): preserve source-anchored real Gemini outputs'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
