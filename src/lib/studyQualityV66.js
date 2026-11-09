@@ -6,6 +6,7 @@ import {extractProtectedItems} from './fidelityEngine.js';
 import {rewriteQualityV65} from './rewriteQualityV65.js';
 import {measureEditionLengthV72} from './studyRebalancePolicyV67.js';
 import {pageLetterReviewV74} from './studyPageBudgetsV74.js';
+import {inspectBestOfV76,STUDY_BEST_OF_V76} from './studyBestOfV76.js';
 export const STUDY_LEVELS_V66=['summary','50','40','30','20','10'];
 const hasText=s=>typeof s==='string'&&s.trim().length>0;
 const text=s=>hasText(s)?s.trim():null;
@@ -22,6 +23,7 @@ export function studyQualityInspectionV66(book,units,stagedRows,drafts,{persiste
    editions:{...(stagedRows?.[ci]?.[pi]?.editions||{})},
    verified:{...(stagedRows?.[ci]?.[pi]?.verified||{})},
    issues:{...(stagedRows?.[ci]?.[pi]?.issues||{})},
+   bestOfV76:{...(stagedRows?.[ci]?.[pi]?.bestOfV76||{})},
    // This field explicitly distinguishes availability from old certification.
    generatedWithoutCertificationV66:true
   })));
@@ -33,7 +35,7 @@ export function studyQualityInspectionV66(book,units,stagedRows,drafts,{persiste
  const levels={};
  const through={};
  for(const level of STUDY_LEVELS_V66){
-  let outputLetters=0;
+  let outputLetters=0,bestOfInspected=0,bestOfNumeric=0,bestOfWarnings=0;
   const notes=new Map();
   const add=(page,code)=>{
    const list=notes.get(page)||[];
@@ -57,6 +59,18 @@ export function studyQualityInspectionV66(book,units,stagedRows,drafts,{persiste
     continue;
    }
    outputLetters+=studyLetters(saved);
+   // LAB76: inspect each original physical page / inseparable range from
+   // immutable source; this is local, advisory, and consumes ZERO Gemini quota.
+   const best=inspectBestOfV76(u.source,saved,level);
+   row.bestOfV76[level]=best;
+   bestOfInspected++;
+   if(best.numericAndVirtualGrid)bestOfNumeric++;
+   bestOfWarnings+=best.semanticAdvisories.length;
+   for(let p=u.pageStart;p<=u.pageEnd;p++){
+    if(!best.withinBand)add(p,'best-of-source-percent-off-target');
+    if(!best.gridFits)add(p,'best-of-virtual-grid-warning');
+    for(const code of best.semanticAdvisories)add(p,'best-of-'+code);
+   }
    const mirror=rewriteQualityV65(u.source,saved,level);
    if(mirror.needsRewrite)
     for(let p=u.pageStart;p<=u.pageEnd;p++)add(p,'similar-to-original');
@@ -110,6 +124,10 @@ export function studyQualityInspectionV66(book,units,stagedRows,drafts,{persiste
    })),
    reductionBand:{min:numericReview.minLetters,max:numericReview.maxLetters},
    semanticCertification:false,
+   bestOfV76:{protocol:STUDY_BEST_OF_V76,examinedUnits:bestOfInspected,
+    compliantNumericAndVirtualGrid:bestOfNumeric,
+    sourceMeaningWarnings:bestOfWarnings,semanticCertified:false,
+    scope:'advisory-not-physical-A4-proof'},
    state:checkedPages===pageCount&&persistent?'checked-with-notes':'incomplete'
   };
   let contiguous=0;
