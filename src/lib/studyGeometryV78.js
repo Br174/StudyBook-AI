@@ -109,7 +109,7 @@ export function studyGeometryReviewV78(units,parts,level){
   const inBand=!missing&&outputLetters>=g.minLetters&&outputLetters<=g.maxLetters;
   const fitsRows=!missing&&measured.rows<=g.maxRows&&!measured.overlong;
   return {
-   pageStart:g.pageStart,pageEnd:g.pageEnd,sourceLetters:g.sourceLetters,
+   ids:g.ids,pageStart:g.pageStart,pageEnd:g.pageEnd,sourceLetters:g.sourceLetters,
    targetLetters:g.targetLetters,minLetters:g.minLetters,maxLetters:g.maxLetters,
    outputLetters,rows:measured.rows,maxRows:g.maxRows,overlong:measured.overlong,
    inBand,fitsRows,pass:inBand&&fitsRows,missing
