@@ -6,6 +6,7 @@ on:
     paths:
       - 'scripts/lab89-budget-engine.mjs'
       - 'scripts/test-lab89-proportional-offline.mjs'
+      - 'scripts/test-lab89-shared-line-packing.mjs'
       - '.github/workflows/studybook-lab89-allocation-offline.yml'
 permissions:
   contents: write
@@ -25,14 +26,19 @@ jobs:
         run: |
           node --check scripts/lab89-budget-engine.mjs
           node --check scripts/test-lab89-proportional-offline.mjs
+          node --check scripts/test-lab89-shared-line-packing.mjs
       - name: Deterministic stress without Gemini
         run: node scripts/test-lab89-proportional-offline.mjs
+      - name: Offline reflow of Gemini outputs without new provider calls
+        run: node scripts/test-lab89-shared-line-packing.mjs
       - name: Upload complete offline evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: StudyBook-LAB89-Proportional-Offline
-          path: audit/reports/lab89-offline-allocation-stress.json
+          path: |
+            audit/reports/lab89-offline-allocation-stress.json
+            audit/reports/lab89-shared-line-repacking.json
           retention-days: 30
           if-no-files-found: ignore
       - name: Persist evidence on isolated audit branch
@@ -44,8 +50,10 @@ jobs:
           test -f audit/reports/lab89-offline-allocation-stress.json || exit 0
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add audit/reports/lab89-offline-allocation-stress.json
+          git add audit/reports/lab89-offline-allocation-stress.json audit/reports/lab89-shared-line-repacking.json
           if ! git diff --cached --quiet; then
             git commit -m 'test(LAB89): store weighted allocation stress results'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
             git push origin "HEAD:${TARGET_REF}"
           fi
