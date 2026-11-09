@@ -1,0 +1,1124 @@
+{
+  "study": "LAB96 source-only prompt offline control",
+  "date": "2026-11-09T13:49:59.186Z",
+  "modelCalls": 0,
+  "summary": {
+    "gold2": 2,
+    "goldPass": 2,
+    "replay92": 15,
+    "replay95": 7,
+    "randomChecks": 6000,
+    "negativeDetected": 6000,
+    "errors": 0
+  },
+  "warning": "The two golden cases were manually prepared, not Gemini outputs. Regex fact coverage is not proof of semantic equivalence. Does not test physical PDF/A4.",
+  "cases": [
+    {
+      "kind": "MANUAL_GOLD_NOT_GEMINI",
+      "source": "scienze",
+      "level": 20,
+      "metric": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 479,
+        "actualLetters": 498,
+        "reduction": 16.86,
+        "band": {
+          "low": 450,
+          "high": 509,
+          "passes": true
+        },
+        "grid": {
+          "rows": 11,
+          "maxRows": 11,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 27,
+          "fractionalEquivalent": 10.45
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 16,
+          "matched": 16,
+          "missing": []
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota attorno al proprio asse. Tale rotazione genera il giorno e la notte perché una parte riceve luce e l'altra resta al buio. La rivoluzione intorno al Sole dura un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre e non dalla distanza dal Sole. La Luna influisce sulle maree con il Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta. Bisogna distinguere la descrizione dei movimenti dalle cause delle variazioni osservate.",
+        "words": 90
+      }
+    },
+    {
+      "kind": "MANUAL_GOLD_NOT_GEMINI",
+      "source": "medicina",
+      "level": 20,
+      "metric": {
+        "valid": true,
+        "originalLetters": 728,
+        "targetLetters": 582,
+        "actualLetters": 609,
+        "reduction": 16.35,
+        "band": {
+          "low": 546,
+          "high": 618,
+          "passes": true
+        },
+        "grid": {
+          "rows": 13,
+          "maxRows": 13,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 48,
+          "fractionalEquivalent": 12.8
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 17,
+          "matched": 17,
+          "missing": []
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "L'apparato respiratorio porta aria ai polmoni attraverso le vie aeree. Inspirando, il diaframma si contrae e il torace aumenta di volume; espirando a riposo, il diaframma si rilassa. Negli alveoli dalle pareti sottili l'ossigeno passa dall'aria al sangue e l'anidride carbonica segue il percorso opposto, grazie a differenze di pressione parziale. L'emoglobina dei globuli rossi trasporta gran parte dell'ossigeno. Durante uno sforzo la frequenza respiratoria può aumentare perché si consuma più ossigeno e si produce più anidride carbonica. Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo: un solo valore misurato non basta per la diagnosi e va interpretato nel contesto clinico.",
+        "words": 107
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "scienze",
+      "level": 40,
+      "metric": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 359,
+        "actualLetters": 430,
+        "reduction": 28.21,
+        "band": {
+          "low": 330,
+          "high": 389,
+          "passes": false
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 8,
+          "passes": false,
+          "maxActualWidth": 59,
+          "lastRowCells": 50,
+          "fractionalEquivalent": 8.833
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 13,
+          "matched": 12,
+          "missing": [
+            {
+              "fact": "cause_vs_description",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota attorno al proprio asse causando il giorno e la notte perché una parte riceve luce mentre l'altra resta al buio. La rivoluzione intorno al Sole dura un anno e le stagioni dipendono dall'inclinazione dell'asse terrestre e non dalla distanza. La Luna e il Sole influenzano le maree mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per spiegare le cause.",
+        "words": 81
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "procedura",
+      "level": 40,
+      "metric": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 382,
+        "actualLetters": 348,
+        "reduction": 45.28,
+        "band": {
+          "low": 350,
+          "high": 413,
+          "passes": false
+        },
+        "grid": {
+          "rows": 8,
+          "maxRows": 9,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 16,
+          "fractionalEquivalent": 7.267
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 11,
+          "matched": 11,
+          "missing": []
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nell'esercizio 2024 la regola dodici prevede registrazione del titolo prima del prestito e restituzione entro dieci giorni. La proroga è concessa solo se non prenotato ed è esclusa l'automaticità: senza conferma scritta vale la data iniziale. Se il libro è riservato va restituito alla scadenza senza completare la lettura. Il registro indica chi e quando senza opinioni personali. Condizioni ed eccezioni sono essenziali.",
+        "words": 63
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "medicina",
+      "level": 40,
+      "metric": {
+        "valid": true,
+        "originalLetters": 728,
+        "targetLetters": 437,
+        "actualLetters": 421,
+        "reduction": 42.17,
+        "band": {
+          "low": 401,
+          "high": 473,
+          "passes": true
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 10,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 55,
+          "fractionalEquivalent": 8.917
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 9,
+          "missing": [
+            {
+              "fact": "co2_opposite",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "oxygen_consumption_co2_production",
+              "importance": "core",
+              "concept": "C3"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "L'apparato respiratorio porta aria ai polmoni. Durante l'inspirazione il diaframma si contrae, mentre nell'espirazione si rilassa. Negli alveoli l'ossigeno passa nel sangue e l'anidride carbonica fa il percorso inverso grazie alle differenze di pressione parziale. L'emoglobina trasporta l'ossigeno. Lo sforzo fisico aumenta la frequenza respiratoria perché il corpo consuma più ossigeno. La diagnosi di un disturbo richiede sintomi, storia ed esame obiettivo; un singolo valore isolato non è sufficiente.",
+        "words": 69
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "metric": {
+        "valid": true,
+        "originalLetters": 670,
+        "targetLetters": 402,
+        "actualLetters": 346,
+        "reduction": 48.36,
+        "band": {
+          "low": 369,
+          "high": 435,
+          "passes": false
+        },
+        "grid": {
+          "rows": 7,
+          "maxRows": 9,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 58,
+          "fractionalEquivalent": 6.967
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 9,
+          "matched": 7,
+          "missing": [
+            {
+              "fact": "distinguish_fact_opinion",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "uncertainty",
+              "importance": "core",
+              "concept": "C1"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nel laboratorio di storia gli studenti confrontano vari documenti per ricostruire gli avvenimenti. La provenienza e gli interessi degli autori spiegano le differenti versioni. Per la verifica occorre confrontare più fonti indipendenti e analizzare il contesto e le cause. Una fonte primaria risale al periodo studiato. La fonte secondaria interpreta documenti precedenti. Occorre distinguere ipotesi e fatti.",
+        "words": 57
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "pagina_breve_continua",
+      "level": 40,
+      "metric": {
+        "valid": true,
+        "originalLetters": 155,
+        "targetLetters": 93,
+        "actualLetters": 133,
+        "reduction": 14.19,
+        "band": {
+          "low": 86,
+          "high": 100,
+          "passes": true
+        },
+        "grid": {
+          "rows": 3,
+          "maxRows": 5,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 45,
+          "fractionalEquivalent": 2.75
+        },
+        "completeMathPass": true,
+        "short": true,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 5,
+          "matched": 4,
+          "missing": [
+            {
+              "fact": "observations_filing",
+              "importance": "core",
+              "concept": "C1"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Il termine perentorio per le osservazioni è di 15 giorni dalla notifica. Scaduto il termine si decade dal deposito ma resta il diritto di conoscere la motivazione.",
+        "words": 27
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "scienze",
+      "level": 50,
+      "metric": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 300,
+        "actualLetters": 319,
+        "reduction": 46.74,
+        "band": {
+          "low": 270,
+          "high": 329,
+          "passes": true
+        },
+        "grid": {
+          "rows": 7,
+          "maxRows": 7,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 35,
+          "fractionalEquivalent": 6.583
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 13,
+          "matched": 10,
+          "missing": [
+            {
+              "fact": "not_every_lunation",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "isolated_result_insufficient",
+              "importance": "core",
+              "concept": "C4"
+            },
+            {
+              "fact": "cause_vs_description",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La rotazione terrestre attorno al proprio asse determina l'alternanza tra giorno e notte. La rivoluzione dura un anno e le stagioni dipendono dall'inclinazione dell'asse, non dalla distanza. Il Sole e la Luna influenzano le maree. Le eclissi avvengono solo con specifici allineamenti. Il metodo scientifico esige ipotesi verificabili, osservazioni ripetibili e l'analisi delle cause.",
+        "words": 54
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "procedura",
+      "level": 50,
+      "metric": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 318,
+        "actualLetters": 359,
+        "reduction": 43.55,
+        "band": {
+          "low": 287,
+          "high": 349,
+          "passes": false
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 7,
+          "passes": false,
+          "maxActualWidth": 58,
+          "lastRowCells": 10,
+          "fractionalEquivalent": 8.167
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 11,
+          "missing": []
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nel 2024 la regola 12 della biblioteca richiede di registrare il titolo prima del prestito e di restituire entro dieci giorni. La proroga è concessa solo se il libro non è prenotato, non è automatica e senza conferma scritta vale la data iniziale. Se un libro è prenotato, va restituito alla scadenza anche se la lettura non è terminata. Il registro traccia lettori e date senza opinioni. Condizioni ed eccezioni sono essenziali per la procedura.",
+        "words": 75
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "medicina",
+      "level": 50,
+      "metric": {
+        "valid": true,
+        "originalLetters": 728,
+        "targetLetters": 364,
+        "actualLetters": 362,
+        "reduction": 50.27,
+        "band": {
+          "low": 328,
+          "high": 400,
+          "passes": true
+        },
+        "grid": {
+          "rows": 8,
+          "maxRows": 8,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 26,
+          "fractionalEquivalent": 7.433
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 6,
+          "missing": [
+            {
+              "fact": "respiratory_route",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "co2_opposite",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "partial_pressure",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "oxygen_consumption_co2_production",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "single_measurement_not_enough",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Durante l'inspirazione il diaframma si contrae, mentre nell'espirazione a riposo il diaframma si rilassa. Negli alveoli l'ossigeno passa nel sangue e l'anidride carbonica fa il percorso inverso grazie alle pressioni. L'emoglobina trasporta l'ossigeno e lo sforzo fisico aumenta la frequenza respiratoria per i maggiori scambi. La diagnosi richiede sintomi, storia clinica ed esame obiettivo, senza basarsi su un singolo valore isolato.",
+        "words": 61
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "metric": {
+        "valid": true,
+        "originalLetters": 670,
+        "targetLetters": 335,
+        "actualLetters": 287,
+        "reduction": 57.16,
+        "band": {
+          "low": 302,
+          "high": 368,
+          "passes": false
+        },
+        "grid": {
+          "rows": 6,
+          "maxRows": 8,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 53,
+          "fractionalEquivalent": 5.883
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 9,
+          "matched": 7,
+          "missing": [
+            {
+              "fact": "distinguish_fact_opinion",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "uncertainty",
+              "importance": "core",
+              "concept": "C1"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nel laboratorio di storia gli studenti confrontano documenti diversi valutarne la provenienza e gli interessi per verificare le affermazioni tramite il confronto e studiare il contesto e le cause. Una fonte primaria risale al periodo studiato. La fonte secondaria interpreta documenti precedenti. Occorre distinguere le ipotesi dai fatti.",
+        "words": 48
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "metric": {
+        "valid": true,
+        "originalLetters": 155,
+        "targetLetters": 78,
+        "actualLetters": 133,
+        "reduction": 14.19,
+        "band": {
+          "low": 70,
+          "high": 85,
+          "passes": true
+        },
+        "grid": {
+          "rows": 3,
+          "maxRows": 5,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 49,
+          "fractionalEquivalent": 2.817
+        },
+        "completeMathPass": true,
+        "short": true,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 5,
+          "matched": 5,
+          "missing": []
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Il termine perentorio per depositare le osservazioni è di 15 giorni dalla notifica. Se scade, la parte decade dal deposito ma conserva il diritto alla motivazione.",
+        "words": 26
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "scienze",
+      "level": 20,
+      "metric": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 479,
+        "actualLetters": 411,
+        "reduction": 31.39,
+        "band": {
+          "low": 450,
+          "high": 509,
+          "passes": false
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 11,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 27,
+          "fractionalEquivalent": 8.45
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 16,
+          "matched": 15,
+          "missing": [
+            {
+              "fact": "light_dark",
+              "importance": "support",
+              "concept": "C1"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La rotazione terrestre attorno al proprio asse determina l'alternanza del giorno e della notte. La rivoluzione dura un anno e le stagioni dipendono dall'inclinazione dell'asse, non dalla distanza. Sole e Luna influenzano le maree; le eclissi avvengono solo per allineamento e non a ogni lunazione. Il metodo scientifico esige ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta. Occorre distinguere tra descrizione del movimento e cause delle variazioni osservate.",
+        "words": 70
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "procedura",
+      "level": 20,
+      "metric": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 509,
+        "actualLetters": 404,
+        "reduction": 36.48,
+        "band": {
+          "low": 477,
+          "high": 540,
+          "passes": false
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 11,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 37,
+          "fractionalEquivalent": 8.617
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 15,
+          "matched": 14,
+          "missing": [
+            {
+              "fact": "simulated_library",
+              "importance": "support",
+              "concept": "C1"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nel 2024 la regola dodici prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni. Il personale concede la proroga solo se il volume non e prenotato. Essa non e automatica e senza conferma scritta vale la data iniziale. Se un libro e gia riservato va restituito alla scadenza pur non avendo completato la lettura. Il registro traccia chi e quando senza opinioni personali. Le condizioni ed eccezioni sono essenziali per la corretta procedura.",
+        "words": 81
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "medicina",
+      "level": 20,
+      "metric": {
+        "valid": true,
+        "originalLetters": 728,
+        "targetLetters": 582,
+        "actualLetters": 362,
+        "reduction": 50.27,
+        "band": {
+          "low": 546,
+          "high": 618,
+          "passes": false
+        },
+        "grid": {
+          "rows": 8,
+          "maxRows": 13,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 40,
+          "fractionalEquivalent": 7.667
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 17,
+          "matched": 9,
+          "missing": [
+            {
+              "fact": "respiratory_route",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "airways",
+              "importance": "support",
+              "concept": "C1"
+            },
+            {
+              "fact": "thorax_expands",
+              "importance": "support",
+              "concept": "C1"
+            },
+            {
+              "fact": "partial_pressure",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "thin_wall",
+              "importance": "support",
+              "concept": "C2"
+            },
+            {
+              "fact": "oxygen_consumption_co2_production",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "red_blood_cells",
+              "importance": "support",
+              "concept": "C3"
+            },
+            {
+              "fact": "clinical_context",
+              "importance": "support",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Durante l'inspirazione il diaframma si contrae, mentre nell'espirazione a riposo il diaframma si rilassa. Negli alveoli l'ossigeno passa nel sangue e l'anidride carbonica nel senso opposto grazie a differenze di pressione. L'emoglobina trasporta l'ossigeno e lo sforzo fisico aumenta la frequenza respiratoria per gestire i gas. La diagnosi medica richiede sintomi, storia ed esame obiettivo, non basandosi mai su un solo valore isolato.",
+        "words": 63
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "metric": {
+        "valid": true,
+        "originalLetters": 670,
+        "targetLetters": 536,
+        "actualLetters": 417,
+        "reduction": 37.76,
+        "band": {
+          "low": 503,
+          "high": 569,
+          "passes": false
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 12,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 45,
+          "fractionalEquivalent": 8.75
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 9,
+          "missing": [
+            {
+              "fact": "uncertainty",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "context_causes",
+              "importance": "core",
+              "concept": "C1"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nel laboratorio di storia gli studenti analizzano documenti vari per ricostruire gli avvenimenti. La provenienza chiarisce autore e scopo. Testimonianze diverse possono variare per punti di vista o interessi personali. Per verificare occorre confrontare fonti indipendenti, distinguere fatti da opinioni e considerare contesto e conseguenze. La fonte primaria risale al periodo studiato. La fonte secondaria interpreta documenti precedenti. Le ipotesi vanno distinte dai fatti documentati.",
+        "words": 65
+      }
+    },
+    {
+      "kind": "LAB92_GEMINI_REPLAY",
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "metric": {
+        "valid": true,
+        "originalLetters": 155,
+        "targetLetters": 124,
+        "actualLetters": 150,
+        "reduction": 3.23,
+        "band": {
+          "low": 117,
+          "high": 131,
+          "passes": true
+        },
+        "grid": {
+          "rows": 4,
+          "maxRows": 5,
+          "passes": true,
+          "maxActualWidth": 57,
+          "lastRowCells": 12,
+          "fractionalEquivalent": 3.2
+        },
+        "completeMathPass": true,
+        "short": true,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 5,
+          "matched": 5,
+          "missing": []
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Il termine perentorio per depositare le osservazioni è di quindici giorni dalla notifica. Se scade, la parte decade dal deposito ma conserva il diritto di conoscere la motivazione.",
+        "words": 28
+      }
+    },
+    {
+      "kind": "LAB95_GEMINI_REPLAY",
+      "source": "scienze",
+      "level": 20,
+      "variant": "A",
+      "metric": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 479,
+        "actualLetters": 621,
+        "reduction": -3.67,
+        "band": {
+          "low": 450,
+          "high": 509,
+          "passes": false
+        },
+        "grid": {
+          "rows": 14,
+          "maxRows": 11,
+          "passes": false,
+          "maxActualWidth": 59,
+          "lastRowCells": 10,
+          "fractionalEquivalent": 13.167
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 16,
+          "matched": 16,
+          "missing": []
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota attorno al proprio asse determinando il giorno e la notte, poichè una parte della superficie riceve la luce solare mentre l'altra resta al buio. La rivoluzione terrestre attorno al Sole dura circa un anno, e le stagioni dipendono soprattutto dall'inclinazione dell'asse terrestre e non dalla distanza tra la Terra e il Sole. La Luna e il Sole influiscono insieme sulle maree, mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, e un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra la descrizione del movimento e le cause delle variazioni osservate.",
+        "words": 113
+      }
+    },
+    {
+      "kind": "LAB95_GEMINI_REPLAY",
+      "source": "scienze",
+      "level": 20,
+      "variant": "B",
+      "metric": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 479,
+        "actualLetters": 618,
+        "reduction": -3.17,
+        "band": {
+          "low": 450,
+          "high": 509,
+          "passes": false
+        },
+        "grid": {
+          "rows": 13,
+          "maxRows": 11,
+          "passes": false,
+          "maxActualWidth": 60,
+          "lastRowCells": 52,
+          "fractionalEquivalent": 12.867
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 16,
+          "matched": 16,
+          "missing": []
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota attorno al proprio asse terrestre determinando il giorno e la notte, poichè una parte della superficie riceve la luce solare mentre l'altra resta al buio. La rivoluzione della Terra attorno al Sole dura circa un anno; le stagioni dipendono soprattutto dall'inclinazione dell'asse e non dalla distanza tra i due corpi celesti. La Luna e il Sole influiscono insieme sulle maree, mentre le eclissi richiedono un allineamento particolare e non avvengono a ogni singola lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, poichè un risultato isolato non basta per dimostrare una spiegazione; bisogna inoltre distinguere fra la descrizione del movimento e le cause delle variazioni osservate.",
+        "words": 110
+      }
+    },
+    {
+      "kind": "LAB95_GEMINI_REPLAY",
+      "source": "medicina",
+      "level": 20,
+      "variant": "A",
+      "metric": {
+        "valid": true,
+        "originalLetters": 728,
+        "targetLetters": 582,
+        "actualLetters": 762,
+        "reduction": -4.67,
+        "band": {
+          "low": 546,
+          "high": 618,
+          "passes": false
+        },
+        "grid": {
+          "rows": 16,
+          "maxRows": 13,
+          "passes": false,
+          "maxActualWidth": 60,
+          "lastRowCells": 41,
+          "fractionalEquivalent": 15.683
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 17,
+          "matched": 17,
+          "missing": []
+        },
+        "spellingSignals": [
+          "apostrophe broken"
+        ],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un esempio didattico l apparato respiratorio trasporta aria ai polmoni attraverso le vie aeree. Durante l inspirazione il diaframma si contrae e il torace aumenta di volume, mentre durante l espirazione a riposo il diaframma si rilassa. Negli alveoli polmonari le cui pareti sono molto sottili l ossigeno passa dall aria al sangue, l anidride carbonica compie il percorso opposto dal sangue verso l aria e lo scambio avviene per differenze di pressione parziale dei gas. L emoglobina presente nei globuli rossi trasporta gran parte dell ossigeno nel sangue. Durante lo sforzo la frequenza respiratoria può aumentare perché l organismo consuma più ossigeno e produce più anidride carbonica. Per valutare un disturbo respiratorio il medico considera sintomi storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi ma deve essere sempre interpretato nel contesto clinico.",
+        "words": 141
+      }
+    },
+    {
+      "kind": "LAB95_GEMINI_REPLAY",
+      "source": "medicina",
+      "level": 20,
+      "variant": "B",
+      "metric": {
+        "valid": true,
+        "originalLetters": 728,
+        "targetLetters": 582,
+        "actualLetters": 730,
+        "reduction": -0.27,
+        "band": {
+          "low": 546,
+          "high": 618,
+          "passes": false
+        },
+        "grid": {
+          "rows": 16,
+          "maxRows": 13,
+          "passes": false,
+          "maxActualWidth": 60,
+          "lastRowCells": 17,
+          "fractionalEquivalent": 15.283
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 17,
+          "matched": 16,
+          "missing": [
+            {
+              "fact": "hemoglobin_transports_oxygen",
+              "importance": "core",
+              "concept": "C3"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "L'apparato respiratorio trasporta l'aria ai polmoni attraverso le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume, mentre durante l'espirazione a riposo il diaframma si rilassa. Negli alveoli polmonari, dotati di pareti molto sottili, l'ossigeno passa dall'aria al sangue e l'anidride carbonica compie il percorso opposto; questo scambio avviene grazie a differenze di pressione parziale. Gran parte dell'ossigeno nel sangue è trasportata dall'emoglobina presente nei globuli rossi. Durante lo sforzo la frequenza respiratoria può aumentare perché l'organismo consuma più ossigeno e produce più anidride carbonica. Per valutare un disturbo respiratorio il medico considera sintomi, storia clinica ed esame obiettivo. Un singolo valore misurato non basta sempre per una diagnosi e deve essere sempre interpretato nel contesto clinico.",
+        "words": 122
+      }
+    },
+    {
+      "kind": "LAB95_GEMINI_REPLAY",
+      "source": "procedura",
+      "level": 20,
+      "variant": "A",
+      "metric": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 509,
+        "actualLetters": 655,
+        "reduction": -2.99,
+        "band": {
+          "low": 477,
+          "high": 540,
+          "passes": false
+        },
+        "grid": {
+          "rows": 14,
+          "maxRows": 11,
+          "passes": false,
+          "maxActualWidth": 60,
+          "lastRowCells": 31,
+          "fractionalEquivalent": 13.517
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 15,
+          "matched": 13,
+          "missing": [
+            {
+              "fact": "not_automatic",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "initial_date_without_confirmation",
+              "importance": "core",
+              "concept": "C2"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura basata sulla regola interna numero 12, stabilendo che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni. Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti; questa non è automatica e necessita di una conferma scritta, poiché senza di essa resta valida la data iniziale. Quando un libro è già riservato, lo studente deve restituirlo tassativamente alla scadenza del prestito, anche se non ha completato la lettura. Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori, ricordando che le condizioni e le eccezioni sono essenziali.",
+        "words": 126
+      }
+    },
+    {
+      "kind": "LAB95_GEMINI_REPLAY",
+      "source": "procedura",
+      "level": 20,
+      "variant": "B",
+      "metric": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 509,
+        "actualLetters": 708,
+        "reduction": -11.32,
+        "band": {
+          "low": 477,
+          "high": 540,
+          "passes": false
+        },
+        "grid": {
+          "rows": 15,
+          "maxRows": 11,
+          "passes": false,
+          "maxActualWidth": 60,
+          "lastRowCells": 43,
+          "fractionalEquivalent": 14.717
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 15,
+          "matched": 13,
+          "missing": [
+            {
+              "fact": "not_automatic",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "initial_date_without_confirmation",
+              "importance": "core",
+              "concept": "C2"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Durante un esercizio scolastico del 2024, una biblioteca simulata ha adottato una procedura basata sulla regola interna numero 12, stabilendo che lo studente debba registrare il titolo prima del prestito e confermare la restituzione entro dieci giorni. Il personale può concedere una proroga soltanto se il volume non risulta prenotato da altri, ma tale estensione non è automatica e richiede una conferma scritta, poiché in mancanza di essa resta valida la data iniziale. Se un libro è già riservato, lo studente deve obbligatoriamente restituirlo alla scadenza, anche qualora non avesse ancora completato la lettura. Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non raccoglie le opinioni personali dei lettori; perciò le condizioni e le eccezioni risultano essenziali per applicare correttamente l'intera procedura.",
+        "words": 129
+      }
+    },
+    {
+      "kind": "LAB95_GEMINI_REPLAY",
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "variant": "A",
+      "metric": {
+        "valid": true,
+        "originalLetters": 670,
+        "targetLetters": 536,
+        "actualLetters": 696,
+        "reduction": -3.88,
+        "band": {
+          "low": 503,
+          "high": 569,
+          "passes": false
+        },
+        "grid": {
+          "rows": 15,
+          "maxRows": 12,
+          "passes": false,
+          "maxActualWidth": 60,
+          "lastRowCells": 22,
+          "fractionalEquivalent": 14.367
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 10,
+          "missing": [
+            {
+              "fact": "compare_documents",
+              "importance": "core",
+              "concept": "C1"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nel laboratorio di storia gli studenti confrontano lettere, cronache, carte geografiche e registri per ricostruire gli avvenimenti. Valutare provenienza, autore, periodo e scopo di ogni documento è essenziale poiché testimonianze diverse dipendono dai punti di osservazione e dagli interessi degli autori. Per verificare un'affermazione occorre usare più fonti indipendenti, distinguere i fatti dalle opinioni, segnalare ciò che resta incerto e analizzare il contesto, le cause e le conseguenze degli eventi. Una fonte primaria è un documento prodotto direttamente nel periodo storico che si sta studiando. Una fonte secondaria consiste in un'interpretazione successiva basata su documenti precedenti. Nel corso della ricerca, le ipotesi formulate dagli studiosi vanno sempre tenute distinte dai fatti realmente documentati.",
+        "words": 113
+      }
+    }
+  ],
+  "issues": []
+}

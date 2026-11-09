@@ -1,0 +1,798 @@
+{
+  "study": "LAB96 lean source-only Gemini benchmark",
+  "createdAt": "2026-11-09T13:50:19.381Z",
+  "model": "gemini-3.5-flash-lite",
+  "modelProvider": "Google Gemini via pre-existing free credential",
+  "provider": {
+    "attempts": 12,
+    "stopped": false,
+    "reason": "",
+    "maxAttempts": 12
+  },
+  "policy": "STOP on first 429 or after one repeated 503; no upgrades, no background retry.",
+  "scope": "Synthetic prior-split sample pages. No PDF layout/A4 font tested. Model prompt excludes atomic checklist; only post-output checker reads facts.",
+  "passMeaning": "No automatic lexical test certifies full semantic correctness. Even geometrically and numerically passing results require review before app.",
+  "productionChanged": false,
+  "apkBuilt": false,
+  "summary": {
+    "planned": 12,
+    "attempted": 12,
+    "validResponses": 12,
+    "longResponses": 11,
+    "longGridPass": 11,
+    "longBandPass": 2,
+    "longBoth": 2,
+    "longAllFactSignalsClear": 0,
+    "longBothNoFactSignals": 0,
+    "shortResponses": 1
+  },
+  "cases": [
+    {
+      "source": "scienze",
+      "level": 20,
+      "valid": true,
+      "ms": 1004,
+      "plan": {
+        "originalLetters": 599,
+        "targetLetters": 479,
+        "short": false,
+        "maxRows": 11
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 479,
+        "actualLetters": 405,
+        "reduction": 32.39,
+        "band": {
+          "low": 450,
+          "high": 509,
+          "passes": false
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 11,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 21,
+          "fractionalEquivalent": 8.35
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 16,
+          "matched": 13,
+          "missing": [
+            {
+              "fact": "light_dark",
+              "importance": "support",
+              "concept": "C1"
+            },
+            {
+              "fact": "not_every_lunation",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "isolated_result_insufficient",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota sul proprio asse causando il giorno e la notte, mentre la rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono dall'inclinazione dell'asse e non dalla distanza solare. La Luna e il Sole influenzano le maree, mentre le eclissi richiedono un allineamento specifico. Il metodo scientifico esige ipotesi verificabili, osservazioni ripetibili e dati non isolati. Infine, bisogna distinguere la descrizione del movimento dalle cause delle variazioni osservate.",
+        "words": 71
+      },
+      "completionTokens": 113,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "valid": true,
+      "ms": 981,
+      "plan": {
+        "originalLetters": 728,
+        "targetLetters": 582,
+        "short": false,
+        "maxRows": 13
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 728,
+        "targetLetters": 582,
+        "actualLetters": 478,
+        "reduction": 34.34,
+        "band": {
+          "low": 546,
+          "high": 618,
+          "passes": false
+        },
+        "grid": {
+          "rows": 10,
+          "maxRows": 13,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 57,
+          "fractionalEquivalent": 9.95
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 17,
+          "matched": 13,
+          "missing": [
+            {
+              "fact": "expiration_relaxes",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "co2_opposite",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "oxygen_consumption_co2_production",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "red_blood_cells",
+              "importance": "support",
+              "concept": "C3"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un esempio didattico l'apparato respiratorio porta aria ai polmoni tramite le vie aeree. Inspirando il diaframma si contrae e il torace si espande mentre a riposo si rilassa. Negli alveoli l'ossigeno passa al sangue e l'anidride carbonica fa il percorso inverso grazie a differenze di pressione parziale e pareti sottili. L'emoglobina trasporta l'ossigeno. La frequenza sale sotto sforzo per maggiore consumo di ossigeno e produzione di anidride carbonica. Il medico valuta sintomi storia ed esame obiettivo. Un solo valore non basta ma va interpretato nel contesto clinico.",
+        "words": 88
+      },
+      "completionTokens": 153,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "valid": true,
+      "ms": 937,
+      "plan": {
+        "originalLetters": 636,
+        "targetLetters": 509,
+        "short": false,
+        "maxRows": 11
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 509,
+        "actualLetters": 410,
+        "reduction": 35.53,
+        "band": {
+          "low": 477,
+          "high": 540,
+          "passes": false
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 11,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 28,
+          "fractionalEquivalent": 8.467
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 15,
+          "matched": 13,
+          "missing": [
+            {
+              "fact": "regulation_12",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "not_automatic",
+              "importance": "core",
+              "concept": "C2"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un esercizio del 2024, una biblioteca simulata adotta una regola per i libri: lo studente registra il titolo prima del prestito e conferma la restituzione entro dieci giorni. Il personale concede una proroga solo se il volume non è prenotato da altri; senza conferma scritta vale la scadenza iniziale. I libri prenotati vanno restituiti alla scadenza anche se non letti. Il registro traccia prestiti e date, ma ignora le opinioni dei lettori. Condizioni ed eccezioni sono essenziali per la procedura.",
+        "words": 81
+      },
+      "completionTokens": 120,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "valid": true,
+      "ms": 923,
+      "plan": {
+        "originalLetters": 670,
+        "targetLetters": 536,
+        "short": false,
+        "maxRows": 12
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 670,
+        "targetLetters": 536,
+        "actualLetters": 452,
+        "reduction": 32.54,
+        "band": {
+          "low": 503,
+          "high": 569,
+          "passes": false
+        },
+        "grid": {
+          "rows": 10,
+          "maxRows": 12,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 25,
+          "fractionalEquivalent": 9.417
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 9,
+          "missing": [
+            {
+              "fact": "context_causes",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "secondary_source_interprets",
+              "importance": "core",
+              "concept": "C3"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nel laboratorio di storia gli studenti esaminano lettere, cronache, mappe e registri. La provenienza dei documenti svela autore, epoca e scopo. Testimonianze diverse sullo stesso fatto dipendono da punti di vista o interessi differenti. Per verificare un'affermazione si confrontano fonti indipendenti, separando fatti, opinioni e incertezze. Un evento richiede contesto e conseguenze, non solo date. Le fonti primarie sono coeve al periodo studiato, quelle secondarie interpretano documenti precedenti. Le ipotesi vanno distinte dai fatti.",
+        "words": 74
+      },
+      "completionTokens": 125,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "valid": true,
+      "ms": 630,
+      "plan": {
+        "originalLetters": 155,
+        "targetLetters": 124,
+        "short": true,
+        "maxRows": 5
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 155,
+        "targetLetters": 124,
+        "actualLetters": 127,
+        "reduction": 18.06,
+        "band": {
+          "low": 117,
+          "high": 131,
+          "passes": true
+        },
+        "grid": {
+          "rows": 3,
+          "maxRows": 5,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 34,
+          "fractionalEquivalent": 2.567
+        },
+        "completeMathPass": true,
+        "short": true,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 5,
+          "matched": 4,
+          "missing": [
+            {
+              "fact": "loss_right_to_file",
+              "importance": "core",
+              "concept": "C2"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Il termine perentorio per depositare le osservazioni è di 15 giorni dalla notifica. La scadenza preclude il deposito, ma resta il diritto alla motivazione.",
+        "words": 24
+      },
+      "completionTokens": 41,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "valid": true,
+      "ms": 1619,
+      "plan": {
+        "originalLetters": 599,
+        "targetLetters": 300,
+        "short": false,
+        "maxRows": 7
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 300,
+        "actualLetters": 299,
+        "reduction": 50.08,
+        "band": {
+          "low": 270,
+          "high": 329,
+          "passes": true
+        },
+        "grid": {
+          "rows": 7,
+          "maxRows": 7,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 20,
+          "fractionalEquivalent": 6.333
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 13,
+          "matched": 10,
+          "missing": [
+            {
+              "fact": "not_distance",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "not_every_lunation",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "isolated_result_insufficient",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota su se stessa creando il ciclo di giorno e notte, e rivoluziona attorno al Sole in un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre. Sole e Luna causano le maree, mentre le eclissi esigono allineamenti specifici. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili, distinguendo descrizione e cause.",
+        "words": 52
+      },
+      "completionTokens": 89,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "valid": true,
+      "ms": 1011,
+      "plan": {
+        "originalLetters": 728,
+        "targetLetters": 364,
+        "short": false,
+        "maxRows": 8
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 728,
+        "targetLetters": 364,
+        "actualLetters": 343,
+        "reduction": 52.88,
+        "band": {
+          "low": 328,
+          "high": 400,
+          "passes": true
+        },
+        "grid": {
+          "rows": 8,
+          "maxRows": 8,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 9,
+          "fractionalEquivalent": 7.15
+        },
+        "completeMathPass": true,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 7,
+          "missing": [
+            {
+              "fact": "partial_pressure",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "oxygen_consumption_co2_production",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "diagnostic_triad",
+              "importance": "core",
+              "concept": "C4"
+            },
+            {
+              "fact": "single_measurement_not_enough",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "L'apparato respiratorio porta aria ai polmoni. Inspirando il diaframma si contrae, espirando si rilassa. Negli alveoli l'ossigeno passa al sangue e l'anidride carbonica fa il contrario grazie a pareti sottili e differenze di pressione. L'emoglobina trasporta l'ossigeno. Lo sforzo aumenta la frequenza respiratoria. Per i disturbi il medico valuta sintomi e storia clinica, interpretando ogni valore nel contesto.",
+        "words": 58
+      },
+      "completionTokens": 118,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "valid": true,
+      "ms": 879,
+      "plan": {
+        "originalLetters": 636,
+        "targetLetters": 318,
+        "short": false,
+        "maxRows": 7
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 318,
+        "actualLetters": 277,
+        "reduction": 56.45,
+        "band": {
+          "low": 287,
+          "high": 349,
+          "passes": false
+        },
+        "grid": {
+          "rows": 6,
+          "maxRows": 7,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 55,
+          "fractionalEquivalent": 5.917
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 11,
+          "matched": 6,
+          "missing": [
+            {
+              "fact": "title_before_loan",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "not_automatic",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "initial_date_without_confirmation",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "even_if_not_finished",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "register_who_when",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nella biblioteca scolastica 2024, la regola 12 impone di registrare il libro prima del prestito e restituirlo entro dieci giorni. Il personale concede una proroga solo se il volume non è prenotato da altri, ma serve conferma scritta. Se riservato, va restituito alla scadenza. Il registro traccia solo prestiti e date, senza opinioni personali.",
+        "words": 54
+      },
+      "completionTokens": 87,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "valid": true,
+      "ms": 866,
+      "plan": {
+        "originalLetters": 599,
+        "targetLetters": 539,
+        "short": false,
+        "maxRows": 12
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 539,
+        "actualLetters": 420,
+        "reduction": 29.88,
+        "band": {
+          "low": 510,
+          "high": 569,
+          "passes": false
+        },
+        "grid": {
+          "rows": 9,
+          "maxRows": 12,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 43,
+          "fractionalEquivalent": 8.717
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 16,
+          "matched": 14,
+          "missing": [
+            {
+              "fact": "light_dark",
+              "importance": "support",
+              "concept": "C1"
+            },
+            {
+              "fact": "not_every_lunation",
+              "importance": "core",
+              "concept": "C3"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota attorno al proprio asse, causando il giorno e la notte, e compie la rivoluzione attorno al Sole in un anno. Le stagioni dipendono dall'inclinazione dell'asse terrestre, non dalla distanza dal Sole. La Luna e il Sole influenzano le maree, mentre le eclissi richiedono un allineamento specifico. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili; un risultato isolato non basta. Occorre infine distinguere la descrizione del movimento dalle cause delle variazioni.",
+        "words": 74
+      },
+      "completionTokens": 120,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "valid": true,
+      "ms": 1134,
+      "plan": {
+        "originalLetters": 728,
+        "targetLetters": 655,
+        "short": false,
+        "maxRows": 15
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 728,
+        "targetLetters": 655,
+        "actualLetters": 565,
+        "reduction": 22.39,
+        "band": {
+          "low": 619,
+          "high": 691,
+          "passes": false
+        },
+        "grid": {
+          "rows": 12,
+          "maxRows": 15,
+          "passes": true,
+          "maxActualWidth": 59,
+          "lastRowCells": 51,
+          "fractionalEquivalent": 11.85
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 17,
+          "matched": 14,
+          "missing": [
+            {
+              "fact": "thin_wall",
+              "importance": "support",
+              "concept": "C2"
+            },
+            {
+              "fact": "oxygen_consumption_co2_production",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "red_blood_cells",
+              "importance": "support",
+              "concept": "C3"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "In un esempio didattico, l'apparato respiratorio porta aria ai polmoni tramite le vie aeree. Durante l'inspirazione il diaframma si contrae e il torace aumenta di volume; durante l'espirazione a riposo si rilassa. Negli alveoli l'ossigeno passa al sangue e l'anidride carbonica fa il percorso opposto grazie a differenze di pressione parziale. L'emoglobina trasporta gran parte dell'ossigeno. La frequenza respiratoria può salire sotto sforzo per maggiore consumo di ossigeno e produzione di anidride carbonica. Per valutare un disturbo il medico valuta sintomi, storia clinica ed esame obiettivo. Un singolo valore non basta per una diagnosi, va interpretato nel contesto clinico.",
+        "words": 99
+      },
+      "completionTokens": 177,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "valid": true,
+      "ms": 790,
+      "plan": {
+        "originalLetters": 599,
+        "targetLetters": 419,
+        "short": false,
+        "maxRows": 10
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 599,
+        "targetLetters": 419,
+        "actualLetters": 359,
+        "reduction": 40.07,
+        "band": {
+          "low": 390,
+          "high": 449,
+          "passes": false
+        },
+        "grid": {
+          "rows": 8,
+          "maxRows": 10,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 27,
+          "fractionalEquivalent": 7.45
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": true,
+        "facts": {
+          "total": 13,
+          "matched": 10,
+          "missing": [
+            {
+              "fact": "not_distance",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "not_every_lunation",
+              "importance": "core",
+              "concept": "C3"
+            },
+            {
+              "fact": "isolated_result_insufficient",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "La Terra ruota attorno al proprio asse creando giorno e notte. La rivoluzione dura un anno e le stagioni dipendono dall'inclinazione dell'asse. Sole e Luna influenzano le maree, mentre le eclissi richiedono un allineamento specifico. Il metodo scientifico esige ipotesi verificabili, osservazioni ripetibili e prove non isolate. Infine, occorre distinguere tra la descrizione di un movimento e le cause delle variazioni osservate.",
+        "words": 62
+      },
+      "completionTokens": 106,
+      "semanticallyCertified": false
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "valid": true,
+      "ms": 930,
+      "plan": {
+        "originalLetters": 636,
+        "targetLetters": 382,
+        "short": false,
+        "maxRows": 9
+      },
+      "metrics": {
+        "valid": true,
+        "originalLetters": 636,
+        "targetLetters": 382,
+        "actualLetters": 291,
+        "reduction": 54.25,
+        "band": {
+          "low": 350,
+          "high": 413,
+          "passes": false
+        },
+        "grid": {
+          "rows": 7,
+          "maxRows": 9,
+          "passes": true,
+          "maxActualWidth": 60,
+          "lastRowCells": 19,
+          "fractionalEquivalent": 6.317
+        },
+        "completeMathPass": false,
+        "short": false,
+        "smallShortfallReview": false,
+        "facts": {
+          "total": 11,
+          "matched": 5,
+          "missing": [
+            {
+              "fact": "regulation_12",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "title_before_loan",
+              "importance": "core",
+              "concept": "C1"
+            },
+            {
+              "fact": "extension_only_if_unreserved",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "written_confirmation",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "initial_date_without_confirmation",
+              "importance": "core",
+              "concept": "C2"
+            },
+            {
+              "fact": "register_who_when",
+              "importance": "core",
+              "concept": "C4"
+            }
+          ]
+        },
+        "spellingSignals": [],
+        "semanticallyCertified": false,
+        "noPaddingVerified": false,
+        "text": "Nel 2024 una biblioteca ha introdotto una regola sui prestiti. Lo studente registra il titolo e restituisce il libro in dieci giorni. La proroga è possibile solo senza altre prenotazioni e non è automatica. Se il libro è riservato, va restituito alla scadenza anche se non finito. Il registro traccia solo le date e i prestiti, escludendo le opinioni personali.",
+        "words": 60
+      },
+      "completionTokens": 92,
+      "semanticallyCertified": false
+    }
+  ],
+  "errors": []
+}
