@@ -36,6 +36,10 @@ jobs:
           node scripts/test-lab58-large-block-cadence.mjs
           node scripts/test-lab55-503-resume.mjs
           node scripts/test-fidelity-engine.mjs
+      - name: Mandatory Scudo360 LAB72 and LAB74 backward compatibility, no skipping
+        run: |
+          node scripts/StudyBookLab72Targeted.mjs
+          node scripts/StudyBookLab74PageBudget.mjs
       - name: Compile real StudyBook web core with LAB78 mandatory handshake
         env:
           VITE_NATIVE_API_BASE: https://studybook-ai-lab78-geometry.brunoverlezza.workers.dev
