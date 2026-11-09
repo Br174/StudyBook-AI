@@ -1,0 +1,48 @@
+name: StudyBook LAB91 no-padding audit
+on:
+  push:
+    branches:
+      - 'audit/studybook-conditional-elaboration-guard-v91-*'
+    paths:
+      - 'scripts/test-lab91-conditional-elaboration-gate.mjs'
+      - '.github/workflows/studybook-lab91-no-padding.yml'
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source syntax
+        run: node --check scripts/test-lab91-conditional-elaboration-gate.mjs
+      - name: Stress no-padding policy over 20000 cases and actual output records
+        run: node scripts/test-lab91-conditional-elaboration-gate.mjs
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB91-NoPadding
+          path: audit/reports/lab91-conditional-elaboration-guard.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Preserve audit report on isolated branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab91-conditional-elaboration-guard.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab91-conditional-elaboration-guard.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB91): preserve stop-on-complete no-padding evidence'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
