@@ -12,6 +12,18 @@ export const ROW_WIDTH_V106=60;
 
 function letters(value){return studyLetters(String(value||'').normalize('NFC'))}
 function normalize(value){return String(value??'').normalize('NFC').replace(/\s+/gu,' ').trim()}
+// Historical LAB97–105 Riassunto is a 65% research target (60–70%).
+// Existing APP summary policy instead targets 60% (55–65%). They must NOT
+// be silently conflated. This module is isolated experimental research only.
+function researchBudget(source,level){
+ const n=letters(source);
+ if(Number(level)===65){
+  return{originalLetters:n,reductionPercent:65,targetLetters:Math.round(n*.35),
+    minLetters:Math.ceil(n*.30),maxLetters:Math.floor(n*.40),
+    integerFeasible:Math.ceil(n*.30)<=Math.floor(n*.40)};
+ }
+ return sourceLetterBudgetV74(n,String(level));
+}
 function stamp(source,level){return JSON.stringify([normalize(source),level])}
 function baselineEquivalent(a,b){return stamp(a.source,a.level)===stamp(b.source,b.level)}
 export function virtualRowsV106(text,width=ROW_WIDTH_V106){
@@ -49,7 +61,7 @@ export function localOrthographyV106(source,draft){
 }
 export function measuredPageV106(source,text,level,{maxRows=Infinity,shortPageExempt=false}={}){
  if(!SINGLE_CALL_LEVELS_V106.includes(Number(level)))throw Error('UNSUPPORTED_LEVEL');
- const b=sourceLetterBudgetV74(letters(source),String(level));
+ const b=researchBudget(source,level);
  const n=letters(text),layout=virtualRowsV106(text);
  const rangePass=shortPageExempt?true:b.integerFeasible&&n>=b.minLetters&&n<=b.maxLetters;
  const gridPass=layout.rows<=maxRows&&!layout.overlong;
@@ -97,7 +109,7 @@ export async function runSingleCallV106({
  if(typeof invokeOnce!=='function')throw Error('SINGLE_DISPATCH_ADAPTER_REQUIRED');
  if(!Number.isFinite(maxRows)&&maxRows!==Infinity)throw Error('INVALID_ROW_CAP');
  let dispatches=0;
- const contract={source,sourceId,level:Number(level),target:sourceLetterBudgetV74(letters(source),String(level))};
+ const contract={source,sourceId,level:Number(level),target:researchBudget(source,level)};
  let response;
  try{
   dispatches++;
