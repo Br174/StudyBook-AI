@@ -47,6 +47,9 @@ jobs:
           test -f audit/reports/lab104-fact-by-fact-editorial-review.json
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Historical offline auditors regenerate timestamped LAB103 JSON. Restore their
+          # working-tree copies; LAB104 is the ONLY intended persisted result.
+          git restore -- audit/reports/lab103-incumbent-no-regression.json audit/reports/lab103-targeted-history-modality.json
           git add audit/reports/lab104-fact-by-fact-editorial-review.json
           if ! git diff --cached --quiet; then
             git commit -m 'audit(LAB104): persist 52 source-backed fact decisions and targeted non-regression checks'
