@@ -1,4 +1,5 @@
 name: StudyBook LAB98 semantic caution with modal guard
+# Rerun after fixing apostrophe quoting in adversarial fixture
 on:
   push:
     branches:
