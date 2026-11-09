@@ -1,0 +1,195 @@
+{
+  "study": "StudyBook AI LAB89",
+  "reviewer": "assistant manual reading, not specialist clinical/legal certification",
+  "date": "2026-11-09",
+  "rubric": "Check semantic facts, spelling and completeness; geometry and percent in separate report",
+  "noProductionPromotion": true,
+  "source": "audit/reports/lab89-proportional-real-gemini.json",
+  "records": [
+    {
+      "source": "scienze",
+      "level": 40,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Manca che le stagioni non dipendono dalla distanza Sole-Terra.",
+        "Manca che le eclissi non si verificano a ogni lunazione.",
+        "Apostrofi assenti in «lalternanza» e «dallinclinazione»."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Assenti esplicitamente inclinazione e non-distanza tra Terra e Sole; manca la condizione non a ogni lunazione.",
+        "Grafia «dall asse» scorretta."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Mancano il confronto con la distanza, la condizione eclissi/non ogni lunazione e il singolo risultato non sufficiente."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Riduzione 50,92% invece di 30%.",
+        "Manca la condizione eclissi/non ogni lunazione e la negazione sulla distanza.",
+        "Grafia «dall asse»."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Ha allungato il testo invece di ridurlo.",
+        "Distribuzione righe non rispettata; accenti e apostrofi difettosi."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Ha allungato il testo; oltre il limite di griglia.",
+        "La sintassi «l altra» contiene errori di apostrofo."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Righe complessive 9 anche con condivisione, limite 8.",
+        "Contenuti principali sostanzialmente presenti, ma controllo approfondito ancora necessario."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Non specifica la conferma scritta necessaria per la proroga.",
+        "Perde l'eccezione del libro prenotato da restituire anche se non letto."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Righe complessive 8 con limite 7; riduzione 44,81% appena sotto la soglia 45%.",
+        "Meno dettagli sul registro rispetto all'originale."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Linguaggio «non e automatica», «non si e finito»: accenti errati.",
+        "L'anno 2024 e regola 12 sono scritti correttamente in lettere, non sono omissioni semantiche."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "geometricPercentPassInOriginal": true,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "«duemilaventiquattro» e «dodici» sono equivalenti numerici leciti, non perdite di numeri.",
+        "Errore grafico «Non e automatica»; alcuni contenuti sono condensati e servono controlli approfonditi."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Riduzione 29,09% invece di 10%, troppo aggressiva per edizione tecnica.",
+        "Anno e numero norma in lettere sono semanticamente equivalenti."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "geometricPercentPassInOriginal": true,
+      "automaticHeuristicsPass": true,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Righe e percentuale rispettate.",
+        "Nel concetto storico lungo non resta esplicita la differenza fra testimonianze derivante da prospettive e interessi, e la necessità di segnalare ciò che rimane incerto: fedeltà completa da approfondire."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Lungo concetto iniziale richiede 4 righe benché ne siano state assegnate 2.",
+        "Riduzione effettiva 57,91% fuori da 60–70%; mancano alcuni dettagli importanti."
+      ],
+      "acceptedForProduction": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "geometricPercentPassInOriginal": false,
+      "automaticHeuristicsPass": false,
+      "expertCertified": false,
+      "qualitativeCautions": [
+        "Riduzione effettiva 28,21% anziché 10%, con perdita di dettagli sul contesto e l'incertezza.",
+        "Griglia globale entro limite, ma percentuale errata."
+      ],
+      "acceptedForProduction": false
+    }
+  ],
+  "summary": {
+    "reviewed": 15,
+    "approvedForProduction": 0
+  }
+}
