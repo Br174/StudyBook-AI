@@ -54,7 +54,7 @@ const checks={
    words:[/(?:prenot|riserv)/iu,/(?:restitu|rendere|render|riport)/iu,/(?:anche se|pur|nonostante|senza)/iu,/(?:finito|completat|terminat|letto|lettura|legger)/iu],
    why:'Il libro prenotato va restituito anche se lo studente non ha finito di leggerlo.'},
   {id:'register_who_and_when',orig:/ricostruire chi ha ricevuto il libro e in quale giorno/iu,
-   words:[/(?:registr|tracc|annot|ricostru)/iu,/(?:chi|student|lettor|destinatar)/iu,/(?:giorn|data|quando)/iu],
+   words:[/\bregistro\b/iu,/(?:\bchi\b|student|lettor|destinatar)/iu,/(?:giorn|data|quando)/iu],
    why:'Nel registro risultano la persona che riceve il libro e il giorno.'},
   {id:'extension_not_automatic',orig:/proroga non è automatica/iu,
    words:[/prorog/iu,/non/iu,/automatic/iu],
