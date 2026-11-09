@@ -92,7 +92,7 @@ try{
  assert.equal(first.draftUnitsSaved,paragraphCount*2);
  assert.equal(first.draftRowsV57[0][0].editions.summary.length>0,true);
  assert.equal(first.draftRowsV57[0][0].editions['50'].length>0,true);
- assert.equal(first.draftRowsV57[0][0].editions['40'],undefined);
+ assert.equal(first.draftRowsV57[0][0].editions['40']??null,null);
  const pacing=await readGeminiThroughputV77();
  assert.equal(pacing.kind,'overload-avoidance');
  assert(pacing.gapMs>=90000);
