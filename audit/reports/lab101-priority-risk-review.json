@@ -1,0 +1,377 @@
+{
+  "study": "LAB101b fact priority coherence and downgraded-condition alerts",
+  "date": "2026-11-09T15:17:17.477Z",
+  "summary": {
+    "sources": 5,
+    "actualModelFacts": 56,
+    "fundamental": 47,
+    "support": 7,
+    "context": 2,
+    "priorityDisagreements": 6,
+    "realPagesFlagged": 1,
+    "highRiskAlerts": 3,
+    "noCoreConceptGroups": 1,
+    "moderatorSafetyFlags": 1,
+    "testedReclassifications": 20000,
+    "detected": 20000,
+    "modalRiskMutationChecks": 10000,
+    "modelCalls": 0,
+    "issues": 0
+  },
+  "pages": [
+    {
+      "source": "scienze",
+      "priorities": {
+        "facts": 12,
+        "core": 11,
+        "support": 1,
+        "context": 0,
+        "flatPriority": false,
+        "quotedSourceSentences": 9,
+        "sourceSentenceCount": 9,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "priorityRisk": {
+        "source": "scienze",
+        "byConcept": [
+          {
+            "concept": "C1",
+            "sourceRows": 2,
+            "facts": 3,
+            "fundamental": 2,
+            "support": 1,
+            "context": 0
+          },
+          {
+            "concept": "C2",
+            "sourceRows": 2,
+            "facts": 3,
+            "fundamental": 3,
+            "support": 0,
+            "context": 0
+          },
+          {
+            "concept": "C3",
+            "sourceRows": 2,
+            "facts": 3,
+            "fundamental": 3,
+            "support": 0,
+            "context": 0
+          },
+          {
+            "concept": "C4",
+            "sourceRows": 3,
+            "facts": 3,
+            "fundamental": 3,
+            "support": 0,
+            "context": 0
+          }
+        ],
+        "flags": [],
+        "highRiskFlags": 0,
+        "autoPromotable": false,
+        "meaningCertified": false,
+        "warning": "Rules are lexical and conservative. Flags indicate review, not guaranteed mistakes. No generated study texts tested."
+      },
+      "editorialDisagreements": [],
+      "unverifiedPriorityApproved": false
+    },
+    {
+      "source": "procedura",
+      "priorities": {
+        "facts": 13,
+        "core": 8,
+        "support": 4,
+        "context": 1,
+        "flatPriority": false,
+        "quotedSourceSentences": 7,
+        "sourceSentenceCount": 7,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "priorityRisk": {
+        "source": "procedura",
+        "byConcept": [
+          {
+            "concept": "C1",
+            "sourceRows": 2,
+            "facts": 4,
+            "fundamental": 3,
+            "support": 0,
+            "context": 1
+          },
+          {
+            "concept": "C2",
+            "sourceRows": 2,
+            "facts": 4,
+            "fundamental": 3,
+            "support": 1,
+            "context": 0
+          },
+          {
+            "concept": "C3",
+            "sourceRows": 1,
+            "facts": 2,
+            "fundamental": 2,
+            "support": 0,
+            "context": 0
+          },
+          {
+            "concept": "C4",
+            "sourceRows": 2,
+            "facts": 3,
+            "fundamental": 0,
+            "support": 3,
+            "context": 0
+          }
+        ],
+        "flags": [
+          {
+            "type": "CONCEPT_HAS_SUPPORT_BUT_NO_FUNDAMENTAL",
+            "concept": "C4",
+            "factIds": [
+              "F11",
+              "F12",
+              "F13"
+            ],
+            "highRisk": true
+          },
+          {
+            "type": "SOURCE_MODAL_SENTENCE_WITHOUT_CORE",
+            "sentenceId": "S6",
+            "factIds": [
+              "F11",
+              "F12"
+            ],
+            "highRisk": true
+          },
+          {
+            "type": "MODAL_NEGATIVE_OR_CONDITION_DOWNGRADED",
+            "factId": "F12",
+            "priority": "supporto",
+            "evidence": "ma non contiene dati sulle opinioni personali dei lettori",
+            "highRisk": true,
+            "note": "Source phrase contains risk-sensitive wording; a model may still have reasonable grounds for support, so human review required."
+          }
+        ],
+        "highRiskFlags": 3,
+        "autoPromotable": false,
+        "meaningCertified": false,
+        "warning": "Rules are lexical and conservative. Flags indicate review, not guaranteed mistakes. No generated study texts tested."
+      },
+      "editorialDisagreements": [
+        {
+          "modelFact": "F11",
+          "manualFact": "F9",
+          "modelTier": "supporto",
+          "editorialTier": "fondamentale",
+          "evidenceOverlap": 1
+        },
+        {
+          "modelFact": "F2",
+          "manualFact": "F1",
+          "modelTier": "fondamentale",
+          "editorialTier": "contesto",
+          "evidenceOverlap": 0.727
+        }
+      ],
+      "unverifiedPriorityApproved": false
+    },
+    {
+      "source": "medicina",
+      "priorities": {
+        "facts": 15,
+        "core": 13,
+        "support": 1,
+        "context": 1,
+        "flatPriority": false,
+        "quotedSourceSentences": 8,
+        "sourceSentenceCount": 8,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "priorityRisk": {
+        "source": "medicina",
+        "byConcept": [
+          {
+            "concept": "C1",
+            "sourceRows": 2,
+            "facts": 5,
+            "fundamental": 4,
+            "support": 0,
+            "context": 1
+          },
+          {
+            "concept": "C2",
+            "sourceRows": 2,
+            "facts": 4,
+            "fundamental": 3,
+            "support": 1,
+            "context": 0
+          },
+          {
+            "concept": "C3",
+            "sourceRows": 2,
+            "facts": 3,
+            "fundamental": 3,
+            "support": 0,
+            "context": 0
+          },
+          {
+            "concept": "C4",
+            "sourceRows": 2,
+            "facts": 3,
+            "fundamental": 3,
+            "support": 0,
+            "context": 0
+          }
+        ],
+        "flags": [],
+        "highRiskFlags": 0,
+        "autoPromotable": false,
+        "meaningCertified": false,
+        "warning": "Rules are lexical and conservative. Flags indicate review, not guaranteed mistakes. No generated study texts tested."
+      },
+      "editorialDisagreements": [
+        {
+          "modelFact": "F4",
+          "manualFact": "F3",
+          "modelTier": "fondamentale",
+          "editorialTier": "supporto",
+          "evidenceOverlap": 1
+        }
+      ],
+      "unverifiedPriorityApproved": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "priorities": {
+        "facts": 13,
+        "core": 12,
+        "support": 1,
+        "context": 0,
+        "flatPriority": false,
+        "quotedSourceSentences": 8,
+        "sourceSentenceCount": 8,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "priorityRisk": {
+        "source": "concetto_sbilanciato",
+        "byConcept": [
+          {
+            "concept": "C1",
+            "sourceRows": 5,
+            "facts": 10,
+            "fundamental": 9,
+            "support": 1,
+            "context": 0
+          },
+          {
+            "concept": "C2",
+            "sourceRows": 1,
+            "facts": 1,
+            "fundamental": 1,
+            "support": 0,
+            "context": 0
+          },
+          {
+            "concept": "C3",
+            "sourceRows": 1,
+            "facts": 1,
+            "fundamental": 1,
+            "support": 0,
+            "context": 0
+          },
+          {
+            "concept": "C4",
+            "sourceRows": 1,
+            "facts": 1,
+            "fundamental": 1,
+            "support": 0,
+            "context": 0
+          }
+        ],
+        "flags": [],
+        "highRiskFlags": 0,
+        "autoPromotable": false,
+        "meaningCertified": false,
+        "warning": "Rules are lexical and conservative. Flags indicate review, not guaranteed mistakes. No generated study texts tested."
+      },
+      "editorialDisagreements": [
+        {
+          "modelFact": "F1",
+          "manualFact": "F1",
+          "modelTier": "supporto",
+          "editorialTier": "fondamentale",
+          "evidenceOverlap": 1
+        },
+        {
+          "modelFact": "F2",
+          "manualFact": "F2",
+          "modelTier": "fondamentale",
+          "editorialTier": "supporto",
+          "evidenceOverlap": 1
+        },
+        {
+          "modelFact": "F10",
+          "manualFact": "F10",
+          "modelTier": "fondamentale",
+          "editorialTier": "supporto",
+          "evidenceOverlap": 1
+        }
+      ],
+      "unverifiedPriorityApproved": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "priorities": {
+        "facts": 3,
+        "core": 3,
+        "support": 0,
+        "context": 0,
+        "flatPriority": true,
+        "quotedSourceSentences": 2,
+        "sourceSentenceCount": 2,
+        "coreAllSixLevels": true,
+        "sourceEvidenceValid": true,
+        "semanticApproved": false
+      },
+      "priorityRisk": {
+        "source": "pagina_breve_continua",
+        "byConcept": [
+          {
+            "concept": "C1",
+            "sourceRows": 1,
+            "facts": 1,
+            "fundamental": 1,
+            "support": 0,
+            "context": 0
+          },
+          {
+            "concept": "C2",
+            "sourceRows": 1,
+            "facts": 2,
+            "fundamental": 2,
+            "support": 0,
+            "context": 0
+          }
+        ],
+        "flags": [],
+        "highRiskFlags": 0,
+        "autoPromotable": false,
+        "meaningCertified": false,
+        "warning": "Rules are lexical and conservative. Flags indicate review, not guaranteed mistakes. No generated study texts tested."
+      },
+      "editorialDisagreements": [],
+      "unverifiedPriorityApproved": false
+    }
+  ],
+  "errors": [],
+  "caveat": "All flags are provisional and source-specific; they do not establish independent scholarly accuracy. No model claims modified. This stage is for quality review before any six-level generation."
+}
