@@ -1,0 +1,23 @@
+name: StudyBook LAB105 native 1000-page chapter and study-engine stress
+on:
+  push:
+    branches:
+      - 'audit/studybook-1000page-reliability-v105-*'
+    paths:
+      - '.github/workflows/studybook-lab105-native-1000-chapters.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-studysystem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install declared free project packages
+        run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+      - name: StudyBook 1000 pages chapter and local didactic-engine integrity stress
+        run: node scripts/lab105-1000page-native-study-engine.mjs
