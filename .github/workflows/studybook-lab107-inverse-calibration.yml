@@ -1,0 +1,21 @@
+name: StudyBook LAB107 - inverse calibration (offline, no Gemini)
+on:
+  push:
+    branches:
+      - audit/studybook-inverse-calibration-v107-20261110
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inverse-calibration-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact experiment
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify LAB107 no-provider calibration
+        run: node scripts/test-lab107-inverse-calibration.mjs
