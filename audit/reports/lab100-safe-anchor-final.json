@@ -1,0 +1,351 @@
+{
+  "study": "LAB100 safe evidence quote case reconciliation and six-level reuse",
+  "date": "2026-11-09T14:57:43.909Z",
+  "modelCallsThisAudit": 0,
+  "summary": {
+    "sources": 5,
+    "firstReadingGeminiCalls": 6,
+    "sourceFacts": 53,
+    "originalValid": 4,
+    "safeMetadataCorrections": 1,
+    "finalAnchorValid": 5,
+    "sixLevelPlans": 30,
+    "manualRubricTotal": 64,
+    "lexicalRubricMatched": 61,
+    "negativeCases": 20000,
+    "negativeRejected": 20000,
+    "modelClaimsUnmodified": true,
+    "semanticallyCertified": 0,
+    "errors": 0
+  },
+  "cases": [
+    {
+      "source": "scienze",
+      "originalModelAnchorValidated": true,
+      "afterSafeMetadataFix": true,
+      "caseOnlyChanges": [],
+      "originalClaimHash": "75251e74012659411a9b9cb5f20c18e42ab036ee464fcf16bbfcc0862aac6c9b",
+      "claimHashAfterFix": "75251e74012659411a9b9cb5f20c18e42ab036ee464fcf16bbfcc0862aac6c9b",
+      "modelClaimsIntact": true,
+      "modelFacts": 12,
+      "referenceRubricItems": 16,
+      "lexicalRubricMatches": 16,
+      "missingRubricHints": [],
+      "warnings": [
+        "OVERBROAD_EVIDENCE_9"
+      ],
+      "sixPlans": 6,
+      "semanticCertification": false
+    },
+    {
+      "source": "procedura",
+      "originalModelAnchorValidated": true,
+      "afterSafeMetadataFix": true,
+      "caseOnlyChanges": [],
+      "originalClaimHash": "add2fcc56fdac5a645465109342db954853f042f8e855c9dd32a838caa909c44",
+      "claimHashAfterFix": "add2fcc56fdac5a645465109342db954853f042f8e855c9dd32a838caa909c44",
+      "modelClaimsIntact": true,
+      "modelFacts": 11,
+      "referenceRubricItems": 15,
+      "lexicalRubricMatches": 15,
+      "missingRubricHints": [],
+      "warnings": [
+        "OVERBROAD_EVIDENCE_0",
+        "NONSTANDARD_KIND_1",
+        "NONSTANDARD_KIND_2",
+        "OVERBROAD_EVIDENCE_3",
+        "OVERBROAD_EVIDENCE_10",
+        "CRITICAL_MARKER_NOT_VISIBLE_S5:obligation"
+      ],
+      "sixPlans": 6,
+      "semanticCertification": false
+    },
+    {
+      "source": "medicina",
+      "originalModelAnchorValidated": false,
+      "afterSafeMetadataFix": true,
+      "caseOnlyChanges": [
+        {
+          "factId": "F2",
+          "sentenceId": "S2",
+          "before": "durante l'inspirazione il diaframma si contrae",
+          "after": "Durante l'inspirazione il diaframma si contrae",
+          "meaningEdited": false,
+          "claimEdited": false
+        }
+      ],
+      "originalClaimHash": "6c7832a33e7359ffb03c406ab96405aec01b90314655cf048d6297da333a58e0",
+      "claimHashAfterFix": "6c7832a33e7359ffb03c406ab96405aec01b90314655cf048d6297da333a58e0",
+      "modelClaimsIntact": true,
+      "modelFacts": 14,
+      "referenceRubricItems": 17,
+      "lexicalRubricMatches": 14,
+      "missingRubricHints": [
+        "co2_opposite",
+        "hemoglobin_transports_oxygen",
+        "oxygen_consumption_co2_production"
+      ],
+      "warnings": [
+        "OVERBROAD_EVIDENCE_8",
+        "OVERBROAD_EVIDENCE_11",
+        "CLAUSE_UNCOVERED_S6"
+      ],
+      "sixPlans": 6,
+      "semanticCertification": false
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "originalModelAnchorValidated": true,
+      "afterSafeMetadataFix": true,
+      "caseOnlyChanges": [],
+      "originalClaimHash": "092de1251ab6d6545e61c8f213964f9bc62c2dea7355a16b950214a56e90a2cc",
+      "claimHashAfterFix": "092de1251ab6d6545e61c8f213964f9bc62c2dea7355a16b950214a56e90a2cc",
+      "modelClaimsIntact": true,
+      "modelFacts": 13,
+      "referenceRubricItems": 11,
+      "lexicalRubricMatches": 11,
+      "missingRubricHints": [],
+      "warnings": [
+        "OVERBROAD_EVIDENCE_2",
+        "NONSTANDARD_KIND_3",
+        "NONSTANDARD_KIND_9",
+        "NONSTANDARD_KIND_12",
+        "CLAUSE_UNCOVERED_S4"
+      ],
+      "sixPlans": 6,
+      "semanticCertification": false
+    },
+    {
+      "source": "pagina_breve_continua",
+      "originalModelAnchorValidated": true,
+      "afterSafeMetadataFix": true,
+      "caseOnlyChanges": [],
+      "originalClaimHash": "a9ca9a21f31b8af30a2367ec9588bf40f8953487c80c6bdae6fba38fabc47381",
+      "claimHashAfterFix": "a9ca9a21f31b8af30a2367ec9588bf40f8953487c80c6bdae6fba38fabc47381",
+      "modelClaimsIntact": true,
+      "modelFacts": 3,
+      "referenceRubricItems": 5,
+      "lexicalRubricMatches": 5,
+      "missingRubricHints": [],
+      "warnings": [
+        "CRITICAL_MARKER_NOT_VISIBLE_S1:obligation"
+      ],
+      "sixPlans": 6,
+      "semanticCertification": false
+    }
+  ],
+  "plans": [
+    {
+      "source": "scienze",
+      "level": 10,
+      "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc",
+      "letters": 539,
+      "rows": 12
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc",
+      "letters": 479,
+      "rows": 11
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc",
+      "letters": 419,
+      "rows": 10
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc",
+      "letters": 359,
+      "rows": 8
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc",
+      "letters": 300,
+      "rows": 7
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "ledgerHash": "d2d56837b13ed07c1af85255cd816791192befec61d93bb92940974eb71e51dc",
+      "letters": 210,
+      "rows": 5
+    },
+    {
+      "source": "procedura",
+      "level": 10,
+      "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302",
+      "letters": 572,
+      "rows": 13
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302",
+      "letters": 509,
+      "rows": 11
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302",
+      "letters": 445,
+      "rows": 10
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302",
+      "letters": 382,
+      "rows": 9
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302",
+      "letters": 318,
+      "rows": 7
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "ledgerHash": "299672db2542c11d512ac58ed85f84070db191fc21fcd09facd5f3f2fb403302",
+      "letters": 223,
+      "rows": 5
+    },
+    {
+      "source": "medicina",
+      "level": 10,
+      "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07",
+      "letters": 655,
+      "rows": 15
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07",
+      "letters": 582,
+      "rows": 13
+    },
+    {
+      "source": "medicina",
+      "level": 30,
+      "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07",
+      "letters": 510,
+      "rows": 12
+    },
+    {
+      "source": "medicina",
+      "level": 40,
+      "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07",
+      "letters": 437,
+      "rows": 10
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07",
+      "letters": 364,
+      "rows": 8
+    },
+    {
+      "source": "medicina",
+      "level": 65,
+      "ledgerHash": "4c0d8d57a64da8e621ff0bfb2de15ca05548b87b1c66413bd83d0d836c8c9e07",
+      "letters": 255,
+      "rows": 6
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 10,
+      "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2",
+      "letters": 603,
+      "rows": 14
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2",
+      "letters": 536,
+      "rows": 12
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 30,
+      "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2",
+      "letters": 469,
+      "rows": 11
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 40,
+      "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2",
+      "letters": 402,
+      "rows": 9
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 50,
+      "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2",
+      "letters": 335,
+      "rows": 8
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 65,
+      "ledgerHash": "6511e5efbcdec052eac5dbdc0605b5ab0138be41d46b079c29ff740ff54942f2",
+      "letters": 234,
+      "rows": 6
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 10,
+      "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3",
+      "letters": 140,
+      "rows": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3",
+      "letters": 124,
+      "rows": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 30,
+      "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3",
+      "letters": 109,
+      "rows": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 40,
+      "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3",
+      "letters": 93,
+      "rows": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 50,
+      "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3",
+      "letters": 78,
+      "rows": 5
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 65,
+      "ledgerHash": "0190d58e0ba4642f73f86d856245bb51d4b29eb2561ff60392b125612ea4cea3",
+      "letters": 54,
+      "rows": 5
+    }
+  ],
+  "errors": [],
+  "caution": "Literal source quote and manually calibrated regex matching are not proof of semantic equivalence, and this test does not certify full-book PDF segmentation."
+}
