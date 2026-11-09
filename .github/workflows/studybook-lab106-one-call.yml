@@ -1,0 +1,55 @@
+name: StudyBook LAB106 single-call deterministic standard proof
+on:
+  push:
+    branches:
+      - 'audit/studybook-single-call-standard-v106-*'
+    paths:
+      - '.github/workflows/studybook-lab106-one-call.yml'
+      - 'src/lib/studySingleCallGateV106.js'
+      - 'scripts/test-lab106-single-call-replay.mjs'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab106-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax gates
+        run: |
+          node --check src/lib/studySingleCallGateV106.js
+          node --check scripts/test-lab106-single-call-replay.mjs
+      - name: Replay twelve real Gemini outputs and one-call adversarial guards OFFLINE
+        run: node scripts/test-lab106-single-call-replay.mjs
+      - name: Preserve complete evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB106-OneCall-RealOutput-Replay
+          path: audit/reports/lab106-single-call-replay.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Save report ONLY on isolated audit branch
+        if: success()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab106-single-call-replay.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab106-single-call-replay.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB106): preserve one-call and no-regression proof'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
