@@ -466,14 +466,21 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
 
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
   const editionState=studyBook?.editionsV36;
+  // LAB79: LAB78 numeric failure means "complete:false", yet all raw
+  // drafts are saved. That is exactly when the correction control is needed.
+  const auditedNeedsRepair=Boolean(editionState?.draftComplete&&
+    editionState?.qualityV66?.levels&&
+    editionState?.publicationModeV66==='lab78-numeric-gate-semantic-unverified'&&
+    editionState?.complete!==true);
   const canImprove=Boolean(onRebalance&&!isOriginalOnly&&
-    editionState?.complete&&editionState?.draftComplete&&
-    editionState?.publicationModeV66==='generated-text-quality-not-certified'&&
-    editionState?.checkpointPersistent!==false);
+    editionState?.draftComplete&&editionState?.checkpointPersistent!==false&&
+    (editionState?.publicationModeV66==='generated-text-quality-not-certified'||
+     editionState?.publicationModeV66==='lab78-numeric-gate-semantic-unverified'));
   const qualityLevels=editionState?.qualityV66?.levels||{};
   const outsideTarget=Object.entries(STUDY_TARGET_V67).filter(([id,range])=>{
     const v=qualityLevels[id]?.actualReduction;
-    return !Number.isFinite(v)||v<range.min||v>range.max;
+    return qualityLevels[id]?.quantitativeAndGeometryCompliantV78===false||
+      !Number.isFinite(v)||v<range.min||v>range.max;
   }).map(([id])=>id);
   const rebalanceCurrent=editionState?.rebalanceV67;
   const improvementLeft=outsideTarget.length>0;
@@ -514,7 +521,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
                 studyBook?.canonicalBookMap?.pageCount||0}}/>
             {v36Partial&&resumeWait.label&&
               <small className="sb-gemini-wait-note" role="status">{resumeWait.label}</small>}
-            {v36Partial&&<button type="button" className="sb-resume-manual"
+            {v36Partial&&!auditedNeedsRepair&&<button type="button" className="sb-resume-manual"
               onClick={onResumeGemini}>
               {geminiStalled?'↻ Recupera richiesta bloccata':
                 generating?'↻ Verifica richiesta Gemini':
@@ -550,10 +557,14 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
                   <strong>{Number.isFinite(reductionMeta?.achievedLettersPercent)
                     ?reductionMeta.achievedLettersPercent.toLocaleString('it-IT',{
                       minimumFractionDigits:1,maximumFractionDigits:1})+'%'
-                    :'In elaborazione'}</strong>
+                    :Number.isFinite(qualityLevels[String(reduction)]?.actualReduction)
+                      ?qualityLevels[String(reduction)].actualReduction.toLocaleString('it-IT',{
+                       minimumFractionDigits:1,maximumFractionDigits:1})+'% · da correggere'
+                      :'In elaborazione'}</strong>
                   <small>{reduction==='summary'?'Obiettivo del Riassunto: circa 60%':
                     'Obiettivo: '+reduction+'%'}</small>
-                  {Number.isFinite(reductionMeta?.achievedLettersPercent)&&
+                  {(Number.isFinite(reductionMeta?.achievedLettersPercent)||
+                     Number.isFinite(qualityLevels[String(reduction)]?.actualReduction))&&
                     reductionMeta?.targetBand&&
                     <small role="status" className={
                       reductionMeta?.reductionCompliant?
@@ -588,10 +599,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
                  :'✦ Migliora percentuali e chiarezza'}
             </button>
             <p style={{margin:'8px 0 0',fontSize:12,color:'#526476'}}>
-              {outsideTarget.length} versioni fuori dal margine desiderato.
-              Gemini semplifica le spiegazioni senza alterare formule o
-              citazioni normative. Le copie precedenti rimangono salvate,
-              la verifica finale resta non bloccante.
+              {outsideTarget.length} versioni richiedono ricalibrazione di lettere
+              e/o righe. Tutte le bozze precedenti restano salvate.
+              Nessuna nuova generazione parte automaticamente: avvii la
+              correzione soltanto quando desidera usare Gemini.
             </p>
           </div>}
         {!isOriginalOnly && studyBook?.editionsV36 && <>
