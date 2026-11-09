@@ -1,0 +1,59 @@
+name: StudyBook LAB93 atomic fact preservation and no padding
+on:
+  push:
+    branches:
+      - 'audit/studybook-atomic-facts-v93-*'
+    paths:
+      - '.github/workflows/studybook-lab93-atomic-facts.yml'
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab93-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: |
+          node --check scripts/lab93-semantic-gate.mjs
+          node --check scripts/test-lab93-facts-offline.mjs
+          node --check scripts/test-lab93-real-gemini.mjs
+      - name: Offline atomic-ledger checks and old Gemini replays
+        run: node scripts/test-lab93-facts-offline.mjs
+      - name: Bounded single-pass real Gemini with facts protected
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab93-real-gemini.mjs
+      - name: Preserve all evidence as action artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB93-AtomicFacts
+          path: |
+            audit/reports/lab93-offline-fact-check.json
+            audit/reports/lab93-real-atomic-fact-gemini.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit reports on audit branch only
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for p in audit/reports/lab93-offline-fact-check.json audit/reports/lab93-real-atomic-fact-gemini.json; do
+            test -f "$p" && git add "$p" || true
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(LAB93): preserve real and offline atomic fact benchmark evidence'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
