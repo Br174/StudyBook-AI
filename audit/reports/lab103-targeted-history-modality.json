@@ -1,0 +1,41 @@
+{
+  "study": "LAB103 isolated correction of one real archived Gemini sentence",
+  "source": "concetto_sbilanciato",
+  "level": 20,
+  "sourceHash": "b0254bcb3a3bd7990f9033cf53b9664028c0dd376356b4001554394ad531fc82",
+  "originalGeminiUnmodified": true,
+  "oldSentence": "Testimonianze diverse sullo stesso episodio dipendono da aspetti osservati o interessi particolari.",
+  "replacementSentence": "Due testimonianze sullo stesso episodio possono differire per aspetti osservati o interessi particolari.",
+  "before": {
+    "letters": 544,
+    "lettersSaved": 126,
+    "reductionPercent": 18.81,
+    "rows": 11,
+    "maxRows": 12,
+    "inBand": true,
+    "gridPass": true,
+    "relationAlerts": [],
+    "containsPossibility": false,
+    "textHash": "068f0f6698c17896df12849f9954d1ed233a3989bc380bb985ddddb0ad23ec53"
+  },
+  "after": {
+    "letters": 548,
+    "lettersSaved": 122,
+    "reductionPercent": 18.21,
+    "rows": 12,
+    "maxRows": 12,
+    "inBand": true,
+    "gridPass": true,
+    "relationAlerts": [],
+    "containsPossibility": true,
+    "textHash": "5875fa87e11ab8e21f0229d44ccf3360ad8d16b863048ece7d67119d26166aa6"
+  },
+  "retainedPrefixAndSuffix": true,
+  "otherSentencesUnchanged": true,
+  "policy": "Single-sentence copy. No filler; no global regeneration; no APK/production writes.",
+  "verdict": "MORE_FAITHFUL_MODALITY_WITH_NO_NUMERIC_GEOMETRIC_REGRESSION_NEEDS_INDEPENDENT_SEMANTIC_REVIEW",
+  "semanticCertified": false,
+  "approvedForApp": false,
+  "geminiCalls": 0,
+  "addedCostEuro": 0
+}

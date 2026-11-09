@@ -1,6 +1,6 @@
 {
   "name": "MotorLab StudyBook LAB103 incumbent no-regression baseline",
-  "executedAt": "2026-11-09T16:26:01.233Z",
+  "executedAt": "2026-11-09T16:28:57.500Z",
   "scope": "OFFLINE historical-only, no Gemini requests, no APK/production changes",
   "sourceOrigin": "LAB97,LAB98,LAB99,LAB101,LAB102 GitHub evidence",
   "totals": {
