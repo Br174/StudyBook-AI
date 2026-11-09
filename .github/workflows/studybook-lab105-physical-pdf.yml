@@ -1,0 +1,53 @@
+name: StudyBook LAB105 physical 1000-page synthetic PDF ingestion
+on:
+  push:
+    branches:
+      - 'audit/studybook-1000page-reliability-v105-*'
+    paths:
+      - '.github/workflows/studybook-lab105-physical-pdf.yml'
+      - 'scripts/lab105-1000-page-physical-pdf.mjs'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab105-pdf-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  native-pdf-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install declared project dependencies from lockfile
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test actual 1000-page generated PDF with native StudyBook reader
+        run: node scripts/lab105-1000-page-physical-pdf.mjs
+      - name: Preserve PDF import diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB105-1000-Physical-PDF-Ingest
+          path: audit/reports/lab105-1000-physical-pdf.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Commit only new PDF test report to isolated research branch
+        if: success()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab105-1000-physical-pdf.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab105-1000-physical-pdf.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB105): archive native PDF 1000-page ingestion result'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
