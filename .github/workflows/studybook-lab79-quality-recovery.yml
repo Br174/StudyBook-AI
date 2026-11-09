@@ -15,6 +15,7 @@ on:
       - 'src/components/HomeDashboardV16.jsx'
       - 'src/AppV15.jsx'
       - 'scripts/test-lab79-quality-no-loop.mjs'
+      - 'scripts/test-lab79-targeted-recalibration.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -33,7 +34,9 @@ jobs:
       - name: Install existing project packages
         run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
       - name: Source-anchored LAB79 44x6 regression, no provider calls
-        run: node scripts/test-lab79-quality-no-loop.mjs
+        run: |
+          node scripts/test-lab79-quality-no-loop.mjs
+          node scripts/test-lab79-targeted-recalibration.mjs
       - name: Previous quality and targeted correction safeguards
         run: |
           node scripts/test-lab66-nonblocking-quality.mjs
