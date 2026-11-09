@@ -1406,6 +1406,40 @@ jobs:
           node scripts/test-lab58-large-block-cadence.mjs
           node scripts/test-lab55-503-resume.mjs
 
+      - name: LAB79 44x6 QA no-loop, targeted repair and Scudo360 regression gate
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-79-')
+        run: |
+          node scripts/test-lab79-quality-no-loop.mjs
+          node scripts/test-lab66-nonblocking-quality.mjs
+          node scripts/test-lab67-simplified-precise-rebalance.mjs
+          node scripts/test-lab69-strict-bands.mjs
+          node scripts/test-lab78-real-worker-parity.mjs
+          node scripts/test-lab77-503-throughput-recovery.mjs
+          node scripts/StudyBookLab72Targeted.mjs
+          node scripts/StudyBookLab74PageBudget.mjs
+
+      - name: LAB79 verify existing free LAB78 Worker before signing
+        if: startsWith(github.ref_name, 'lab/studybook-core-android-01-update-79-')
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          const url='https://studybook-ai-lab78-geometry.brunoverlezza.workers.dev/api/editions/bulk/v51';
+          let verified=false;
+          for(let i=0;i<10;i++){
+            try{
+              const r=await fetch(url,{method:'GET',signal:AbortSignal.timeout(10000)});
+              if(r.status===405&&
+                 r.headers.get('X-StudyBook-Geometry-Policy')==='lab78-real-worker-60-cell-source-pages-v1'){
+                verified=true;break;
+              }
+            }catch{}
+            await new Promise(resolve=>setTimeout(resolve,1500));
+          }
+          assert(verified,'LAB79 STOP: existing geometry Worker not verified');
+          console.log('LAB79_REUSES_SAME_FREE_WORKER_NO_NEW_DEPLOYMENT');
+          NODE
+
       - name: Build web core
         env:
           VITE_STUDYBOOK_GEOMETRY_V78: ${{ (startsWith(github.ref_name, 'lab/studybook-core-android-01-update-78-') || startsWith(github.ref_name, 'lab/studybook-core-android-01-update-79-')) && '1' || '0' }}
