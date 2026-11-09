@@ -92,7 +92,7 @@ function persist(){
    exactTechnical10and20:r.filter(x=>[10,20].includes(x.level)&&x.termsMissing.length===0).length,
    totalOutputTokens:r.reduce((a,v)=>a+(v.tokens||0),0),totalProviderMs:r.reduce((a,v)=>a+v.ms,0)};
  }
- const report={name:'MotorLab StudyBook AI LAB85 real Gemini six levels with calibrated virtual lines',date:new Date().toISOString(),
+ const report={name:'MotorLab StudyBook AI LAB86 real Gemini six-level fixed-grid gate',date:new Date().toISOString(),
   gitBranch:'audit/studybook-hard-grid-lines-v86-20261109',
   model:MODEL,methods:'Hard cap from precomputed rows: monospaced 60 character cells and max rows; geometry gate rejects overflow without truncating; average LAB84 for capacity; Gemini normal texts + validation; no calls for In parole semplici',
   calibration:CAL,limits:{maxTests:MAX_TESTS,maxProviderAttempts:MAX_ATTEMPTS,completedProviderAttempts:attempts},
@@ -118,9 +118,9 @@ async function ask(source,level){
     const msg=String(json.error?.message||'HTTP '+res.status).slice(0,180);
     const issue={source:source.id,level:level.reduction,attempt:attempts,status:res.status,message:msg,ms};
     errors.push(issue);finalStatus=res.status;
-    console.log('LAB85_PROVIDER_ERROR',JSON.stringify(issue));persist();
+    console.log('LAB86_PROVIDER_ERROR',JSON.stringify(issue));persist();
     if(res.status===503&&retry===0&&attempts<MAX_ATTEMPTS){
-     console.log('LAB85_BACKOFF',JSON.stringify({ms:3000,reason:'one retry only after transient 503'}));
+     console.log('LAB86_BACKOFF',JSON.stringify({ms:3000,reason:'one retry only after transient 503'}));
      await sleep(3000);continue;
     }
     if(res.status===429||res.status===503||/quota|billing|resource.exhausted|rate.limit/i.test(msg)){
@@ -157,7 +157,7 @@ async function ask(source,level){
     missingNumbers:missingNums,termsMissing,contextLeakSignals:leaks,
     ms,tokens:json.usage?.completion_tokens??null,text:content,virtualRows:rows};
    records.push(result);callsFinished++;
-   console.log('LAB85_RESULT',JSON.stringify({source:source.id,level:level.reduction,shortPage:t.short,actualReductionPct:result.actualReductionPct,accepted:result.numericAccepted,missingNums:missingNums.length,termsMissing:termsMissing.length,rows:rows.length,ms}));
+   console.log('LAB86_RESULT',JSON.stringify({source:source.id,level:level.reduction,shortPage:t.short,actualReductionPct:result.actualReductionPct,accepted:result.numericAccepted,missingNums:missingNums.length,termsMissing:termsMissing.length,rows:rows.length,ms}));
    persist();return result;
   }catch(e){
    errors.push({source:source.id,level:level.reduction,attempt:attempts,error:String(e?.name||'NETWORK')});
@@ -167,7 +167,7 @@ async function ask(source,level){
  return null;
 }
 if(!KEY){errors.push({error:'MISSING_EXISTING_GEMINI_KEY'});persist();process.exit(1)}
-console.log('LAB85_START',JSON.stringify({model:MODEL,levels:LEVELS.map(l=>l.reduction),sources:TEXTS.map(s=>s.id),maxTests:MAX_TESTS,maxAttempts:MAX_ATTEMPTS}));
+console.log('LAB86_START',JSON.stringify({model:MODEL,levels:LEVELS.map(l=>l.reduction),sources:TEXTS.map(s=>s.id),maxTests:MAX_TESTS,maxAttempts:MAX_ATTEMPTS}));
 for(const source of [TEXTS[1],TEXTS[0],TEXTS[2]]){
  for(const level of [40,65,50,30,20,10].map(p=>LEVELS.find(l=>l.reduction===p))){
   if(stopped||records.length>=MAX_TESTS||attempts>=MAX_ATTEMPTS)break;
@@ -177,5 +177,5 @@ for(const source of [TEXTS[1],TEXTS[0],TEXTS[2]]){
  }
  if(stopped||attempts>=MAX_ATTEMPTS)break;
 }
-const final=persist();console.log('LAB85_FINAL',JSON.stringify({attempts,completed:records.length,stopped,stoppedReason,summary:final.summary,errors:errors.length}));
+const final=persist();console.log('LAB86_FINAL',JSON.stringify({attempts,completed:records.length,stopped,stoppedReason,summary:final.summary,errors:errors.length}));
 if(stopped||errors.length||records.length===0)process.exitCode=1;
