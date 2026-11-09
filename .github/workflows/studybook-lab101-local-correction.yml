@@ -1,0 +1,47 @@
+name: StudyBook LAB101c single metadata-only priority correction
+on:
+  push:
+    branches:
+      - 'audit/studybook-priority-first-read-v101-*'
+    paths:
+      - '.github/workflows/studybook-lab101-local-correction.yml'
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse test script
+        run: node --check scripts/test-lab101-local-priority-correction.mjs
+      - name: Verify one metadata-only priority correction and six-level reuse
+        run: node scripts/test-lab101-local-priority-correction.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB101c-MetadataOnlyCorrection
+          path: audit/reports/lab101-local-priority-correction.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit report in isolated audit branch only
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          test -f audit/reports/lab101-local-priority-correction.json || exit 0
+          git add audit/reports/lab101-local-priority-correction.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB101): preserve one review-based source-fact priority correction'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
