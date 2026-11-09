@@ -1,0 +1,334 @@
+{
+  "study": "LAB98 source-comparison qualitative review",
+  "date": "2026-11-09",
+  "scope": "15 valid Gemini responses from presegmented synthetic sources, 60-cell virtual grid",
+  "method": "Assistant manual comparison against full original sample text and semantic guard; requires independent QA before production",
+  "summary": {
+    "reviewed": 15,
+    "mathPass": 7,
+    "mathPassNoGuardAlerts": 3,
+    "mathPassNoGuardAlertsButConfirmedOmissions": 3,
+    "readyForApp": 0
+  },
+  "rows": [
+    {
+      "source": "scienze",
+      "level": 20,
+      "reduction": 26.88,
+      "gridRows": 9,
+      "maxRows": 11,
+      "arithmeticPass": false,
+      "guardAlerts": [],
+      "confirmedOmissions": [
+        "Manca la distinzione esplicita fra descrizione del moto e cause delle variazioni osservate."
+      ],
+      "qualifiers": [
+        "26,88% contro banda 15–25%; piccolo eccesso di riduzione."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "medicina",
+      "level": 20,
+      "reduction": 21.29,
+      "gridRows": 12,
+      "maxRows": 13,
+      "arithmeticPass": true,
+      "guardAlerts": [],
+      "confirmedOmissions": [
+        "L'emoglobina non è più collocata nei globuli rossi.",
+        "Il singolo valore è dichiarato insufficiente in modo assoluto anziché «non basta sempre», cambiando la sfumatura."
+      ],
+      "qualifiers": [
+        "La produzione di CO₂ durante lo sforzo è presente in formulazione differente: l'allarme lessicale qui è un falso positivo.",
+        "La frase finale mantiene «contesto» senza specificare clinico."
+      ],
+      "lexicalFalsePositives": [
+        "oxygen_consumption_co2_production"
+      ],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "procedura",
+      "level": 20,
+      "reduction": 0,
+      "gridRows": 14,
+      "maxRows": 11,
+      "arithmeticPass": false,
+      "guardAlerts": [],
+      "confirmedOmissions": [],
+      "qualifiers": [
+        "Il testo è stato riprodotto identico all'originale: riduzione 0%, 14/11 righe. Nessun guadagno didattico."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "concetto_sbilanciato",
+      "level": 20,
+      "reduction": 1.79,
+      "gridRows": 14,
+      "maxRows": 12,
+      "arithmeticPass": false,
+      "guardAlerts": [],
+      "confirmedOmissions": [],
+      "qualifiers": [
+        "Riduzione solo 1,79%, 14/12 righe.",
+        "Apostrofi mancanti in «un affermazione» e «un opinione», punteggiatura ripetutamente assente.",
+        "«Una secondaria interpreta documenti precedenti» rende la fonte secondaria: allarme lessicale falso."
+      ],
+      "lexicalFalsePositives": [
+        "secondary_source_interprets"
+      ],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "pagina_breve_continua",
+      "level": 20,
+      "reduction": 0.65,
+      "gridRows": 4,
+      "maxRows": 5,
+      "arithmeticPass": true,
+      "guardAlerts": [
+        "right_to_motivation_remains"
+      ],
+      "confirmedOmissions": [],
+      "qualifiers": [
+        "Pagina breve: la percentuale è libera; 4/5 righe.",
+        "«Permane il diritto di conoscere la motivazione» equivale alla tutela della motivazione originale: il controllo ha prodotto un falso positivo."
+      ],
+      "lexicalFalsePositives": [
+        "right_to_motivation_remains"
+      ],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "reduction": 35.39,
+      "gridRows": 9,
+      "maxRows": 10,
+      "arithmeticPass": false,
+      "guardAlerts": [
+        "eclipses_not_every_lunation"
+      ],
+      "confirmedOmissions": [
+        "Le eclissi richiedono un allineamento, ma manca che non avvengono a ogni lunazione.",
+        "L'alternanza luce/buio della superficie non è espressa."
+      ],
+      "qualifiers": [
+        "«poiche» senza accento.",
+        "35,39% appena oltre la banda 25–35%."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "medicina",
+      "level": 30,
+      "reduction": 39.01,
+      "gridRows": 10,
+      "maxRows": 12,
+      "arithmeticPass": false,
+      "guardAlerts": [
+        "pressure_is_partial",
+        "single_value_not_always_sufficient"
+      ],
+      "confirmedOmissions": [
+        "La pressione parziale è diventata semplice pressione.",
+        "Il collegamento sforzo-consumo di ossigeno-produzione di anidride carbonica è stato eliminato.",
+        "La cautela sul singolo valore non sufficiente per diagnosi non è esplicita.",
+        "Emoglobina non associata ai globuli rossi."
+      ],
+      "qualifiers": [
+        "39,01% invece del 30%; riduzione troppo forte."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "procedura",
+      "level": 30,
+      "reduction": 34.91,
+      "gridRows": 9,
+      "maxRows": 10,
+      "arithmeticPass": true,
+      "guardAlerts": [
+        "extension_not_automatic"
+      ],
+      "confirmedOmissions": [
+        "Non dice più che la proroga non è automatica.",
+        "Non dice che il libro riservato va restituito anche se non si è finito di leggerlo.",
+        "Nel registro non compare esplicitamente chi ha ricevuto il libro."
+      ],
+      "qualifiers": [
+        "34,91% e 9/10 righe: successo matematico soltanto."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "scienze",
+      "level": 40,
+      "reduction": 41.4,
+      "gridRows": 8,
+      "maxRows": 8,
+      "arithmeticPass": true,
+      "guardAlerts": [
+        "eclipses_not_every_lunation"
+      ],
+      "confirmedOmissions": [
+        "Le eclissi non a ogni lunazione non sono menzionate.",
+        "Manca il confronto esplicito fra descrizione e cause osservate."
+      ],
+      "qualifiers": [
+        "«dall'inclinazione asse» è grammaticalmente scorretto.",
+        "41,4% e 8/8 righe rispettate, ma testo incompleto."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "reduction": 43.08,
+      "gridRows": 8,
+      "maxRows": 9,
+      "arithmeticPass": true,
+      "guardAlerts": [],
+      "confirmedOmissions": [
+        "Manca la condizione di restituire il libro anche senza aver concluso la lettura.",
+        "Nel registro non viene spiegato che si devono poter ricostruire il destinatario e il giorno."
+      ],
+      "qualifiers": [
+        "43,08% e 8/9 righe: successo matematico soltanto."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "reduction": 50.08,
+      "gridRows": 7,
+      "maxRows": 7,
+      "arithmeticPass": true,
+      "guardAlerts": [],
+      "confirmedOmissions": [
+        "Le maree vengono attribuite alla sola Luna: scompare il contributo del Sole.",
+        "Manca il necessario allineamento delle eclissi.",
+        "Manca la ripetibilità delle osservazioni scientifiche.",
+        "Manca la distinzione fra descrizione e spiegazione causale."
+      ],
+      "qualifiers": [
+        "50,08% e 7/7 righe, nessun allarme nel guard mirato: dimostrazione di un falso negativo del controllo."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "medicina",
+      "level": 50,
+      "reduction": 45.05,
+      "gridRows": 9,
+      "maxRows": 8,
+      "arithmeticPass": false,
+      "guardAlerts": [
+        "pressure_is_partial",
+        "single_value_not_always_sufficient"
+      ],
+      "confirmedOmissions": [
+        "La pressione parziale è resa generica.",
+        "Manca che il diaframma si rilassa durante l'espirazione a riposo: la nuova frase è ambigua.",
+        "Manca l'effetto dello sforzo sul consumo di O₂ e la produzione di CO₂.",
+        "Non si dice che il singolo valore può non bastare per la diagnosi."
+      ],
+      "qualifiers": [
+        "45,05% di riduzione dentro fascia ma 9 righe contro massimo 8."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "reduction": 64.94,
+      "gridRows": 5,
+      "maxRows": 5,
+      "arithmeticPass": true,
+      "guardAlerts": [
+        "seasons_not_distance",
+        "single_result_insufficient"
+      ],
+      "confirmedOmissions": [
+        "Manca che le stagioni non dipendono dalla distanza dal Sole.",
+        "Spariscono ipotesi verificabili e osservazioni ripetibili.",
+        "Manca che un risultato isolato non è sufficiente.",
+        "Non è esplicitato l'allineamento come condizione delle eclissi."
+      ],
+      "qualifiers": [
+        "64,94% e 5/5 righe: corretto numericamente ma semanticamente insufficiente."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "reduction": 61.95,
+      "gridRows": 6,
+      "maxRows": 5,
+      "arithmeticPass": false,
+      "guardAlerts": [
+        "internal_rule_not_generic_norm",
+        "written_confirmation_initial_deadline"
+      ],
+      "confirmedOmissions": [
+        "La conferma scritta e la validità della scadenza iniziale sono assenti.",
+        "Non resta l'eccezione del libro prenotato che va restituito anche se non letto fino alla fine.",
+        "La fonte identificava una regola interna; il testo abbreviato omette la specificazione interna.",
+        "Il registro non esplicita destinatari e date."
+      ],
+      "qualifiers": [
+        "61,95% dentro banda ma 6/5 righe."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "reduction": 22.2,
+      "gridRows": 10,
+      "maxRows": 12,
+      "arithmeticPass": false,
+      "guardAlerts": [
+        "eclipses_not_every_lunation"
+      ],
+      "confirmedOmissions": [
+        "La formula «senza avvenire ogni volta» non indica chiaramente che le eclissi non avvengono a ogni lunazione."
+      ],
+      "qualifiers": [
+        "22,2% invece di riduzione 10%; compressione eccessiva, anche se 10/12 righe."
+      ],
+      "lexicalFalsePositives": [],
+      "readyForApp": false,
+      "review": "Assistant source-text inspection; not independent professional academic/legal/medical validation"
+    }
+  ]
+}
