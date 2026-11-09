@@ -119,8 +119,8 @@ for(const [source,level] of [['medicina',10],['concetto_sbilanciato',20],['scien
  const id=source+'|'+level,base=oldTextFor(source,level),fixture=sourceMap.get(source),p=inventories.get(source);
  assert(p?.anchorValidated,'NO_VERIFIED_LEDGER_'+source);
  assert.equal(sha256(normalize(fixture.concepts.join(' '))),p.ledger.sourceHash,'SOURCE_DRIFT_'+source);
- const historicHash=previous.candidateIndex.find(x=>x.source===source&&x.level===level&&
- (source==='scienze'?'LAB102_TARGETED_REVIEW_COPY':source==='medicina'?'LAB102_GEMINI':'LAB102_GEMINI'))?.textHash;
+ const requiredFrom=source==='scienze'?'LAB102_TARGETED_REVIEW_COPY':'LAB102_GEMINI';
+ const historicHash=previous.candidateIndex.find(x=>x.source===source&&x.level===level&&x.from===requiredFrom)?.textHash;
  if(source!=='concetto_sbilanciato')assert.equal(sha256(base),historicHash,'LAB103_WINNER_DRIFT_'+id);
  let after=base;
  const edits=changes[id];
