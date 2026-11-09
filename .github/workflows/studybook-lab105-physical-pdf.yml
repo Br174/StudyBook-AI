@@ -21,9 +21,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - name: Install declared project dependencies from lockfile
-        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install declared project dependencies without introducing a lockfile
+        run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
       - name: Test actual 1000-page generated PDF with native StudyBook reader
         run: node scripts/lab105-1000-page-physical-pdf.mjs
       - name: Preserve PDF import diagnostic evidence
