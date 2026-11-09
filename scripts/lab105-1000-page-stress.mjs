@@ -141,11 +141,10 @@ try{
    results.push(rec);
   }
   savedPage++;
-  save();
+  if(savedPage%10===0||checkSubset.includes(savedPage)||savedPage===pages.length)save();
   if(checkSubset.includes(savedPage)&&!crashPoints.some(c=>c.cause===checkSpecial[savedPage])){
    restart(checkSpecial[savedPage],savedPage===760);
-   // Avoid infinite injection if last-good restored to page savedPage-1.
-   checkSubset.splice(checkSubset.indexOf(savedPage),1);
+   // The recorded cause prevents reinjecting the same fault after recovery.
   }
  }
  const final=load();
