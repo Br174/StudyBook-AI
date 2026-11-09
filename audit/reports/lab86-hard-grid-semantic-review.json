@@ -1,0 +1,275 @@
+{
+  "project": "StudyBook AI",
+  "motorlab": "r40",
+  "experiment": "LAB86",
+  "date": "2026-11-09",
+  "scope": "Fixed-width 60-character monospace virtual cell test; not a render test with proportional fonts or actual A4 PDF",
+  "realGemini": true,
+  "model": "gemini-3.5-flash-lite",
+  "provider": {
+    "attempts": 13,
+    "stopped": true,
+    "stoppedReason": "HTTP_503"
+  },
+  "limits": {
+    "maxTests": 18,
+    "maxProviderAttempts": 18,
+    "completedProviderAttempts": 13
+  },
+  "baselineCompared": "Same nine source/level combinations LAB85 vs LAB86",
+  "totals": {
+    "completed": 9,
+    "providerAttempts": 13,
+    "previousCombinedPass": 2,
+    "newGridPass": 7,
+    "newBandPass": 7,
+    "newCombinedPass": 6,
+    "hyphenSplitCases": 1
+  },
+  "note": "CombinedPass is purely geometry and percentage, NOT semantic validation. Semantic notes are preliminary and non-exhaustive. Missing 9 tests caused by HTTP 503 safe stop.",
+  "tests": [
+    {
+      "source": "scienze",
+      "level": 40,
+      "maxRows": 8,
+      "widthCells": 60,
+      "previous": {
+        "reduction": 20.2,
+        "rows": 11,
+        "mathAndGrid": false
+      },
+      "current": {
+        "reduction": 37.9,
+        "rows": 8,
+        "geometryPass": true,
+        "bandPass": true,
+        "combinedPass": true,
+        "letters": 372,
+        "sourceLetters": 599,
+        "modelRawRowCompliant": true
+      },
+      "hyphenSplit": false,
+      "semanticReview": [
+        "Apostrofo mancante in «dall asse»",
+        "Non precisa che le eclissi non avvengono a ogni lunazione."
+      ],
+      "semanticValidated": false
+    },
+    {
+      "source": "scienze",
+      "level": 65,
+      "maxRows": 5,
+      "widthCells": 60,
+      "previous": {
+        "reduction": 57.26,
+        "rows": 6,
+        "mathAndGrid": false
+      },
+      "current": {
+        "reduction": 53.59,
+        "rows": 6,
+        "geometryPass": false,
+        "bandPass": false,
+        "combinedPass": false,
+        "letters": 278,
+        "sourceLetters": 599,
+        "modelRawRowCompliant": false
+      },
+      "hyphenSplit": false,
+      "semanticReview": [
+        "Riduzione eccessivamente lunga per il limite delle cinque righe",
+        "Alcune precisazioni scientifiche non sono conservate esplicitamente."
+      ],
+      "semanticValidated": false
+    },
+    {
+      "source": "scienze",
+      "level": 50,
+      "maxRows": 6,
+      "widthCells": 60,
+      "previous": {
+        "reduction": 39.23,
+        "rows": 8,
+        "mathAndGrid": false
+      },
+      "current": {
+        "reduction": 51.75,
+        "rows": 6,
+        "geometryPass": true,
+        "bandPass": true,
+        "combinedPass": true,
+        "letters": 289,
+        "sourceLetters": 599,
+        "modelRawRowCompliant": true
+      },
+      "hyphenSplit": true,
+      "semanticReview": [
+        "«dipen-\\ndono» è una parola spezzata.",
+        "«La rivoluzione e il Sole durano un anno» è una frase scientificamente fuorviante."
+      ],
+      "semanticValidated": false
+    },
+    {
+      "source": "scienze",
+      "level": 30,
+      "maxRows": 9,
+      "widthCells": 60,
+      "previous": {
+        "reduction": 31.72,
+        "rows": 9,
+        "mathAndGrid": true
+      },
+      "current": {
+        "reduction": 34.56,
+        "rows": 9,
+        "geometryPass": true,
+        "bandPass": true,
+        "combinedPass": true,
+        "letters": 392,
+        "sourceLetters": 599,
+        "modelRawRowCompliant": false
+      },
+      "hyphenSplit": false,
+      "semanticReview": [
+        "Non compare la distinzione fra descrizione del moto e sue cause, presente nell'originale."
+      ],
+      "semanticValidated": false
+    },
+    {
+      "source": "scienze",
+      "level": 20,
+      "maxRows": 10,
+      "widthCells": 60,
+      "previous": {
+        "reduction": 20.7,
+        "rows": 11,
+        "mathAndGrid": false
+      },
+      "current": {
+        "reduction": 19.2,
+        "rows": 10,
+        "geometryPass": true,
+        "bandPass": true,
+        "combinedPass": true,
+        "letters": 484,
+        "sourceLetters": 599,
+        "modelRawRowCompliant": true
+      },
+      "hyphenSplit": false,
+      "semanticReview": [
+        "Nessuna anomalia evidente nei concetti principali con questa revisione rapida; richiede comunque QA indipendente."
+      ],
+      "semanticValidated": false
+    },
+    {
+      "source": "scienze",
+      "level": 10,
+      "maxRows": 12,
+      "widthCells": 60,
+      "previous": {
+        "reduction": 14.52,
+        "rows": 11,
+        "mathAndGrid": true
+      },
+      "current": {
+        "reduction": 20.7,
+        "rows": 10,
+        "geometryPass": true,
+        "bandPass": false,
+        "combinedPass": false,
+        "letters": 475,
+        "sourceLetters": 599,
+        "modelRawRowCompliant": false
+      },
+      "hyphenSplit": false,
+      "semanticReview": [
+        "«Luna ... insieme con la luce solare» non descrive correttamente la causa delle maree.",
+        "Riduzione fuori fascia: 20,70% anziché 5–15%."
+      ],
+      "semanticValidated": false
+    },
+    {
+      "source": "procedura",
+      "level": 40,
+      "maxRows": 8,
+      "widthCells": 60,
+      "previous": {
+        "reduction": 33.49,
+        "rows": 9,
+        "mathAndGrid": false
+      },
+      "current": {
+        "reduction": 44.81,
+        "rows": 8,
+        "geometryPass": true,
+        "bandPass": true,
+        "combinedPass": true,
+        "letters": 351,
+        "sourceLetters": 636,
+        "modelRawRowCompliant": false
+      },
+      "hyphenSplit": false,
+      "semanticReview": [
+        "Manca il riferimento alla regola interna n. 12.",
+        "Manca l'eccezione «anche se non ha completato la lettura».",
+        "Il registro non identifica espressamente chi ha ricevuto il libro e in quale giorno."
+      ],
+      "semanticValidated": false
+    },
+    {
+      "source": "procedura",
+      "level": 65,
+      "maxRows": 5,
+      "widthCells": 60,
+      "previous": {
+        "reduction": 58.33,
+        "rows": 6,
+        "mathAndGrid": false
+      },
+      "current": {
+        "reduction": 62.42,
+        "rows": 6,
+        "geometryPass": false,
+        "bandPass": true,
+        "combinedPass": false,
+        "letters": 239,
+        "sourceLetters": 636,
+        "modelRawRowCompliant": false
+      },
+      "hyphenSplit": false,
+      "semanticReview": [
+        "Manca il riferimento alla regola n. 12.",
+        "Manca il contenuto sul registro dei prestiti.",
+        "Supera di una riga il limite fissato."
+      ],
+      "semanticValidated": false
+    },
+    {
+      "source": "procedura",
+      "level": 50,
+      "maxRows": 7,
+      "widthCells": 60,
+      "previous": {
+        "reduction": 47.48,
+        "rows": 8,
+        "mathAndGrid": false
+      },
+      "current": {
+        "reduction": 50,
+        "rows": 7,
+        "geometryPass": true,
+        "bandPass": true,
+        "combinedPass": true,
+        "letters": 318,
+        "sourceLetters": 636,
+        "modelRawRowCompliant": true
+      },
+      "hyphenSplit": false,
+      "semanticReview": [
+        "Manca l'eccezione «anche se non ha completato la lettura».",
+        "Il registro non esplicita chi ha ricevuto il libro e in quale giorno."
+      ],
+      "semanticValidated": false
+    }
+  ]
+}
