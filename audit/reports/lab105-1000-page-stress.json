@@ -1,0 +1,358 @@
+{
+  "name": "LAB105 1000-page operational stress simulation, 6000 level tasks",
+  "date": "2026-11-09T17:15:50.855Z",
+  "scope": "OFFLINE deterministic repeated synthetic source pages",
+  "disclaimer": "NOT an actual 1000-page book, NOT 6000 newly generated Gemini versions, NOT an end-to-end Android benchmark. Five source archetypes are repeated 200 times each. No true semantic certification.",
+  "sampleCatalog": [
+    {
+      "sourceLevel": "scienze|65",
+      "selected": "scienze|65|LAB104_EDITORIAL_COPY",
+      "mathPass": true,
+      "relationAlerts": [
+        "single_result_not_proof"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "scienze|50",
+      "selected": "scienze|50|LAB99_TARGETED_FIRST_tides_sole_scienze50",
+      "mathPass": true,
+      "relationAlerts": [
+        "eclipse_alignment",
+        "observations_repeatable"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "scienze|40",
+      "selected": "scienze|40|LAB99_TARGETED_FIRST_eclipses_lunation_scienze40",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "scienze|30",
+      "selected": "scienze|30|LAB104_EDITORIAL_COPY",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "scienze|20",
+      "selected": "scienze|20|LAB86_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "scienze|10",
+      "selected": "scienze|10|LAB85_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "procedura|65",
+      "selected": "procedura|65|LAB89_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "reserved_return_even_if_unread"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "procedura|50",
+      "selected": "procedura|50|LAB87_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "unconfirmed_extension_original_deadline",
+        "extension_not_automatic"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "procedura|40",
+      "selected": "procedura|40|LAB99_TARGETED_RETRY_unread_reserved_procedura40",
+      "mathPass": true,
+      "relationAlerts": [
+        "register_who_and_when"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "procedura|30",
+      "selected": "procedura|30|LAB89_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "procedura|20",
+      "selected": "procedura|20|LAB89_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "extension_not_automatic"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "procedura|10",
+      "selected": "procedura|10|LAB97_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [
+        "internal_rule_12",
+        "reserved_return_even_if_unread",
+        "register_who_and_when",
+        "extension_not_automatic"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "medicina|65",
+      "selected": "medicina|65|LAB90_GEMINI",
+      "mathPass": false,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "medicina|50",
+      "selected": "medicina|50|LAB92_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "partial_pressure",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase",
+        "single_value_not_always_enough"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "medicina|40",
+      "selected": "medicina|40|LAB92_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [
+        "hemoglobin_in_red_cells",
+        "effort_both_oxygen_and_co2",
+        "respiration_may_increase"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "medicina|30",
+      "selected": "medicina|30|LAB102_GEMINI",
+      "mathPass": false,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "medicina|20",
+      "selected": "medicina|20|LAB99_TARGETED_FIRST_hemoglobin_red_cells_medicina20",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "medicina|10",
+      "selected": "medicina|10|LAB104_EDITORIAL_COPY",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "concetto_sbilanciato|65",
+      "selected": "concetto_sbilanciato|65|LAB102_GEMINI",
+      "mathPass": false,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "concetto_sbilanciato|50",
+      "selected": "concetto_sbilanciato|50|LAB102_GEMINI",
+      "mathPass": false,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "concetto_sbilanciato|40",
+      "selected": "concetto_sbilanciato|40|LAB102_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [
+        "uncertainty_explicit"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "concetto_sbilanciato|30",
+      "selected": "concetto_sbilanciato|30|LAB102_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "concetto_sbilanciato|20",
+      "selected": "concetto_sbilanciato|20|LAB104_EDITORIAL_COPY",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "concetto_sbilanciato|10",
+      "selected": "concetto_sbilanciato|10|LAB97_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [
+        "documented_not_proven"
+      ],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "pagina_breve_continua|65",
+      "selected": "pagina_breve_continua|65|LAB102_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "pagina_breve_continua|50",
+      "selected": "pagina_breve_continua|50|LAB102_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "pagina_breve_continua|40",
+      "selected": "pagina_breve_continua|40|LAB92_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "pagina_breve_continua|30",
+      "selected": "pagina_breve_continua|30|LAB102_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "pagina_breve_continua|20",
+      "selected": "pagina_breve_continua|20|LAB96_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    },
+    {
+      "sourceLevel": "pagina_breve_continua|10",
+      "selected": "pagina_breve_continua|10|LAB102_GEMINI",
+      "mathPass": true,
+      "relationAlerts": [],
+      "semanticallyCertified": false
+    }
+  ],
+  "counts": {
+    "processedBookPageRecords": 1000,
+    "sourceArchetypes": 5,
+    "distinctSourceTexts": 5,
+    "chapterCount": 25,
+    "levelJobs": 6000,
+    "restarts": 4,
+    "checkpointReplays": 10,
+    "sourceIntegrityMutationsCaught": 7,
+    "duplicateJobs": 0,
+    "completedPageRecords": 1000,
+    "percentPlusGridPasses": 5200,
+    "nonConformingArchivedResults": 800,
+    "academicSemanticCertificates": 0,
+    "realPdfPagesProcessed": 0,
+    "realGeminiGenerationsInThisRun": 0,
+    "onlySyntheticRepeatedSourceContent": true
+  },
+  "countByLevel": [
+    {
+      "level": 65,
+      "total": 1000,
+      "archivedNumericGridPass": 600,
+      "archivedInvalidOrMissing": 400,
+      "semanticCertifications": 0
+    },
+    {
+      "level": 50,
+      "total": 1000,
+      "archivedNumericGridPass": 800,
+      "archivedInvalidOrMissing": 200,
+      "semanticCertifications": 0
+    },
+    {
+      "level": 40,
+      "total": 1000,
+      "archivedNumericGridPass": 1000,
+      "archivedInvalidOrMissing": 0,
+      "semanticCertifications": 0
+    },
+    {
+      "level": 30,
+      "total": 1000,
+      "archivedNumericGridPass": 800,
+      "archivedInvalidOrMissing": 200,
+      "semanticCertifications": 0
+    },
+    {
+      "level": 20,
+      "total": 1000,
+      "archivedNumericGridPass": 1000,
+      "archivedInvalidOrMissing": 0,
+      "semanticCertifications": 0
+    },
+    {
+      "level": 10,
+      "total": 1000,
+      "archivedNumericGridPass": 1000,
+      "archivedInvalidOrMissing": 0,
+      "semanticCertifications": 0
+    }
+  ],
+  "crashPoints": [
+    {
+      "cause": "CRASH_AFTER_PAGE_7",
+      "recoveredPage": 7
+    },
+    {
+      "cause": "ERROR_61_PERCENT",
+      "recoveredPage": 610
+    },
+    {
+      "cause": "ERROR_76_PERCENT_WITH_CORRUPTED_PRIMARY",
+      "recoveredPage": 750
+    },
+    {
+      "cause": "CRASH_AT_99_PERCENT",
+      "recoveredPage": 990
+    }
+  ],
+  "pageIntegrityDigest": "c1010afcf9ca07328f15d2d112183a2be5afd262ccc5b2d47861918e50bf8682",
+  "regressionGates": {
+    "sourceLedgerHash": "PASS",
+    "uniquePageNumbers": "PASS",
+    "noDuplicateJobs": "PASS",
+    "fourInjectedCrashes": "PASS",
+    "damagedCheckpointRecovery": "PASS",
+    "noPseudoApproval": "PASS",
+    "sevenResultMutationsRejected": "PASS",
+    "all6000TextsActuallyRegenerated": "NOT_TESTED",
+    "true1000PagePDFImport": "NOT_TESTED",
+    "six1000PageSemanticAccuracy": "NOT_TESTED",
+    "realAndroidPersistence": "NOT_TESTED"
+  },
+  "costAddedEuro": 0,
+  "productionChanged": false,
+  "apkChanged": false
+}
