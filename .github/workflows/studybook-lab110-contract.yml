@@ -1,0 +1,32 @@
+name: StudyBook LAB110 - actual Worker source ledger contract
+on:
+  push:
+    branches:
+      - audit/studybook-source-ledger-v110-20261110
+    paths:
+      - .github/workflows/studybook-lab110-contract.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-worker-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks
+        run: |
+          node --check src/lib/studySourceLedgerV110.js
+          node --check api/editionsBulkV51.js
+          node --check scripts/test-lab110-source-ledger-contract.mjs
+      - name: Real Worker handler with deterministic fake provider
+        run: node scripts/test-lab110-source-ledger-contract.mjs
+      - name: Old LAB79 + LAB109 regressions, existing dependencies
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          node scripts/test-lab109-worker-contract.mjs
+          node scripts/test-lab79-quality-no-loop.mjs
+          node scripts/test-lab79-targeted-recalibration.mjs
