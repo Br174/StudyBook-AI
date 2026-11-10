@@ -50,6 +50,13 @@ jobs:
           echo "Trial is descendant of verified active Android ref; NO ACTIVE REF UPDATE"
       - name: Install existing project dependencies
         run: npm install --no-audit --no-fund
+      - name: Build real trial Android/Worker web assets against isolated endpoint
+        run: |
+          set -euo pipefail
+          npm run build
+          grep -Rql 'studybook-ai-trial110.brunoverlezza.workers.dev' dist/assets/
+          grep -Rql 'source-clause-soft-budget-40-optin-v110b' dist/assets/
+          node -e "const x=require('./capacitor.config.json'); if(x.appId!=='it.studybook.ai.lab') process.exit(1)"
       - name: StudyBook LAB79 + LAB110 actual Worker and source-risk gates
         shell: bash
         run: |
@@ -76,13 +83,6 @@ jobs:
           test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
           test -n "${AI_API_KEY:-${GEMINI_API_KEY:-}}"
           echo "Existing CF and free Gemini credentials found; no new service"
-      - name: Build real trial Android/Worker web assets against isolated endpoint
-        run: |
-          set -euo pipefail
-          npm run build
-          grep -Rql 'studybook-ai-trial110.brunoverlezza.workers.dev' dist/assets/
-          grep -Rql 'source-clause-soft-budget-40-optin-v110b' dist/assets/
-          node -e "const x=require('./capacitor.config.json'); if(x.appId!=='it.studybook.ai.lab') process.exit(1)"
       - name: Validate dedicated free-tier Worker before isolated deployment
         run: |
           set -euo pipefail
