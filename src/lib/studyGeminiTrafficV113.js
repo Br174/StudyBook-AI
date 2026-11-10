@@ -47,7 +47,7 @@ export function applyGeminiTrafficV113(state,entry,now=Date.now()){
   item.state=http===200?'received':'failed';
   item.http=http||null;
   item.elapsedMs=number(entry.elapsedMs,600000);
-  item.code=safeCode(entry.code||http===200?'OK':'TRANSPORT');
+  item.code=safeCode(entry.code||(http===200?'OK':'TRANSPORT'));
   item.inputTokens=number(entry.inputTokens,1e9);
   item.outputTokens=number(entry.outputTokens,1e9);
   item.parts=number(entry.parts,10000);
