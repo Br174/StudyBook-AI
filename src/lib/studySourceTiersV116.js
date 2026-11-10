@@ -180,7 +180,10 @@ function chooseGroup(group,segmentGroups,level){
   for(const unitSegments of segmentGroups){
    const pieces=[];
    for(const seg of unitSegments){
-    const option=seg.options.find(o=>o.key===state.chosen[i++]);
+    // Consume exactly one state decision per sentence, not per option probed.
+    const selectedKey=state.chosen[i++];
+    const option=seg.options.find(o=>o.key===selectedKey);
+    if(!option)throw Error('LAB116_COMPOSER_STATE_CORRUPT');
     if(option?.text)pieces.push(option.text);
    }
    const str=normalize(pieces.join(' '));
