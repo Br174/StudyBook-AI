@@ -26,6 +26,7 @@ import {STUDY_SOURCE_LEDGER_V110,chooseSourceLedgerV110,buildSourceLedgerV110,
  sourceLedgerInstructionV110} from '../src/lib/studySourceLedgerV110.js';
 import {STUDY_CLAUSE_BUDGET_V110B,chooseClauseBudgetV110B,
  clauseBudgetInstructionV110B} from '../src/lib/studyClauseBudgetV110B.js';
+import {sourceRiskReviewV110} from '../src/lib/studySourceRiskV110.js';
 import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const DEFAULT_MODEL='gemini-3.5-flash-lite';
@@ -671,6 +672,10 @@ export default async function handler(req,res){
     const finishReason=payload?.choices?.[0]?.finish_reason||null;
     const pageReviewV74=protocolV75||protocolV74?pageLetterReviewV74(safe,parts,level):null;
     const geometryReviewV78=protocolV74?studyGeometryReviewV78(safe,parts,level):null;
+    // Read-only LAB110 risk signals: never confuse numeric success with study approval.
+    // Codes ONLY, original page text is never returned through the audit metadata.
+    const sourceRiskAuditV110=(sourceLedgerActiveV110||clauseBudgetActiveV110B)
+      ?sourceRiskReviewV110(safe,parts):null;
     const numericAudit=measureEditionLengthV72({
       level,originalLetters,outputLetters:totalLetters,
       completeParts:parts.length===safe.length,finishReason
@@ -699,6 +704,7 @@ export default async function handler(req,res){
         semanticCertified:false,approvedForApp:false}:{}),
       geometryPolicyV78:protocolV74?STUDY_GEOMETRY_V78:null,
       geometryReviewV78,
+      ...(sourceRiskAuditV110?{sourceRiskAuditV110}:{}),
       draftProtocol:protocolV75?STUDY_DRAFT_PROTOCOL_V75:protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:protocolV70?STUDY_DRAFT_PROTOCOL_V70:null,
       lengthReview:{exact:hasExactLength,
         withinBand:numericAudit.withinBand,
