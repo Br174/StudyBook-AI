@@ -24,6 +24,8 @@ jobs:
           node --check scripts/test-lab109-worker-contract.mjs
       - name: Test actual Worker contract with fake provider; no external calls
         run: node scripts/test-lab109-worker-contract.mjs
+      - name: Install existing project dependencies for LAB79 guards
+        run: npm install --ignore-scripts --no-audit --no-fund
       - name: Run existing native and numerical guards
         run: |
           node scripts/test-lab79-quality-no-loop.mjs
