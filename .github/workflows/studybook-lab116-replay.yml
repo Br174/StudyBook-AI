@@ -1,0 +1,44 @@
+name: StudyBook LAB116 - replay saved Gemini answer OFFLINE
+on:
+  push:
+    branches:
+      - research/studybook-lab116-source-anchored-20261110
+    paths:
+      - .github/workflows/studybook-lab116-replay.yml
+      - scripts/replay-lab116-real-edits.mjs
+      - src/lib/studySourceTiersV116.js
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  recompose-six-levels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reuse immutable raw edits from the ONE real response
+        uses: actions/download-artifact@v4
+        with:
+          name: LAB116-One-Real-Gemini-Six-Level-Study
+          repository: Br174/StudyBook-AI
+          run-id: 42921705373
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: audit/reports
+      - name: Validate previous report includes actual Gemini edits
+        run: |
+          node --check scripts/replay-lab116-real-edits.mjs
+          test -s audit/reports/lab116-one-real-gemini.json
+      - name: Replay edits, never call provider
+        run: node scripts/replay-lab116-real-edits.mjs
+      - name: Preserve failed gates rather than masking them
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB116-Replay-Existing-Real-Edits-0-Requests
+          path: audit/reports/lab116-replay-from-real-answer.json
+          if-no-files-found: ignore
+          retention-days: 30
