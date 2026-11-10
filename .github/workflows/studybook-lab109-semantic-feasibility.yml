@@ -1,0 +1,46 @@
+name: StudyBook LAB109 - source fact semantic feasibility (offline)
+on:
+  push:
+    branches:
+      - lab/studybook-core-android-01-update-109-fact-first-pilot-20261110
+    paths:
+      - .github/workflows/studybook-lab109-semantic-feasibility.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  proof-separate-from-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check source-protected manual feasibility / 3 mutations
+        run: node scripts/test-lab109-semantic-feasibility.mjs
+      - name: Save offline evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB109-Manual-Feasibility-Not-Gemini
+          path: audit/reports/lab109-manual-semantic-feasibility.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit only isolated synthetic evidence
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab109-manual-semantic-feasibility.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab109-manual-semantic-feasibility.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB109): preserve human feasibility separate from Gemini'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
