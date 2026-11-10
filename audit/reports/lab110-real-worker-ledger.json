@@ -1,0 +1,139 @@
+{
+  "lab": "LAB110 source clause ledger",
+  "date": "2026-11-10T02:10:34.601Z",
+  "source": "existing synthetic science and library fixtures, not user PDF",
+  "path": "actual api/editionsBulkV51.js Worker handler",
+  "model": "gemini-3.5-flash-lite",
+  "existingFreeKey": true,
+  "noPaidFallback": true,
+  "productionAppModified": false,
+  "cloudflareDeployed": false,
+  "realAndroidTested": false,
+  "maximumModelGenerations": 2,
+  "attempted": 2,
+  "received": 2,
+  "stopped": false,
+  "stopReason": null,
+  "results": [
+    {
+      "fixture": "scienze",
+      "valid": true,
+      "status": 200,
+      "level": "40",
+      "model": "gemini-3.5-flash-lite",
+      "sourceSha256": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+      "sourceLetters": 599,
+      "outputLetters": 310,
+      "targetLetters": 359,
+      "minLetters": 330,
+      "maxLetters": 389,
+      "observedReduction": 48.25,
+      "grid": {
+        "rows": 7,
+        "maxRows": 8,
+        "pass": true,
+        "inBand": false
+      },
+      "quantitativeAndGridPass": false,
+      "sourceClauseCount": 9,
+      "factChecks": {
+        "checks": {
+          "rotationDayNight": false,
+          "lightDark": true,
+          "revolutionYear": false,
+          "seasonsInclinationNotDistance": true,
+          "tidesMoonAndSun": false,
+          "eclipseAlignmentNotEveryLunation": false,
+          "hypothesisAndRepeatability": false,
+          "isolatedResultNotProof": false,
+          "describingMotionVsCausesOfVariations": false
+        },
+        "passed": 2,
+        "total": 9,
+        "heuristicOnly": true
+      },
+      "priorFidelityChecks": {
+        "missingProtected": 0,
+        "qualifierMismatches": 0,
+        "heuristicOnly": true
+      },
+      "finishReason": "stop",
+      "elapsedMs": 1205,
+      "semanticCertified": false,
+      "approvedForApp": false,
+      "outputText": "La Terra ruota sul proprio asse causando dí e notte poichè una parte ha luce e l'altra buio. La rivoluzione annua e l'inclinazione dell'asse generano le stagioni, non la distanza dal Sole. Sole e Luna causano le maree, mentre le eclissi esigono allineamenti rari. La scienza richiede ipotesi verificate e prove ripetibili; un caso isolato non basta, distinguendo i moti dalle cause."
+    },
+    {
+      "fixture": "procedura",
+      "valid": true,
+      "status": 200,
+      "level": "40",
+      "model": "gemini-3.5-flash-lite",
+      "sourceSha256": "7e4759f0f1a1c6344af4ebf2e026c1be5544c53b2527d722e67a90cef79ee2bd",
+      "sourceLetters": 636,
+      "outputLetters": 425,
+      "targetLetters": 382,
+      "minLetters": 350,
+      "maxLetters": 413,
+      "observedReduction": 33.18,
+      "grid": {
+        "rows": 10,
+        "maxRows": 9,
+        "pass": false,
+        "inBand": false
+      },
+      "quantitativeAndGridPass": false,
+      "sourceClauseCount": 7,
+      "factChecks": {
+        "checks": {
+          "simulationAndYear": true,
+          "internalRule12": false,
+          "registerTitleBeforeLoan": false,
+          "returnWithinTenDays": true,
+          "extensionOnlyWhenUnreserved": false,
+          "notAutomaticWrittenConfirmation": true,
+          "returnReservedEvenIfUnread": true,
+          "registerWhoAndWhenWithoutOpinions": false
+        },
+        "passed": 4,
+        "total": 8,
+        "heuristicOnly": true
+      },
+      "priorFidelityChecks": {
+        "missingProtected": 0,
+        "qualifierMismatches": 0,
+        "heuristicOnly": true
+      },
+      "finishReason": "stop",
+      "elapsedMs": 1440,
+      "semanticCertified": false,
+      "approvedForApp": false,
+      "outputText": "Nel 2024 una biblioteca scolastica simulata ha introdotto una procedura per i libri: la regola dodici impone di registrare il titolo e confermare la resa entro dieci giorni. Il personale concede proroghe solo se il volume è libero da prenotazioni. Tale proroga non è automatica: senza conferma scritta vale la data iniziale. Se il libro è riservato va reso alla scadenza pur senza aver finito la lettura. Il registro traccia prestiti e date ma ignora le opinioni dei lettori. Condizioni ed eccezioni guidano la procedura."
+    }
+  ],
+  "complete": true,
+  "semanticCertifiedCount": 0,
+  "approvedForApp": false,
+  "baseline": {
+    "science40": {
+      "lab": "LAB109",
+      "reduction": 24.37,
+      "rows": 10,
+      "cap": 8
+    },
+    "procedure40": {
+      "lab": "LAB108 after local source-literal patch",
+      "reduction": 36.48,
+      "rows": 9,
+      "cap": 9
+    }
+  },
+  "finalSummary": {
+    "completedRealGenerations": 2,
+    "numericGridPass": 0,
+    "allFixtureHeuristics": 0,
+    "professionalSemanticCertifications": 0,
+    "releaseEligible": false
+  },
+  "finishedAt": "2026-11-10T02:10:37.248Z"
+}
