@@ -67,6 +67,15 @@ const prompt=sourceTierInstructionV116(small),json=sourceTierUserV116(small);
 ok(prompt.includes('Non scrivere sei versioni'));eq(json.units.length,44);
 let result=composeSourceTiersV116(small,manualReply(small));
 eq(Object.keys(result.partsByLevel).sort(),[...STUDY_LEVELS_V67].sort());
+console.log('LAB116 DEBUG FIRST PAGE',JSON.stringify({
+ sourceLetters:studyLetters(small.units[0].source),
+ levels:Object.fromEntries(STUDY_LEVELS_V67.map(level=>[level,{
+  actualLetters:studyLetters(result.partsByLevel[level][0].text),
+  target:result.quality[level].groups[0].targetLetters,
+  composing:result.quality[level].groups[0],
+  preview:result.partsByLevel[level][0].text.slice(0,250)
+ }]))
+}));
 const reports=STUDY_LEVELS_V67.map(level=>{
  const r=result.quality[level];
  eq(r.totalGroups,44);
