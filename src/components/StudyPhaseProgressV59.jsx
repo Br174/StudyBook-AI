@@ -72,6 +72,8 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null}){
          {' '}{measuredTraffic.http429} errori 429.
          <p style={{margin:'5px 0'}}>
            {measuredTraffic.confirmedParts} risposte contenenti testo;
+           {' '}tentativi provider dichiarati: {measuredTraffic.providerAttemptsReported||0};
+           {' '}503 recuperati senza bloccare il libro: {measuredTraffic.provider503Recoveries||0};
            {' '}token in ingresso riportati: {measuredTraffic.inputTokensReported};
            {' '}token in uscita riportati: {measuredTraffic.outputTokensReported}.
          </p>
