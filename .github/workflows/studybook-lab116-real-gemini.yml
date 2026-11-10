@@ -1,0 +1,35 @@
+name: StudyBook LAB116 - ONE real Gemini edit-analysis request on synthetic pages
+on:
+  push:
+    branches:
+      - research/studybook-lab116-source-anchored-20261110
+    paths:
+      - .github/workflows/studybook-lab116-real-gemini.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  one-provider-call:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and config
+        run: |
+          node --check src/lib/studySourceTiersV116.js
+          node --check scripts/test-lab116-real-one-call.mjs
+      - name: Call Gemini exactly ONCE with two PUBLIC fixture pages
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab116-real-one-call.mjs
+      - name: Save model's edits and six outcomes whether passed or not
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB116-One-Real-Gemini-Six-Level-Study
+          path: audit/reports/lab116-one-real-gemini.json
+          if-no-files-found: error
+          retention-days: 30
