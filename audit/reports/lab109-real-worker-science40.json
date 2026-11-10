@@ -1,0 +1,85 @@
+{
+  "lab": "LAB109 real Worker fact-first pilot",
+  "date": "2026-11-10T01:51:28.528Z",
+  "usesActualWorkerHandler": true,
+  "model": "gemini-3.5-flash-lite",
+  "privateBookUsed": false,
+  "workerDeployed": false,
+  "productionModified": false,
+  "appBuilt": false,
+  "originalSourceSHA256": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+  "originalLetters": 599,
+  "targetLetters": 359,
+  "minLetters": 330,
+  "maxLetters": 389,
+  "officialGrid": 8,
+  "priorHistorical": {
+    "reduction": 36.89,
+    "rows": 8,
+    "missingKnownConcept": "distinction of description of motion from causes of observed variations",
+    "semanticCertified": false
+  },
+  "realModelGenerationsRequested": 1,
+  "modelGenerationsReceived": 1,
+  "countTokensCallsUnknown": true,
+  "providerResult": {
+    "status": 200,
+    "code": null,
+    "finishReason": "stop",
+    "model": "gemini-3.5-flash-lite",
+    "experiment": "studybook-source-fact-first-40-optin-v109",
+    "outputTokensUsed": 132
+  },
+  "finalText": "La Terra ruota attorno al proprio asse causando giorno e notte poiche una parte riceve luce mentre laltra resta al buio. La rivoluzione intorno al Sole dura un anno. Le stagioni dipendono dallinclinazione dellasse terrestre e non dalla distanza dal Sole. La Luna influisce sulle maree con il Sole. Le eclissi richiedono un allineamento e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta. Occorre distinguere la descrizione del movimento dalle cause.",
+  "sourceFactChecklist": {
+    "checks": {
+      "rotationDayNight": true,
+      "sunlightShadow": true,
+      "revolutionYear": true,
+      "seasonsNotDistance": true,
+      "tidesMoonSun": true,
+      "eclipseAlignmentNotEveryLunation": true,
+      "hypothesesRepeatability": true,
+      "singleResultNoProof": true,
+      "descriptionVsCauses": false
+    },
+    "passed": 8,
+    "total": 9,
+    "heuristicOnly": true
+  },
+  "semanticCertified": false,
+  "approvedForApp": false,
+  "finishedAt": "2026-11-10T01:51:29.683Z",
+  "actualLetters": 453,
+  "achievedReduction": 24.373956594323875,
+  "geometryReview": {
+    "ids": [
+      "1:1"
+    ],
+    "pageStart": 1,
+    "pageEnd": 1,
+    "sourceLetters": 599,
+    "targetLetters": 359,
+    "minLetters": 330,
+    "maxLetters": 389,
+    "outputLetters": 453,
+    "rows": 10,
+    "maxRows": 8,
+    "overlong": false,
+    "inBand": false,
+    "fitsRows": false,
+    "pass": false,
+    "missing": false
+  },
+  "lengthReview": {
+    "withinBand": false,
+    "compliant": false,
+    "achievedReduction": 24.4
+  },
+  "preliminaryFidelity": {
+    "missingProtectedCount": 0,
+    "qualifierMismatchCount": 0,
+    "heuristicOnly": true
+  },
+  "numericGridPass": false
+}

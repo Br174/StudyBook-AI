@@ -20,6 +20,8 @@ export {STUDY_DRAFT_PROTOCOL_V71} from '../src/lib/studyDraftProtocolV71.js';
 export {STUDY_DRAFT_PROTOCOL_V70} from '../src/lib/studyDraftProtocolV70.js';
 import {immutableFragmentsV67,immutableViolationsV67} from '../src/lib/immutableFragmentsV67.js';
 import {auditFidelity} from '../src/lib/fidelityEngine.js';
+import {STUDY_FACT_FIRST_V109,chooseFactFirstV109,factFirstInstructionV109}
+ from '../src/lib/studyFactFirstV109.js';
 import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const DEFAULT_MODEL='gemini-3.5-flash-lite';
@@ -404,6 +406,13 @@ export default async function handler(req,res){
   const protocolV71=['draft-v71','repair-v71','recalibrate-v71'].includes(phase);
   const protocolV70=['draft-v70','repair-v70','recalibrate-v70'].includes(phase);
   const protocolRequested=protocolV75||protocolV74||protocolV72||protocolV71||protocolV70;
+  // LAB109 opt-in requires BOTH an explicit request and a Worker-only flag.
+  // Normal LAB79 clients never send experimentV109 and remain unchanged.
+  if(req.body?.experimentV109!=null&&
+    (req.body.experimentV109!==STUDY_FACT_FIRST_V109||
+     !chooseFactFirstV109({env,req:req.body,level,phase})))
+    return fail(res,409,'AI_FACT_FIRST_PILOT_UNAVAILABLE',
+      'Esperimento non disponibile: versione installata preservata.');
   if(protocolRequested&&req.body?.draftProtocol!==(protocolV75?STUDY_DRAFT_PROTOCOL_V75:protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:STUDY_DRAFT_PROTOCOL_V70))
     return fail(res,409,'AI_DRAFT_PROTOCOL_MISMATCH','Versione motore Gemini non corrispondente alla LAB70.');
   // Backward-compatible LAB74 clients remain valid. The new LAB78 Android
@@ -492,7 +501,10 @@ export default async function handler(req,res){
   const feedback=(protocolV72&&phase==='repair-v72'||protocolV71&&phase==='repair-v71')&&observed>0
     ?{observedLetters:observed,desiredLetters:desired,gapLetters:desired-observed}:null;
   const geometryV78=protocolV74?studyGeometryPlanV78(safe,level):null;
-  const stageInstruction=protocolV75
+  const factFirstV109=chooseFactFirstV109({env,req:req.body,level,phase});
+  const stageInstruction=factFirstV109
+    ?factFirstInstructionV109(level,originalLetters,phase,geometryV78)
+    :protocolV75
     ?phase==='plan-v75'
       ?planningInstructionV75(level,originalLetters,STUDY_TARGET_V67[level])
       :writingInstructionV75(level,originalLetters,STUDY_TARGET_V67[level])
@@ -638,7 +650,9 @@ export default async function handler(req,res){
       finishReason,outputTokenLimit:outputTokens,
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
-      bestOfInstruction:protocolV74?STUDY_BEST_OF_V76:null,
+      bestOfInstruction:protocolV74&&!factFirstV109?STUDY_BEST_OF_V76:null,
+      ...(factFirstV109?{factFirstPilotV109:STUDY_FACT_FIRST_V109,
+        semanticCertified:false,approvedForApp:false}:{}),
       geometryPolicyV78:protocolV74?STUDY_GEOMETRY_V78:null,
       geometryReviewV78,
       draftProtocol:protocolV75?STUDY_DRAFT_PROTOCOL_V75:protocolV74?STUDY_DRAFT_PROTOCOL_V74:protocolV72?STUDY_DRAFT_PROTOCOL_V72:protocolV71?STUDY_DRAFT_PROTOCOL_V71:protocolV70?STUDY_DRAFT_PROTOCOL_V70:null,
