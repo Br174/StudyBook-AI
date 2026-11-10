@@ -30,6 +30,7 @@ import {sourceRiskReviewV110} from '../src/lib/studySourceRiskV110.js';
 import {STUDY_LEAN_PERCENT_V111,chooseLeanPercentV111,
  leanPercentInstructionV111} from '../src/lib/studyLeanPercentV111.js';
 import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
+import {STUDY_503_FAILOVER_V114,invoke503FailoverV114} from '../src/lib/study503FailoverV114.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const DEFAULT_MODEL='gemini-3.5-flash-lite';
 const ENDPOINT='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
@@ -423,6 +424,13 @@ export default async function handler(req,res){
       !chooseLeanPercentV111({env,req:req.body,level,phase})))
     return fail(res,409,'AI_LEAN_PERCENT_UNAVAILABLE',
       'Il metodo sperimentale delle percentuali non è abilitato.');
+  // LAB114 is opt-in on BOTH sides. Never silently change original LAB111.
+  if(req.body?.experimentV114!=null&&
+    (req.body.experimentV114!==STUDY_503_FAILOVER_V114||
+     env.STUDYBOOK_503_FAILOVER_V114!=='1'||
+     req.body.experimentV111!==STUDY_LEAN_PERCENT_V111))
+    return fail(res,409,'AI_503_FAILOVER_NOT_ENABLED',
+      'La protezione 503 sperimentale non è disponibile.');
   // LAB110B adds separate deliberate one-off validation; mixed experiments are forbidden.
   if([req.body?.experimentV109,req.body?.experimentV110,req.body?.experimentV110b]
       .filter(value=>value!=null).length>1)
@@ -583,25 +591,37 @@ export default async function handler(req,res){
         countedBy:counted===null?'conservative-estimate':'google-countTokens'});
     const url=env.AI_API_URL||process.env.AI_API_URL||ENDPOINT;
     providerStageV73='gemini-request';
-    const upstream=await fetch(url,{method:'POST',signal:controller.signal,
-      headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},
-      body:JSON.stringify({model:selected,temperature:0.1,reasoning_effort:'low',
-        max_tokens:outputTokens,response_format:protocolV75&&phase==='plan-v75'
-          ?PLANNING_SCHEMA_V75:protocolV72&&phase==='repair-v72'?PATCH_SCHEMA_V72:SCHEMA,messages})});
-    providerStageV73='gemini-response-body';
-    const payload=await upstream.json().catch(()=>null);
+    const invoke=async model=>{
+      const response=await fetch(url,{method:'POST',signal:controller.signal,
+        headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},
+        body:JSON.stringify({model,temperature:0.1,reasoning_effort:'low',
+          max_tokens:outputTokens,response_format:protocolV75&&phase==='plan-v75'
+            ?PLANNING_SCHEMA_V75:protocolV72&&phase==='repair-v72'?PATCH_SCHEMA_V72:SCHEMA,messages})});
+      providerStageV73='gemini-response-body';
+      return {response,payload:await response.json().catch(()=>null)};
+    };
+    const failover=await invoke503FailoverV114({
+      primaryModel:selected,signal:controller.signal,
+      deadlineMs:started+timeoutMs,
+      enabled:leanPercentActiveV111&&env.STUDYBOOK_503_FAILOVER_V114==='1'&&
+        req.body?.experimentV114===STUDY_503_FAILOVER_V114,
+      invoke});
+    const upstream=failover.response,payload=failover.payload;
+    const servingModel=failover.model;
     providerStageV73='gemini-response-parse';
     const elapsedMs=Date.now()-started;
     if(upstream.status===429||upstream.status===503){
       const quota=diagnoseGeminiQuota({status:upstream.status,body:payload,
-        headers:upstream.headers,model:selected});
+        headers:upstream.headers,model:servingModel});
       if(!quota.estimated&&quota.retryAfterSeconds!==null)
         res.setHeader('Retry-After',String(quota.retryAfterSeconds));
       return fail(res,upstream.status,
         !quota.automatic?'AI_QUOTA_MANUAL_REVIEW':
           upstream.status===503?'AI_TEMPORARY_OVERLOAD':'AI_QUOTA_LIMIT',
         quotaPublicMessage(quota.kind),{quota,
-          diagnostic:{reason:quota.kind,elapsedMs,model:selected,
+          diagnostic:{reason:quota.kind,elapsedMs,model:servingModel,
+            providerAttempts:failover.attempts,
+            backupHttpStatus:failover.fallbackStatus,
             inputTokens,outputTokens}});
     }
     if(!upstream.ok)return fail(res,502,'AI_PROVIDER_REJECTED','Il provider non ha accettato la richiesta.',
@@ -707,6 +727,9 @@ export default async function handler(req,res){
     return res.status(200).json({engine:'ai',version:'integral-v51',sourceVersion:'original',
       level,parts,completeParts:parts.length===safe.length,
       expectedParts:safe.length,inputTokens,outputTokensUsed:payload?.usage?.completion_tokens||null,
+      providerAttempts:failover.attempts,
+      provider503Recovered:failover.failoverRecovered,
+      providerBackupModel:failover.failoverRecovered?servingModel:null,
       finishReason,outputTokenLimit:outputTokens,
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
@@ -738,7 +761,7 @@ export default async function handler(req,res){
         minLetters:numericAudit.minLetters,maxLetters:numericAudit.maxLetters,
         suspectedTruncation:numericAudit.suspectedTruncation,
         range:STUDY_TARGET_V67[level]?{min:STUDY_TARGET_V67[level].min,max:STUDY_TARGET_V67[level].max}:null},
-      model:selected,elapsedMs});
+      model:servingModel,elapsedMs});
   }catch(error){
     return fail(res,controller.signal.aborted?504:502,
       controller.signal.aborted?'AI_PROVIDER_TIMEOUT':'AI_PROVIDER_NETWORK',
