@@ -5,6 +5,8 @@ on:
       - research/studybook-lab116-source-anchored-20261110
     paths:
       - .github/workflows/studybook-lab116-research.yml
+      - src/lib/studySourceTiersV116.js
+      - scripts/test-lab116-source-tiers.mjs
   workflow_dispatch:
 permissions:
   contents: read
