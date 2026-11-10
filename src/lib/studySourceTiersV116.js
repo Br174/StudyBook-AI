@@ -116,7 +116,7 @@ function validatedVariants(plan,modelReply){
    return {unitId:unit.id,source:full,importance:edit.importance,
     essential:edit.essential,options};
   });
- }
+ });
 function pruneStates(states,target,remainingMin,remainingMax){
  if(states.size<=BEAM)return states;
  const items=[...states.entries()].sort((a,b)=>{
