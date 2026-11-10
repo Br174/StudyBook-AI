@@ -1,0 +1,53 @@
+name: StudyBook LAB110 - REAL Worker Gemini source-clause ledger
+on:
+  push:
+    branches:
+      - audit/studybook-source-ledger-v110-20261110
+    paths:
+      - .github/workflows/studybook-lab110-real-worker.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab110-gemini-real-two-case
+  cancel-in-progress: false
+jobs:
+  bounded-real-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks on actual Worker evidence script
+        run: node --check scripts/test-lab110-real-worker-ledger.mjs
+      - name: Run 2 source-grounded Gemini generations via actual handler
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab110-real-worker-ledger.mjs
+      - name: Save evidence including provider limit stops
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB110-Gemini-Source-Clause-Evidence
+          path: audit/reports/lab110-real-worker-ledger.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Preserve results only on isolated audit branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab110-real-worker-ledger.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab110-real-worker-ledger.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB110): preserve source-ledger real Gemini experiment'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
