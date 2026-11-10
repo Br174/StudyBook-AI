@@ -1,0 +1,55 @@
+name: StudyBook LAB109 - REAL Worker Gemini science40 pilot
+on:
+  push:
+    branches:
+      - lab/studybook-core-android-01-update-109-fact-first-pilot-20261110
+    paths:
+      - .github/workflows/studybook-lab109-real-worker.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab109-science40-one-pilot
+  cancel-in-progress: false
+jobs:
+  real-single-model-generation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ensure valid real Worker test files
+        run: |
+          node --check api/editionsBulkV51.js
+          node --check scripts/test-lab109-real-worker-science40.mjs
+      - name: Run one actual free-tier Gemini request through StudyBook Worker
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab109-real-worker-science40.mjs
+      - name: Keep model evidence regardless of quota
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB109-Real-Worker-Science40
+          path: audit/reports/lab109-real-worker-science40.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Commit only synthetic source test evidence to isolated branch
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab109-real-worker-science40.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab109-real-worker-science40.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB109): preserve one real Worker-generated source experiment'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
