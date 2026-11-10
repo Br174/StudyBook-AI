@@ -1,0 +1,30 @@
+name: StudyBook LAB109 - guarded real Worker contract
+on:
+  push:
+    branches:
+      - lab/studybook-core-android-01-update-109-fact-first-pilot-20261110
+    paths:
+      - .github/workflows/studybook-lab109-worker-contract.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  worker-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm opt-in files compile
+        run: |
+          node --check src/lib/studyFactFirstV109.js
+          node --check api/editionsBulkV51.js
+          node --check scripts/test-lab109-worker-contract.mjs
+      - name: Test actual Worker contract with fake provider; no external calls
+        run: node scripts/test-lab109-worker-contract.mjs
+      - name: Run existing native and numerical guards
+        run: |
+          node scripts/test-lab79-quality-no-loop.mjs
+          node scripts/test-lab79-targeted-recalibration.mjs
