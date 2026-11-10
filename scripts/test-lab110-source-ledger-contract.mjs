@@ -94,7 +94,7 @@ const brokenBudget=await invoke({pilot:'110',flag110:true,invalidBudget:true});
 eq(brokenBudget.status,409);
 eq(brokenBudget.models,0);
 eq(brokenBudget.data.code,'AI_PAGE_BUDGET_MISMATCH');
-const outOfScope=await invoke({pilot:'110',flag110:true,source:'lorem '.repeat(500)+'fine.'});
+const outOfScope=await invoke({pilot:'110',flag110:true,source:'lorem '.repeat(700)+'fine.'});
 eq(outOfScope.status,422);
 eq(outOfScope.models,0);
 eq(outOfScope.data.code,'AI_SOURCE_LEDGER_OUT_OF_SCOPE');
