@@ -30,6 +30,8 @@ import {pageLetterBudgetsV74,pageLetterReviewV74} from './studyPageBudgetsV74.js
 import {STUDY_GEOMETRY_V78,studyGeometryPlanV78} from './studyGeometryV78.js';
 import {buildSourceLedgerV110} from './studySourceLedgerV110.js';
 import {STUDY_CLAUSE_BUDGET_V110B} from './studyClauseBudgetV110B.js';
+import {STUDY_LEAN_PERCENT_V111} from './studyLeanPercentV111.js';
+import {planNaturalBlocksLinearV111} from './studyLinearPlannerV111.js';
 import {initialStudyOutputLimitV73,safeNetworkSplitV73,isRecoverableNetworkV73,
  minimumFullPageOutputV73}
  from './studyNetworkRecoveryV73.js';
@@ -132,8 +134,9 @@ function blocksForMissing(units,drafts,rows,level,inputLimit,outputLimit){
  const completePages=units.filter(u=>
    Array.from({length:u.pageEnd-u.pageStart+1},(_,i)=>u.pageStart+i)
      .some(page=>missingPages.has(page)));
- return planNaturalBlocksV51(completePages,level,{maxInputTokens:inputLimit,
-  maxOutputTokens:outputLimit});
+ return (import.meta.env?.VITE_STUDYBOOK_TRIAL_111==='1'?
+   planNaturalBlocksLinearV111:planNaturalBlocksV51)(completePages,level,
+   {maxInputTokens:inputLimit,maxOutputTokens:outputLimit});
 }
 function reviewEdition(units,drafts,level){
  const violations=[],missing=[],texts=[];
@@ -207,7 +210,10 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
      sectionTitle:u.sectionTitle,pageStart:u.pageStart,pageEnd:u.pageEnd}))};
  // LAB110 test-only. Do not send a pilot request for unmeasured large blocks:
  // preserve the LAB79 source, natural page boundaries and retry behavior.
- if(import.meta.env?.VITE_STUDYBOOK_TRIAL_110B==='1'&&level==='40'&&usePageBudgetV74){
+ if(import.meta.env?.VITE_STUDYBOOK_TRIAL_111==='1'&&usePageBudgetV74){
+   // All six levels; one Gemini reply per intact natural block.
+   body.experimentV111=STUDY_LEAN_PERCENT_V111;
+ }else if(import.meta.env?.VITE_STUDYBOOK_TRIAL_110B==='1'&&level==='40'&&usePageBudgetV74){
    try{
      const geometry=studyGeometryPlanV78(block,level);
      buildSourceLedgerV110(block,geometry);
@@ -259,6 +265,9 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
       data?.geometryReviewV78?.policy!==STUDY_GEOMETRY_V78))
    throw Object.assign(new Error('Worker geometrico LAB78 non verificato: bozze conservate'),
     {code:'AI_GEOMETRY_BACKEND_VERSION_MISMATCH'});
+ if(body.experimentV111&&data?.leanPercentPilotV111!==STUDY_LEAN_PERCENT_V111)
+   throw Object.assign(new Error('Worker percentuali LAB111 non verificato: bozze preservate'),
+     {code:'AI_TRIAL_111_BACKEND_MISMATCH'});
  if(body.experimentV110b&&
    (data?.clauseBudgetPilotV110B!==STUDY_CLAUSE_BUDGET_V110B||
      data?.sourceRiskAuditV110?.semanticCertified!==false))
@@ -534,7 +543,8 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
              finishReason:response.finishReason||null,
              generationStoppedEarly:response.generationStoppedEarly===true,
              generatedAt:new Date().toISOString(),
-             bookFingerprint:fp,level
+             bookFingerprint:fp,level,
+             ...(response.leanPercentPilotV111?{leanPercentPilotV111:response.leanPercentPilotV111}:{})
            }}})));
          if(!ok)return halt(onProgress,book,units,rows,drafts,fp,diagnostics,
            'draft','local-storage-error','AI_CHECKPOINT_UNAVAILABLE',false);
@@ -608,7 +618,10 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
    'draft','draft-incomplete','AI_INCOMPLETE_BLOCK',persisted);
  // LAB66: once every saved draft exists, perform ONLY a local advisory audit.
  // No provider call, no automatic corrections, no discarded approvals.
- if(qualityOnly)return finalizeStudyQualityV66(book,units,rows,drafts,
+ // Trial111: one local quality pass, no automatic Gemini repair calls.
+ // Users can start an explicitly requested targeted correction separately.
+ if(qualityOnly||import.meta.env?.VITE_STUDYBOOK_TRIAL_111==='1')
+   return finalizeStudyQualityV66(book,units,rows,drafts,
    {...state,checkpointPersistent:persisted},onProgress);
  const reviews={};
  for(const level of LEVELS)reviews[level]=reviewEdition(units,drafts,level);
