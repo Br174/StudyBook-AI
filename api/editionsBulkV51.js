@@ -22,6 +22,8 @@ import {immutableFragmentsV67,immutableViolationsV67} from '../src/lib/immutable
 import {auditFidelity} from '../src/lib/fidelityEngine.js';
 import {STUDY_FACT_FIRST_V109,chooseFactFirstV109,factFirstInstructionV109}
  from '../src/lib/studyFactFirstV109.js';
+import {STUDY_SOURCE_LEDGER_V110,chooseSourceLedgerV110,buildSourceLedgerV110,
+ sourceLedgerInstructionV110} from '../src/lib/studySourceLedgerV110.js';
 import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const DEFAULT_MODEL='gemini-3.5-flash-lite';
@@ -406,6 +408,13 @@ export default async function handler(req,res){
   const protocolV71=['draft-v71','repair-v71','recalibrate-v71'].includes(phase);
   const protocolV70=['draft-v70','repair-v70','recalibrate-v70'].includes(phase);
   const protocolRequested=protocolV75||protocolV74||protocolV72||protocolV71||protocolV70;
+  // LAB110 opt-in is independent of LAB109; never silently change an installed client.
+  // Reject mixed or unapproved pilot selections BEFORE provider/token counting.
+  if(req.body?.experimentV110!=null&&
+    (req.body.experimentV110!==STUDY_SOURCE_LEDGER_V110||
+     !chooseSourceLedgerV110({env,req:req.body,level,phase})))
+    return fail(res,409,'AI_SOURCE_LEDGER_PILOT_UNAVAILABLE',
+      'Inventario sorgente sperimentale non abilitato, bozze preservate.');
   // LAB109 opt-in requires BOTH an explicit request and a Worker-only flag.
   // Normal LAB79 clients never send experimentV109 and remain unchanged.
   if(req.body?.experimentV109!=null&&
@@ -501,8 +510,17 @@ export default async function handler(req,res){
   const feedback=(protocolV72&&phase==='repair-v72'||protocolV71&&phase==='repair-v71')&&observed>0
     ?{observedLetters:observed,desiredLetters:desired,gapLetters:desired-observed}:null;
   const geometryV78=protocolV74?studyGeometryPlanV78(safe,level):null;
+  const sourceLedgerActiveV110=chooseSourceLedgerV110({env,req:req.body,level,phase});
+  let sourceLedgerV110=null;
+  if(sourceLedgerActiveV110){
+    try{sourceLedgerV110=buildSourceLedgerV110(safe,geometryV78)}
+    catch{return fail(res,422,'AI_SOURCE_LEDGER_OUT_OF_SCOPE',
+      'Il gruppo non rientra nel collaudo: nessuna chiamata Gemini eseguita.');}
+  }
   const factFirstV109=chooseFactFirstV109({env,req:req.body,level,phase});
-  const stageInstruction=factFirstV109
+  const stageInstruction=sourceLedgerActiveV110
+    ?sourceLedgerInstructionV110(level,phase,geometryV78,sourceLedgerV110)
+    :factFirstV109
     ?factFirstInstructionV109(level,originalLetters,phase,geometryV78)
     :protocolV75
     ?phase==='plan-v75'
@@ -650,7 +668,10 @@ export default async function handler(req,res){
       finishReason,outputTokenLimit:outputTokens,
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
-      bestOfInstruction:protocolV74&&!factFirstV109?STUDY_BEST_OF_V76:null,
+      bestOfInstruction:protocolV74&&!factFirstV109&&!sourceLedgerActiveV110?STUDY_BEST_OF_V76:null,
+      ...(sourceLedgerActiveV110?{sourceLedgerPilotV110:STUDY_SOURCE_LEDGER_V110,
+        ledgerClauseCountV110:sourceLedgerV110.groups.reduce((n,g)=>n+g.count,0),
+        semanticCertified:false,approvedForApp:false}:{}),
       ...(factFirstV109?{factFirstPilotV109:STUDY_FACT_FIRST_V109,
         semanticCertified:false,approvedForApp:false}:{}),
       geometryPolicyV78:protocolV74?STUDY_GEOMETRY_V78:null,
