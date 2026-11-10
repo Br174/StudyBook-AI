@@ -7,7 +7,7 @@ import {loadResumeState,saveResumeState} from './resumeStore.js';
 
 export const STUDY_GEMINI_TRAFFIC_V113='studybook-local-gemini-traffic-v113';
 const PREFIX='studybook-local-gemini-traffic-v113:';
-const MAX_RECENT=80,MAX_ERRORS=12;
+const MAX_RECENT=60,MAX_ERRORS=12;
 const number=(v,max=1e9)=>Number.isFinite(Number(v))?
  Math.max(0,Math.min(max,Math.round(Number(v)))):0;
 const safeLevel=v=>['summary','50','40','30','20','10'].includes(String(v))?String(v):'unknown';
