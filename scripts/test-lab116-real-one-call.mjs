@@ -22,15 +22,18 @@ const fixture=JSON.parse(readFileSync('audit/test-fixtures/lab109-worker-source.
 const sources=fixture.sources.filter(x=>['scienze','procedura'].includes(x.id));
 const units=sources.map((x,i)=>({id:String(i)+':0',pageStart:i+1,pageEnd:i+1,source:x.text}));
 const plan=prepareSourceTiersV116(units);
-const SCHEMA={type:'json_schema',json_schema:{name:'studybook_lab116_anchored_edits',
- strict:true,schema:{type:'object',additionalProperties:false,
- properties:{units:{type:'array',items:{type:'object',additionalProperties:false,
- properties:{id:{type:'string'},variants:{type:'array',items:{
-  type:'object',additionalProperties:false,properties:{
-   compact:{type:'string'},brief:{type:'string'},
-   importance:{type:'integer'},essential:{type:'boolean'}
-  },required:['compact','brief','importance','essential']
- }}}},required:['id','variants']}}},required:['units']}}};
+const EDIT_ITEM={type:'object',additionalProperties:false,
+ properties:{compact:{type:'string'},brief:{type:'string'},
+  importance:{type:'integer'},essential:{type:'boolean'}},
+ required:['compact','brief','importance','essential']};
+const UNIT_ITEM={type:'object',additionalProperties:false,
+ properties:{id:{type:'string'},variants:{type:'array',items:EDIT_ITEM}},
+ required:['id','variants']};
+const SCHEMA={type:'json_schema',json_schema:{
+ name:'studybook_lab116_anchored_edits',strict:true,
+ schema:{type:'object',additionalProperties:false,
+  properties:{units:{type:'array',items:UNIT_ITEM}},required:['units']}
+}};
 const started=Date.now();
 try{
  const signal=AbortSignal.timeout(110000);
