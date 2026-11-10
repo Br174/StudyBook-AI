@@ -55,6 +55,8 @@ const live=await run({flag:true});
 eq(live.code,200);eq(live.generations,1);eq(live.tokens,1);
 eq(live.data.clauseBudgetPilotV110B,STUDY_CLAUSE_BUDGET_V110B);
 eq(live.data.clauseCountV110B,9);eq(live.data.approvedForApp,false);
+eq(live.data.sourceRiskAuditV110.readyForStudy,false);
+ok(live.data.sourceRiskAuditV110.groups[0].warningCodes.includes('DESCRIPTION_VS_CAUSES_OF_VARIATIONS_MISSING'));
 ok(live.system.includes('CLAUSOLA 9'));
 const denied=await run({flag:false});eq(denied.code,409);eq(denied.generations,0);
 const mixed=await run({flag:true,mixed:true});eq(mixed.code,409);eq(mixed.generations,0);
