@@ -4,6 +4,8 @@ import {studyPhaseProgressV59} from '../lib/studyPhaseProgressV59.js';
 // The six rows are physical-page counts, never Gemini paragraphs or 714 jobs.
 export default function StudyPhaseProgressV59({book=null,acquisition=null}){
  const progress=studyPhaseProgressV59(book,{acquisition});
+ const traffic=book?.editionsV36?.diagnostics?.geminiTrafficV113;
+ const measuredTraffic=traffic?.policy==='studybook-local-gemini-traffic-v113'?traffic:null;
  const labels={acquisition:'Fase 1 · Acquisizione',
    compression:'Fase 2 · Compressione',
    correction:'Fase 3 · Verifica e correzione',
@@ -58,6 +60,32 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null}){
            </p>)}
          <p>Controlli automatici indicativi: la fedeltà del significato non è certificata.
            Non vengono apportate modifiche ai testi.</p>
+       </div>
+     </details>}
+   {measuredTraffic&&
+     <details style={{marginTop:10,fontSize:12}}>
+       <summary>Registro Gemini LAB113 · richieste effettivamente inviate</summary>
+       <div style={{paddingTop:7}}>
+         <strong>{measuredTraffic.dispatched}</strong> richieste inviate al Worker;
+         {' '}{measuredTraffic.worker200} risposte HTTP 200;
+         {' '}{measuredTraffic.http503} errori 503;
+         {' '}{measuredTraffic.http429} errori 429.
+         <p style={{margin:'5px 0'}}>
+           {measuredTraffic.confirmedParts} risposte contenenti testo;
+           {' '}token in ingresso riportati: {measuredTraffic.inputTokensReported};
+           {' '}token in uscita riportati: {measuredTraffic.outputTokensReported}.
+         </p>
+         {measuredTraffic.last&&
+           <p style={{margin:'5px 0'}}>
+             Ultimo blocco: {measuredTraffic.last.level},
+             {' '}pagine {measuredTraffic.last.pageStart}–{measuredTraffic.last.pageEnd};
+             {' '}{measuredTraffic.last.sourceChars} caratteri originali;
+             {' '}risposta {measuredTraffic.last.http||'non disponibile'};
+             {' '}durata {Math.round((measuredTraffic.last.elapsedMs||0)/1000)} s.
+           </p>}
+         <small>Conteggio locale cumulativo del libro. Una richiesta al Worker
+           non prova sempre che Gemini abbia generato testo; nessun invio
+           di telemetria esterna e nessuna chiamata aggiuntiva.</small>
        </div>
      </details>}
  </div>;
