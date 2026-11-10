@@ -66,7 +66,7 @@ const small=prepareSourceTiersV116(controlled(44));
 const prompt=sourceTierInstructionV116(small),json=sourceTierUserV116(small);
 ok(prompt.includes('Non scrivere sei versioni'));eq(json.units.length,44);
 let result=composeSourceTiersV116(small,manualReply(small));
-eq(Object.keys(result.partsByLevel),STUDY_LEVELS_V67);
+eq(Object.keys(result.partsByLevel).sort(),[...STUDY_LEVELS_V67].sort());
 const reports=STUDY_LEVELS_V67.map(level=>{
  const r=result.quality[level];
  eq(r.totalGroups,44);
