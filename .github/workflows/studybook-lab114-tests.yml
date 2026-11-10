@@ -5,6 +5,9 @@ on:
       - trial/studybook-lab114-503-flashlite-failover-20261110
     paths:
       - .github/workflows/studybook-lab114-tests.yml
+      - src/lib/studyGeminiTrafficV113.js
+      - src/lib/study503FailoverV114.js
+      - api/editionsBulkV51.js
   workflow_dispatch:
 permissions:
   contents: read
