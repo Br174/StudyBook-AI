@@ -201,6 +201,7 @@ function chooseGroup(group,segmentGroups,level){
   }
   if([...byUnit.values()].some(x=>!x))continue;
   const text=normalize(texts.join(' ')),layout=wrapStudyWordsV78(text);
+  if(studyLetters(text)!==letters)throw Error('LAB116_STATE_LETTER_MISMATCH');
   const numeric=letters>=budget.minLetters&&letters<=budget.maxLetters;
   const rowPass=layout.rows<=plan.maxRows&&!layout.overlong;
   const semanticCost=state.cost;
@@ -215,7 +216,12 @@ function chooseGroup(group,segmentGroups,level){
  if(!winner)throw Error('LAB116_NO_SAFE_NONEMPTY_COMPOSITION');
  return {...winner,pageStart:budget.pageStart,pageEnd:budget.pageEnd,
   targetLetters:budget.targetLetters,minLetters:budget.minLetters,
-  maxLetters:budget.maxLetters,semanticCertified:false};
+  maxLetters:budget.maxLetters,
+  minimumAvailableLetters:minSuffix[0],maximumAvailableLetters:maxSuffix[0],
+  feasibility:minSuffix[0]>budget.maxLetters?'INSUFFICIENT_SAFE_COMPRESSION':
+   maxSuffix[0]<budget.minLetters?'INSUFFICIENT_SAFE_TEXT':
+   winner.numeric?'WITHIN_NUMERIC_BAND':'DISCRETE_OPTIONS_OR_LAYOUT_LIMIT',
+  semanticCertified:false};
 }
 export function composeSourceTiersV116(plan,reply,levels=STUDY_LEVELS_V67){
  if(plan?.policy!==STUDY_SOURCE_TIERS_V116)throw Error('LAB116_PLAN_REQUIRED');
