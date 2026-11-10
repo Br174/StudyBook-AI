@@ -33,3 +33,17 @@
 - APK test attuale, LAB79 installata, Worker LAB79, MAIN, LAST_GOOD e progetto CORE MotorLab restano invariati.
 
 **Conclusione:** l'installabilità è dimostrata, non l'efficacia didattica né l'attivazione su 44 pagine del pilota LAB110B. Il passo prioritario non è un altro prompt casuale né una diversa soglia visiva, ma **provenienza verificabile, applicazione reale del metodo e copertura dei concetti**.
+
+## CORREZIONE DIAGNOSTICA DELL'UTENTE (10 novembre 2026, turno successivo)
+
+**Priorità dichiarata:** l'utente ha verificato direttamente la qualità degli *assunti*, che considera funzionanti e utili. Non assumere che i testi siano didatticamente sbagliati soltanto perché le percentuali non rispettano il target. La priorità immediata è **correggere la quantità di lettere e righe**, mantenendo gli assunti apprezzati. Le etichette delle percentuali richieste non vanno falsificate o modificate.
+
+**Chiarimento tecnico verificato:** `src/components/StudyPhaseProgressV59.jsx` mostra in rosso `X/44 pagine nei margini di lettere e righe` quando il numero di pagine conformi a letter-budget e griglia è inferiore al totale. NON dimostra concetti mancanti. `src/lib/studyQualityV66.js` ha controlli e avvisi separati per la fedeltà; la certificazione semantica è distinta. `src/lib/studyPillarV38.js` calcola `percentReduced(before,after) = round((1-after/before)*1000)/10`, conteggiando lettere Unicode: la percentuale misurata è reale rispetto alla fonte estratta, NON prova di un bug di visualizzazione.
+
+**Valori reali test:** 10%→38,4%; 20%→63,1%; 30%→72,6%; 50%→87,8%; riassunto 60%→87,4%. Il 40% non è visibile in screenshot; 0/44 conforme. Per un 10% effettivo bisogna trattenere circa il 90% delle lettere originali, non il 61,6% effettivamente trattenuto. Per un 50% bisogna trattenere circa il 50%, non il 12,2%. Non è una correzione cosmetica: richiede aumentare la copertura testuale **attingendo fedelmente alla fonte originale**, mantenendo gli assunti, con prosa utile, senza frasi riempitive, senza tagli a metà frase e senza superare il margine.
+
+**Prossimo lavoro vincolante:** prima verificare il denominatore contando lettere realmente estratte dall'originale su pagine campione; poi calibrare il GENERATORE ai budget per pagina e ai sei obiettivi, non modificare il messaggio rosso. Confrontare lettere originali, lettere prodotte, target e intervallo, righe massime; rielaborare solo le pagine fuori margine; conservare versioni migliori/checkpoint; accettare soltanto se numerica+righe e nessuna regressione evidente nei fatti. Distinguere i controlli numerici dalla revisione dei fatti; evitare il riavvio completo e chiamate Gemini senza controllo.
+
+**Correzione della precedente enfasi:** la limitazione `40%` del pilot LAB110B e il fallback silenzioso restano problemi architetturali, ma non attribuire a essi da soli il difetto globale. L'utente vuole prioritariamente centrare le percentuali su tutte le sei edizioni, avendo già verificato i propri assunti.
+
+**Stato operativo:** questa nota aggiorna la diagnosi. NON equivale a correzione implementata, né a nuova APK; la LAB79 e l'APK Prova 110 rimangono immutate.
