@@ -1,0 +1,29 @@
+name: StudyBook LAB112 - 44-page real planner audit (no Gemini)
+on:
+  push:
+    branches:
+      - audit/studybook-lab112-preflight-load-20261110
+    paths:
+      - .github/workflows/studybook-lab112-44-page-audit.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit-blocks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate audit script
+        run: node --check scripts/test-lab112-44-page-block-audit.mjs
+      - name: Execute actual LAB111 planner on synthetic 44-page books
+        run: node scripts/test-lab112-44-page-block-audit.mjs | tee lab112-44-page-block-audit.json
+      - name: Archive evidence without model or private PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB112-Planner-44pages-Synthetic-NoGemini
+          path: lab112-44-page-block-audit.json
+          retention-days: 30
