@@ -1,0 +1,28 @@
+name: StudyBook LAB110B - one-call per-proposition soft budget contract
+on:
+  push:
+    branches:
+      - audit/studybook-source-ledger-v110-20261110
+    paths:
+      - .github/workflows/studybook-lab110b-contract.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-worker-no-provider:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check current pilot module and Worker
+        run: |
+          node --check src/lib/studyClauseBudgetV110B.js
+          node --check api/editionsBulkV51.js
+          node --check scripts/test-lab110b-worker-contract.mjs
+      - name: Offline actual Worker protocol and quota checks
+        run: node scripts/test-lab110b-worker-contract.mjs
+      - name: Re-test LAB110 source-ledger behavior unchanged
+        run: node scripts/test-lab110-source-ledger-contract.mjs
