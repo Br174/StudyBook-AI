@@ -730,6 +730,8 @@ export default async function handler(req,res){
       providerAttempts:failover.attempts,
       provider503Recovered:failover.failoverRecovered,
       providerBackupModel:failover.failoverRecovered?servingModel:null,
+      ...(req.body?.experimentV114===STUDY_503_FAILOVER_V114?{
+        failoverPilotV114:STUDY_503_FAILOVER_V114}:{}),
       finishReason,outputTokenLimit:outputTokens,
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
