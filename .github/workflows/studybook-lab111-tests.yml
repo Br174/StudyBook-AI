@@ -1,0 +1,64 @@
+name: StudyBook LAB111 - lean percentages and 2000 page capacity
+on:
+  push:
+    branches:
+      - trial/studybook-lab111-light-percent-20261110
+    paths:
+      - .github/workflows/studybook-lab111-tests.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab111-first-real
+  cancel-in-progress: false
+jobs:
+  fast-budget-and-provider:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks for lean pilot and original mobile writer
+        run: |
+          node --check src/lib/studyLeanPercentV111.js
+          node --check src/lib/studyLinearPlannerV111.js
+          node --check src/lib/draftFirstV57.js
+          node --check api/editionsBulkV51.js
+          node --check scripts/test-lab111-lean-worker.mjs
+          node --check scripts/test-lab111-2000-pages.mjs
+          node --check scripts/test-lab111-real-gemini.mjs
+      - name: Contract exact StudyBook Worker route for all six levels (zero Gemini)
+        run: node scripts/test-lab111-lean-worker.mjs
+      - name: 2000-page linear workload and compatibility with LAB51 (zero Gemini)
+        run: node scripts/test-lab111-2000-pages.mjs
+      - name: Two strictly bounded free-tier Gemini calls on synthetic sources
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab111-real-gemini.mjs
+      - name: Save evidence even when free quota interrupts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB111-Two-Real-Gemini-Answers
+          path: audit/reports/lab111-real-two-levels.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Persist isolated lab response for further comparison
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab111-real-two-levels.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab111-real-two-levels.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB111): preserve two measured free Gemini responses'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
