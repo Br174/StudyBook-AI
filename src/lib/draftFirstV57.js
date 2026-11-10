@@ -32,6 +32,8 @@ import {buildSourceLedgerV110} from './studySourceLedgerV110.js';
 import {STUDY_CLAUSE_BUDGET_V110B} from './studyClauseBudgetV110B.js';
 import {STUDY_LEAN_PERCENT_V111} from './studyLeanPercentV111.js';
 import {planNaturalBlocksLinearV111} from './studyLinearPlannerV111.js';
+import {readGeminiTrafficV113,saveGeminiTrafficV113,
+ applyGeminiTrafficV113,geminiTrafficSummaryV113} from './studyGeminiTrafficV113.js';
 import {initialStudyOutputLimitV73,safeNetworkSplitV73,isRecoverableNetworkV73,
  minimumFullPageOutputV73}
  from './studyNetworkRecoveryV73.js';
@@ -186,7 +188,7 @@ function publishEdition(rows,units,drafts,level){
  }
 }
 async function request(block,level,{bookTitle='',signal=null,phase='draft',repairDrafts=[],
-  targetOverride=null,onWait=()=>{}}={}){
+  targetOverride=null,onWait=()=>{},onTraffic=async()=>null}={}){
  const target=blockLetterTargetV51(block,level),chars=block.reduce((n,u)=>n+u.source.length,0);
  const ratio=level==='summary'?0.44:1-Number(level)/100;
  const tokenBudget=Math.min(BULK_OUTPUT_TOKEN_CEILING,
@@ -229,12 +231,21 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
  if(cooling)throw Object.assign(new Error('Quota Gemini in attesa'),{
    code:'AI_QUOTA_LIMIT',quota:cooling});
  const startedAt=Date.now();
+ // LAB113: count only an actual Android->Worker fetch, never a queued batch.
+ let traceId=null;
+ try{traceId=await onTraffic({type:'dispatch',phase:isNewDraft?'draft':'repair',
+  level,pageStart:block[0].pageStart,pageEnd:block.at(-1).pageEnd,
+  units:block.length,sourceChars:chars,
+  estimatedInputTokens:Math.ceil(chars/2)+block.length*120+1200,
+  outputTokenLimit:tokenBudget});}catch{}
  let response;
  try{
   response=await fetch(apiEndpoint('/api/editions/bulk/v51'),{
    method:'POST',headers:{'Content-Type':'application/json'},
    signal,body:JSON.stringify(body)});
  }catch(error){
+  try{await onTraffic({type:'result',id:traceId,httpStatus:0,
+    code:'AI_CLIENT_NETWORK',elapsedMs:Date.now()-startedAt});}catch{}
   if(signal?.aborted)throw error;
   // Differentiate Android->Worker transport from Worker->Gemini upstream.
   // Only sanitized codes/stages are retained, never API keys or original text.
@@ -245,6 +256,11 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
   });
  }
  const data=await response.json().catch(()=>null);
+ try{await onTraffic({type:'result',id:traceId,httpStatus:response.status,
+   code:data?.code||(response.ok?'OK':'HTTP_'+response.status),
+   elapsedMs:Date.now()-startedAt,inputTokens:data?.inputTokens||
+     data?.diagnostic?.inputTokens||0,
+   outputTokens:data?.outputTokensUsed||0,parts:data?.parts?.length||0});}catch{}
  if(!response.ok){
    const code=data?.code||(response.status===404?'AI_BULK_ENDPOINT_MISSING':'HTTP_'+response.status);
    if((response.status===429||response.status===503)&&data?.quota){
@@ -432,6 +448,22 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
    // Persist proof of a one-off legacy recovery in every subsequent snapshot.
    qualityRecoveryV62:previous?.sourceFingerprint===fp
      ?previous?.diagnostics?.qualityRecoveryV62||null:null};
+ // LAB113: small per-book persistent counters, source text excluded.
+ // IndexedDB failures never affect model calls or existing checkpoints.
+ const trafficActiveV113=import.meta.env?.VITE_STUDYBOOK_TRIAL_113==='1';
+ let trafficJournal=trafficActiveV113?await readGeminiTrafficV113(fp):null;
+ if(trafficActiveV113)
+   diagnostics.geminiTrafficV113=geminiTrafficSummaryV113(trafficJournal);
+ const onTrafficV113=async event=>{
+   if(!trafficActiveV113)return null;
+   try{
+     const next=applyGeminiTrafficV113(trafficJournal,event);
+     trafficJournal=next.state;
+     diagnostics.geminiTrafficV113=geminiTrafficSummaryV113(trafficJournal);
+     await saveGeminiTrafficV113(fp,trafficJournal);
+     return next.id;
+   }catch{return null;}
+ };
  // LAB66: local quality mode must not reset or consume historical repair
  // attempts, even if the LAB65 semantic-rewrite migration was not completed.
  if(!qualityOnly){
@@ -496,7 +528,8 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
        onActivity({phase:'draft',level,pageStart:block[0].pageStart,
          pageEnd:block.at(-1).pageEnd});
        const response=await request(block,level,{bookTitle:book.title||'',signal,
-         phase:'draft',onWait:data=>onActivity({phase:'pacing',level,...data})});
+         phase:'draft',onWait:data=>onActivity({phase:'pacing',level,...data}),
+         onTraffic:onTrafficV113});
        // LAB72: measure each actual provider response, not just the ideal
        // length of simulated answers used in unit tests.
        const originalLetters=block.reduce((n,u)=>n+studyLetters(u.source),0);
@@ -684,7 +717,8 @@ export async function generateDraftFirstV57(book,{onProgress=()=>{},onActivity=(
          pageEnd:group.at(-1).pageEnd});
        const response=await request(group,level,{bookTitle:book.title||'',signal,
          phase:rewriteGroup?'rewrite':'repair',repairDrafts,targetOverride:desired,
-         onWait:data=>onActivity({phase:'pacing',level,...data})});
+         onWait:data=>onActivity({phase:'pacing',level,...data}),
+         onTraffic:onTrafficV113});
        const indexed=new Map((response.parts||[]).filter(x=>clean(x?.text))
          .map(x=>[x.id,clean(x.text)]));
        const changes=group.filter(u=>indexed.has(u.id)&&
