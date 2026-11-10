@@ -56,6 +56,7 @@ try{
  const content=payload?.choices?.[0]?.message?.content;
  let edits;
  try{edits=JSON.parse(content)}catch{throw Error('MODEL_INVALID_JSON')}
+ report.modelEdits=edits; // PUBLIC synthetic fixtures ONLY: enables local replay without spending more Gemini calls.
  report.finishReason=payload?.choices?.[0]?.finish_reason||null;
  report.outputTokensUsed=payload?.usage?.completion_tokens||null;
  report.inputTokensUsed=payload?.usage?.prompt_tokens||null;
@@ -92,7 +93,10 @@ try{
    pagePass:r.compliantPages,of:r.totalPages,
    heuristicNotCertified:r.qualitativeWarnings.map(w=>w.heuristicPassed)})),
   semanticCertified:false,approvedForApp:false},null,2));
- if(report.numericallyCompliantLevels!==6)process.exitCode=2;
+ report.heuristicPassedLevels=report.results.filter(r=>
+    r.qualitativeWarnings.every(w=>w.heuristicPassed)).length;
+ if(report.numericallyCompliantLevels!==6||report.heuristicPassedLevels!==6)
+   process.exitCode=2;
 }catch(e){report.error=String(e?.message||e).slice(0,130);report.elapsedMs=Date.now()-started;save();
  console.error(JSON.stringify({lab:report.lab,error:report.error,requests:report.actualModelCalls}));
  process.exitCode=2;
