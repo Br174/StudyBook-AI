@@ -27,5 +27,15 @@
     },
     "knownMissingFact": "distinction of description of motion from causes of observed variations",
     "semanticCertified": false
+  },
+  "manuallyAuthoredScience40Feasibility": {
+    "method": "MANUAL_EDITORIAL_REFERENCE_NOT_GEMINI",
+    "source": "scienze",
+    "level": 40,
+    "authoring": "human-style constrained rewrite composed for offline feasibility; never claim model produced this text",
+    "sourceFactCompleteness": "PRELIMINARY_EDITORIAL_JUDGEMENT_ONLY",
+    "professionalSemanticCertified": false,
+    "approvedForApp": false,
+    "text": "La Terra ruota sull'asse, alternando luce e buio: giorno e notte. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono dall'asse inclinato, non dalla distanza Terra-Sole. Le maree risentono di Luna e Sole. Le eclissi esigono allineamento e non avvengono a ogni lunazione. Il metodo scientifico usa ipotesi verificabili e osservazioni ripetibili: un dato isolato non prova una spiegazione. Descrivere il moto non spiega le cause delle variazioni."
   }
 }
