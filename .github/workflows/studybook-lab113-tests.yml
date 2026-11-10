@@ -1,0 +1,40 @@
+name: StudyBook LAB113 - actual requests and short safe 503 recovery
+on:
+  push:
+    branches:
+      - trial/studybook-lab113-cadence-telemetry-20261110
+    paths:
+      - .github/workflows/studybook-lab113-tests.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-only-diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax of the existing single request owner and new ledger
+        run: |
+          node --check src/lib/studyGeminiTrafficV113.js
+          node --check src/lib/draftFirstV57.js
+          node --check src/lib/geminiQuotaControllerV36.js
+          node --check src/lib/geminiThroughputV77.js
+          node --check scripts/test-lab113-traffic-pacing.mjs
+      - name: Zero-provider 2000-request stress, privacy, 503 and 429 invariants
+        run: node scripts/test-lab113-traffic-pacing.mjs
+      - name: Keep 2000 page planner fast and unchanged
+        run: node scripts/test-lab111-2000-pages.mjs
+      - name: Verify native Worker six level budgets still use one Gemini call
+        run: node scripts/test-lab111-lean-worker.mjs
+      - name: Build web app to prove the new on-device panel compiles
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          VITE_STUDYBOOK_TRIAL_111=1 VITE_STUDYBOOK_TRIAL_113=1 npm run build
+      - name: Preserve LAB79 baseline regression protection
+        run: |
+          node scripts/test-lab79-quality-no-loop.mjs
+          node scripts/test-lab79-targeted-recalibration.mjs
