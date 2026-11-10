@@ -24,7 +24,9 @@ jobs:
           node --check src/lib/studySourceTiersV116.js
           node --check scripts/test-lab116-source-tiers.mjs
       - name: Local source-anchored 44/2000 page numerical and safety tests
-        run: node scripts/test-lab116-source-tiers.mjs | tee lab116-local-results.json
+        run: |
+          set -euo pipefail
+          node scripts/test-lab116-source-tiers.mjs | tee lab116-local-results.json
       - name: Preserve proof independently of Gemini and APK builds
         if: always()
         uses: actions/upload-artifact@v4
