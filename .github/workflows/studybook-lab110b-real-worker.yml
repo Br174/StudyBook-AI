@@ -1,0 +1,55 @@
+name: StudyBook LAB110B - real per-proposition budget via Worker
+on:
+  push:
+    branches:
+      - audit/studybook-source-ledger-v110-20261110
+    paths:
+      - .github/workflows/studybook-lab110b-real-worker.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studybook-lab110b-two-real-fixtures
+  cancel-in-progress: false
+jobs:
+  measured-free-tier-case-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify offline Worker pilot before provider consumption
+        run: |
+          node --check scripts/test-lab110b-real-worker-budget.mjs
+          node scripts/test-lab110b-worker-contract.mjs
+      - name: Two actual free-tier Gemini Worker calls max
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab110b-real-worker-budget.mjs
+      - name: Archive real replies
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB110B-Real-Clause-Budgets
+          path: audit/reports/lab110b-real-worker-clause-budget.json
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Preserve exact synthetic result on isolated branch only
+        if: always()
+        env:
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f audit/reports/lab110b-real-worker-clause-budget.json || exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/reports/lab110b-real-worker-clause-budget.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'audit(LAB110B): save measured one-call clause budget trial'
+            git fetch origin "${TARGET_REF}"
+            git rebase "origin/${TARGET_REF}"
+            git push origin "HEAD:${TARGET_REF}"
+          fi
