@@ -98,9 +98,14 @@ jobs:
         run: |
           set -euo pipefail
           test "$TRIAL_WORKER" = studybook-ai-trial110
-          npx wrangler deploy --config wrangler.trial110.jsonc
-          printf '%s' "${AI_API_KEY:-${GEMINI_API_KEY:-}}" |
-            npx wrangler secret put AI_API_KEY --name "$TRIAL_WORKER" --config wrangler.trial110.jsonc
+          # Wrangler requires secrets at initial creation, not secret put later.
+          SECRETS_FILE="$(mktemp)"
+          trap 'rm -f "$SECRETS_FILE"' EXIT
+          printf 'AI_API_KEY=%s\n' "${AI_API_KEY:-${GEMINI_API_KEY:-}}" > "$SECRETS_FILE"
+          chmod 600 "$SECRETS_FILE"
+          npx wrangler deploy --config wrangler.trial110.jsonc --secrets-file "$SECRETS_FILE"
+          rm -f "$SECRETS_FILE"
+          trap - EXIT
           CODE=000
           for attempt in 1 2 3 4 5 6; do
             CODE=$(curl -sS --max-time 12 --output /tmp/trial110-worker-verify.json --write-out '%{http_code}' "$TRIAL_URL/api/editions/bulk/v51" || true)
