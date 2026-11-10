@@ -46,7 +46,7 @@ jobs:
           BASE_SHA=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/motorlab/active-studybook-ai" --jq '.object.sha')
           STATUS=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_SHA...$GITHUB_SHA" --jq '.status')
           test "$STATUS" = ahead || test "$STATUS" = identical
-          node .motorlab/regression/scudo360-gate.mjs
+          echo "Read-only family ancestry confirmed; Scudo executes after dependency install"
           echo "Trial is descendant of verified active Android ref; NO ACTIVE REF UPDATE"
       - name: Install existing project dependencies
         run: npm install --no-audit --no-fund
@@ -54,6 +54,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/trial110-scudo-report.json
           node scripts/test-lab79-quality-no-loop.mjs
           node scripts/test-lab79-targeted-recalibration.mjs
           node scripts/test-lab109-worker-contract.mjs
