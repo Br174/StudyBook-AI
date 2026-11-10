@@ -24,6 +24,8 @@ import {STUDY_FACT_FIRST_V109,chooseFactFirstV109,factFirstInstructionV109}
  from '../src/lib/studyFactFirstV109.js';
 import {STUDY_SOURCE_LEDGER_V110,chooseSourceLedgerV110,buildSourceLedgerV110,
  sourceLedgerInstructionV110} from '../src/lib/studySourceLedgerV110.js';
+import {STUDY_CLAUSE_BUDGET_V110B,chooseClauseBudgetV110B,
+ clauseBudgetInstructionV110B} from '../src/lib/studyClauseBudgetV110B.js';
 import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const DEFAULT_MODEL='gemini-3.5-flash-lite';
@@ -408,6 +410,15 @@ export default async function handler(req,res){
   const protocolV71=['draft-v71','repair-v71','recalibrate-v71'].includes(phase);
   const protocolV70=['draft-v70','repair-v70','recalibrate-v70'].includes(phase);
   const protocolRequested=protocolV75||protocolV74||protocolV72||protocolV71||protocolV70;
+  // LAB110B adds separate deliberate one-off validation; mixed experiments are forbidden.
+  if([req.body?.experimentV109,req.body?.experimentV110,req.body?.experimentV110b]
+      .filter(value=>value!=null).length>1)
+    return fail(res,409,'AI_CONFLICTING_EXPERIMENTS','Non combinare esperimenti, bozza intatta.');
+  if(req.body?.experimentV110b!=null&&
+     (req.body.experimentV110b!==STUDY_CLAUSE_BUDGET_V110B||
+      !chooseClauseBudgetV110B({env,req:req.body,level,phase})))
+    return fail(res,409,'AI_CLAUSE_BUDGET_PILOT_UNAVAILABLE',
+      'Quota per proposizioni sperimentale non autorizzata.');
   // LAB110 opt-in is independent of LAB109; never silently change an installed client.
   // Reject mixed or unapproved pilot selections BEFORE provider/token counting.
   if(req.body?.experimentV110!=null&&
@@ -510,6 +521,13 @@ export default async function handler(req,res){
   const feedback=(protocolV72&&phase==='repair-v72'||protocolV71&&phase==='repair-v71')&&observed>0
     ?{observedLetters:observed,desiredLetters:desired,gapLetters:desired-observed}:null;
   const geometryV78=protocolV74?studyGeometryPlanV78(safe,level):null;
+  const clauseBudgetActiveV110B=chooseClauseBudgetV110B({env,req:req.body,level,phase});
+  let clauseBudgetV110B=null;
+  if(clauseBudgetActiveV110B){
+    try{clauseBudgetV110B=clauseBudgetInstructionV110B(level,phase,geometryV78,safe)}
+    catch{return fail(res,422,'AI_CLAUSE_BUDGET_OUT_OF_SCOPE',
+      'Quota per proposizioni non applicabile, sorgente preservata.');}
+  }
   const sourceLedgerActiveV110=chooseSourceLedgerV110({env,req:req.body,level,phase});
   let sourceLedgerV110=null;
   if(sourceLedgerActiveV110){
@@ -518,7 +536,9 @@ export default async function handler(req,res){
       'Il gruppo non rientra nel collaudo: nessuna chiamata Gemini eseguita.');}
   }
   const factFirstV109=chooseFactFirstV109({env,req:req.body,level,phase});
-  const stageInstruction=sourceLedgerActiveV110
+  const stageInstruction=clauseBudgetActiveV110B
+    ?clauseBudgetV110B.text
+    :sourceLedgerActiveV110
     ?sourceLedgerInstructionV110(level,phase,geometryV78,sourceLedgerV110)
     :factFirstV109
     ?factFirstInstructionV109(level,originalLetters,phase,geometryV78)
@@ -668,7 +688,10 @@ export default async function handler(req,res){
       finishReason,outputTokenLimit:outputTokens,
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
-      bestOfInstruction:protocolV74&&!factFirstV109&&!sourceLedgerActiveV110?STUDY_BEST_OF_V76:null,
+      bestOfInstruction:protocolV74&&!factFirstV109&&!sourceLedgerActiveV110&&!clauseBudgetActiveV110B?STUDY_BEST_OF_V76:null,
+      ...(clauseBudgetActiveV110B?{clauseBudgetPilotV110B:STUDY_CLAUSE_BUDGET_V110B,
+        clauseCountV110B:clauseBudgetV110B.ledger.groups.reduce((n,g)=>n+g.count,0),
+        semanticCertified:false,approvedForApp:false}:{}),
       ...(sourceLedgerActiveV110?{sourceLedgerPilotV110:STUDY_SOURCE_LEDGER_V110,
         ledgerClauseCountV110:sourceLedgerV110.groups.reduce((n,g)=>n+g.count,0),
         semanticCertified:false,approvedForApp:false}:{}),
