@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install cached project dependencies before native regression
+        run: npm install --ignore-scripts --no-audit --no-fund
       - name: Verify one request owner and exact Worker protocol
         run: |
           node --check src/lib/study503FailoverV114.js
@@ -38,5 +40,4 @@ jobs:
           node scripts/test-lab79-quality-no-loop.mjs
       - name: Build client with isolated pilot and no production Worker changes
         run: |
-          npm install --ignore-scripts --no-audit --no-fund
           VITE_STUDYBOOK_TRIAL_111=1 VITE_STUDYBOOK_TRIAL_113=1 VITE_STUDYBOOK_TRIAL_114=1 npm run build
