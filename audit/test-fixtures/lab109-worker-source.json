@@ -1,0 +1,31 @@
+{
+  "purpose": "LAB109 controlled synthetic same-source Worker test; no private user PDF",
+  "sources": [
+    {
+      "id": "scienze",
+      "text": "La Terra ruota attorno al proprio asse. La rotazione causa il giorno e la notte, perché una parte della superficie riceve luce solare mentre l’altra rimane al buio. La rivoluzione attorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dall’inclinazione dell’asse terrestre, non dalla distanza tra la Terra e il Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta per dimostrare una spiegazione. Per comprendere il fenomeno bisogna distinguere fra descrizione del movimento e cause delle variazioni osservate."
+    },
+    {
+      "id": "procedura",
+      "text": "In un esercizio scolastico del 2024, una biblioteca simulata ha introdotto una procedura per richiedere i libri. La regola interna numero 12 prevede che lo studente registri il titolo prima del prestito e confermi la restituzione entro dieci giorni. Il personale può concedere una proroga soltanto se il volume non è stato prenotato da altri studenti. La proroga non è automatica: senza conferma scritta resta valida la data iniziale. Quando un libro è già riservato, lo studente deve restituirlo alla scadenza anche se non ha completato la lettura. Il registro consente di ricostruire chi ha ricevuto il libro e in quale giorno, ma non contiene dati sulle opinioni personali dei lettori. Le condizioni e le eccezioni sono essenziali per applicare correttamente la procedura."
+    }
+  ],
+  "historicalScience40": {
+    "source": "scienze",
+    "level": 40,
+    "text": "La Terra ruota attorno al proprio asse causando il giorno e la notte, mentre la rivoluzione attorno al Sole dura un anno. Le stagioni dipendono dall'inclinazione asse, non dalla distanza solare. La Luna e il Sole influenzano le maree. Le eclissi esigono allineamenti particolari e non avvengono a ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili; un risultato isolato non basta per dimostrare una spiegazione.",
+    "lab99Metrics": {
+      "letters": 378,
+      "reduction": 36.89,
+      "rows": 8,
+      "cap": 8,
+      "letterBand": true,
+      "relationAlerts": [],
+      "lexicalAlerts": [
+        "cause_vs_description"
+      ]
+    },
+    "knownMissingFact": "distinction of description of motion from causes of observed variations",
+    "semanticCertified": false
+  }
+}
