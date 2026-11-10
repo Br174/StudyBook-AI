@@ -24,7 +24,7 @@ jobs:
           node --check scripts/test-lab110-source-risk-replay.mjs
       - name: Risk replay, six source cases plus three adversarial mutations
         run: node scripts/test-lab110-source-risk-replay.mjs
-      - name: Actual Worker LAB110 and LAB110B regression
+      - name: Actual Worker LAB110 and LAB110B regression with source-risk no-study hold
         run: |
           node scripts/test-lab110-source-ledger-contract.mjs
           node scripts/test-lab110b-worker-contract.mjs
