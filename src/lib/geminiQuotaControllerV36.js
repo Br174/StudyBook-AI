@@ -22,10 +22,17 @@ export function makeGeminiPause(quota={},previous=null,now=Date.now()){
   let estimated=Boolean(quota.estimated);
   if(!Number.isFinite(seconds)||seconds<1)estimated=true;
   if(estimated){
-    const base=Number.isFinite(seconds)&&seconds>=1
-      ?seconds:ESTIMATED_BASE_SECONDS[kind]||15*60;
-    seconds=Math.min(MAX_ESTIMATED_WAIT_MS/1000,
-      Math.max(base,base*Math.pow(2,Math.min(attempts-1,8))));
+    if(kind==='overload'&&import.meta.env?.VITE_STUDYBOOK_TRIAL_113==='1'){
+      // LAB113: a provider 503 is NOT a daily quota reset. Cap only
+      // *locally guessed* cooldowns. A real Retry-After remains authoritative.
+      // Conservative bounded sequence 35, 50, 72, 103, 120 seconds.
+      seconds=Math.min(120,Math.ceil(35*Math.pow(1.43,attempts-1)));
+    }else{
+      const base=Number.isFinite(seconds)&&seconds>=1
+        ?seconds:ESTIMATED_BASE_SECONDS[kind]||15*60;
+      seconds=Math.min(MAX_ESTIMATED_WAIT_MS/1000,
+        Math.max(base,base*Math.pow(2,Math.min(attempts-1,8))));
+    }
   }
   // Only non-estimated provider RetryInfo / Retry-After is treated as official.
   const delay=Math.max(15*1000,Math.min(MAX_WAIT_MS,Math.ceil(seconds)*1000));
@@ -47,9 +54,16 @@ export async function readGeminiPause({now=Date.now()}={}){
   const saved=await loadResumeState(KEY);
   if(!saved||saved.version!==1)return null;
   if(!saved.automatic)return saved;
-  const until=Date.parse(saved.retryAt||'');
+  let until=Date.parse(saved.retryAt||'');
+  if(import.meta.env?.VITE_STUDYBOOK_TRIAL_113==='1'&&
+     saved.kind==='overload'&&saved.estimated===true){
+    // Existing LAB111 installation may hold an older 6-minute estimate.
+    // Never bypass an official Google Retry-After or any real 429 limit.
+    const from=Date.parse(saved.registeredAt||'');
+    if(Number.isFinite(from))until=Math.min(until,from+120000);
+  }
   if(!Number.isFinite(until)||until<=now)return null;
-  return saved;
+  return {...saved,retryAt:new Date(until).toISOString()};
 }
 export async function registerGeminiPause(quota,{now=Date.now()}={}){
   const previous=await loadResumeState(KEY);
