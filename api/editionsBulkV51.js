@@ -27,6 +27,8 @@ import {STUDY_SOURCE_LEDGER_V110,chooseSourceLedgerV110,buildSourceLedgerV110,
 import {STUDY_CLAUSE_BUDGET_V110B,chooseClauseBudgetV110B,
  clauseBudgetInstructionV110B} from '../src/lib/studyClauseBudgetV110B.js';
 import {sourceRiskReviewV110} from '../src/lib/studySourceRiskV110.js';
+import {STUDY_LEAN_PERCENT_V111,chooseLeanPercentV111,
+ leanPercentInstructionV111} from '../src/lib/studyLeanPercentV111.js';
 import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const DEFAULT_MODEL='gemini-3.5-flash-lite';
@@ -411,6 +413,16 @@ export default async function handler(req,res){
   const protocolV71=['draft-v71','repair-v71','recalibrate-v71'].includes(phase);
   const protocolV70=['draft-v70','repair-v70','recalibrate-v70'].includes(phase);
   const protocolRequested=protocolV75||protocolV74||protocolV72||protocolV71||protocolV70;
+  // LAB111 is a six-level, single-call alternative. Never mix with LAB109/110.
+  if([req.body?.experimentV109,req.body?.experimentV110,
+      req.body?.experimentV110b,req.body?.experimentV111]
+      .filter(value=>value!=null).length>1)
+    return fail(res,409,'AI_CONFLICTING_EXPERIMENTS','Esperimenti incompatibili, bozze preservate.');
+  if(req.body?.experimentV111!=null&&
+     (req.body.experimentV111!==STUDY_LEAN_PERCENT_V111||
+      !chooseLeanPercentV111({env,req:req.body,level,phase})))
+    return fail(res,409,'AI_LEAN_PERCENT_UNAVAILABLE',
+      'Il metodo sperimentale delle percentuali non è abilitato.');
   // LAB110B adds separate deliberate one-off validation; mixed experiments are forbidden.
   if([req.body?.experimentV109,req.body?.experimentV110,req.body?.experimentV110b]
       .filter(value=>value!=null).length>1)
@@ -522,6 +534,7 @@ export default async function handler(req,res){
   const feedback=(protocolV72&&phase==='repair-v72'||protocolV71&&phase==='repair-v71')&&observed>0
     ?{observedLetters:observed,desiredLetters:desired,gapLetters:desired-observed}:null;
   const geometryV78=protocolV74?studyGeometryPlanV78(safe,level):null;
+  const leanPercentActiveV111=chooseLeanPercentV111({env,req:req.body,level,phase});
   const clauseBudgetActiveV110B=chooseClauseBudgetV110B({env,req:req.body,level,phase});
   let clauseBudgetV110B=null;
   if(clauseBudgetActiveV110B){
@@ -537,7 +550,9 @@ export default async function handler(req,res){
       'Il gruppo non rientra nel collaudo: nessuna chiamata Gemini eseguita.');}
   }
   const factFirstV109=chooseFactFirstV109({env,req:req.body,level,phase});
-  const stageInstruction=clauseBudgetActiveV110B
+  const stageInstruction=leanPercentActiveV111
+    ?leanPercentInstructionV111(level,phase,geometryV78)
+    :clauseBudgetActiveV110B
     ?clauseBudgetV110B.text
     :sourceLedgerActiveV110
     ?sourceLedgerInstructionV110(level,phase,geometryV78,sourceLedgerV110)
@@ -558,8 +573,10 @@ export default async function handler(req,res){
   // LAB73: no source text, model prompts or API keys in diagnostic metadata.
   let providerStageV73='token-count';
   try{
-    const counted=await countOfficialTokens(selected,key,messages,controller.signal);
+    // LAB111 skips one provider round-trip for small bounded input only.
     const safeEstimate=Math.ceil(JSON.stringify(messages).length/2)+1200;
+    const counted=leanPercentActiveV111&&safeEstimate<=100000
+      ?null:await countOfficialTokens(selected,key,messages,controller.signal);
     const inputTokens=counted===null?safeEstimate:counted;
     if(inputTokens>INPUT_LIMIT)return fail(res,413,'AI_BLOCK_TOO_LARGE',
       'Il blocco supera il margine di token in ingresso.',{inputTokens,
@@ -693,7 +710,10 @@ export default async function handler(req,res){
       finishReason,outputTokenLimit:outputTokens,
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
-      bestOfInstruction:protocolV74&&!factFirstV109&&!sourceLedgerActiveV110&&!clauseBudgetActiveV110B?STUDY_BEST_OF_V76:null,
+      bestOfInstruction:protocolV74&&!factFirstV109&&!sourceLedgerActiveV110&&!clauseBudgetActiveV110B&&!leanPercentActiveV111?STUDY_BEST_OF_V76:null,
+      ...(leanPercentActiveV111?{leanPercentPilotV111:STUDY_LEAN_PERCENT_V111,
+        verifiedNumericBudgetOwner:'studyPageBudgetsV74',
+        semanticCertified:false,approvedForApp:false}:{}),
       ...(clauseBudgetActiveV110B?{clauseBudgetPilotV110B:STUDY_CLAUSE_BUDGET_V110B,
         clauseCountV110B:clauseBudgetV110B.ledger.groups.reduce((n,g)=>n+g.count,0),
         semanticCertified:false,approvedForApp:false}:{}),
