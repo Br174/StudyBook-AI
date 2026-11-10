@@ -15,7 +15,10 @@ const validClock=v=>Number.isFinite(Number(v))?Number(v):0;
 export function throughputFailureV77(previous=null,{now=Date.now()}={}){
  const was=previous?.version===1&&previous.expiresAt>now?previous:null;
  const failures=clamp((was?.overloadCount||0)+1,1,12);
- const gapMs=clamp(Math.round(90000*Math.pow(1.35,failures-1)),90000,MAX_GAP_MS);
+ const trial113=import.meta.env?.VITE_STUDYBOOK_TRIAL_113==='1';
+ const gapMs=trial113
+  ?clamp(Math.round(45000*Math.pow(1.4,failures-1)),45000,90000)
+  :clamp(Math.round(90000*Math.pow(1.35,failures-1)),90000,MAX_GAP_MS);
  return{version:1,kind:'overload-avoidance',overloadCount:failures,
   successesSinceOverload:0,gapMs,observedInputTokens:was?.observedInputTokens||0,
   lastStartedAt:was?.lastStartedAt||0,nextAllowedAt:now,
@@ -35,7 +38,8 @@ export function throughputSuccessV77(previous=null,{
   // Retain a conservative recovery window but decay only AFTER repeated
   // successful calls. A second 503 quickly raises the interval again.
   const discount=Math.floor(successesSinceOverload/2)*15000;
-  gapMs=clamp(was.gapMs-discount,25000,MAX_GAP_MS);
+  gapMs=clamp(was.gapMs-discount,25000,
+   import.meta.env?.VITE_STUDYBOOK_TRIAL_113==='1'?90000:MAX_GAP_MS);
   if(successesSinceOverload>=8){
    overloadCount=0;
    gapMs=input>=LARGE_INPUT_TOKENS?
@@ -56,7 +60,12 @@ export function throughputSuccessV77(previous=null,{
 }
 export function throughputDelayV77(record,now=Date.now()){
  if(record?.version!==1||record?.expiresAt<=now)return 0;
- return Math.max(0,Math.min(MAX_GAP_MS,validClock(record.nextAllowedAt)-now));
+ const trial113=import.meta.env?.VITE_STUDYBOOK_TRIAL_113==='1';
+ const maxGap=trial113&&record.kind==='overload-avoidance'?90000:MAX_GAP_MS;
+ const allowedAt=trial113&&record.kind==='overload-avoidance'&&record.lastStartedAt>0
+   ?Math.min(validClock(record.nextAllowedAt),validClock(record.lastStartedAt)+maxGap)
+   :validClock(record.nextAllowedAt);
+ return Math.max(0,Math.min(maxGap,allowedAt-now));
 }
 export async function readGeminiThroughputV77(){
  const d=await loadResumeState(KEY);
