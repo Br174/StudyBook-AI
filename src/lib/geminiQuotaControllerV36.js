@@ -9,6 +9,10 @@ const ESTIMATED_BASE_SECONDS={daily:24*3600,overload:90,
 // Provider supplied timing is authoritative as a minimum; local estimates
 // increase after repeated failures, and never masquerade as Google deadlines.
 const validKinds=new Set(['requests-minute','tokens-minute','daily','billing','no-free-allocation','overload','unknown']);
+export function estimatedOverloadSecondsV113(attempts){
+ return Math.min(120,Math.ceil(35*Math.pow(1.43,
+   Math.max(0,Math.min(20,Number(attempts)||1)-1))));
+}
 export function makeGeminiPause(quota={},previous=null,now=Date.now()){
   const kind=validKinds.has(quota.kind)?quota.kind:'unknown';
   const automatic=quota.automatic!==false&&!['billing','no-free-allocation'].includes(kind);
@@ -26,7 +30,7 @@ export function makeGeminiPause(quota={},previous=null,now=Date.now()){
       // LAB113: a provider 503 is NOT a daily quota reset. Cap only
       // *locally guessed* cooldowns. A real Retry-After remains authoritative.
       // Conservative bounded sequence 35, 50, 72, 103, 120 seconds.
-      seconds=Math.min(120,Math.ceil(35*Math.pow(1.43,attempts-1)));
+      seconds=estimatedOverloadSecondsV113(attempts);
     }else{
       const base=Number.isFinite(seconds)&&seconds>=1
         ?seconds:ESTIMATED_BASE_SECONDS[kind]||15*60;
