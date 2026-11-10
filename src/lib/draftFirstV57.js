@@ -27,7 +27,9 @@ import {measureEditionLengthV72} from './studyRebalancePolicyV67.js';
 import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from './studyDraftProtocolV72.js';
 import {STUDY_DRAFT_PROTOCOL_V74,verifyStudyDraftResponseV74} from './studyDraftProtocolV74.js';
 import {pageLetterBudgetsV74,pageLetterReviewV74} from './studyPageBudgetsV74.js';
-import {STUDY_GEOMETRY_V78} from './studyGeometryV78.js';
+import {STUDY_GEOMETRY_V78,studyGeometryPlanV78} from './studyGeometryV78.js';
+import {buildSourceLedgerV110} from './studySourceLedgerV110.js';
+import {STUDY_CLAUSE_BUDGET_V110B} from './studyClauseBudgetV110B.js';
 import {initialStudyOutputLimitV73,safeNetworkSplitV73,isRecoverableNetworkV73,
  minimumFullPageOutputV73}
  from './studyNetworkRecoveryV73.js';
@@ -203,6 +205,17 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
    maxOutputTokens:tokenBudget,timeoutMs:190000,repairDrafts,
    units:block.map(u=>({id:u.id,source:u.source,chapterTitle:u.chapterTitle,
      sectionTitle:u.sectionTitle,pageStart:u.pageStart,pageEnd:u.pageEnd}))};
+ // LAB110 test-only. Do not send a pilot request for unmeasured large blocks:
+ // preserve the LAB79 source, natural page boundaries and retry behavior.
+ if(import.meta.env?.VITE_STUDYBOOK_TRIAL_110B==='1'&&level==='40'&&usePageBudgetV74){
+   try{
+     const geometry=studyGeometryPlanV78(block,level);
+     buildSourceLedgerV110(block,geometry);
+     body.experimentV110b=STUDY_CLAUSE_BUDGET_V110B;
+   }catch{
+     // Unsupported original group: stay on normal LAB79 path (one request).
+   }
+ }
  await waitForGeminiCadenceV58({signal,onWait});
  // The in-request wait is part of the existing single Gemini runner.
  // Re-check quota here because Android may resume after a background pause.
@@ -246,6 +259,11 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
       data?.geometryReviewV78?.policy!==STUDY_GEOMETRY_V78))
    throw Object.assign(new Error('Worker geometrico LAB78 non verificato: bozze conservate'),
     {code:'AI_GEOMETRY_BACKEND_VERSION_MISMATCH'});
+ if(body.experimentV110b&&
+   (data?.clauseBudgetPilotV110B!==STUDY_CLAUSE_BUDGET_V110B||
+     data?.sourceRiskAuditV110?.semanticCertified!==false))
+   throw Object.assign(new Error('Worker prova LAB110 non verificato: bozze preservate'),
+     {code:'AI_TRIAL_110_BACKEND_MISMATCH'});
  if(data?.engine!=='ai'||data?.version!=='integral-v51'||data?.level!==level)
    throw Object.assign(new Error('Provenienza risposta Gemini non verificata'),{code:'INVALID_EDITION_RESPONSE'});
  // LAB70: reject stale LAB67 Worker deployments before storing new drafts.
