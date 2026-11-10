@@ -6,7 +6,7 @@
 import {studyLetters} from './studyPillarV38.js';
 import {pageLetterBudgetsV74,pageLetterReviewV74} from './studyPageBudgetsV74.js';
 import {STUDY_TARGET_V67,STUDY_LEVELS_V67} from './studyRebalancePolicyV67.js';
-import {extractProtectedItems} from './fidelityEngine.js';
+import {extractProtectedItems,auditFidelity} from './fidelityEngine.js';
 import {immutableViolationsV67} from './immutableFragmentsV67.js';
 import {wrapStudyWordsV78,studyGeometryPlanV78,studyGeometryReviewV78}
  from './studyGeometryV78.js';
@@ -30,6 +30,13 @@ function guarded(source,candidate){
  if(!text||text===original||studyLetters(text)>=studyLetters(original))return null;
  if(studyLetters(text)<Math.ceil(studyLetters(original)*0.20))return null;
  if(immutableViolationsV67(original,text).length)return null;
+ // LAB116 semantic caution: a short variant is NOT safe solely because it
+ // contains the same dates and negation words. Keep the whole original
+ // whenever a distinct fact/condition appears to have disappeared.
+ const fidelity=auditFidelity(original,text);
+ if(fidelity.missingHighValue.length||
+    fidelity.missingProtected.length||
+    fidelity.qualifierMismatches.length)return null;
  const from=extractProtectedItems(original),to=extractProtectedItems(text);
  const lower=text.toLocaleLowerCase('it-IT');
  // Strict policy: if a legal number, date, literal qualifier, or deadline
@@ -70,6 +77,8 @@ export function sourceTierInstructionV116(plan){
   'brief: circa 35–50% delle LETTERE della singola frase originale.',
   'Importanza 0–5 della frase per la comprensione del libro. Segnala essential=true per fatti, definizioni, condizioni e nessi imprescindibili.',
   'Semplifica la lingua ma non cambiare senso, soggetto, negazione, data, numero, formula, grado di certezza o eccezioni. Non eliminare in brief una negazione, un termine legale o un riferimento protetto.',
+  'Ogni frase breve deve contenere TUTTE le proposizioni della stessa frase originale: soggetti, verbi obbligatori, azioni distinte, condizioni, eccezioni, negazioni, differenze tra influenza e causa. Non sostituire due obblighi con uno solo.',
+  'Nelle frasi che contengono molti fatti, mantieni anche 65–85% del testo se necessario: le percentuali si compongono globalmente, non sacrificando una condizione in una singola frase.',
   'Non inventare spiegazioni né aggiungere esempi. Se non puoi abbreviare una frase in sicurezza, ripeti l’originale come alternativa: il software la manterrà intatta.',
   'Conserva tutti gli ID delle unità nello stesso ordine e produci per ogni unità UN elemento variants per ciascuna frase originale nell’ordine esatto.',
   'Rispondi SOLTANTO con JSON: {"units":[{"id":"...","variants":[{"compact":"...","brief":"...","importance":3,"essential":true}]}]}.',
