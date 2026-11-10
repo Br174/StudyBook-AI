@@ -20,7 +20,7 @@ jobs:
       TRIAL_BASE: StudyBook-AI-TRIAL-111
       TRIAL_WORKER: studybook-ai-trial111
       TRIAL_URL: https://studybook-ai-trial111.brunoverlezza.workers.dev
-      STUDYBOOK_APPLICATION_ID: it.studybook.ai.lab.trial110
+      STUDYBOOK_APPLICATION_ID: it.studybook.ai.lab.trial111
       STUDYBOOK_VERSION_CODE: "2026111101"
       STUDYBOOK_VERSION_NAME: "0.3.111-prova"
       VITE_NATIVE_API_BASE: https://studybook-ai-trial111.brunoverlezza.workers.dev
@@ -133,7 +133,7 @@ jobs:
           test -x "$SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
-      - name: Upgrade only separate Android TRIAL110 package to LAB111 at build time
+      - name: Create independent LAB111 Android package; retain old LAB110 draft cache
         shell: bash
         run: |
           set -euo pipefail
@@ -142,7 +142,7 @@ jobs:
           const path='capacitor.config.json';
           const c=JSON.parse(readFileSync(path,'utf8'));
           if(c.appId!=='it.studybook.ai.lab')throw Error('Wrong LAB79 parent appId');
-          c.appId='it.studybook.ai.lab.trial110';
+          c.appId='it.studybook.ai.lab.trial111';
           c.appName='StudyBook AI Prova 111';
           writeFileSync(path,JSON.stringify(c,null,2)+'\n');
           NODE
@@ -225,6 +225,6 @@ jobs:
           gh release create "$TAG" \
             "artifacts/$TRIAL_BASE.apk" "artifacts/$TRIAL_BASE.zip" "artifacts/$TRIAL_BASE-SORGENTI.zip" "artifacts/$TRIAL_BASE.sha256" "artifacts/$TRIAL_BASE-IDENTITY.txt" \
             --title "StudyBook AI LAB111 PROVA (affiancata, non certificata)" \
-            --notes "APK sperimentale affiancata: NON sostituisce LAB79, non è promossa né certificata per uso didattico. Tutti e sei i livelli usano il budget lettere LAB111 in una sola generazione per blocco. QA locale dopo le bozze, zero correzioni Gemini automatiche. Test su copia di PDF, verifica percentuali e fatti. Worker isolato $TRIAL_URL. SHA sorgente $GITHUB_SHA." \
+            --notes "APK sperimentale con DATI SEPARATI da LAB79 e Prova110: nessuna vecchia bozza viene riutilizzata. Non è certificata per uso didattico. Tutti e sei i livelli usano il budget lettere LAB111 in una sola generazione per blocco. QA locale dopo le bozze, zero correzioni Gemini automatiche. Test su copia di PDF, verifica percentuali e fatti. Worker isolato $TRIAL_URL. SHA sorgente $GITHUB_SHA." \
             --target "$GITHUB_SHA" --prerelease --latest=false
           echo "TRIAL111_RELEASE=https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
