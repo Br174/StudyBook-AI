@@ -1,0 +1,52 @@
+{
+  "lab": "LAB111",
+  "runType": "real Gemini through actual Worker handler",
+  "sources": "synthetic public test fixtures only",
+  "privateBookUsed": false,
+  "date": "2026-11-10T09:45:21.836Z",
+  "model": "gemini-3.5-flash-lite",
+  "approvedForApp": false,
+  "maxCalls": 2,
+  "providerRequestsAttempted": 2,
+  "providerResponses": 1,
+  "freeTierOnly": true,
+  "noPaidFallback": true,
+  "automaticRetries": 0,
+  "results": [
+    {
+      "sourceId": "scienze",
+      "level": "10",
+      "sourceSha256": "e6c0dfd8a4a3e28994458e60bf0d44f5b3814281cc45b29c405f3d36671c46cd",
+      "sourceLetters": 599,
+      "outputLetters": 512,
+      "targetLetters": 539,
+      "minLetters": 510,
+      "maxLetters": 569,
+      "actualReduction": 14.52,
+      "numericBand": true,
+      "gridPass": true,
+      "rows": 11,
+      "rowCap": 12,
+      "numericAndVirtualGrid": true,
+      "semanticAdvisories": [],
+      "semanticCertified": false,
+      "countedBy": "conservative-estimate",
+      "responseProvenance": "lab111-original-letters-retention-one-call-v1",
+      "finishReason": "stop",
+      "approvedForApp": false,
+      "outputText": "La Terra ruota attorno al proprio asse. La rotazione causa giorno e notte, poiche una parte riceve luce mentre altra resta al buio. La rivoluzione intorno al Sole dura circa un anno. Le stagioni dipendono soprattutto dalla inclinazione dell asse terrestre, non dalla distanza tra la Terra ed il Sole. La Luna influisce sulle maree insieme al Sole. Le eclissi richiedono un allineamento particolare e non avvengono ad ogni lunazione. Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. Un risultato isolato non basta. Per comprendere il fenomeno bisogna distinguere fra descrizione e cause."
+    }
+  ],
+  "errors": [
+    {
+      "sourceId": "procedura",
+      "level": "50",
+      "http": 503,
+      "code": "AI_TEMPORARY_OVERLOAD"
+    }
+  ],
+  "semanticCertified": false,
+  "complete": false,
+  "numericAndGridPass": 1,
+  "finishedAt": "2026-11-10T09:45:30.168Z"
+}
