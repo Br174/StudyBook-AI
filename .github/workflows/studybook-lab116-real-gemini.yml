@@ -5,6 +5,7 @@ on:
       - research/studybook-lab116-source-anchored-20261110
     paths:
       - .github/workflows/studybook-lab116-real-gemini.yml
+      - scripts/test-lab116-real-one-call.mjs
   workflow_dispatch:
 permissions:
   contents: read
