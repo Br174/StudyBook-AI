@@ -1,0 +1,39 @@
+name: StudyBook LAB114 - one-shot 503 failover no extra healthy calls
+on:
+  push:
+    branches:
+      - trial/studybook-lab114-503-flashlite-failover-20261110
+    paths:
+      - .github/workflows/studybook-lab114-tests.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  failover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify one request owner and exact Worker protocol
+        run: |
+          node --check src/lib/study503FailoverV114.js
+          node --check src/lib/draftFirstV57.js
+          node --check src/lib/studyGeminiTrafficV113.js
+          node --check api/editionsBulkV51.js
+          node --check scripts/test-lab114-one-shot-failover.mjs
+      - name: Test real Worker route with fake model responses, no Gemini quota spent
+        run: node scripts/test-lab114-one-shot-failover.mjs
+      - name: Confirm LAB111 six levels preserve existing one-call behavior
+        run: node scripts/test-lab111-lean-worker.mjs
+      - name: Confirm existing no-loop quality and request journal are unchanged
+        run: |
+          node scripts/test-lab113-traffic-pacing.mjs
+          node scripts/test-lab111-2000-pages.mjs
+          node scripts/test-lab79-quality-no-loop.mjs
+      - name: Build client with isolated pilot and no production Worker changes
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          VITE_STUDYBOOK_TRIAL_111=1 VITE_STUDYBOOK_TRIAL_113=1 VITE_STUDYBOOK_TRIAL_114=1 npm run build
