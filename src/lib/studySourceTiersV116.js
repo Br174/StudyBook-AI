@@ -117,6 +117,7 @@ function validatedVariants(plan,modelReply){
     essential:edit.essential,options};
   });
  });
+}
 function pruneStates(states,target,remainingMin,remainingMax){
  if(states.size<=BEAM)return states;
  const items=[...states.entries()].sort((a,b)=>{
