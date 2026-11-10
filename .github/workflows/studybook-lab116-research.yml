@@ -1,0 +1,33 @@
+name: StudyBook LAB116 - anchored source six levels local experiment
+on:
+  push:
+    branches:
+      - research/studybook-lab116-source-anchored-20261110
+    paths:
+      - .github/workflows/studybook-lab116-research.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  numeric-source-trial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax all research-only components
+        run: |
+          node --check src/lib/studySourceTiersV116.js
+          node --check scripts/test-lab116-source-tiers.mjs
+      - name: Local source-anchored 44/2000 page numerical and safety tests
+        run: node scripts/test-lab116-source-tiers.mjs | tee lab116-local-results.json
+      - name: Preserve proof independently of Gemini and APK builds
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB116-Source-Anchored-Local-Evidence
+          path: lab116-local-results.json
+          if-no-files-found: ignore
+          retention-days: 30
