@@ -17,6 +17,7 @@ export function emptyGeminiTrafficV113(){
   nextId:0,dispatched:0,worker200:0,workerFailures:0,
   confirmedParts:0,http503:0,http429:0,
   inputTokensReported:0,outputTokensReported:0,
+  providerAttemptsReported:0,provider503Recoveries:0,
   lastHttp:null,errors:{},recent:[]};
 }
 export function applyGeminiTrafficV113(state,entry,now=Date.now()){
@@ -51,6 +52,8 @@ export function applyGeminiTrafficV113(state,entry,now=Date.now()){
   item.inputTokens=number(entry.inputTokens,1e9);
   item.outputTokens=number(entry.outputTokens,1e9);
   item.parts=number(entry.parts,10000);
+  item.providerAttempts=number(entry.providerAttempts,2);
+  item.provider503Recovered=entry.provider503Recovered===true;
   current.lastHttp=http||null;
   if(http===200){current.worker200++;if(item.parts>0)current.confirmedParts++}
   else{current.workerFailures++;if(http===503)current.http503++;if(http===429)current.http429++;
@@ -61,6 +64,9 @@ export function applyGeminiTrafficV113(state,entry,now=Date.now()){
   }
   current.inputTokensReported+=item.inputTokens;
   current.outputTokensReported+=item.outputTokens;
+  current.providerAttemptsReported=(current.providerAttemptsReported||0)+item.providerAttempts;
+  if(item.provider503Recovered)current.provider503Recoveries=
+    (current.provider503Recoveries||0)+1;
   return {state:current,id};
  }
  return {state:current,id:null};
@@ -74,10 +80,14 @@ export function geminiTrafficSummaryV113(state){
   http503:number(s.http503),http429:number(s.http429),
   inputTokensReported:number(s.inputTokensReported),
   outputTokensReported:number(s.outputTokensReported),
+  providerAttemptsReported:number(s.providerAttemptsReported),
+  provider503Recoveries:number(s.provider503Recoveries),
   last:last?{level:last.level,pageStart:last.pageStart,pageEnd:last.pageEnd,
    sourceChars:last.sourceChars,estimatedInputTokens:last.estimatedInputTokens,
    outputTokenLimit:last.outputTokenLimit,http:last.http||null,
-   elapsedMs:last.elapsedMs||0,state:last.state}:null,
+   elapsedMs:last.elapsedMs||0,state:last.state,
+   providerAttempts:last.providerAttempts||0,
+   provider503Recovered:last.provider503Recovered===true}:null,
   // Only latest metadata; no original content, no PII, no provider keys.
  };
 }
