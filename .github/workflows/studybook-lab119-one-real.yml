@@ -1,0 +1,35 @@
+name: StudyBook LAB119 - one free Gemini semantic ladder request
+on:
+  push:
+    branches:
+      - research/studybook-lab119-semantic-ladder-20261111
+    paths:
+      - .github/workflows/studybook-lab119-one-real.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  one-real-ladder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify isolated script before provider use
+        run: |
+          node --check src/lib/studySemanticLadderV119.js
+          node --check scripts/test-lab119-one-real-gemini.mjs
+      - name: EXACTLY ONE free Gemini reply, two public synthetic pages
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab119-one-real-gemini.mjs
+      - name: Preserve model's real answer and all pass/fail evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB119-ONE-REAL-GEMINI-CORE-EXPANSIONS
+          path: audit/reports/lab119-one-real-response.json
+          if-no-files-found: error
+          retention-days: 30
