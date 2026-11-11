@@ -55,6 +55,8 @@ export function explainedSnapshotV122(book,originalPages,records,status='partial
   totalChunkVariants:all,verifiedChunks:ready,blockedCells:all-ready,
   draftUnitsSaved:saved,checkpointPersistent:true,
   updatedAt:new Date().toISOString(),semanticCertified:false,
+  ...(diagnostics.retryAt?{quota:{
+    automatic:true,estimated:true,kind:'overload',retryAt:diagnostics.retryAt}}:{}),
   diagnostics:{...diagnostics}};
 }
 export async function generateExplainedBookV122(book,{
