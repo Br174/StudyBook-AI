@@ -88,7 +88,7 @@ try{
  const result=await rebalanceSavedStudyBookV67(book,{
   onProgress:async state=>snapshots.push(state)
  });
- console.log('LAB121_DIAGNOSTIC_REBALANCE_CALLS',calls.length, JSON.stringify({status:result?.rebalanceV67?.status,completed:result?.rebalanceV67?.completed,remaining:result?.rebalanceV67?.remaining,accepted:result?.rebalanceV67?.accepted}));
+ console.log('LAB121_DIAGNOSTIC_REBALANCE_CALLS',calls.length, JSON.stringify({status:result?.rebalanceV67?.status,completed:result?.rebalanceV67?.completed,remaining:result?.rebalanceV67?.remaining,accepted:result?.rebalanceV67?.accepted,errors:result?.rebalanceV67?.errors, lastQuota:result?.rebalanceV67?.lastQuota}));
  assert.equal(calls.length,2,'one extra attempt, then stop');
  assert.deepEqual(calls.map(c=>c.phase),['recalibrate-v74','recalibrate-v74']);
  assert.equal(result.rebalanceV67.version,'lab72-targeted-source-v1');
