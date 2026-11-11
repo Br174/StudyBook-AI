@@ -5,10 +5,13 @@ import {originalExplainedPagesV122,auditExplainedPageV122,
  EXPLAINED_PRIVATE_BAND_V122,EXPLAINED_POLICY_V122} from './explainedPolicyV122.js';
 import {percentReduced} from './studyPillarV38.js';
 
-// Large batches for short pages; split automatically on provider truncation.
-// LAB123: first verified page must arrive before any large batch is attempted.
-const BLOCK_SOURCE_LIMIT=6500;
-const BLOCK_PAGE_LIMIT=4;
+// LAB124: restore the LAB51/58 TRANSPORT concept: a few large natural
+// page-boundary requests, bounded by estimated input/output capacity.
+// No legacy six-edition text generation or 680-character request splitting.
+const BLOCK_SOURCE_LIMIT=28000; // Worker hard cap is 30000 source chars.
+const BLOCK_PAGE_LIMIT=72;
+const BLOCK_INPUT_TOKEN_LIMIT=35000;
+const BLOCK_OUTPUT_TOKEN_LIMIT=30000;
 const RECOVERABLE_HTTP=new Set([413,422,502,503,504]);
 const VERSION=EXPLAINED_POLICY_V122;
 const withSource=(original,result)=>({
@@ -18,18 +21,34 @@ const withSource=(original,result)=>({
  review:result?.review||{ready:false,issues:['V122_DRAFT_NOT_VERIFIED']},
  sourcePage:original.physicalPage
 });
-export function planExplainedBlocksV122(pages,{maxChars=BLOCK_SOURCE_LIMIT,maxPages=BLOCK_PAGE_LIMIT}={}){
- const groups=[],limit=Math.max(512,Math.min(30000,Math.floor(maxChars)));
- let group=[],used=0;
- for(const p of pages){
-  const size=p.segments.reduce((n,s)=>n+s.source.length,0);
-  if(size>30000)throw Object.assign(new Error('Una pagina eccede il limite del blocco Gemini.'),{code:'V122_PAGE_EXCEEDS_BLOCK_LIMIT'});
-  if(group.length&&(group.length>=maxPages||used+size>limit)){
-   groups.push(group);group=[];used=0;
-  }
-  group.push(p);used+=size;
+export function planExplainedBlocksV122(pages,{
+ maxChars=BLOCK_SOURCE_LIMIT,maxPages=BLOCK_PAGE_LIMIT,
+ maxInputTokens=BLOCK_INPUT_TOKEN_LIMIT,maxOutputTokens=BLOCK_OUTPUT_TOKEN_LIMIT
+}={}){
+ // Same principle as LAB51 natural-boundary planner: estimate BOTH input
+ // and output, fill the largest safe request, cut only at whole-page borders.
+ // Page count is not an arbitrary 4-page limit.
+ const groups=[],charCap=Math.max(512,Math.min(30000,Math.floor(maxChars))),
+  pageCap=Math.max(1,Math.min(72,Math.floor(maxPages))),
+  inputCap=Math.max(2000,Math.floor(maxInputTokens)),
+  outputCap=Math.max(4000,Math.floor(maxOutputTokens));
+ let group=[],chars=0;
+ const flush=()=>{if(group.length){groups.push(group);group=[];chars=0;}};
+ for(const page of pages){
+  const charsOfPage=page.segments.reduce((n,seg)=>n+seg.source.length,0);
+  if(charsOfPage<=0)continue;
+  const count=group.length+1,nextChars=chars+charsOfPage;
+  const inputEstimate=Math.ceil(nextChars/2)+count*120+1200;
+  // Glossary/structured JSON creates extra output vs historic simple editions.
+  const outputEstimate=Math.ceil(nextChars*0.50/1.5)+count*260+1800;
+  if(group.length&&(count>pageCap||nextChars>charCap||
+     inputEstimate>inputCap||outputEstimate>outputCap))flush();
+  // A single abnormally long page must not abort earlier pages BEFORE their
+  // requests. It remains an atomic page and will receive an explicit Worker
+  // size error, without silently splitting its source across pages.
+  group.push(page);chars+=charsOfPage;
  }
- if(group.length)groups.push(group);
+ flush();
  return groups;
 }
 export function explainedSnapshotV122(book,originalPages,records,status='partial',diagnostics={}){
@@ -108,14 +127,14 @@ export async function generateExplainedBookV122(book,{
  // running Gemini. Avoid writing the entire original PDF AGAIN before the
  // first network request; on large books this could stall at 0/N.
  await publish('partial',{persist:false});
- // Probe ONE real physical page first. The LAB122 26k/72-page initial batch
- // could trigger a provider 503 before the first visible checkpoint (0/44).
- // After the first page succeeds, use modest groups and split only on errors.
- const queue=pending.length
-   ?[[pending[0]],...planExplainedBlocksV122(pending.slice(1))]
-   :[];
+ // LAB124: use the same natural whole-page grouping principle that allowed
+ // LAB58 to complete a 44-page example in one call PER EDITION.
+ // Keep LAB123 bisection on 413/422/502/503/504 for oversized responses.
+ const queue=planExplainedBlocksV122(pending);
  diagnostics.splits=0;
- diagnostics.initialProbePages=pending.length?1:0;
+ diagnostics.plannedRequests=queue.length;
+ diagnostics.plannedPagesPerRequest=queue.map(group=>group.length);
+ diagnostics.transport='large-natural-page-blocks-lab51-lab58';
  for(let index=0;index<queue.length;index++){
   const block=queue[index];
   if(signal?.aborted){lastError='V122_INTERRUPTED';break;}
