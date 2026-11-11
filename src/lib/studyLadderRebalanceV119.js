@@ -31,7 +31,12 @@ function unsupported(source,s){
  if(extraNums.length)return'INVENTED_NUMERIC_VALUE';
  // Source-to-fragment warnings are conservative; this helps detect
  // scientifically stronger claims such as "cause" for "influence".
- const risk=inspectBestOfV76(source,s,'50').semanticAdvisories;
+ // The existing page-level assessor also reports "missing protected"
+ // when given only ONE sentence of a whole page. That is NOT a legitimate
+ // reason to reject an independently valid addition; only semantic-direction
+ // contradictions belong in this local sentence gate.
+ const risk=inspectBestOfV76(source,s,'50').semanticAdvisories
+  .filter(v=>v!=='missing-protected-facts'&&v!=='qualifier-scope-review');
  if(risk.length)return'SEMANTIC_DIRECTION_WARNING';
  const protectedOriginal=new Set(extractProtectedItems(source)
   .filter(x=>x.kind!=='qualifier').map(x=>x.kind+':'+x.value.toLowerCase()));
