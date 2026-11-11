@@ -1,0 +1,43 @@
+name: StudyBook LAB118 - replay one real V2 answer with stricter safety
+on:
+  push:
+    branches:
+      - research/studybook-lab118-claim-ledger-20261111
+    paths:
+      - .github/workflows/studybook-lab118-v2-replay.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay-no-new-calls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download exact historic Gemini response only
+        uses: actions/download-artifact@v4
+        with:
+          name: LAB118-V2-ONE-REAL-PATCH-ANSWER
+          repository: Br174/StudyBook-AI
+          run-id: 42960996133
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: audit/reports
+      - name: Re-evaluate all edits with semantic guard; zero provider calls
+        run: |
+          set -euo pipefail
+          node --check scripts/replay-lab118-v2-strict-safety.mjs
+          node scripts/replay-lab118-v2-strict-safety.mjs | tee lab118-v2-replay-summary.json
+      - name: Publish evidence regardless of pass for audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB118-V2-Safety-Replay-0-Gemini
+          path: |
+            audit/reports/lab118-v2-safety-replay.json
+            lab118-v2-replay-summary.json
+          if-no-files-found: ignore
+          retention-days: 30
