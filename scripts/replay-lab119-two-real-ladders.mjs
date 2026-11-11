@@ -1,5 +1,6 @@
 // LAB119C offline REPLAY of two previously saved provider replies.
 // 0 Gemini calls, no new book imports or Android builds.
+import assert from 'node:assert/strict';
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import {prepareSemanticLadderV119} from '../src/lib/studySemanticLadderV119.js';
 import {rebalanceSemanticLadderV119} from '../src/lib/studyLadderRebalanceV119.js';
@@ -32,6 +33,18 @@ for(const [label,filepath] of [
   levels,providerRequestsMade:result.providerRequestsMade,
   semanticCertified:false,approvedForApp:false});
 }
+// A numeric improvement must NEVER imply that semantic quality was solved.
+assert.equal(out.newGeminiCalls,0);
+assert.equal(out.runs.length,2);
+assert.ok(out.runs.every(x=>x.providerRequestsMade===0));
+assert.ok(out.runs.every(x=>x.semanticCertified===false&&x.approvedForApp===false));
+assert.ok(out.runs.every(x=>x.missingFactsLikely===true),
+ 'The real Gemini replies still have source-fidelity warnings');
+assert.ok(out.runs[0].rejectedCandidates.some(x=>
+ x.rejected.some(v=>v.reason==='GENERIC_FILLER')),
+ 'Meta-text filler in real Gemini3.5 must not be used');
+assert.ok(out.runs[0].recalibratedNumericLevelPasses>=3);
+assert.ok(out.runs[1].recalibratedNumericLevelPasses>=4);
 out.anyRealNumericalImprovement=out.runs.some(x=>
  x.recalibratedNumericLevelPasses>x.originalNumericLevelPasses);
 mkdirSync('audit/reports',{recursive:true});
