@@ -1,3 +1,4 @@
+import {STUDY_TARGET_V67} from './studyRebalancePolicyV67.js';
 // LAB51: use only complete source paragraphs and natural chapter/page boundaries.
 // Text-only planning. The immutable PDF and scanner photographs are never mutated.
 import {allocateExactLetterBudgets,studyLetters} from './studyPillarV38.js';
@@ -38,7 +39,7 @@ export function naturalBoundaryV51(units,i){
 function estimatedTokens(units,level){
   const letters=units.reduce((n,x)=>n+studyLetters(x.source),0);
   const chars=units.reduce((n,x)=>n+x.source.length,0);
-  const ratio=level==='summary'?0.44:1-Number(level)/100;
+  const ratio=1-STUDY_TARGET_V67[String(level)].target/100;
   // Deliberately conservative Italian/JSON estimate, including IDs and thinking.
   return {input:Math.ceil(chars/2)+units.length*120+1200,
     output:Math.ceil(chars*ratio/1.5)+units.length*115+1800,
@@ -48,9 +49,10 @@ export function assignBudgetsV51(units,level){
   const sources=units.map(x=>x.source);
   // LAB72: Riassunto now targets 60% reduction under the canonical policy,
   // not the old legacy 50%-retention upper bound.
-  const caps=allocateExactLetterBudgets(sources,level==='summary'?60:50);
+  const reduction=STUDY_TARGET_V67[String(level)].target;
+  const caps=allocateExactLetterBudgets(sources,STUDY_TARGET_V67.summary.target);
   const targets=level==='summary'?caps:
-    allocateExactLetterBudgets(sources,Number(level));
+    allocateExactLetterBudgets(sources,reduction);
   return units.map((u,i)=>({...u,targetLetters:level==='summary'?null:targets[i],
     summaryCapLetters:caps[i]}));
 }
