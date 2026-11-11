@@ -155,7 +155,11 @@ function bestForGroup(groupUnits,level){
    a[1].cost-b[1].cost;
  });
  let best=null,score=Infinity;
- for(const [saved,rec] of candidates.slice(0,Math.min(150,candidates.length))){
+ // Candidate order already prioritizes in-band length, then target
+ // distance. Never re-wrap 150 near-identical long pages after finding a
+ // numerically compliant grid-fit winner. Bounded fallback if geometry fails.
+ const evaluationCap=Math.min(16,candidates.length);
+ for(const [saved,rec] of candidates.slice(0,evaluationCap)){
   const selectedByUnit=groupUnits.map(()=>new Set());
   for(const index of rec.picks){
    const p=descriptors[index];
@@ -176,6 +180,10 @@ function bestForGroup(groupUnits,level){
   if(val<score){score=val;best={parts,letters,rows:layout.rows,
    maxRows:cap.maxRows,numeric,rowPass:rows,savings:saved,
    chosenPatchCount:rec.picks.length};}
+  // The remaining ranked choices cannot improve the primary quality gates;
+  // this small tolerance is in LETTTERS, not an invented achieved percent.
+  if(numeric&&rows&&Math.abs(letters-budget.targetLetters)<=
+    Math.max(3,Math.floor(budget.originalLetters*.005)))break;
  }
  if(!best)throw Error('LAB118_DELTA_NO_VALID_SOURCE_CONFIGURATION');
  const totalSafeSavings=descriptors.reduce((n,p)=>n+p.savedLetters,0);
