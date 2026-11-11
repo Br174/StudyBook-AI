@@ -1,0 +1,37 @@
+name: StudyBook LAB119 - semantic ladder local six levels
+on:
+  push:
+    branches:
+      - research/studybook-lab119-semantic-ladder-20261111
+    paths:
+      - .github/workflows/studybook-lab119-offline.yml
+      - src/lib/studySemanticLadderV119.js
+      - scripts/test-lab119-semantic-ladder.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-local-ladder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Source syntax
+        run: |
+          node --check src/lib/studySemanticLadderV119.js
+          node --check scripts/test-lab119-semantic-ladder.mjs
+      - name: Validate all six quantitative targets without model calls
+        run: |
+          set -euo pipefail
+          node scripts/test-lab119-semantic-ladder.mjs | tee lab119-offline.json
+      - name: Preserve result whether passed or failed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB119-Offline-Six-Levels
+          path: lab119-offline.json
+          if-no-files-found: ignore
+          retention-days: 30
