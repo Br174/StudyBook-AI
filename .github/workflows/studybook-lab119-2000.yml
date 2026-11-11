@@ -1,0 +1,34 @@
+name: StudyBook LAB119 - 2000 page local cost without Gemini
+on:
+  push:
+    branches:
+      - research/studybook-lab119-semantic-ladder-20261111
+    paths:
+      - .github/workflows/studybook-lab119-2000.yml
+      - scripts/bench-lab119-2000-pages.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local2000:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate benchmark syntax
+        run: node --check scripts/bench-lab119-2000-pages.mjs
+      - name: Measure 2000 synthetic pages and 12k numeric checks
+        run: |
+          set -euo pipefail
+          node scripts/bench-lab119-2000-pages.mjs | tee lab119-2000-result.json
+      - name: Save elapsed time and memory evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB119-2000-Synthetic-Pages-Numeric
+          path: lab119-2000-result.json
+          if-no-files-found: ignore
+          retention-days: 30
