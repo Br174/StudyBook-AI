@@ -515,18 +515,43 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         {!isOriginalOnly && studyBook && !editionState?.complete && (
           <div className="sb-studio-inline-progress sb-studio-inline-progress-v68"
             aria-label="Avanzamento del libro in preparazione">
-            <StudyPhaseProgressV59 book={studyBook}
-              acquisition={{done:sourceData?.structure?.pageCount||
-                studyBook?.canonicalBookMap?.pageCount||0,
-                total:sourceData?.structure?.pageCount||
-                studyBook?.canonicalBookMap?.pageCount||0}}/>
+            {explainedV122
+              ? <div className="sb-v122-page-progress" role="group" aria-label="Libro spiegato · pagine verificate"
+                  style={{padding:'10px 12px',border:'1px solid #dce6f1',borderRadius:12}}>
+                  <div style={{display:'flex',justifyContent:'space-between',gap:8}}>
+                    <strong>Libro spiegato · unica versione</strong>
+                    <span>{editionState?.verifiedChunkVariants||0}/
+                      {editionState?.totalChunkVariants||0} pagine</span>
+                  </div>
+                  <div role="progressbar" aria-label="Pagine spiegate e verificate"
+                    aria-valuenow={editionState?.verifiedChunkVariants||0} aria-valuemin={0}
+                    aria-valuemax={editionState?.totalChunkVariants||1}
+                    className="sb-download-progress-track sb-ia-progress-track"
+                    style={{marginTop:8}}>
+                    <span style={{width:(editionState?.totalChunkVariants
+                      ?Math.round(100*(editionState?.verifiedChunkVariants||0)/
+                        editionState.totalChunkVariants):0)+'%'}}/>
+                  </div>
+                  <small>Una spiegazione e un glossario per pagina. Solo le pagine
+                    controllate sono disponibili per lo studio.</small>
+                  {editionState?.qualityWarnings?.length>0&&
+                    <p role="status">La riduzione globale necessita una verifica mirata:
+                      la fedeltà al testo originale viene prima del numero.</p>}
+                </div>
+              : <StudyPhaseProgressV59 book={studyBook}
+                  acquisition={{done:sourceData?.structure?.pageCount||
+                    studyBook?.canonicalBookMap?.pageCount||0,
+                    total:sourceData?.structure?.pageCount||
+                    studyBook?.canonicalBookMap?.pageCount||0}}/>}
             {v36Partial&&resumeWait.label&&
               <small className="sb-gemini-wait-note" role="status">{resumeWait.label}</small>}
             {v36Partial&&!auditedNeedsRepair&&<button type="button" className="sb-resume-manual"
               onClick={onResumeGemini}>
               {geminiStalled?'↻ Recupera richiesta bloccata':
                 generating?'↻ Verifica richiesta Gemini':
-                resumeWait.label?resumeWait.button:'↻ Riprendi elaborazione dal checkpoint'}
+                resumeWait.label?resumeWait.button:
+                explainedV122?'↻ Riprendi Libro spiegato dai checkpoint':
+                '↻ Riprendi elaborazione dal checkpoint'}
             </button>}
           </div>
         )}
@@ -631,7 +656,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       </section>
 
       {v36Partial && <div className="sb-mirror-warning" role="status">
-        {geminiCause && <p><strong>Diagnosi elaborazione:</strong> {geminiCause.description}
+        {!explainedV122&&geminiCause && <p><strong>Diagnosi elaborazione:</strong> {geminiCause.description}
           {geminiCause.halted ? ' Codice: '+geminiCause.halted+'.' : ''}
         </p>}
         {generating && <p>Verifica Gemini attiva. Le pagine approvate restano
@@ -659,9 +684,9 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
           ? ('Attesa Gemini · '+(studyBook.editionsV36.quota.estimated?'orario stimato: ':'ripresa prevista: ')+
             new Date(studyBook.editionsV36.quota.retryAt).toLocaleString('it-IT'))
           : 'Quota o configurazione da verificare: nessun pagamento automatico.'}</p>}
-        <button type="button" onClick={()=>onReductionChange?.(0)}>
+        {!explainedV122&&<button type="button" onClick={()=>onReductionChange?.(0)}>
           Apri il testo originale mentre Gemini elabora
-        </button>
+        </button>}
 
       </div>}
 
@@ -692,15 +717,15 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
           <div className="sb-export-formats">
             {isOriginalOnly && <button type="button" onClick={() => onExport('original', 'original')}>Formato originale</button>}
             <button type="button" onClick={() => onExport('pdf', isOriginalOnly ? 'original' : exportVariant)}>PDF</button>
-            <button type="button" onClick={() => onExport('docx', isOriginalOnly ? 'original' : exportVariant)}>DOCX</button>
-            <button type="button" onClick={() => onExport('html', isOriginalOnly ? 'original' : exportVariant)}>HTML</button>
-            <button type="button" onClick={() => onExport('epub', isOriginalOnly ? 'original' : exportVariant)}>EPUB</button>
-            {!isOriginalOnly && <button type="button" onClick={() => onExport('odt', exportVariant)}>ODT</button>}
-            {!isOriginalOnly && <button type="button" onClick={() => onExport('rtf', exportVariant)}>RTF</button>}
-            {!isOriginalOnly && <button type="button" onClick={() => onExport('md', exportVariant)}>Markdown</button>}
+            {!explainedV122&&<button type="button" onClick={() => onExport('docx', isOriginalOnly ? 'original' : exportVariant)}>DOCX</button>}
+            {!explainedV122&&<button type="button" onClick={() => onExport('html', isOriginalOnly ? 'original' : exportVariant)}>HTML</button>}
+            {!explainedV122&&<button type="button" onClick={() => onExport('epub', isOriginalOnly ? 'original' : exportVariant)}>EPUB</button>}
+            {!explainedV122 && !isOriginalOnly && <button type="button" onClick={() => onExport('odt', exportVariant)}>ODT</button>}
+            {!explainedV122 && !isOriginalOnly && <button type="button" onClick={() => onExport('rtf', exportVariant)}>RTF</button>}
+            {!explainedV122 && !isOriginalOnly && <button type="button" onClick={() => onExport('md', exportVariant)}>Markdown</button>}
             {!isOriginalOnly && <button type="button" onClick={() => onExport('print', exportVariant)}>Stampa</button>}
-            <button type="button" onClick={() => onExport('txt', isOriginalOnly ? 'original' : exportVariant)} disabled={!isOriginalOnly && exportVariant === 'both'}>TXT</button>
-            {!isOriginalOnly && <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>}
+            {!explainedV122&&<button type="button" onClick={() => onExport('txt', isOriginalOnly ? 'original' : exportVariant)} disabled={!isOriginalOnly && exportVariant === 'both'}>TXT</button>}
+            {!explainedV122 && !isOriginalOnly && <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>}
           </div>
           {!isOriginalOnly && <p>Le spiegazioni «In parole semplici» si esportano dalla nuova sezione della Libreria.</p>}
         </article>
