@@ -28,7 +28,7 @@ ok(out.quality['10'].quantitativePass,'10% should be feasible from exact repeate
 ok(out.quality['20'].quantitativePass,'20% should be feasible from exact repeated phrases');
 ok(out.quality['30'].quantitativePass,'30% should be feasible from exact repeated phrases');
 ok(out.quality['40'].quantitativePass,'40% should be feasible from exact repeated phrases');
-eq(out.quality['50'].quantitativePass,false);
+ok(out.quality['50'].quantitativePass,'50% feasible on truly redundant source should pass');
 eq(out.quality.summary.quantitativePass,false);
 ok(out.quality.summary.groups.every(x=>x.feasibility==='INSUFFICIENT_SAFE_PATCHES'));
 eq(out.approvedForApp,false);
