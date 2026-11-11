@@ -1,0 +1,35 @@
+name: StudyBook LAB118 - one improved real source-delta V2 trial
+on:
+  push:
+    branches:
+      - research/studybook-lab118-claim-ledger-20261111
+    paths:
+      - .github/workflows/studybook-lab118-real-delta-v2.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  single-free-call:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check source files and no-app-wiring
+        run: |
+          node --check src/lib/studySourcePatchV118.js
+          node --check scripts/test-lab118-real-source-delta-v2.mjs
+      - name: One real Gemini free call, public fixtures, no retry
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab118-real-source-delta-v2.mjs
+      - name: Preserve true success and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB118-V2-ONE-REAL-PATCH-ANSWER
+          path: audit/reports/lab118-one-real-source-patches-v2.json
+          if-no-files-found: error
+          retention-days: 30
