@@ -19,9 +19,17 @@ jobs:
           node-version: '22'
       - name: Install dependencies for real native adapter
         run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Build web bundle required by Cloudflare harness
+        run: npm run build
       - name: Reveal Cloudflare adapter's exact failed checks
         continue-on-error: true
         run: node scripts/StudyBookCloudflare.mjs
+      - name: Diagnose updated selected targeted regressions explicitly
+        continue-on-error: true
+        run: |
+          node scripts/test-lab72-negative-closure.mjs
+          node scripts/test-lab69-strict-bands.mjs
+          node scripts/test-lab67-simplified-precise-rebalance.mjs
       - name: Reveal LAB72 adapter's exact failed checks
         continue-on-error: true
         run: node scripts/StudyBookLab72Targeted.mjs
