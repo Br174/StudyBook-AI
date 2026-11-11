@@ -58,7 +58,16 @@ eq(composed.approvedForApp,false);
 ok(!composed.allSixPreliminarySafe,'Numeric pass cannot imply semantic pass');
 let nonmonotonic=equalLengthResponse(plan);
 nonmonotonic.units[0].extra50='';
-assert.throws(()=>composeSemanticLadderV119(plan,nonmonotonic),/INCOMPLETE_FIELD/);checks++;
+const underfilled=composeSemanticLadderV119(plan,nonmonotonic);
+eq(underfilled.allSixActuallyProgressive,false);
+ok(underfilled.quality['50'].missingGrowthUnits.includes('unit0'));
+ok(underfilled.allSixCompliantAndProgressive===false);
+// Source-free filler must not be treated as an extra just to fill a tier.
+const filler=equalLengthResponse(plan);
+filler.units[0].extra10='Ulteriori dettagli operativi inclusi senza modifiche strutturali.';
+const withFiller=composeSemanticLadderV119(plan,filler);
+ok(withFiller.quality['10'].meaningDiagnostics[0].invalidGeneratedFields.length>0);
+eq(withFiller.quality['10'].meaningDiagnostics[0].preliminarySafetyPass,false);
 const sourceUnit=[{id:'multi-a',source:original,
  pageStart:1,pageEnd:1},{id:'multi-b',source:original,
  pageStart:1,pageEnd:1}];
