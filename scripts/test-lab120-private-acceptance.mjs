@@ -79,7 +79,7 @@ ok(measured.every(m=>m.quantityPass));
 ok(measured.every(m=>m.accepted===false),'Quantity alone never certifies education');
 const missing=assessExistingDraftsV120([{id:'P1',source:original}],
  {...drafts,summary:[]},{contentVerified:true,gridVerified:true});
-eq(missing[4].sourceComplete,false);
+eq(missing[4].completeSource,false);
 eq(missing[4].accepted,false);
 console.log(JSON.stringify({lab:'LAB120',checks,
  modelGoalCenters:cases.map(([stage,ideal])=>({stage,ideal})),
