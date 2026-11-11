@@ -4,6 +4,8 @@
 import {assignBudgetsV51,naturalBoundaryV51,safeNaturalInputLimitV55,
  BULK_INPUT_TOKEN_CEILING,BULK_OUTPUT_TOKEN_CEILING} from './integralPlannerV51.js';
 
+import {STUDY_TARGET_V67} from './studyRebalancePolicyV67.js';
+
 const MAX_REQUEST_CHARS=1200000;
 const LEVELS=new Set(['summary','50','40','30','20','10']);
 export const STUDY_LINEAR_BLOCK_PLANNER_V111='lab111-linear-natural-boundary-planner-v1';
@@ -16,7 +18,7 @@ export function planNaturalBlocksLinearV111(units,level,{
  if(!LEVELS.has(requested))throw Error('Livello sconosciuto.');
  const bounded=assignBudgetsV51(units,requested);
  const effectiveInputTokens=safeNaturalInputLimitV55(bounded,requested,maxInputTokens);
- const outputRatio=requested==='summary'?0.44:1-Number(requested)/100;
+ const outputRatio=1-STUDY_TARGET_V67[requested].target/100;
  const blocks=[];
  let start=0;
  while(start<bounded.length){
