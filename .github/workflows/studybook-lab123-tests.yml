@@ -1,0 +1,77 @@
+name: StudyBook LAB123 - one explained edition fidelity and Android build readiness
+on:
+  push:
+    branches:
+      - trial/studybook-lab123-503-small-first-auto-recovery-20261111
+    paths:
+      - .github/workflows/studybook-lab123-tests.yml
+      - src/lib/explainedPolicyV122.js
+      - src/lib/explainedGeneratorV122.js
+      - src/lib/explainedLayoutV122.js
+      - src/lib/explainedViewV122.js
+      - src/lib/exportExplainedPdfV122.js
+      - src/components/ExplainedReaderV122.jsx
+      - src/components/ExplainedReaderV122.css
+      - src/components/AppScreens.jsx
+      - src/AppV15.jsx
+      - api/explainedV122.js
+      - worker/index.js
+      - scripts/test-lab122-single-explained.mjs
+      - scripts/test-lab122-pdf-render.mjs
+      - scripts/test-lab122-recovery.mjs
+      - scripts/test-lab123-503-recovery.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Checkout isolated experiment
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks for isolated LAB123
+        run: |
+          set -euo pipefail
+          for f in scripts/test-lab123-503-recovery.mjs src/lib/explainedPolicyV122.js src/lib/explainedGeneratorV122.js src/lib/explainedLayoutV122.js src/lib/explainedViewV122.js src/lib/exportExplainedPdfV122.js api/explainedV122.js scripts/test-lab123-single-explained.mjs; do node --check "$f"; done
+      - name: Install existing dependencies without paid services
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Build actual app with native LAB123 and glossario
+        run: npm run build
+      - name: One-explained Worker + semantic hard stops + 2000-page source test
+        run: |
+          set -euo pipefail
+          node scripts/test-lab122-single-explained.mjs
+          node scripts/test-lab122-recovery.mjs
+          node scripts/test-lab123-503-recovery.mjs | tee lab123-proof.jsonl
+      - name: Actual PDF rendering, 30 original anchors, bis and tris, legal side glossary
+        run: |
+          set -euo pipefail
+          node scripts/test-lab122-pdf-render.mjs | tee lab123-pdf-proof.jsonl
+      - name: Scudo360 native P1 regression gate
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/lab123-scudo-report.json
+      - name: Prior source-risk, provider quota and historical Worker regressions
+        run: |
+          set -euo pipefail
+          node scripts/test-lab109-worker-contract.mjs
+          node scripts/test-lab110-source-ledger-contract.mjs
+          node scripts/test-lab110b-worker-contract.mjs
+          node scripts/test-lab110-source-risk-replay.mjs
+          node scripts/test-lab111-2000-pages.mjs
+          node scripts/test-lab114-one-shot-failover.mjs
+          node scripts/test-lab121-private-worker.mjs
+      - name: Preserve LAB123 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-LAB123-Quality-Tests
+          path: |
+            lab123-proof.jsonl
+            lab123-pdf-proof.jsonl
+            .motorlab/lab123-scudo-report.json
+          if-no-files-found: ignore
+          retention-days: 30
