@@ -1,6 +1,6 @@
 // LAB122 isolated Worker route. One provider generation for a contiguous set of original pages.
 // The strict 50% model target and the private 30-60 acceptance are deliberately separated.
-import {modelInstructionV122,modelPayloadV122,auditExplainedPageV122,
+import {modelInstructionV122,modelPayloadV122,auditExplainedPageV122,normalizeExplainedAnchorsV122,
  EXPLAINED_POLICY_V122} from '../src/lib/explainedPolicyV122.js';
 const ENDPOINT='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 const ALLOWED=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
@@ -76,8 +76,10 @@ export default async function handler(req,res){
      parsed.pages.some((p,i)=>p?.id!==pages[i].id))
    return fail(res,422,'V122_PAGE_COUNT_OR_ORDER','Risposta incompleta o con pagine fuori ordine.');
   const audited=parsed.pages.map((p,i)=>{
-   const review=auditExplainedPageV122(pages[i],p);
-   return {...p,review};
+   // Only format terms already present: no AI follow-up and no invented content.
+   const normalized=normalizeExplainedAnchorsV122(p);
+   const review=auditExplainedPageV122(pages[i],normalized);
+   return {...normalized,review};
   });
   return res.status(200).json({engine:'ai',version:EXPLAINED_POLICY_V122,
    pages:audited,model,finishReason,providerRequests:1,
