@@ -63,11 +63,20 @@ export function validateSourcePatchesV118(plan,reply){
     rejected.push({index:j,reason:'UNANCHORED_OR_AMBIGUOUS_SOURCE_QUOTE'});
     continue;
    }
-   const safety=patchSafety(from,to);
+   const offset=hits[occurrence],end=offset+from.length;
+   // A zero-length replacement is accepted ONLY for a literally identical
+   // complete sentence repeated at least twice in the SAME source unit.
+   // The actual selection still has to leave >=1 untouched whole copy.
+   const completeSentence=/[.!?]$/u.test(from.trim())&&
+     (offset===0||/[.!?]\s*$/u.test(source.slice(0,offset)))&&
+     (end===source.length||/^\s+/u.test(source.slice(end)));
+   const exactDuplicateDeletion=to===''&&completeSentence&&hits.length>=2;
+   const safety=exactDuplicateDeletion?
+     {pass:true,reason:'EXACT_DUPLICATE_DELETE_REQUIRES_UNTOUCHED_COPY'}:
+     patchSafety(from,to);
    if(!safety.pass){
     rejected.push({index:j,reason:safety.reason});continue;
    }
-   const offset=hits[occurrence],end=offset+from.length;
    if(accepted.some(v=>offset<v.end&&end>v.start)){
     rejected.push({index:j,reason:'OVERLAPPING_SOURCE_PATCH'});continue;
    }
@@ -90,6 +99,14 @@ export function validateSourcePatchesV118(plan,reply){
 }
 function applyPatches(source,patches,selected){
  const used=patches.filter((p,i)=>selected.has(i));
+ // Don't erase a unique fact merely because identical strings appear:
+ // for EACH deletion, require a whole untouched source copy in this page.
+ for(const patch of used.filter(p=>p.to==='')){
+  const all=allOccurrences(source,patch.from);
+  const untouched=all.some(start=>!used.some(candidate=>
+    candidate.start<=start&&candidate.end>=start+patch.from.length));
+  if(!untouched)return null;
+ }
  let text='',cursor=0;
  for(const p of used){
   if(p.start<cursor)throw Error('LAB118_DELTA_OVERLAP_AFTER_VALIDATION');
@@ -146,6 +163,7 @@ function bestForGroup(groupUnits,level){
   }
   const parts=groupUnits.map((u,k)=>({id:u.id,
    text:applyPatches(u.source,u.accepted,selectedByUnit[k])}));
+  if(parts.some(p=>p.text===null||!p.text.trim()))continue;
   const text=compact(parts.map(x=>x.text).join(' '));
   const letters=studyLetters(text);
   if(letters!==budget.originalLetters-saved)
@@ -208,6 +226,7 @@ export function sourcePatchPromptV118(){
   'Per ogni unità originale ritorna soltanto le modifiche NON obbligatorie di frasi ripetitive sotto forma di patches.',
   'Ogni patch {from,to,occurrence,importance}: from è una sottostringa esatta dell’originale; occurrence è l’indice zero-based della sua ricorrenza nell’unità.',
   'to deve contenere lo stesso significato di from in meno LETTERE, conservando informazioni, condizioni, negazioni e grado di certezza.',
+  'Solo se from è UNA FRASE COMPLETA ripetuta IDENTICA nella stessa pagina, to può essere vuota: il software controllerà che resti una copia letterale intatta. Non eliminare intere definizioni uniche.',
   'Non segnalare modifiche che cancellano informazioni uniche o spostano condizioni. Pochi patch ben ancorati sono migliori di molti suggerimenti incerti.',
   'È facoltativo aggiungere macro50 e macroSummary, ma il compilatore NON presume che rispettino percentuali o fedeltà.',
   'JSON: {"units":[{"id":"...","patches":[{"from":"...","to":"...","occurrence":0,"importance":3}],"macro50":"...","macroSummary":"..."}]}.',
