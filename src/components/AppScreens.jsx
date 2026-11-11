@@ -466,6 +466,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
 
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
   const editionState=studyBook?.editionsV36;
+  const explainedV122=Boolean(studyBook?.explainedV122);
   // LAB79: LAB78 numeric failure means "complete:false", yet all raw
   // drafts are saved. That is exactly when the correction control is needed.
   const auditedNeedsRepair=Boolean(editionState?.draftComplete&&
@@ -529,7 +530,19 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             </button>}
           </div>
         )}
-        {!isOriginalOnly && studyBook && (
+        {!isOriginalOnly && explainedV122 && (
+          <div className="sb-edition-switcher-v68" role="status" aria-label="Unica versione spiegata">
+            <div className="sb-edition-switcher-heading-v68">
+              <strong>Versione di studio</strong><span>Libro spiegato</span>
+            </div>
+            <p>Unica spiegazione completa in parole semplici, con termini tecnici e glossario laterale.
+              Pagine originali conservate e fogli bis, ter dove necessari.</p>
+            <p><strong>Riduzione effettiva:</strong> {Number.isFinite(reductionMeta?.achievedLettersPercent)
+              ?reductionMeta.achievedLettersPercent.toLocaleString('it-IT',{maximumFractionDigits:1})+'%'
+              :'In elaborazione'} · obiettivo 50%.</p>
+          </div>
+        )}
+        {!isOriginalOnly && studyBook && !explainedV122 && (
           <div className="sb-edition-switcher-v68" role="group"
             aria-label="Scegli la riduzione del libro">
             <div className="sb-edition-switcher-heading-v68">
@@ -587,7 +600,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             : <button type="button" onClick={onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>}
           <button type="button" disabled={v36Partial&&!isOriginalOnly} className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>Scarica libro</strong></button>
         </div>
-        {canImprove&&improvementLeft&&
+        {!explainedV122&&canImprove&&improvementLeft&&
           <div style={{marginTop:12,padding:'12px 14px',
             border:'1px solid #dce6f1',borderRadius:12}}>
             <button type="button" className="sb-resume-manual"
@@ -605,7 +618,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
               correzione soltanto quando desidera usare Gemini.
             </p>
           </div>}
-        {!isOriginalOnly && studyBook?.editionsV36 && <>
+        {!explainedV122 && !isOriginalOnly && studyBook?.editionsV36 && <>
           <button type="button" className="sb-resume-manual"
             style={{width:'100%',marginTop:12}}
             aria-expanded={draftInspectorOpen}
@@ -625,6 +638,9 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
           consultabili senza interrompere il lavoro. I progressi reali
           sono nel grafico della fase in corso.</p>}
         <p>ANTEPRIMA PARZIALE · le pagine già verificate restano consultabili; nessuna bozza non verificata è pubblicata.</p>
+        {explainedV122&&<p>Libro spiegato · {editionState?.verifiedChunkVariants||0}/
+          {editionState?.totalChunkVariants||0} pagine. Testo e glossario vengono generati insieme.
+          Controllo automatico superato non significa certificazione semantica infallibile.</p>}
         <p>Il PDF e il download del libro completo saranno disponibili dopo la verifica finale.</p>
         {studyBook.editionsV36?.diagnostics?.sourceBlocked>0 && <p>
           {studyBook.editionsV36.diagnostics.sourceBlocked} parti del documento
@@ -669,7 +685,8 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       {exportOpen && !v36Partial && (
         <article className="sb-export-card">
           <div className="sb-export-head">
-            <div><small>ESPORTA</small><h2>Scarica libro</h2><p className="sb-export-description">{isOriginalOnly ? 'Scegli il formato: il file importato rimane invariato.' : 'Scegli la versione del libro e il formato da scaricare o stampare.'}</p></div>
+            <div><small>ESPORTA</small><h2>Scarica libro</h2><p className="sb-export-description">{isOriginalOnly ? 'Scegli il formato: il file importato rimane invariato.' : '{explainedV122 ? 'Scarica o stampa il Libro spiegato con il glossario laterale.' :
+                'Scegli la versione del libro e il formato da scaricare o stampare.'}'}</p></div>
           </div>
           <div className="sb-export-formats">
             {isOriginalOnly && <button type="button" onClick={() => onExport('original', 'original')}>Formato originale</button>}
