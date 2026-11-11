@@ -25,7 +25,7 @@ function body({pilot=null,level='40',source=science,invalidBudget=false}={}){
  return {level,phase:'draft-v74',draftProtocol:STUDY_DRAFT_PROTOCOL_V74,
   geometryPolicyV78:STUDY_GEOMETRY_V78,units,
   unitBudgets:buildUnitBudgetsV71(units,level),pageBudgetsV74:budgets,
-  bookTitle:'LAB110 controlled offline source',targetLetters:Math.round(studyLetters(source)*(1-Number(level)/100)),
+  bookTitle:'LAB110 controlled offline source',targetLetters:pageLetterBudgetsV74(units,level)[0].targetLetters,
   maxOutputTokens:4096,timeoutMs:65000,
   ...(pilot==='110'?{experimentV110:STUDY_SOURCE_LEDGER_V110}:{}),
   ...(pilot==='109'?{experimentV109:STUDY_FACT_FIRST_V109}:{})
