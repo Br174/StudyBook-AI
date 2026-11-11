@@ -28,7 +28,7 @@ export default async function handler(req,res){
  if(!ALLOWED.has(model))return fail(res,503,'AI_MODEL_NOT_ALLOWLISTED','Modello non autorizzato.');
  const pages=req.body?.pages;
  if(req.body?.policy!==EXPLAINED_POLICY_V122||!Array.isArray(pages)||
-    pages.length<1||pages.length>12)
+    pages.length<1||pages.length>72)
   return fail(res,400,'V122_REQUEST_INVALID','Richiesta per pagine non valida.');
  const ids=new Set(),allSegmentIds=new Set();
  let length=0;
