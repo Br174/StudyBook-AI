@@ -19,7 +19,7 @@ jobs:
           node-version: '22'
       - name: Install existing project dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
-      - name: One real free-tier Gemini call only - simple legal explanation and glossary
+      - name: One real free-tier Gemini call - test glossary marker normalization and legal meaning
         env:
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
