@@ -5,6 +5,8 @@ on:
       - research/studybook-lab118-claim-ledger-20261111
     paths:
       - .github/workflows/studybook-lab118-2000.yml
+      - src/lib/studySourcePatchV118.js
+      - scripts/bench-lab118-2000-patch-pages.mjs
   workflow_dispatch:
 permissions:
   contents: read
