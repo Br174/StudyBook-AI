@@ -28,7 +28,7 @@ const sub=(original,output)=>{
  const expected=new Set(src.map(x=>x.kind+':'+x.value.toLocaleLowerCase('it-IT')));
  if(out.some(x=>!expected.has(x.kind+':'+x.value.toLocaleLowerCase('it-IT'))))
   return null;
- return {text:output,issues:[],coverageHeuristic:r.coveragePercent};
+ return {text:output,issues:[],coverageHeuristic:risk.coveragePercent};
 };
 export function macroInstructionV117(plan){
  if(plan?.policy!==STUDY_SOURCE_TIERS_V116)
