@@ -36,24 +36,41 @@ export function planExplainedBlocksV122(pages,{
   pageCap=Math.max(1,Math.min(72,Math.floor(maxPages))),
   inputCap=Math.max(2000,Math.floor(maxInputTokens)),
   outputCap=Math.max(4000,Math.floor(maxOutputTokens));
- let group=[],chars=0;
- const flush=()=>{if(group.length){groups.push(group);group=[];chars=0;}};
+ let group=[],chars=0,segments=0;
+ const flush=()=>{if(group.length){groups.push(group);group=[];chars=0;segments=0;}};
  for(const page of pages){
   const charsOfPage=page.segments.reduce((n,seg)=>n+seg.source.length,0);
   if(charsOfPage<=0)continue;
-  const count=group.length+1,nextChars=chars+charsOfPage;
-  const inputEstimate=Math.ceil(nextChars/2)+count*120+1200;
-  // Glossary/structured JSON creates extra output vs historic simple editions.
-  const outputEstimate=Math.ceil(nextChars*0.50/1.5)+count*260+1800;
+  const segmentCount=page.segments.length;
+  const count=group.length+1,nextChars=chars+charsOfPage,nextSegments=segments+segmentCount;
+  // LAB124 preventive estimate: one linear LOCAL scan, zero Gemini calls.
+  // Input includes JSON IDs and source-protected legal references.
+  // Output includes the explained text, structured JSON and side glossary.
+  const inputEstimate=Math.ceil(nextChars*0.62)+count*190+nextSegments*65+1500;
+  const outputEstimate=Math.ceil(nextChars*0.58/1.4)+count*420+nextSegments*115+1800;
   if(group.length&&(count>pageCap||nextChars>charCap||
      inputEstimate>inputCap||outputEstimate>outputCap))flush();
-  // A single abnormally long page must not abort earlier pages BEFORE their
-  // requests. It remains an atomic page and will receive an explicit Worker
-  // size error, without silently splitting its source across pages.
-  group.push(page);chars+=charsOfPage;
+  // Keep a single unusual page atomic for an explicit targeted review.
+  group.push(page);chars+=charsOfPage;segments+=segmentCount;
  }
  flush();
  return groups;
+}
+export function preflightExplainedCallsV124(pages,options={}){
+ const blocks=planExplainedBlocksV122(pages,options);
+ const details=blocks.map(block=>{
+  const chars=block.reduce((n,p)=>n+p.segments.reduce((m,s)=>m+s.source.length,0),0);
+  const segments=block.reduce((n,p)=>n+p.segments.length,0);
+  const count=block.length;
+  return {fromPage:block[0].physicalPage,toPage:block.at(-1).physicalPage,
+    pages:count,sourceChars:chars,
+    estimatedInputTokens:Math.ceil(chars*0.62)+count*190+segments*65+1500,
+    estimatedOutputTokens:Math.ceil(chars*0.58/1.4)+count*420+segments*115+1800};
+ });
+ return {plannedRequests:blocks.length,totalPages:pages.length,
+  details,oversizedPages:details.filter(d=>d.sourceChars>30000||d.pages>72||
+    d.estimatedOutputTokens>30000).map(d=>d.fromPage),
+  estimatedLocally:true,providerCallsForEstimate:0};
 }
 export function explainedSnapshotV122(book,originalPages,records,status='partial',diagnostics={}){
  const map=new Map(records.map(r=>[r.id,r]));
@@ -140,15 +157,20 @@ export async function generateExplainedBookV122(book,{
  // Initial source snapshot was already persisted by the book owner before
  // running Gemini. Avoid writing the entire original PDF AGAIN before the
  // first network request; on large books this could stall at 0/N.
- await publish('partial',{persist:false});
  // LAB124: the LAB51/58 pattern packages as many whole pages as estimated
  // INPUT and OUTPUT capacity allow. A previous overload reduces the next
  // session's budget rather than firing several requests against a busy model.
  const queue=planExplainedBlocksV122(pending,{maxChars:blockCharBudget});
+ const estimate=preflightExplainedCallsV124(pending,{maxChars:blockCharBudget});
  diagnostics.splits=0;
- diagnostics.plannedRequests=queue.length;
- diagnostics.plannedPagesPerRequest=queue.map(group=>group.length);
+ diagnostics.plannedRequests=estimate.plannedRequests;
+ diagnostics.plannedPagesPerRequest=estimate.details.map(block=>block.pages);
+ diagnostics.predictedInputTokens=estimate.details.map(block=>block.estimatedInputTokens);
+ diagnostics.predictedOutputTokens=estimate.details.map(block=>block.estimatedOutputTokens);
+ diagnostics.preflightProviderCalls=0;
  diagnostics.transport='large-natural-page-blocks-lab51-lab58';
+ // Publish the request forecast before starting Gemini, without a storage rewrite.
+ await publish('partial',{persist:false});
  for(let index=0;index<queue.length;index++){
   const block=queue[index];
   if(signal?.aborted){lastError='V122_INTERRUPTED';break;}
