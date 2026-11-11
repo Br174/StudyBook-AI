@@ -62,7 +62,7 @@ const book={
   paragraphs:Array.from({length:44},(_,i)=>({
    original:source,sourcePageStart:i+1,sourcePageEnd:i+1}))}]
 };
-const ratios={summary:.40,'50':.50,'40':.85,'30':.70,'20':.80,'10':.90};
+const ratios={summary:.45,'50':.50,'40':.85,'30':.65,'20':.75,'10':.85};
 const drafts=[Array.from({length:44},()=>({
  editions:Object.fromEntries(levels.map(l=>[l,trimTo(source,ratios[l])]))
 }))];
@@ -82,10 +82,10 @@ book.editionsV36={
 const before=JSON.stringify(book.editionsV36.draftRowsV57);
 const mockLengthProof=request=>{
  const sourceLetters=request.units.reduce((n,u)=>n+studyLetters(u.source),0);
- const outputLetters=request.units.reduce((n,u)=>n+studyLetters(trimTo(u.source,.60)),0);
+ const outputLetters=request.units.reduce((n,u)=>n+studyLetters(trimTo(u.source,.55)),0);
  return {sourceLetters,observedLetters:outputLetters,withinBand:true,compliant:true,
   pageReviewV74:pageLetterReviewV74(request.units,request.units.map(u=>({
-   id:u.id,text:trimTo(u.source,.60)})),request.level)};
+   id:u.id,text:trimTo(u.source,.55)})),request.level)};
 };
 const units=bookUnitsV51(book);
 const targets=planRebalanceV67(units,drafts);
@@ -102,7 +102,7 @@ try{
   return new Response(JSON.stringify({engine:'ai',version:'integral-v51',
    level:'40',inputTokens:2100,draftProtocol:STUDY_DRAFT_PROTOCOL_V74,finishReason:'stop',outputTokenLimit:6000,
    lengthReview:mockLengthProof(body),
-   parts:body.units.map(u=>({id:u.id,text:trimTo(u.source,.60)}))}),
+   parts:body.units.map(u=>({id:u.id,text:trimTo(u.source,.55)}))}),
    {status:200,headers:{'Content-Type':'application/json'}});
  };
  const after=await rebalanceSavedStudyBookV67(book,{
@@ -112,8 +112,8 @@ try{
  assert.equal(after.complete,true);
  assert.equal(after.rebalanceV67.accepted,1);
  assert.equal(after.rebalanceV67.remaining.length,0);
- assert.ok(after.qualityV66.levels['40'].actualReduction>=35);
- assert.ok(after.qualityV66.levels['40'].actualReduction<=45);
+ assert.ok(after.qualityV66.levels['40'].actualReduction>=40);
+ assert.ok(after.qualityV66.levels['40'].actualReduction<=50);
  assert.deepEqual(after.stagedRows[0].filter(p=>p.verified.summary).length,16);
  assert.deepEqual(after.draftRowsV57[0].map(p=>p.editions.summary),
   drafts[0].map(p=>p.editions.summary),'summary untouched');
