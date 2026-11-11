@@ -93,6 +93,42 @@ export function modelPayloadV122(pages){
   throw Error('V122_PRIVATE_BAND_LEAK');
  return output;
 }
+// Formatting-only repair. Never insert a term absent from the generated text,
+// and never change a quoted normative source. This cannot certify semantics.
+export function normalizeExplainedAnchorsV122(result){
+ if(!result||!Array.isArray(result.segments)||!Array.isArray(result.glossary))return result;
+ const segments=result.segments.map(x=>({...x}));
+ const inVerbatim=(text,index)=>{
+  const before=text.slice(0,index);
+  return before.lastIndexOf('«')>before.lastIndexOf('»')||
+   (before.match(/“/gu)||[]).length>(before.match(/”/gu)||[]).length;
+ };
+ for(const item of result.glossary){
+  const term=clean(item?.term);
+  if(!term||term.length>90)continue;
+  const escaped=term.replace(/[.*+?^$\{\}()|\[\]\\]/gu,'\\function detectTerms(body,glossary){');
+  const already=new RegExp('\\*\\*\\('+escaped+'\\)\\*\\*','iu');
+  if(segments.some(x=>already.test(String(x?.text||''))))continue;
+  for(const seg of segments){
+   let value=String(seg?.text||'');
+   const alternatives=[
+    new RegExp('\\*\\*('+escaped+')\\*\\*','iu'),
+    new RegExp('\\(('+escaped+')\\)','iu'),
+    new RegExp('(?<![\\p{L}\\p{N}])('+escaped+')(?![\\p{L}\\p{N}])','iu')
+   ];
+   let fixed=false;
+   for(let r=0;r<alternatives.length;r++){
+    const m=alternatives[r].exec(value);
+    if(!m||inVerbatim(value,m.index))continue;
+    const original=m[1]||term;
+    value=value.slice(0,m.index)+'**('+original+')**'+value.slice(m.index+m[0].length);
+    fixed=true;break;
+   }
+   if(fixed){seg.text=value;break;}
+  }
+ }
+ return {...result,segments};
+}
 function detectTerms(body,glossary){
  const issues=[],seen=new Set();
  if(!Array.isArray(glossary)||glossary.length>40)return ['GLOSSARY_INVALID'];
