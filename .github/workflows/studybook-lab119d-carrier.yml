@@ -1,0 +1,46 @@
+name: StudyBook LAB119D - source-carrier real replay zero Gemini
+on:
+  push:
+    branches:
+      - research/studybook-lab119-semantic-ladder-20261111
+    paths:
+      - .github/workflows/studybook-lab119d-carrier.yml
+      - src/lib/studySourceCarrierRestoreV119.js
+      - scripts/replay-lab119d-carriers.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  restore-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Recover exact saved Gemini 3.5 answer
+        uses: actions/download-artifact@v4
+        with:
+          name: LAB119-ONE-REAL-GEMINI-CORE-EXPANSIONS
+          repository: Br174/StudyBook-AI
+          run-id: 42985330555
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: audit/reports
+      - name: Syntax and real answer source carrier restore
+        run: |
+          set -euo pipefail
+          node --check src/lib/studySourceCarrierRestoreV119.js
+          node --check scripts/replay-lab119d-carriers.mjs
+          node scripts/replay-lab119d-carriers.mjs | tee lab119d-results.json
+      - name: Preserve original-vs-restored comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB119D-Real-Source-Carrier-Restore-Zero-Gemini
+          path: |
+            audit/reports/lab119d-real-carrier-restore.json
+            lab119d-results.json
+          if-no-files-found: ignore
+          retention-days: 30
