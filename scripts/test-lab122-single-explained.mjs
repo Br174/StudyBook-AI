@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {originalExplainedPagesV122,modelInstructionV122,modelPayloadV122,
-  auditExplainedPageV122,EXPLAINED_POLICY_V122,
+  auditExplainedPageV122,normalizeExplainedAnchorsV122,EXPLAINED_POLICY_V122,
   EXPLAINED_PRIVATE_BAND_V122} from '../src/lib/explainedPolicyV122.js';
 import {planExplainedBlocksV122,generateExplainedBookV122} from '../src/lib/explainedGeneratorV122.js';
 import {composeExplainedSheetsV122} from '../src/lib/explainedLayoutV122.js';
@@ -43,6 +43,15 @@ say('provider sees only precise 50 percent target, not private margins');
 const badTerm=makeAnswer(pages[0]);badTerm.glossary=[];
 assert.equal(auditExplainedPageV122(pages[0],badTerm).ready,false);
 say('missing glossary definition rejected');
+const looseTerm=makeAnswer(pages[0]);
+looseTerm.segments[0].text=looseTerm.segments[0].text.replace('**(norma imperativa)**','norma imperativa');
+const normalizedTerm=normalizeExplainedAnchorsV122(looseTerm);
+assert.ok(normalizedTerm.segments[0].text.includes('**(norma imperativa)**'));
+assert.equal(auditExplainedPageV122(pages[0],normalizedTerm).ready,true);
+const absentTerm=makeAnswer(pages[0]);
+absentTerm.segments[0].text='La regola obbligatoria non può essere eliminata da accordi tra privati.';
+assert.ok(!normalizeExplainedAnchorsV122(absentTerm).segments[0].text.includes('**(norma imperativa)**'));
+say('local typographic repair never fabricates omitted legal terminology');
 const wrongOrder={...valid,id:'p2'};
 assert.equal(auditExplainedPageV122(pages[0],wrongOrder).ready,false);
 const emptySegment=makeAnswer(pages[0]);emptySegment.segments[0].text='';
