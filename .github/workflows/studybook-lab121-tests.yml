@@ -12,6 +12,9 @@ on:
       - src/lib/draftFirstV57.js
       - api/editionsBulkV51.js
       - scripts/test-lab121-private-worker.mjs
+      - scripts/test-lab72-negative-closure.mjs
+      - scripts/test-lab69-strict-bands.mjs
+      - scripts/test-lab67-simplified-precise-rebalance.mjs
   workflow_dispatch:
 permissions:
   contents: read
