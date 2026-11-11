@@ -1,0 +1,53 @@
+name: StudyBook LAB121 - isolated private bands real Worker mock and regressions
+on:
+  push:
+    branches:
+      - trial/studybook-lab121-private-bands-android-20261111
+    paths:
+      - .github/workflows/studybook-lab121-tests.yml
+      - src/lib/studyPrivatePromptV121.js
+      - src/lib/studyRebalancePolicyV67.js
+      - src/lib/integralPlannerV51.js
+      - src/lib/draftFirstV57.js
+      - api/editionsBulkV51.js
+      - scripts/test-lab121-private-worker.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate JS source syntax
+        run: |
+          node --check src/lib/studyPrivatePromptV121.js
+          node --check src/lib/studyRebalancePolicyV67.js
+          node --check src/lib/integralPlannerV51.js
+          node --check src/lib/draftFirstV57.js
+          node --check api/editionsBulkV51.js
+          node --check scripts/test-lab121-private-worker.mjs
+      - name: Six-level Worker request privacy and numeric center contract
+        run: |
+          set -euo pipefail
+          node scripts/test-lab121-private-worker.mjs | tee lab121-worker-test.json
+      - name: Existing LAB114 one-shot 503 preservation
+        run: node scripts/test-lab114-one-shot-failover.mjs
+      - name: Existing LAB111 one-call per natural block
+        run: node scripts/test-lab111-lean-worker.mjs
+      - name: Existing LAB111 2000-page source planner
+        run: node scripts/test-lab111-2000-pages.mjs
+      - name: Existing LAB79 quality and no-loop invariant
+        run: node scripts/test-lab79-quality-no-loop.mjs
+      - name: Preserve evidence even when gate fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB121-Worker-Privacy-Quality-Regressions
+          path: lab121-worker-test.json
+          if-no-files-found: ignore
+          retention-days: 30
