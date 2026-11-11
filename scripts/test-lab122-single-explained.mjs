@@ -126,16 +126,16 @@ try{
  const finished=await generateExplainedBookV122(book,{onProgress:async snap=>snapshots.push(snap)});
  assert.equal(finished.complete,true,'All verified page outputs should become one complete edition');
  assert.equal(finished.totalChunkVariants,2);
- assert.equal(workerCalls,2);
- assert.equal(modelCalls,2);
+ assert.equal(workerCalls,1);
+ assert.equal(modelCalls,1);
  assert.ok(snapshots.length>=2);
  assert.ok(!capturedPrompt.includes('30%')&&!capturedPrompt.includes('60%'));
  assert.ok(!capturedUser.includes('minLetters'));
- say('real Worker handler + simulated model, first page saved before second');
+ say('real Worker handler + simulated model, two source pages bundled in ONE provider request');
  const unchanged=await generateExplainedBookV122({...book,editionsV36:finished},{
   onProgress:async()=>{}});
  assert.equal(unchanged.complete,true);
- assert.equal(workerCalls,2);
+ assert.equal(workerCalls,1);
  say('restart reuses verified checkpoint; zero repeated Gemini calls');
  const bad=await runMockWorker({method:'POST',env:{AI_API_KEY:'test',AI_MODEL:'gemini-3.5-flash-lite'},
   body:{policy:EXPLAINED_POLICY_V122,pages:[{id:'p1',segments:[{id:'p1-s0',source:''}]}]}});
