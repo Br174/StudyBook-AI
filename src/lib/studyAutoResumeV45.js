@@ -34,6 +34,13 @@ export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0
     return {reason:'quality-continue',
       at:Number.isFinite(safeAt)?Math.max(floor,safeAt):floor};
   }
+  // LAB123: a single-edition request can finish as "provider-blocked" when a
+  // transient HTTP 502/network fault followed a 503 cooldown. Recheck with
+  // the SAME foreground scheduler, never spawn another timer/worker.
+  if(snapshot.version==='lab122-one-explained-glossary-v1' &&
+     snapshot.status==='provider-blocked' && stalledAttempts<2)
+    return {reason:'lab123-provider-recovery',
+      at:now+45000*Math.pow(2,stalledAttempts)};
   if(TRANSIENT.includes(halt)&&stalledAttempts<2)
     return {reason:'transient-recovery',at:now+30000*Math.pow(2,stalledAttempts)};
   if(snapshot.status==='interrupted'&&stalledAttempts<2)
