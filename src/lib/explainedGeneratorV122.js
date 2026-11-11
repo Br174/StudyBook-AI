@@ -57,7 +57,8 @@ export function planExplainedBlocksV122(pages,{
  return groups;
 }
 export function preflightExplainedCallsV124(pages,options={}){
- const blocks=planExplainedBlocksV122(pages,options);
+ const blocks=Array.isArray(options.preplannedBlocks)?options.preplannedBlocks:
+  planExplainedBlocksV122(pages,options);
  const details=blocks.map(block=>{
   const chars=block.reduce((n,p)=>n+p.segments.reduce((m,s)=>m+s.source.length,0),0);
   const segments=block.reduce((n,p)=>n+p.segments.length,0);
@@ -161,7 +162,8 @@ export async function generateExplainedBookV122(book,{
  // INPUT and OUTPUT capacity allow. A previous overload reduces the next
  // session's budget rather than firing several requests against a busy model.
  const queue=planExplainedBlocksV122(pending,{maxChars:blockCharBudget});
- const estimate=preflightExplainedCallsV124(pending,{maxChars:blockCharBudget});
+ const estimate=preflightExplainedCallsV124(pending,{maxChars:blockCharBudget,
+  preplannedBlocks:queue});
  diagnostics.splits=0;
  diagnostics.plannedRequests=estimate.plannedRequests;
  diagnostics.plannedPagesPerRequest=estimate.details.map(block=>block.pages);
