@@ -61,6 +61,35 @@ const overlapping={units:plan.units.map(u=>({
 const checked=validateSourcePatchesV118(plan,overlapping);
 eq(checked.accepted,4);
 eq(checked.rejected,8);
+// LAB118D: combine 10 guarded exact duplicate deletions and 10 conservative
+// changes. One untouched sentence must survive every selected deletion.
+const mix={units:plan.units.map(u=>({
+ id:u.id,
+ patches:Array.from({length:perPage},(_,i)=>({
+  from:sentence,to:i<10?'':replacement,
+  occurrence:i,importance:3})),
+ macro50:'',macroSummary:''
+}))};
+const mixedInput=validateSourcePatchesV118(plan,mix);
+eq(mixedInput.accepted,pages*perPage);
+eq(mixedInput.rejected,0);
+const mixed=composeSourcePatchesV118(plan,mix);
+for(const level of ['10','20','30','40','50','summary']){
+ ok(mixed.quality[level].quantitativePass,'All six percentages when literal redundancies are truly present: '+level);
+ ok(mixed.partsByLevel[level].every(p=>p.text.includes(sentence)),
+  'One unchanged literal source carrier must remain at every level');
+}
+eq(mixed.quality.summary.achievedReduction>=55,true);
+eq(mixed.quality.summary.achievedReduction<=65,true);
+eq(mixed.providerRequestsMade,0);
+const mustKeep=prepareSourceTiersV116([{
+ id:'unique',source:'Il termine unico 2024 non deve essere cancellato.',
+ pageStart:1,pageEnd:1}]);
+const attempt={units:[{id:'unique',patches:[{
+ from:'Il termine unico 2024 non deve essere cancellato.',to:'',
+ occurrence:0,importance:0
+}],macro50:'',macroSummary:''}]};
+eq(validateSourcePatchesV118(mustKeep,attempt).accepted,0);
 console.log(JSON.stringify({lab:'LAB118-SOURCE-PATCHES',checks,
  pages,originalLettersPerPage:studyLetters(units[0].source),
  acceptedPatches:inspected.accepted,rejectedPatches:0,
