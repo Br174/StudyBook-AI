@@ -67,20 +67,19 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
    style={{aspectRatio:page.widthMm+' / '+page.heightMm}}>
    <header className="sb-explained-pagehead">Libro spiegato · Pagina {page.label}</header>
    <div className="sb-explained-grid">
-    <div className="sb-explained-body">
-     {page.rows.map((r,i)=>
-      r.kind==='chapter-title'?<h2 key={i}>{r.text}</h2>:
-      r.kind==='section-title'?<h3 key={i}>{r.text}</h3>:
-      <p key={i}><RichText value={r.text}/></p>)}
-    </div>
-    <aside className="sb-explained-sidebar" aria-label="Significato dei termini">
-     {page.rows.map((r,i)=>(r.notes||[]).length?
-      <div key={i} className="sb-explained-notes" style={{marginTop:i===0?0:undefined}}>
-       {r.notes.map((n,j)=><div key={j} className="sb-explained-definition">
+    {page.rows.map((r,i)=><React.Fragment key={page.label+'-'+i}>
+      <div className="sb-explained-body sb-explained-row-body">
+       {r.kind==='chapter-title'?<h2>{r.text}</h2>:
+        r.kind==='section-title'?<h3>{r.text}</h3>:
+        <p><RichText value={r.text}/></p>}
+      </div>
+      <aside className="sb-explained-sidebar sb-explained-row-aside"
+       aria-label={'Termini spiegati accanto al testo: pagina '+page.label}>
+       {(r.notes||[]).map((n,j)=><div key={j} className="sb-explained-definition">
         <strong>{n.term}</strong><p>{n.definition}</p>
        </div>)}
-      </div>:null)}
-    </aside>
+      </aside>
+    </React.Fragment>)}
    </div>
    <footer>Pagina originale {page.sourcePage}
     {Number.isFinite(page.reduction)&&' · Riduzione '+page.reduction.toFixed(1)+'%'}
