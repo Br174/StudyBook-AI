@@ -37,7 +37,7 @@ async function run({flag=false,mixed=false,invalidBudget=false,sourceOverride=nu
    ...(mixed?{experimentV110:STUDY_SOURCE_LEDGER_V110}:{}),
    level:'40',units:useUnits,unitBudgets:buildUnitBudgetsV71(useUnits,'40'),
    pageBudgetsV74,
-   targetLetters:Math.round(studyLetters(useUnits[0].source)*.60),maxOutputTokens:4096,timeoutMs:70000
+   targetLetters:pageLetterBudgetsV74(useUnits,'40')[0].targetLetters,maxOutputTokens:4096,timeoutMs:70000
   }
  };
  const res={code:200,data:null,headers:{},status(x){this.code=x;return this},json(x){this.data=x;return this},setHeader(k,v){this.headers[k]=v;return this}};
