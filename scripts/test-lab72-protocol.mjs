@@ -5,6 +5,7 @@ import {STUDY_DRAFT_PROTOCOL_V72,verifyStudyDraftResponseV72} from '../src/lib/s
 import {STUDY_DRAFT_PROTOCOL_V74} from '../src/lib/studyDraftProtocolV74.js';
 import {buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
+import {STUDY_TARGET_V67} from '../src/lib/studyRebalancePolicyV67.js';
 import {readFileSync} from 'node:fs';
 const source=('Una regola prevede fatti, conseguenze e limiti che devono restare chiari. ').repeat(17);
 const units=[{id:'0:0',source,pageStart:1,pageEnd:1}];
@@ -23,7 +24,7 @@ try{
  };
  const req={method:'POST',env:{AI_API_KEY:'MOCK_KEY_ONLY',AI_MODEL:'gemini-3.5-flash-lite'},
   body:{phase:'draft-v72',draftProtocol:STUDY_DRAFT_PROTOCOL_V72,level:'10',
-   targetLetters:exactRetained(letters,10),summaryCapLetters:null,
+   targetLetters:exactRetained(letters,STUDY_TARGET_V67['10'].target),summaryCapLetters:null,
    unitBudgets:buildUnitBudgetsV71(units,'10'),maxOutputTokens:6000,units}};
  const out=res();
  await handler(req,out);
