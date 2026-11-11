@@ -1,0 +1,54 @@
+name: StudyBook LAB119C - zero Gemini calibrated replay of two real model replies
+on:
+  push:
+    branches:
+      - research/studybook-lab119-semantic-ladder-20261111
+    paths:
+      - .github/workflows/studybook-lab119-rebalance.yml
+      - src/lib/studyLadderRebalanceV119.js
+      - scripts/replay-lab119-two-real-ladders.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  offline-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reuse exact Gemini 3.5 original answer
+        uses: actions/download-artifact@v4
+        with:
+          name: LAB119-ONE-REAL-GEMINI-CORE-EXPANSIONS
+          repository: Br174/StudyBook-AI
+          run-id: 42985330555
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: /tmp/lab119-35
+      - name: Reuse exact Gemini 3.1 original answer
+        uses: actions/download-artifact@v4
+        with:
+          name: LAB119B-ONE-FREE-GEMINI-31-EVIDENCE
+          repository: Br174/StudyBook-AI
+          run-id: 42986027506
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: /tmp/lab119-31
+      - name: Rebalance old answers locally with zero additional Gemini calls
+        run: |
+          set -euo pipefail
+          node --check src/lib/studyLadderRebalanceV119.js
+          node --check scripts/replay-lab119-two-real-ladders.mjs
+          node scripts/replay-lab119-two-real-ladders.mjs | tee lab119-rebalance-summary.json
+      - name: Preserve actual measured pass/fail of both previous model responses
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB119C-REAL-REPLY-REBALANCE-OFFLINE
+          path: |
+            audit/reports/lab119-offline-rebalance-two-real-replies.json
+            lab119-rebalance-summary.json
+          if-no-files-found: ignore
+          retention-days: 30
