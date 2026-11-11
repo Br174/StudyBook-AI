@@ -26,7 +26,7 @@ function makeBody({experiment=false,phase='draft-v74'}={}){
    level:'40',units,bookTitle:'Fixture sintetico LAB109',
    unitBudgets:buildUnitBudgetsV71(units,'40'),
    pageBudgetsV74:pageLetterBudgetsV74(units,'40'),
-   targetLetters:Math.round(sourceLetters*.6),summaryCapLetters:null,
+   targetLetters:pageLetterBudgetsV74(units,'40')[0].targetLetters,summaryCapLetters:null,
    maxOutputTokens:4096,timeoutMs:55000,
    repairDrafts:phase==='recalibrate-v74'?[{id:'1:1',text:prior}]:[],
    ...(experiment?{experimentV109:STUDY_FACT_FIRST_V109}:{})
