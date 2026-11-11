@@ -2,7 +2,7 @@
 // exact counts and no fake "semantic approval". Runs on public synthetic text.
 import assert from 'node:assert/strict';
 import {prepareSourceTiersV116} from '../src/lib/studySourceTiersV116.js';
-import {composeSourceMacroV117,macroUserV117,macroInstructionV117}
+import {composeSourceMacroV117,macroUserV117,macroInstructionV117,inspectMacroCandidateV117}
  from '../src/lib/studyConceptMacroV117.js';
 import {studyLetters} from '../src/lib/studyPillarV38.js';
 const sentence='Il programma registra i libri e mostra il titolo richiesto.';
@@ -60,6 +60,13 @@ ok(fail.partsByLevel['50'][0].text.includes('2024'));
 ok(!fail.partsByLevel['50'][0].text.includes('2023'));
 ok(fail.partsByLevel.summary[0].text.includes('solo se'));
 ok(fail.quality['50'].groups[0].feasibility!=='NUMERIC_AND_ROWS_PASS');
+// Causation cannot replace weaker evidence of influence, even if it is shorter.
+const tidesSource='La Luna influisce sulle maree insieme al Sole.';
+const tidesWrong='Luna e Sole causano le maree.';
+const sourceTidesRisk=inspectMacroCandidateV117(tidesSource,tidesWrong,'50');
+eq(sourceTidesRisk.safetyCandidateAccepted,false);
+ok(sourceTidesRisk.directionalAdvisories.includes('influence-not-cause'),
+ 'A semantic directional inversion must veto the candidate');
 console.log(JSON.stringify({lab:'117',providerRequests:0,assertions,
  syntheticPages:4,groupedPageHandled:true,
  factualInventionRejected:true,level50:result.quality['50'].achievedReduction,
