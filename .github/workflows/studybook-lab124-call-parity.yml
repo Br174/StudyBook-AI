@@ -10,6 +10,7 @@ on:
       - scripts/test-lab123-503-recovery.mjs
       - src/lib/explainedGeneratorV122.js
       - src/AppV15.jsx
+      - src/components/AppScreens.jsx
       - api/editionsV36.js
   workflow_dispatch:
 permissions:
