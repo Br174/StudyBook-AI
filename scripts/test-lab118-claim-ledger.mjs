@@ -63,9 +63,9 @@ const riskPlan=prepareSourceTiersV116([{
  id:'scope',source:scopeSource,pageStart:1,pageEnd:1
 }]);
 const riskLedger=buildClaimLedgerV118(riskPlan);
-eq(riskLedger.uniqueClaims,2);
+eq(riskLedger.uniqueClaims,3); // 'solo se' is correctly split into its own protected claim.
 eq(riskLedger.exactDuplicates,0);
-ok(riskLedger.units[0].claims[0].protectedFacts.some(x=>x.kind==='qualifier'));
+ok(riskLedger.units[0].claims.some(c=>c.protectedFacts.some(x=>x.kind==='qualifier')));
 const bad={units:[{
  id:'scope',variants:riskPlan.units[0].segments.map(s=>({
  compact:s.original,brief:s.original,importance:5,essential:true})),
