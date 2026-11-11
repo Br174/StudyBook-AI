@@ -23,7 +23,7 @@ eq(plan.ledger.groups[0].count,9);
 ok(plan.text.includes('orientativamente conserva'));
 ok(plan.text.includes('distinguere fra descrizione'));
 ok(plan.text.includes('MAX 8 RIGHE'));
-ok(plan.text.includes('conserva 359 LETTERE'));
+ok(plan.text.includes('conserva '+plan.ledger.groups[0].targetLetters+' LETTERE'));
 async function run({flag=false,mixed=false,invalidBudget=false,sourceOverride=null,upstream=200}={}){
  const useUnits=sourceOverride?[{id:'1:1',source:sourceOverride,pageStart:1,pageEnd:1}]:units;
  const pageBudgetsV74=pageLetterBudgetsV74(useUnits,'40');
