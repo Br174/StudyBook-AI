@@ -1,0 +1,44 @@
+name: StudyBook LAB118 - offline replay actual Gemini reply no additional calls
+on:
+  push:
+    branches:
+      - research/studybook-lab118-claim-ledger-20261111
+    paths:
+      - .github/workflows/studybook-lab118-replay.yml
+      - scripts/replay-lab118-real-response.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  offline-real-reply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reuse exact stored public-fixture Gemini response from earlier run
+        uses: actions/download-artifact@v4
+        with:
+          name: LAB118-One-Free-Gemini-Source-Claims
+          repository: Br174/StudyBook-AI
+          run-id: 42953808440
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: audit/reports
+      - name: Run replay of incomplete model answer without new calls
+        run: |
+          set -euo pipefail
+          node --check scripts/replay-lab118-real-response.mjs
+          node scripts/replay-lab118-real-response.mjs | tee lab118-offline-replay-summary.json
+      - name: Keep partial failures as diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB118-Replay-One-Real-Reply-No-Gemini
+          path: |
+            audit/reports/lab118-real-offline-replay.json
+            lab118-offline-replay-summary.json
+          if-no-files-found: ignore
+          retention-days: 30
