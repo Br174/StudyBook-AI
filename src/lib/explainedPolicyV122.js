@@ -106,7 +106,7 @@ export function normalizeExplainedAnchorsV122(result){
  for(const item of result.glossary){
   const term=clean(item?.term);
   if(!term||term.length>90)continue;
-  const escaped=[...term].map(c=>'\\.^$*+?()[]{}|'.includes(c)?'\\\\'+c:c).join('');
+  const escaped=[...term].map(c=>'\\.^$*+?()[]{}|'.includes(c)?'\\'+c:c).join('');
   const already=new RegExp('\\*\\*\\('+escaped+'\\)\\*\\*','iu');
   if(segments.some(x=>already.test(String(x?.text||''))))continue;
   for(const seg of segments){
