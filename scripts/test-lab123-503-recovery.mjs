@@ -22,7 +22,7 @@ try{
  globalThis.fetch=async(_,options)=>{
   const req=JSON.parse(options.body),batch=req.pages;
   calls.push(batch.map(p=>p.id));
-  if(step++===1)return {ok:false,status:503,json:async()=>({
+  if(step++===0)return {ok:false,status:503,json:async()=>({
    code:'AI_TEMPORARY_OVERLOAD',retryAfterSeconds:80})};
   return {ok:true,status:200,json:async()=>replyFor(batch)};
  };
@@ -30,15 +30,16 @@ try{
  const completed=await generateExplainedBookV122(book,{
   onProgress:async s=>{progress.push(s);if(!firstSnapshot&&s.verifiedChunkVariants>0)firstSnapshot=s;}
  });
- assert.equal(calls[0].length,1,'FIRST Gemini block must be exactly one original page');
- assert.equal(firstSnapshot.verifiedChunkVariants,1,'one page saved before any larger request');
- assert.equal(calls[1].length>1,true,'then batching is allowed');
- assert.ok(calls[2].length<calls[1].length,'503 must halve the batch rather than stall all 44 pages');
+ assert.equal(calls[0].length,44,'LAB51-style initial block covers all short original pages');
+ assert.equal(firstSnapshot.verifiedChunkVariants,22,'after 503, half-block saved without waiting for whole book');
+ assert.equal(calls[1].length,22,'503 triggers half-block only when needed');
+ assert.equal(calls[2].length,22,'second half preserves whole-page order');
+ assert.equal(calls.length,3,'initial attempt + only two half-block retries');
  assert.equal(completed.verifiedChunkVariants,44);
  assert.equal(completed.complete,true);
  assert.equal(completed.diagnostics.splits,1);
  assert.equal(progress.some(p=>p.verifiedChunkVariants>=1&&p.verifiedChunkVariants<44),true);
- console.log('PASS LAB123: first page available before 503, safe split and 44/44 checkpoints');
+ console.log('PASS LAB124: one large call for 44 source pages, then safe 503 half-block retry, 44/44 checkpoints');
 
  let failures=0;globalThis.fetch=async()=>{
   failures++;return {ok:false,status:503,json:async()=>({
@@ -62,7 +63,7 @@ try{
  assert.equal(recovered.complete,true);
  assert.equal(recovered.verifiedChunkVariants,44);
  assert.equal(recovered.quota,undefined);
- assert.ok(resumedRequests>1);
+ assert.equal(resumedRequests,1,'resume sends one full natural block when quota recovered');
  console.log('PASS LAB123: no-progress 503 then 44/44 resumes from saved original');
 
  const blocked=planStudyAutoResumeV45({...stopped,quota:undefined,
