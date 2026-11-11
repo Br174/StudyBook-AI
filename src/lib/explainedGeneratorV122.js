@@ -6,8 +6,10 @@ import {originalExplainedPagesV122,auditExplainedPageV122,
 import {percentReduced} from './studyPillarV38.js';
 
 // Large batches for short pages; split automatically on provider truncation.
-const BLOCK_SOURCE_LIMIT=26000;
-const BLOCK_PAGE_LIMIT=72;
+// LAB123: first verified page must arrive before any large batch is attempted.
+const BLOCK_SOURCE_LIMIT=6500;
+const BLOCK_PAGE_LIMIT=4;
+const RECOVERABLE_HTTP=new Set([413,422,502,503,504]);
 const VERSION=EXPLAINED_POLICY_V122;
 const withSource=(original,result)=>({
  id:original.id,label:original.label,physicalPage:original.physicalPage,
@@ -103,8 +105,14 @@ export async function generateExplainedBookV122(book,{
   }));
  }
  await publish();
- const queue=planExplainedBlocksV122(pending);
+ // Probe ONE real physical page first. The LAB122 26k/72-page initial batch
+ // could trigger a provider 503 before the first visible checkpoint (0/44).
+ // After the first page succeeds, use modest groups and split only on errors.
+ const queue=pending.length
+   ?[[pending[0]],...planExplainedBlocksV122(pending.slice(1))]
+   :[];
  diagnostics.splits=0;
+ diagnostics.initialProbePages=pending.length?1:0;
  for(let index=0;index<queue.length;index++){
   const block=queue[index];
   if(signal?.aborted){lastError='V122_INTERRUPTED';break;}
@@ -123,15 +131,18 @@ export async function generateExplainedBookV122(book,{
    if(!reply.ok){
     const code=response?.code||'HTTP_'+reply.status;
     diagnostics.providerErrors++;
-    if([413,422,502,504].includes(reply.status)&&block.length>1&&diagnostics.splits<24){
+    if(RECOVERABLE_HTTP.has(reply.status)&&block.length>1&&diagnostics.splits<24){
       const middle=Math.floor(block.length/2);
       queue.splice(index,1,block.slice(0,middle),block.slice(middle));
       diagnostics.splits++;index--;continue;
     }
     lastError=code;
+    diagnostics.lastProviderCode=code;
+    diagnostics.lastHttpStatus=reply.status;
     if(reply.status===429||reply.status===503){
      const retrySeconds=Number(response?.retryAfterSeconds||90);
-     diagnostics.retryAt=new Date(Date.now()+Math.max(60,Math.min(3600,retrySeconds))*1000).toISOString();
+     const backoff=Number.isFinite(retrySeconds)&&retrySeconds>0?retrySeconds:90;
+     diagnostics.retryAt=new Date(Date.now()+Math.max(60,Math.min(3600,backoff))*1000).toISOString();
     }
     break;
    }
@@ -154,6 +165,8 @@ export async function generateExplainedBookV122(book,{
     else rejected.delete(source.id);
    }
    diagnostics.lastBlockMs=Date.now()-before;
+   diagnostics.lastHttpStatus=200;
+   diagnostics.lastBlockPages=block.length;
    await publish();
   }catch(err){
    lastError=signal?.aborted?'V122_INTERRUPTED':err?.code||'V122_NETWORK_OR_STORAGE';
