@@ -37,6 +37,8 @@ jobs:
           node --check scripts/test-lab121-private-worker.mjs
       - name: Install project dependencies for native LAB79 no-loop test
         run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Build real Vite web assets required by native Cloudflare Worker test harness
+        run: npm run build
       - name: Six-level Worker request privacy and numeric center contract
         run: |
           set -euo pipefail
