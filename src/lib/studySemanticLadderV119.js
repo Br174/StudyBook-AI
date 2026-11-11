@@ -25,6 +25,17 @@ const LEVEL_FIELDS={
 const norm=s=>String(s??'').normalize('NFC').replace(/\s+/gu,' ').trim();
 const percent=(original,output)=>original>0?
  Math.round((1-output/original)*1000)/10:null;
+// Independent numeric facts must survive even if adjacent propositions share
+// nearly every content word. This is diagnostic, not full semantic proof.
+const numerals=value=>[...new Set((String(value||'').match(
+ /(?<![\p{L}\p{N}])\d+(?:[.,]\d+)?(?![\p{L}\p{N}])/gu)||[]))];
+function numberDifference(source,studyText){
+ const src=numerals(source),dst=new Set(numerals(studyText));
+ const known=new Set(src);
+ return{lost:src.filter(n=>!dst.has(n)),
+  introduced:[...dst].filter(n=>!known.has(n))};
+}
+
 function sentenceList(value){
  return (norm(value).match(/[^.!?]+(?:[.!?]+|$)/gu)||[])
   .map(norm).filter(Boolean);
@@ -124,6 +135,7 @@ export function composeSemanticLadderV119(plan,response){
    const audit=auditFidelity(src,p.text);
    const directional=inspectBestOfV76(src,p.text,level);
    const immutable=immutableViolationsV67(src,p.text);
+   const numericFacts=numberDifference(src,p.text);
    const sourceProtected=new Set(extractProtectedItems(src)
     .filter(x=>x.kind!=='qualifier').map(x=>x.kind+':'+x.value.toLocaleLowerCase('it-IT')));
    const novelProtected=extractProtectedItems(p.text)
@@ -135,8 +147,11 @@ export function composeSemanticLadderV119(plan,response){
     directionalAdvisories:directional.semanticAdvisories,
     immutableViolations:immutable.length,
     newProtectedClaims:novelProtected.map(x=>x.value),
+    lostNumericalClaims:numericFacts.lost,
+    inventedNumericalClaims:numericFacts.introduced,
     exactDuplicateSentences:output[i].exactDuplicateSentences,
-    preliminarySafetyPass:audit.passed&&
+    preliminarySafetyPass:numericFacts.lost.length===0&&
+      numericFacts.introduced.length===0&&audit.passed&&
       directional.semanticAdvisories.length===0&&immutable.length===0&&
       novelProtected.length===0&&output[i].exactDuplicateSentences===0,
     semanticCertified:false};
