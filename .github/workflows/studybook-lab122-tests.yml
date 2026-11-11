@@ -17,6 +17,7 @@ on:
       - api/explainedV122.js
       - worker/index.js
       - scripts/test-lab122-single-explained.mjs
+      - scripts/test-lab122-pdf-render.mjs
   workflow_dispatch:
 permissions:
   contents: read
@@ -43,6 +44,10 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/test-lab122-single-explained.mjs | tee lab122-proof.jsonl
+      - name: Actual PDF rendering, 30 original anchors, bis and tris, legal side glossary
+        run: |
+          set -euo pipefail
+          node scripts/test-lab122-pdf-render.mjs | tee lab122-pdf-proof.jsonl
       - name: Scudo360 native P1 regression gate
         run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/lab122-scudo-report.json
       - name: Prior source-risk, provider quota and historical Worker regressions
@@ -62,6 +67,7 @@ jobs:
           name: StudyBook-LAB122-Quality-Tests
           path: |
             lab122-proof.jsonl
+            lab122-pdf-proof.jsonl
             .motorlab/lab122-scudo-report.json
           if-no-files-found: ignore
           retention-days: 30
