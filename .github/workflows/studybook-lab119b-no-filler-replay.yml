@@ -1,0 +1,43 @@
+name: StudyBook LAB119B - replay real Gemini no filler, no new calls
+on:
+  push:
+    branches:
+      - research/studybook-lab119-semantic-ladder-20261111
+    paths:
+      - .github/workflows/studybook-lab119b-no-filler-replay.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay-real:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reuse immutable existing public Gemini output, no model
+        uses: actions/download-artifact@v4
+        with:
+          name: LAB119-ONE-REAL-GEMINI-CORE-EXPANSIONS
+          repository: Br174/StudyBook-AI
+          run-id: 42985330555
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: audit/reports
+      - name: Check source and inspect real filler with no API
+        run: |
+          set -euo pipefail
+          node --check scripts/replay-lab119-empty-unverified-expansions.mjs
+          node scripts/replay-lab119-empty-unverified-expansions.mjs | tee lab119b-replay-results.json
+      - name: Preserve exact benchmark and honest gates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB119B-Real-Filler-Elimination-No-Gemini
+          path: |
+            audit/reports/lab119b-real-no-filler-replay.json
+            lab119b-replay-results.json
+          if-no-files-found: ignore
+          retention-days: 30
