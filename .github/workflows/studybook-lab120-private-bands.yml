@@ -1,0 +1,37 @@
+name: StudyBook LAB120 - private tolerance never sent to Gemini
+on:
+  push:
+    branches:
+      - research/studybook-lab120-private-acceptance-20261111
+    paths:
+      - src/lib/studyPrivateAcceptanceV120.js
+      - scripts/test-lab120-private-acceptance.mjs
+      - .github/workflows/studybook-lab120-private-bands.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-private-bands:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate code first
+        run: |
+          node --check src/lib/studyPrivateAcceptanceV120.js
+          node --check scripts/test-lab120-private-acceptance.mjs
+      - name: Enforce private acceptance vs provider goal separation
+        run: |
+          set -euo pipefail
+          node scripts/test-lab120-private-acceptance.mjs | tee lab120-private-bands-evidence.json
+      - name: Preserve verifiable evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB120-Strict-Model-Private-Acceptance
+          path: lab120-private-bands-evidence.json
+          if-no-files-found: ignore
+          retention-days: 30
