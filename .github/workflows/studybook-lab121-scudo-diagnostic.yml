@@ -30,6 +30,9 @@ jobs:
           node scripts/test-lab72-negative-closure.mjs
           node scripts/test-lab69-strict-bands.mjs
           node scripts/test-lab67-simplified-precise-rebalance.mjs
+      - name: Diagnose V121 manual targeted repairs without changing tests
+        continue-on-error: true
+        run: node scripts/test-lab69-strict-bands.mjs
       - name: Reveal LAB72 adapter's exact failed checks
         continue-on-error: true
         run: node scripts/StudyBookLab72Targeted.mjs
