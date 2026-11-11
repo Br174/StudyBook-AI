@@ -32,6 +32,8 @@ jobs:
           node --check src/lib/draftFirstV57.js
           node --check api/editionsBulkV51.js
           node --check scripts/test-lab121-private-worker.mjs
+      - name: Install project dependencies for native LAB79 no-loop test
+        run: npm install --ignore-scripts --no-audit --no-fund
       - name: Six-level Worker request privacy and numeric center contract
         run: |
           set -euo pipefail
