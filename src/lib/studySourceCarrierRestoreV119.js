@@ -30,7 +30,7 @@ function riskForPair(src,out){
    /\b(?:causa\w*|provoca\w*|determina\w*)\b/u.test(b)&&
    !/\b(?:causa\w*|provoca\w*|determina\w*)\b/u.test(a))
   reasons.push('INFLUENCE_TO_CAUSE');
- if(/\bpuò\b/u.test(a)&&!/\b(?:può|possono|potrebbe|potrebbero)\b/u.test(b))
+ if(/\bpuò(?=\s|[.,:;!?])/u.test(a)&&!/(?:\bpuò(?=\s|[.,:;!?])|\bpossono\b|\bpotrebbe\b|\bpotrebbero\b)/u.test(b))
   reasons.push('POSSIBILITY_MADE_UNCONDITIONAL');
  if(/\b(?:soprattutto|principalmente)\b/u.test(a)&&
    !/\b(?:soprattutto|principalmente|prevalentemente)\b/u.test(b))
@@ -40,6 +40,9 @@ function riskForPair(src,out){
   reasons.push('EXCEPTION_CONDITION_LOST');
  if(/\bnon\b/u.test(a)&&!/\b(?:non|nessun\w*|senza)\b/u.test(b))
   reasons.push('SCOPED_NEGATION_LOST');
+ if(/\bprima\s+del\s+prestito\b/u.test(a)&&
+   !/\bprima\s+del\s+prestito\b/u.test(b))
+  reasons.push('BEFORE_LOAN_SCOPE_LOST');
  if(/\bcirca\b/u.test(a)&&!/\b(?:circa|approssimativamente)\b/u.test(b))
   reasons.push('APPROXIMATION_LOST');
  if(/\bverificabil[ei]\b/u.test(a)&&!/\bverificabil[ei]\b/u.test(b))
