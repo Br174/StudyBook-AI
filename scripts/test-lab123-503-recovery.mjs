@@ -79,11 +79,11 @@ try{
  assert.equal(calls[2].length,22);
  console.log('PASS LAB124: real size error splits at full-page boundaries');
 
- const blocked=planStudyAutoResumeV45({...stopped,quota:undefined,
-  status:'provider-blocked'},readyAt,0);
+ const blocked=planStudyAutoResumeV45({...halted,quota:undefined,
+  status:'provider-blocked'},future,0);
  assert.equal(blocked.reason,'lab123-provider-recovery');
- assert.equal(planStudyAutoResumeV45({...stopped,quota:undefined,
-  status:'provider-blocked'},readyAt,2),null);
+ assert.equal(planStudyAutoResumeV45({...halted,quota:undefined,
+  status:'provider-blocked'},future,2),null);
  console.log('PASS LAB123: 502/network foreground retry bounded to 2');
 
  let providerModels=[],workerResponse=null,workerStatus=200;
