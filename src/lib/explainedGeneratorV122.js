@@ -12,7 +12,11 @@ const BLOCK_SOURCE_LIMIT=28000; // Worker hard cap is 30000 source chars.
 const BLOCK_PAGE_LIMIT=72;
 const BLOCK_INPUT_TOKEN_LIMIT=35000;
 const BLOCK_OUTPUT_TOKEN_LIMIT=30000;
-const RECOVERABLE_HTTP=new Set([413,422,502,503,504]);
+const SPLITTABLE_HTTP=new Set([413,422]);
+const CAP_MIN_CHARS=1200;
+// Error from provider != evidence that more requests at once will help.
+const isProviderCooldown=(status,code)=>status===429||status===503||
+ (status===502||status===504)&&/AI_PROVIDER_(?:NETWORK|TIMEOUT|REJECTED)|V122_NETWORK/iu.test(code||'');
 const VERSION=EXPLAINED_POLICY_V122;
 const withSource=(original,result)=>({
  id:original.id,label:original.label,physicalPage:original.physicalPage,
@@ -108,8 +112,18 @@ export async function generateExplainedBookV122(book,{
    }).slice(0,3).sort((a,b)=>a.physicalPage-b.physicalPage);
   }
  }
+ // A provider overload is not proof of a size limit. Nevertheless, record a
+ // conservative reduction for the NEXT scheduled attempt, not an immediate
+ // cascade of new provider calls. Restore this budget from durable checkpoint.
+ const previousDiag=book?.editionsV36?.diagnostics||{};
+ const savedCharBudget=Number(previousDiag.nextBlockChars);
+ const blockCharBudget=Number.isFinite(savedCharBudget)&&savedCharBudget>=CAP_MIN_CHARS
+  ?Math.max(CAP_MIN_CHARS,Math.min(BLOCK_SOURCE_LIMIT,Math.floor(savedCharBudget)))
+  :BLOCK_SOURCE_LIMIT;
  const diagnostics={requestsSent:0,providerErrors:0,qualityReview:rejected.size,
-  originalPages:originalPages.length,mode:'one-explanation-per-source-page'};
+  originalPages:originalPages.length,mode:'one-explanation-per-source-page',
+  nextBlockChars:blockCharBudget,
+  priorProviderErrors:Number(previousDiag?.providerErrors||0)};
  let lastError=null;
  const publish=async(status='partial',{persist=true}={})=>{
   const snap=explainedSnapshotV122(book,originalPages,[...records.values()],status,diagnostics);
@@ -127,10 +141,10 @@ export async function generateExplainedBookV122(book,{
  // running Gemini. Avoid writing the entire original PDF AGAIN before the
  // first network request; on large books this could stall at 0/N.
  await publish('partial',{persist:false});
- // LAB124: use the same natural whole-page grouping principle that allowed
- // LAB58 to complete a 44-page example in one call PER EDITION.
- // Keep LAB123 bisection on 413/422/502/503/504 for oversized responses.
- const queue=planExplainedBlocksV122(pending);
+ // LAB124: the LAB51/58 pattern packages as many whole pages as estimated
+ // INPUT and OUTPUT capacity allow. A previous overload reduces the next
+ // session's budget rather than firing several requests against a busy model.
+ const queue=planExplainedBlocksV122(pending,{maxChars:blockCharBudget});
  diagnostics.splits=0;
  diagnostics.plannedRequests=queue.length;
  diagnostics.plannedPagesPerRequest=queue.map(group=>group.length);
@@ -157,24 +171,36 @@ export async function generateExplainedBookV122(book,{
    if(!reply.ok){
     const code=response?.code||'HTTP_'+reply.status;
     diagnostics.providerErrors++;
-    if(RECOVERABLE_HTTP.has(reply.status)&&block.length>1&&diagnostics.splits<24){
+    diagnostics.lastProviderCode=code;
+    diagnostics.lastHttpStatus=reply.status;
+    if(isProviderCooldown(reply.status,code)){
+      // 429/503 may be daily/RPM capacity or a Google-side outage. Never
+      // immediately split/retry: it creates a burst of further 503 responses.
+      // The next foreground attempt starts only AFTER the bounded cooldown.
+      const rawSeconds=Number(response?.retryAfterSeconds??reply.headers?.get?.('Retry-After')??90);
+      const seconds=Number.isFinite(rawSeconds)&&rawSeconds>0?rawSeconds:90;
+      diagnostics.retryAt=new Date(Date.now()+Math.max(60,Math.min(3600,seconds))*1000).toISOString();
+      diagnostics.retryReason=code;
+      const thisChars=block.reduce((n,p)=>n+p.segments.reduce((m,seg)=>m+seg.source.length,0),0);
+      const largestPage=Math.max(0,...block.map(p=>p.segments.reduce((m,seg)=>m+seg.source.length,0)));
+      const smaller=Math.floor(Math.min(blockCharBudget,thisChars)*0.65);
+      diagnostics.nextBlockChars=Math.max(CAP_MIN_CHARS,
+        Math.min(BLOCK_SOURCE_LIMIT,Math.max(largestPage,smaller)));
+      lastError=code;break;
+    }
+    if(SPLITTABLE_HTTP.has(reply.status)&&block.length>1&&diagnostics.splits<12){
+      // A verified size/format error can be retried at a whole-page boundary
+      // immediately; unlike a provider cooldown it is not quota exhaustion.
       const middle=Math.floor(block.length/2);
       queue.splice(index,1,block.slice(0,middle),block.slice(middle));
       diagnostics.splits++;index--;continue;
     }
     lastError=code;
-    diagnostics.lastProviderCode=code;
-    diagnostics.lastHttpStatus=reply.status;
-    if(reply.status===429||reply.status===503){
-     const retrySeconds=Number(response?.retryAfterSeconds||90);
-     const backoff=Number.isFinite(retrySeconds)&&retrySeconds>0?retrySeconds:90;
-     diagnostics.retryAt=new Date(Date.now()+Math.max(60,Math.min(3600,backoff))*1000).toISOString();
-    }
     break;
    }
    if(response?.engine!=='ai'||response?.version!==VERSION||
       !Array.isArray(response.pages)||response.pages.length!==block.length){
-    if(block.length>1&&diagnostics.splits<24){
+    if(block.length>1&&diagnostics.splits<12){
       const middle=Math.floor(block.length/2);
       queue.splice(index,1,block.slice(0,middle),block.slice(middle));
       diagnostics.splits++;index--;continue;
@@ -191,6 +217,9 @@ export async function generateExplainedBookV122(book,{
     else rejected.delete(source.id);
    }
    diagnostics.lastBlockMs=Date.now()-before;
+   // Validated successes preserve the learned budget; no unnecessary tiny
+   // batch when the provider is demonstrably healthy.
+   diagnostics.nextBlockChars=Math.max(blockCharBudget,diagnostics.nextBlockChars);
    diagnostics.activePages=[];
    diagnostics.lastHttpStatus=200;
    diagnostics.lastBlockPages=block.length;
