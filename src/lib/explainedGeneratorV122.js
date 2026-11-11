@@ -92,9 +92,9 @@ export async function generateExplainedBookV122(book,{
  const diagnostics={requestsSent:0,providerErrors:0,qualityReview:rejected.size,
   originalPages:originalPages.length,mode:'one-explanation-per-source-page'};
  let lastError=null;
- const publish=async(status='partial')=>{
+ const publish=async(status='partial',{persist=true}={})=>{
   const snap=explainedSnapshotV122(book,originalPages,[...records.values()],status,diagnostics);
-  await onProgress(snap);
+  await onProgress(snap,{persist});
   return snap;
  };
  // Blank physical sheets and cover pages are preserved as original pages, not sent to Gemini.
@@ -104,7 +104,10 @@ export async function generateExplainedBookV122(book,{
     outputLetters:0,reduction:0,semanticCertified:false}
   }));
  }
- await publish();
+ // Initial source snapshot was already persisted by the book owner before
+ // running Gemini. Avoid writing the entire original PDF AGAIN before the
+ // first network request; on large books this could stall at 0/N.
+ await publish('partial',{persist:false});
  // Probe ONE real physical page first. The LAB122 26k/72-page initial batch
  // could trigger a provider 503 before the first visible checkpoint (0/44).
  // After the first page succeeds, use modest groups and split only on errors.
@@ -120,8 +123,12 @@ export async function generateExplainedBookV122(book,{
    label:p.label,physicalPage:p.physicalPage}));
   const before=Date.now();
   try{
+   diagnostics.activePages=block.map(p=>p.physicalPage);
+   diagnostics.lastAttemptStartedAt=new Date().toISOString();
    onActivity({phase:'explained-page-block',pageStart:block[0].physicalPage,
-    pageEnd:block.at(-1).physicalPage,pages:block.length});
+    pageEnd:block.at(-1).physicalPage,pages:block.length,
+    sourceChars:block.reduce((total,p)=>total+p.segments.reduce((n,s)=>n+s.source.length,0),0)});
+
    const reply=await fetch(apiEndpoint('/api/explained/v122'),{
     method:'POST',signal,headers:{'Content-Type':'application/json'},
     body:JSON.stringify({policy:VERSION,pages,timeoutMs:150000})
@@ -165,6 +172,7 @@ export async function generateExplainedBookV122(book,{
     else rejected.delete(source.id);
    }
    diagnostics.lastBlockMs=Date.now()-before;
+   diagnostics.activePages=[];
    diagnostics.lastHttpStatus=200;
    diagnostics.lastBlockPages=block.length;
    await publish();
@@ -175,6 +183,7 @@ export async function generateExplainedBookV122(book,{
   }
  }
  diagnostics.lastCode=lastError;
+ diagnostics.activePages=[];
  const final=await publish(lastError?(lastError==='V122_INTERRUPTED'?'interrupted':
    diagnostics.retryAt?'quota-paused':'provider-blocked'):
    rejected.size?'quality-review':'partial');
