@@ -33,6 +33,8 @@ import {STUDY_CLAUSE_BUDGET_V110B} from './studyClauseBudgetV110B.js';
 import {STUDY_LEAN_PERCENT_V111} from './studyLeanPercentV111.js';
 import {planNaturalBlocksLinearV111} from './studyLinearPlannerV111.js';
 import {STUDY_503_FAILOVER_V114} from './study503FailoverV114.js';
+import {STUDY_PRIVATE_EXPERIMENT_V121} from './studyPrivatePromptV121.js';
+import {STUDY_TARGET_V67} from './studyRebalancePolicyV67.js';
 import {readGeminiTrafficV113,saveGeminiTrafficV113,
  applyGeminiTrafficV113,geminiTrafficSummaryV113} from './studyGeminiTrafficV113.js';
 import {initialStudyOutputLimitV73,safeNetworkSplitV73,isRecoverableNetworkV73,
@@ -191,7 +193,7 @@ function publishEdition(rows,units,drafts,level){
 async function request(block,level,{bookTitle='',signal=null,phase='draft',repairDrafts=[],
   targetOverride=null,onWait=()=>{},onTraffic=async()=>null}={}){
  const target=blockLetterTargetV51(block,level),chars=block.reduce((n,u)=>n+u.source.length,0);
- const ratio=level==='summary'?0.44:1-Number(level)/100;
+ const ratio=1-STUDY_TARGET_V67[String(level)].target/100;
  const tokenBudget=Math.min(BULK_OUTPUT_TOKEN_CEILING,
    Math.max(4096,Math.ceil(chars*ratio/1.5)+block.length*115+1800));
  const expected=targetOverride===null?(level==='summary'?target.summaryCapLetters:target.targetLetters):
@@ -218,6 +220,8 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
    body.experimentV111=STUDY_LEAN_PERCENT_V111;
    if(import.meta.env?.VITE_STUDYBOOK_TRIAL_114==='1')
      body.experimentV114=STUDY_503_FAILOVER_V114;
+   if(import.meta.env?.VITE_STUDYBOOK_TRIAL_121==='1')
+     body.experimentV121=STUDY_PRIVATE_EXPERIMENT_V121;
  }else if(import.meta.env?.VITE_STUDYBOOK_TRIAL_110B==='1'&&level==='40'&&usePageBudgetV74){
    try{
      const geometry=studyGeometryPlanV78(block,level);
@@ -289,6 +293,11 @@ async function request(block,level,{bookTitle='',signal=null,phase='draft',repai
  if(body.experimentV111&&data?.leanPercentPilotV111!==STUDY_LEAN_PERCENT_V111)
    throw Object.assign(new Error('Worker percentuali LAB111 non verificato: bozze preservate'),
      {code:'AI_TRIAL_111_BACKEND_MISMATCH'});
+ if(body.experimentV121&&
+   (data?.privateCenterPilotV121!==STUDY_PRIVATE_EXPERIMENT_V121||
+    data?.privateBandDisclosedToGemini!==false))
+   throw Object.assign(new Error('Worker LAB121 incompatibile: bozze conservate'),
+    {code:'AI_TRIAL_121_BACKEND_MISMATCH'});
  if(body.experimentV114&&
    (data?.failoverPilotV114!==STUDY_503_FAILOVER_V114||
     !Number.isInteger(data.providerAttempts)))
