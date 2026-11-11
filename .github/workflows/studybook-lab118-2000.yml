@@ -1,0 +1,33 @@
+name: StudyBook LAB118 - 2000 page six levels local delta stress
+on:
+  push:
+    branches:
+      - research/studybook-lab118-claim-ledger-20261111
+    paths:
+      - .github/workflows/studybook-lab118-2000.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  2000pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: node --check scripts/bench-lab118-2000-patch-pages.mjs
+      - name: Stress 2000 original pages and six percent output levels locally
+        run: |
+          set -euo pipefail
+          node scripts/bench-lab118-2000-patch-pages.mjs | tee lab118-2000-source-benchmark.json
+      - name: Preserve true local runtime without provider usage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB118-2000-Page-Six-Level-Source-Patches
+          path: lab118-2000-source-benchmark.json
+          if-no-files-found: ignore
+          retention-days: 30
