@@ -1,0 +1,44 @@
+name: StudyBook LAB117 - replay ONE real Gemini answer OFFLINE
+on:
+  push:
+    branches:
+      - research/studybook-lab117-concept-macro-20261111
+    paths:
+      - .github/workflows/studybook-lab117-replay.yml
+      - scripts/replay-lab117-real.mjs
+      - src/lib/studyConceptMacroV117.js
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reuse exact public-synthetic Gemini answer, no API
+        uses: actions/download-artifact@v4
+        with:
+          name: LAB117-ONE-REAL-MACRO-REPLY
+          repository: Br174/StudyBook-AI
+          run-id: 42951777342
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: audit/reports
+      - name: Check script and saved report
+        run: |
+          node --check scripts/replay-lab117-real.mjs
+          test -s audit/reports/lab117-one-real-request.json
+      - name: Diagnose exactly the old source and reply without provider
+        run: node scripts/replay-lab117-real.mjs
+      - name: Preserve numerical and semantic warnings even on expected gate failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB117-Offline-Exact-Reply-Diagnostics
+          path: audit/reports/lab117-offline-replay.json
+          if-no-files-found: ignore
+          retention-days: 30
