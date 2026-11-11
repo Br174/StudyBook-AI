@@ -23,6 +23,36 @@ const LEVEL_FIELDS={
  '10':['core','extra50','extra40','extra30','extra20','extra10']
 };
 const norm=s=>String(s??'').normalize('NFC').replace(/\s+/gu,' ').trim();
+const PLACEHOLDER_PATTERNS_V119=[
+ /(?:ulteriori|altri|tutti i)?\s*dettagli?\s+(?:operativi|completi|originali)\s+(?:inclus[ioae]|present[ie]|gi[aà]\s+riportat[ioae])/iu,
+ /(?:testo|contenuto)\s+originari[oa]\s+inclus[ioae]/iu,
+ /(?:senza|con)\s+(?:modifiche|variazioni)\s+(?:strutturali|alla\s+struttura)/iu,
+ /(?:la|le)\s+informazion[ie]\s+(?:sono|vengono)\s+(?:incluse|riportate|mantenute)/iu,
+ /\b(?:eccetera|etc\.?|omissis|continua\s+come\s+sopra)\b/iu
+];
+// These patterns detect model self-description, NOT useful source content.
+// Never pad an edition with model status text to reach a letter target.
+function invalidGeneratedFieldV119(text){
+ const suspicious=PLACEHOLDER_PATTERNS_V119.find(p=>p.test(text));
+ return suspicious?'METATEXT_INSTEAD_OF_STUDY_CONTENT':null;
+}
+function topicTerms(text){
+ return new Set((String(text||'').toLocaleLowerCase('it-IT')
+   .match(/[\p{L}\p{N}]{4,}/gu)||[])
+  .filter(x=>!new Set(['sono','della','delle','degli','questo','questa',
+  'oltre','anche','essere','dallo','dalla','come','senza','nelle']).has(x)));
+}
+function additionOriginV119(source,previous,added){
+ const sourceTerms=topicTerms(source),seenTerms=topicTerms(previous);
+ const extraTerms=topicTerms(added);
+ const newSource=[...extraTerms].filter(t=>sourceTerms.has(t)&&!seenTerms.has(t));
+ // A paraphrase can be semantically correct with few exact source words,
+ // so do NOT use this metric as a full semantic certification.
+ return {newSourceTerms:newSource.length,
+  novelSourceExamples:newSource.slice(0,6),
+  hasGroundedNewTopic:newSource.length>0};
+}
+
 const percent=(original,output)=>original>0?
  Math.round((1-output/original)*1000)/10:null;
 // Independent numeric facts must survive even if adjacent propositions share
@@ -111,6 +141,14 @@ export function composeSemanticLadderV119(plan,response){
    if(!value||!/[.!?]$/u.test(value))throw Error('LAB119_INCOMPLETE_FIELD_'+field);
    values[field]=value;
   }
+  const invalidFields=FIELDS.filter(field=>invalidGeneratedFieldV119(values[field]))
+    .map(field=>({field,reason:invalidGeneratedFieldV119(values[field])}));
+  const additionOrigins=[];
+  let cumulative='';
+  for(const field of FIELDS){
+    additionOrigins.push({field,...additionOriginV119(source.source,cumulative,values[field])});
+    cumulative=norm(cumulative+' '+values[field]);
+  }
   const progressive=STUDY_LEVELS_V67.map(level=>{
    const text=norm(LEVEL_FIELDS[level].map(f=>values[f]).join(' '));
    return{level,text,letters:studyLetters(text)};
@@ -122,7 +160,7 @@ export function composeSemanticLadderV119(plan,response){
   const repeatCount=normalizedSentences.length-
    new Set(normalizedSentences).size;
   return{id:source.id,source:source.source,values,
-   progressive,exactDuplicateSentences:repeatCount};
+   progressive,exactDuplicateSentences:repeatCount,invalidFields,additionOrigins};
  });
  const editions={},quality={};
  for(const level of STUDY_LEVELS_V67){
@@ -150,7 +188,16 @@ export function composeSemanticLadderV119(plan,response){
     lostNumericalClaims:numericFacts.lost,
     inventedNumericalClaims:numericFacts.introduced,
     exactDuplicateSentences:output[i].exactDuplicateSentences,
-    preliminarySafetyPass:numericFacts.lost.length===0&&
+    invalidGeneratedFields:output[i].invalidFields.filter(x=>
+      LEVEL_FIELDS[level].includes(x.field)),
+    ungroundedAdditions:output[i].additionOrigins.filter(x=>
+      LEVEL_FIELDS[level].includes(x.field)&&
+      !x.hasGroundedNewTopic).map(x=>x.field),
+    preliminarySafetyPass:
+      output[i].invalidFields.every(x=>!LEVEL_FIELDS[level].includes(x.field))&&
+      output[i].additionOrigins.filter(x=>LEVEL_FIELDS[level].includes(x.field))
+        .every(x=>x.hasGroundedNewTopic)&&
+      numericFacts.lost.length===0&&
       numericFacts.introduced.length===0&&audit.passed&&
       directional.semanticAdvisories.length===0&&immutable.length===0&&
       novelProtected.length===0&&output[i].exactDuplicateSentences===0,
