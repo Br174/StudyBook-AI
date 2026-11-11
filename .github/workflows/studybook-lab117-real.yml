@@ -1,0 +1,35 @@
+name: StudyBook LAB117 - ONE REAL free Gemini public-fixture proof
+on:
+  push:
+    branches:
+      - research/studybook-lab117-concept-macro-20261111
+    paths:
+      - .github/workflows/studybook-lab117-real.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  one-real-request:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: |
+          node --check src/lib/studyConceptMacroV117.js
+          node --check scripts/test-lab117-one-real-request.mjs
+      - name: One free Gemini request only; never retry
+        env:
+          AI_TEST_KEY: ${{ secrets.AI_API_KEY || secrets.GEMINI_API_KEY }}
+        run: node scripts/test-lab117-one-real-request.mjs
+      - name: Preserve real synthetic outputs whether passed or failed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB117-ONE-REAL-MACRO-REPLY
+          path: audit/reports/lab117-one-real-request.json
+          if-no-files-found: error
+          retention-days: 30
