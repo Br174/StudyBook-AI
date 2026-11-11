@@ -174,14 +174,26 @@ jobs:
           npx cap add android
           npx cap sync android
           node scripts/prepare-android.mjs
-      - name: Recover and verify original stable StudyBook signing certificate
-        uses: actions/download-artifact@v4
-        with:
-          name: StudyBook-LAB01-signing-recovery
-          path: signing-recovery
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          run-id: 37467723184
+      - name: Recover ORIGINAL signer via GitHub API with bounded retries
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Existing original artifact is unexpired; download never creates a new signer.
+          for attempt in 1 2 3; do
+            rm -rf signing-recovery
+            mkdir -p signing-recovery
+            if gh run download 37467723184 --repo "$GITHUB_REPOSITORY" \
+              --name "StudyBook-LAB01-signing-recovery" --dir signing-recovery; then
+              if test -s signing-recovery/lab01-debug.keystore; then
+                echo "Original Android signing keystore recovered"
+                break
+              fi
+            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt*2)); fi
+          done
+          test -s signing-recovery/lab01-debug.keystore
       - name: Verify signing key is exact LAB79 family (new package still separate)
         shell: bash
         run: |
