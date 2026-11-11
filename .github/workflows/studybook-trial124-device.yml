@@ -11,7 +11,8 @@ permissions:
   actions: read
 concurrency:
   group: studybook-trial124-single-installable
-  cancel-in-progress: false
+  # An obsolete failed signing-recovery run must not block the fixed release.
+  cancel-in-progress: true
 jobs:
   trial-apk:
     runs-on: ubuntu-latest
