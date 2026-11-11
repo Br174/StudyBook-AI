@@ -14,12 +14,12 @@ import {clearGeminiCadenceForTestV58} from '../src/lib/geminiCadenceV58.js';
 const levels=['summary','50','40','30','20','10'];
 for(const x of [10,20,30,40,50]){
  const policy=STUDY_TARGET_V67[String(x)];
- assert.deepEqual([policy.min,policy.max],[x-5,x+5]);
+ assert.deepEqual([policy.min,policy.max],[policy.target-5,policy.target+5]);
  assert.equal(betterReductionV67({within:false,distance:50},
   {within:false,missing:0,measured:25,distance:15}),false,
   'Closer but outside is NOT allowed');
  assert.equal(betterReductionV67({within:false,distance:50},
-  {within:true,missing:0,measured:x,distance:0}),true);
+  {within:true,missing:0,measured:policy.target,distance:0}),true);
 }
 const text=('La teoria spiega il rapporto fra le regole e la vita sociale. ').repeat(16);
 function trimTo(source,reduction){
@@ -56,7 +56,8 @@ const makeBook=()=>({
 function mockLengthProof(request,percent){
  const sourceLetters=request.units.reduce((n,u)=>n+studyLetters(u.source),0);
  const outputLetters=request.units.reduce((n,u)=>n+studyLetters(trimTo(u.source,percent)),0);
- const within=percent>=5&&percent<=15;
+ const p=STUDY_TARGET_V67[request.level];
+ const within=percent>=p.min&&percent<=p.max;
  return {sourceLetters,observedLetters:outputLetters,withinBand:within,compliant:within,
   pageReviewV74:pageLetterReviewV74(request.units,request.units.map(u=>({
    id:u.id,text:trimTo(u.source,percent)})),request.level)};
@@ -75,7 +76,7 @@ try{
   calls.push(request);
   assert.equal(request.level,'10');
   assert.equal(request.targetLetters>0,true);
-  const percent=calls.length===1?40:10;
+  const percent=calls.length===1?40:STUDY_TARGET_V67['10'].target;
   return new Response(JSON.stringify({engine:'ai',version:'integral-v51',level:'10',
    inputTokens:1200,draftProtocol:STUDY_DRAFT_PROTOCOL_V74,finishReason:'stop',outputTokenLimit:6000,
    lengthReview:mockLengthProof(request,percent),
@@ -94,8 +95,8 @@ try{
  assert.equal(result.rebalanceV67.remaining.length,0);
  assert.equal(result.rebalanceV67.completed['10'].withinTolerance,true);
  assert.equal(result.qualityV66.levels['10'].checked,44);
- assert.ok(result.qualityV66.levels['10'].actualReduction>=8&&
-  result.qualityV66.levels['10'].actualReduction<=12);
+ assert.ok(result.qualityV66.levels['10'].actualReduction>=10&&
+  result.qualityV66.levels['10'].actualReduction<=20);
  assert.equal(result.qualityV66.levels['50'].actualReduction,50);
  assert.deepEqual(result.draftRowsV57[0].map(x=>x.editions['50']),
   allDrafts[0].map(x=>x.editions['50']));
