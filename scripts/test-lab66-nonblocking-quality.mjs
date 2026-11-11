@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import {indexedDB as fakeIndexedDB} from 'fake-indexeddb';
 import {generateDraftFirstV57} from '../src/lib/draftFirstV57.js';
+import {STUDY_TARGET_V67} from '../src/lib/studyRebalancePolicyV67.js';
 import {studyQualityInspectionV66} from '../src/lib/studyQualityV66.js';
 import {bookUnitsV51} from '../src/lib/integralPlannerV51.js';
 import {studyPhaseProgressV59} from '../src/lib/studyPhaseProgressV59.js';
@@ -27,8 +28,7 @@ const original=()=>({
     original:source,sourcePageStart:i+1,sourcePageEnd:i+1}))}]
 });
 const drafts=[Array.from({length:44},(_,i)=>({editions:Object.fromEntries(
- levels.map(l=>[l,('argomento '.repeat(l==='summary'?8:
-   Math.round(20*(1-Number(l)/100))).trim())+' '+(i+1)]))}))];
+ levels.map(l=>[l,('argomento '.repeat(Math.round(20*(1-STUDY_TARGET_V67[l].target/100))).trim())+' '+(i+1)]))}))];
 const stage=[Array.from({length:44},(_,i)=>({
  editions:Object.fromEntries(levels.map(l=>[l,l==='summary'&&approved.has(i+1)?
   drafts[0][i].editions[l]:null])),
