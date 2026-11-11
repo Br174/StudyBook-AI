@@ -31,6 +31,8 @@ import {STUDY_LEAN_PERCENT_V111,chooseLeanPercentV111,
  leanPercentInstructionV111} from '../src/lib/studyLeanPercentV111.js';
 import {diagnoseGeminiQuota,quotaPublicMessage} from './geminiQuotaV36.js';
 import {STUDY_503_FAILOVER_V114,invoke503FailoverV114} from '../src/lib/study503FailoverV114.js';
+import {STUDY_PRIVATE_EXPERIMENT_V121,choosePrivatePromptV121,
+ privateCenterInstructionV121,modelOnlyPayloadV121} from '../src/lib/studyPrivatePromptV121.js';
 const FREE_MODELS=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const DEFAULT_MODEL='gemini-3.5-flash-lite';
 const ENDPOINT='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
@@ -431,6 +433,14 @@ export default async function handler(req,res){
      req.body.experimentV111!==STUDY_LEAN_PERCENT_V111))
     return fail(res,409,'AI_503_FAILOVER_NOT_ENABLED',
       'La protezione 503 sperimentale non è disponibile.');
+  // The private-center pilot requires BOTH the isolated Worker and the
+  // new Android client. Older trial and LAB79 callers remain unchanged.
+  if(req.body?.experimentV121!=null&&
+    (req.body.experimentV121!==STUDY_PRIVATE_EXPERIMENT_V121||
+     !choosePrivatePromptV121({env,req:req.body,level,phase})||
+     req.body?.experimentV111!==STUDY_LEAN_PERCENT_V111))
+    return fail(res,409,'AI_PRIVATE_CENTER_PILOT_NOT_ENABLED',
+      'Motore LAB121 incompatibile, bozze originali conservate.');
   // LAB110B adds separate deliberate one-off validation; mixed experiments are forbidden.
   if([req.body?.experimentV109,req.body?.experimentV110,req.body?.experimentV110b]
       .filter(value=>value!=null).length>1)
@@ -532,13 +542,22 @@ export default async function handler(req,res){
     return fail(res,400,'AI_PLANNING_MISMATCH',
       'Pianificazione per pagina assente, duplicata o non valida.');
   // Serialize only AFTER source-based unit budgets are validated and attached.
-  const user=JSON.stringify({bookTitle:String(req.body.bookTitle||'').slice(0,140),
+  // The user may send local bands to the Worker for verification, but Gemini
+  // receives ONLY the model-specific sanitized unit/target structure.
+  const privateCenterActiveV121=choosePrivatePromptV121({
+    env,req:req.body,level,phase});
+  const user=JSON.stringify(privateCenterActiveV121?
+    modelOnlyPayloadV121({bookTitle:req.body.bookTitle,
+      units:safe,verifiedPageBudgets:verifiedPageBudgetsV74,
+      pageFeedback:pageFeedbackV74}):
+    {bookTitle:String(req.body.bookTitle||'').slice(0,140),
     units:safe,repair:byId.size>0,
     ...(protocolV75||protocolV74?{pageBudgetsV74:verifiedPageBudgetsV74}: {}),
     ...(plansV75?{plansV75}: {}),
     ...(pageFeedbackV74?{pageFeedbackV74}: {})});
   const observed=safe.reduce((n,u)=>n+studyLetters(u.previousDraft||''),0);
-  const desired=level==='summary'?Math.round(originalLetters*.40):target;
+  const desired=level==='summary'?
+    Math.round(originalLetters*(1-STUDY_TARGET_V67.summary.target/100)):target;
   const feedback=(protocolV72&&phase==='repair-v72'||protocolV71&&phase==='repair-v71')&&observed>0
     ?{observedLetters:observed,desiredLetters:desired,gapLetters:desired-observed}:null;
   const geometryV78=protocolV74?studyGeometryPlanV78(safe,level):null;
@@ -558,7 +577,9 @@ export default async function handler(req,res){
       'Il gruppo non rientra nel collaudo: nessuna chiamata Gemini eseguita.');}
   }
   const factFirstV109=chooseFactFirstV109({env,req:req.body,level,phase});
-  const stageInstruction=leanPercentActiveV111
+  const stageInstruction=privateCenterActiveV121
+    ?privateCenterInstructionV121(level,phase,geometryV78)
+    :leanPercentActiveV111
     ?leanPercentInstructionV111(level,phase,geometryV78)
     :clauseBudgetActiveV110B
     ?clauseBudgetV110B.text
@@ -732,6 +753,9 @@ export default async function handler(req,res){
       providerBackupModel:failover.failoverRecovered?servingModel:null,
       ...(req.body?.experimentV114===STUDY_503_FAILOVER_V114?{
         failoverPilotV114:STUDY_503_FAILOVER_V114}:{}),
+      ...(privateCenterActiveV121?{
+        privateCenterPilotV121:STUDY_PRIVATE_EXPERIMENT_V121,
+        privateBandDisclosedToGemini:false,semanticCertified:false}:{}),
       finishReason,outputTokenLimit:outputTokens,
       generationStoppedEarly:finishReason==='length',
       countedBy:counted===null?'conservative-estimate':'google-countTokens',
