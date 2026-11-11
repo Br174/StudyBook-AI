@@ -41,7 +41,9 @@ const CRITICAL_QUALIFIERS_V118=[
  ['written-form',/\b(?:scritt[aoie]|per iscritto)\b/iu,
   /\b(?:scritt[aoie]|per iscritto)\b/iu],
  ['primarily-not-exclusively',/\b(?:soprattutto|principalmente|prevalentemente)\b/iu,
-  /\b(?:soprattutto|principalmente|prevalentemente|in primo luogo)\b/iu]
+  /\b(?:soprattutto|principalmente|prevalentemente|in primo luogo)\b/iu],
+ ['essentiality-not-optional',/\b(?:essenzial[ei]|fondamental[ei]|indispensabil[ei])\b/iu,
+  /\b(?:essenzial[ei]|fondamental[ei]|indispensabil[ei]|necessar[ioe])\b/iu]
 ];
 function omittedQualifiersV118(original,replacement){
  return CRITICAL_QUALIFIERS_V118.filter(([,source,rewrite])=>
