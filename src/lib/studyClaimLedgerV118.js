@@ -2,7 +2,7 @@
 // RESEARCH ONLY. This is not a semantic certification system, a new scheduler,
 // a new model call, or a change to any installed APK / production Worker.
 import {studyLetters} from './studyPillarV38.js';
-import {buildConceptInventory,auditFidelity,extractProtectedItems}
+import {buildConceptInventory,splitSemanticUnits,auditFidelity,extractProtectedItems}
  from './fidelityEngine.js';
 import {inspectBestOfV76} from './studyBestOfV76.js';
 import {sourceLetterBudgetV74} from './studyPageBudgetsV74.js';
@@ -190,6 +190,103 @@ export function inspectClaimMacrosV118(plan,reply){
    x.levels.summary.preliminaryPass).length,
   semanticCertified:false,approvedForApp:false,additionalGeminiCalls:0};
 }
+// LAB118B: the MODEL is not allowed to testify that it covered a claim.
+// The only evidence quote is extracted locally from the ACTUAL reduced text.
+// This also works for malformed/partial replies that omit sentence variants.
+function locallyBestEvidence(claim,output){
+ const clauses=splitSemanticUnits(output);
+ const words=splitContent(claim.text);
+ const candidates=clauses.map(text=>{
+  const set=new Set(splitContent(text));
+  const overlap=words.length?
+    words.filter(x=>set.has(x)).length/words.length:0;
+  return{text,overlap};
+ }).sort((a,b)=>b.overlap-a.overlap||b.text.length-a.text.length);
+ const chosen=candidates[0];
+ if(!chosen)return{id:claim.id,quote:'',state:'NO_OUTPUT_TEXT',
+  lexicalCoveragePercent:0,semanticCertified:false};
+ const risk=claimRisk(claim.text,chosen.text);
+ return{id:claim.id,quote:chosen.text,
+  state:risk.bad?'UNSAFE_OR_MISSING_FACT':
+   risk.lexicalCoveragePercent<30?'WEAK_LEXICAL_SUPPORT':'PRELIMINARY_LOCAL_SUPPORT',
+  lexicalCoveragePercent:risk.lexicalCoveragePercent,risk,
+  quoteIsSubstringOfActualOutput:exactInside(output,chosen.text),
+  semanticCertified:false};
+}
+export function deriveClaimEvidenceLocallyV118(plan,reply){
+ const ledger=buildClaimLedgerV118(plan);
+ if(!Array.isArray(reply?.units)||reply.units.length!==ledger.units.length)
+  throw Error('LAB118_RESPONSE_UNIT_COUNT_MISMATCH');
+ const reports=ledger.units.map((unit,i)=>{
+  const row=reply.units[i];
+  if(row?.id!==unit.id)throw Error('LAB118_SOURCE_UNIT_ORDER_MISMATCH');
+  const output={};
+  for(const [level,field] of [['50','macro50'],['summary','macroSummary']]){
+   const generated=norm(row[field]);
+   const seen=new Map();
+   const claimEvidence=unit.claims.map(c=>{
+    if(c.duplicateOf&&seen.has(c.duplicateOf)){
+     const first=seen.get(c.duplicateOf);
+     const repeated={...first,id:c.id,duplicateOf:c.duplicateOf,
+      state:first.state==='PRELIMINARY_LOCAL_SUPPORT'?
+       'EXACT_SOURCE_DUPLICATE_REUSING_VERIFIED_QUOTE':first.state};
+     seen.set(c.id,repeated);
+     return repeated;
+    }
+    const v=locallyBestEvidence(c,generated);
+    seen.set(c.id,v);
+    return v;
+   });
+   const missing=claimEvidence.filter(c=>c.state!=='PRELIMINARY_LOCAL_SUPPORT'&&
+    c.state!=='EXACT_SOURCE_DUPLICATE_REUSING_VERIFIED_QUOTE');
+   const budget=level==='50'?unit.budget50:unit.budgetSummary;
+   const actual=studyLetters(generated);
+   const global=claimRisk(unit.source,generated);
+   output[level]={
+    sourceLetters:unit.sourceLetters,actualLetters:actual,
+    actualReduction:Math.round((1-actual/unit.sourceLetters)*1000)/10,
+    targetReduction:budget.reductionPercent,
+    numericInBand:actual>=budget.minLetters&&actual<=budget.maxLetters,
+    claims:claimEvidence,missingCount:missing.length,
+    globalRisk:global,preliminaryPass:missing.length===0&&!global.bad&&
+     actual>=budget.minLetters&&actual<=budget.maxLetters,
+    modelSuppliedEvidenceIgnored:true,semanticCertified:false
+   };
+  }
+  return{id:unit.id,levels:output,sourceClaimCount:unit.claims.length};
+ });
+ return{policy:STUDY_CLAIM_LEDGER_V118,mode:'LOCAL_EVIDENCE_FROM_REAL_OUTPUT',
+  units:reports,totalSourceClaims:ledger.totalClaims,
+  totalUnsupported:reports.reduce((n,u)=>n+u.levels['50'].missingCount+
+   u.levels.summary.missingCount,0),
+  allPreliminaryPass:reports.every(u=>u.levels['50'].preliminaryPass&&
+   u.levels.summary.preliminaryPass),
+  geminiCalls:0,semanticCertified:false,approvedForApp:false};
+}
+export function inspectPartialGeminiReplyV118(plan,reply){
+ if(plan?.policy!==STUDY_SOURCE_TIERS_V116||!Array.isArray(reply?.units)||
+   reply.units.length!==plan.units.length)
+  throw Error('LAB118_PARTIAL_REPLY_MISSING');
+ const counts=plan.units.map((unit,i)=>{
+  const r=reply.units[i];
+  if(r?.id!==unit.id)throw Error('LAB118_PARTIAL_UNIT_ID_MISMATCH');
+  const expected=unit.segments.length;
+  const supplied=Array.isArray(r.variants)?r.variants.length:0;
+  return{id:unit.id,expectedSentenceEdits:expected,
+   suppliedSentenceEdits:supplied,
+   editsMayBeApplied:expected===supplied,
+   missingOrUnalignedEdits:expected===supplied?0:expected,
+   sourceFallbackRequired:expected!==supplied};
+ });
+ const sourceEvidence=deriveClaimEvidenceLocallyV118(plan,reply);
+ return{policy:STUDY_CLAIM_LEDGER_V118,stage:'PARTIAL_REPLY_DIAGNOSED_NOT_REGENERATED',
+  sourceIsSafe:true,
+  counts,sourceEvidence,
+  allEditCountsValid:counts.every(x=>x.editsMayBeApplied),
+  providerRetriesMadeByInspector:0,automaticGeminiCorrections:0,
+  semanticCertified:false,approvedForApp:false};
+}
+
 export function composeAndAuditClaimsV118(plan,reply){
  const ledger=inspectClaimMacrosV118(plan,reply);
  const rendered=composeSourceMacroV117(plan,reply);
