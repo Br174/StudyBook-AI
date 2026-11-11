@@ -2,6 +2,7 @@
 // The strict 50% model target and the private 30-60 acceptance are deliberately separated.
 import {modelInstructionV122,modelPayloadV122,auditExplainedPageV122,normalizeExplainedAnchorsV122,
  EXPLAINED_POLICY_V122} from '../src/lib/explainedPolicyV122.js';
+import {invoke503FailoverV114} from '../src/lib/study503FailoverV114.js';
 const ENDPOINT='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 const ALLOWED=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
 const MAX_SOURCE_CHARS=30000;
@@ -55,18 +56,34 @@ export default async function handler(req,res){
  const timeout=Math.min(190000,Math.max(60000,Number(req.body.timeoutMs)||150000));
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);
  try{
-  const response=await fetch(env.AI_API_URL||ENDPOINT,{
-   method:'POST',signal:controller.signal,headers:{
-    'Content-Type':'application/json',Authorization:'Bearer '+key},
-   body:JSON.stringify({model,temperature:0.1,reasoning_effort:'low',
-    max_tokens:outputTokens,response_format:SCHEMA,messages})
+  // LAB123: one bounded FREE-model failover for real transient 503 only.
+  // Preserve official Retry-After and 429. Never route to a paid model.
+  const firstStart=Date.now();
+  const invoke=async selectedModel=>{
+   const response=await fetch(env.AI_API_URL||ENDPOINT,{
+    method:'POST',signal:controller.signal,headers:{
+     'Content-Type':'application/json',Authorization:'Bearer '+key},
+    body:JSON.stringify({model:selectedModel,temperature:0.1,reasoning_effort:'low',
+     max_tokens:outputTokens,response_format:SCHEMA,messages})
+   });
+   const payload=await response.json().catch(()=>null);
+   return {response,payload};
+  };
+  const fallbackEnabled=env.STUDYBOOK_LAB123_503_FAILOVER==='1';
+  const outcome=await invoke503FailoverV114({
+   enabled:fallbackEnabled,primaryModel:model,invoke,signal:controller.signal,
+   deadlineMs:firstStart+timeout
   });
-  const result=await response.json().catch(()=>null);
+  const response=outcome.response,result=outcome.payload;
   if(response.status===429||response.status===503){
-   const after=response.headers.get('Retry-After');
+   const after=response?.headers?.get?.('Retry-After')||null;
    if(after&&/^\d{1,5}$/u.test(after))res.setHeader('Retry-After',after);
    return fail(res,response.status,response.status===429?'AI_QUOTA_LIMIT':'AI_TEMPORARY_OVERLOAD',
-    'Limite del servizio gratuito: checkpoint conservati.',{retryAfterSeconds:after&&/^\d+$/u.test(after)?Number(after):null});
+    'Servizio gratuito temporaneamente occupato: checkpoint conservati.',{
+     retryAfterSeconds:after&&/^\d+$/u.test(after)?Number(after):null,
+     providerRequests:outcome.attempts,
+     fallbackStatus:outcome.fallbackStatus||null,
+     failureKind:outcome.declined||null});
   }
   if(!response.ok)return fail(res,502,'AI_PROVIDER_REJECTED','Il provider non ha accettato la richiesta.');
   const finishReason=result?.choices?.[0]?.finish_reason||null;
@@ -82,7 +99,8 @@ export default async function handler(req,res){
    return {...normalized,review};
   });
   return res.status(200).json({engine:'ai',version:EXPLAINED_POLICY_V122,
-   pages:audited,model,finishReason,providerRequests:1,
+   pages:audited,model:outcome.model,finishReason,
+   providerRequests:outcome.attempts,failoverRecovered:outcome.failoverRecovered,
    readyPages:audited.filter(p=>p.review.ready).length,
    semanticCertified:false,privateBandDisclosedToGemini:false});
  }catch(err){
