@@ -82,7 +82,7 @@ jobs:
           node scripts/test-lab121-private-worker.mjs
           node scripts/test-lab122-single-explained.mjs
           node scripts/test-lab123-503-recovery.mjs
-          node scripts/test-lab123-recovery.mjs
+          node scripts/test-lab122-recovery.mjs
           node scripts/test-lab122-pdf-render.mjs
           node --check src/lib/draftFirstV57.js
           node --check api/editionsBulkV51.js
