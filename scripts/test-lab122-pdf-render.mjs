@@ -6,7 +6,7 @@ import {exportExplainedPdfV122} from '../src/lib/exportExplainedPdfV122.js';
 const sentence='La norma imperativa è una regola obbligatoria che non può essere eliminata da accordi tra privati.';
 const termSentence='La **(norma imperativa)** è una regola obbligatoria che non può essere eliminata da accordi tra privati.';
 const pages=Array.from({length:30},(_,i)=>{
- const copies=i===4?64:2;
+ const copies=i===4?160:2;
  return {physicalPage:i+1,label:String(i+1),sourceStatus:'verified',
   text:Array(copies).fill(sentence).join(' '),
   widthPt:595.28,heightPt:841.89};
@@ -19,7 +19,7 @@ const book={canonicalBookMap:{originalFingerprint:'b'.repeat(64),
  sourcePageEnd:i+1}))}]};
 const originals=originalExplainedPagesV122(book);
 const results=originals.map((p,i)=>{
- const copies=i===4?32:1;
+ const copies=i===4?80:1;
  const out={id:p.id,segments:p.segments.map(s=>({
   id:s.id,text:[termSentence,...Array(copies-1).fill(sentence)].join(' ')})),
   glossary:[{term:'norma imperativa',
