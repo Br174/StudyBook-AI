@@ -18,6 +18,7 @@ on:
       - worker/index.js
       - scripts/test-lab122-single-explained.mjs
       - scripts/test-lab122-pdf-render.mjs
+      - scripts/test-lab122-recovery.mjs
   workflow_dispatch:
 permissions:
   contents: read
@@ -43,7 +44,8 @@ jobs:
       - name: One-explained Worker + semantic hard stops + 2000-page source test
         run: |
           set -euo pipefail
-          node scripts/test-lab122-single-explained.mjs | tee lab122-proof.jsonl
+          node scripts/test-lab122-single-explained.mjs
+          node scripts/test-lab122-recovery.mjs | tee lab122-proof.jsonl
       - name: Actual PDF rendering, 30 original anchors, bis and tris, legal side glossary
         run: |
           set -euo pipefail
