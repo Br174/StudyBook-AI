@@ -5,8 +5,9 @@ import {originalExplainedPagesV122,auditExplainedPageV122,
  EXPLAINED_PRIVATE_BAND_V122,EXPLAINED_POLICY_V122} from './explainedPolicyV122.js';
 import {percentReduced} from './studyPillarV38.js';
 
-const BLOCK_SOURCE_LIMIT=16000;
-const BLOCK_PAGE_LIMIT=6;
+// Large batches for short pages; split automatically on provider truncation.
+const BLOCK_SOURCE_LIMIT=26000;
+const BLOCK_PAGE_LIMIT=72;
 const VERSION=EXPLAINED_POLICY_V122;
 const withSource=(original,result)=>({
  id:original.id,label:original.label,physicalPage:original.physicalPage,
@@ -100,7 +101,10 @@ export async function generateExplainedBookV122(book,{
   }));
  }
  await publish();
- for(const block of planExplainedBlocksV122(pending)){
+ const queue=planExplainedBlocksV122(pending);
+ diagnostics.splits=0;
+ for(let index=0;index<queue.length;index++){
+  const block=queue[index];
   if(signal?.aborted){lastError='V122_INTERRUPTED';break;}
   const pages=block.map(p=>({id:p.id,segments:p.segments,
    label:p.label,physicalPage:p.physicalPage}));
@@ -115,8 +119,14 @@ export async function generateExplainedBookV122(book,{
    const response=await reply.json().catch(()=>null);
    diagnostics.requestsSent++;
    if(!reply.ok){
-    lastError=response?.code||'HTTP_'+reply.status;
+    const code=response?.code||'HTTP_'+reply.status;
     diagnostics.providerErrors++;
+    if([413,422,502,504].includes(reply.status)&&block.length>1&&diagnostics.splits<24){
+      const middle=Math.floor(block.length/2);
+      queue.splice(index,1,block.slice(0,middle),block.slice(middle));
+      diagnostics.splits++;index--;continue;
+    }
+    lastError=code;
     if(reply.status===429||reply.status===503){
      const retrySeconds=Number(response?.retryAfterSeconds||90);
      diagnostics.retryAt=new Date(Date.now()+Math.max(60,Math.min(3600,retrySeconds))*1000).toISOString();
@@ -124,8 +134,14 @@ export async function generateExplainedBookV122(book,{
     break;
    }
    if(response?.engine!=='ai'||response?.version!==VERSION||
-      !Array.isArray(response.pages)||response.pages.length!==block.length)
+      !Array.isArray(response.pages)||response.pages.length!==block.length){
+    if(block.length>1&&diagnostics.splits<24){
+      const middle=Math.floor(block.length/2);
+      queue.splice(index,1,block.slice(0,middle),block.slice(middle));
+      diagnostics.splits++;index--;continue;
+    }
     throw Object.assign(new Error('Risposta Gemini non verificabile'),{code:'V122_BACKEND_CONTRACT_MISMATCH'});
+   }
    for(let i=0;i<block.length;i++){
     const source=block[i],answer=response.pages[i];
     if(answer?.id!==source.id)throw Object.assign(new Error('Pagine fuori ordine'),{code:'V122_PAGE_ID_MISMATCH'});
