@@ -32,7 +32,7 @@ const original=Array.from({length:44},(_,i)=>({
 }));
 const allDrafts=[original.map(()=>({
  editions:Object.fromEntries(levels.map(l=>[l,trimTo(text,l==='10'?72:
- l==='summary'?60:Number(l))]))
+ STUDY_TARGET_V67[l].target)]))
 }))];
 const legacy=[original.map((_,i)=>({verified:Object.fromEntries(levels.map(l=>[l,i<16])),
  editions:Object.fromEntries(levels.map(l=>[l,i<16?allDrafts[0][i].editions[l]:null])),
