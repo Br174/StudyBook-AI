@@ -38,6 +38,8 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/test-lab121-private-worker.mjs | tee lab121-worker-test.json
+      - name: Scudo360 P1 native quality and source fidelity tests
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/trial121-scudo-report.json
       - name: Existing LAB114 one-shot 503 preservation
         run: node scripts/test-lab114-one-shot-failover.mjs
       - name: Existing LAB111 one-call per natural block
