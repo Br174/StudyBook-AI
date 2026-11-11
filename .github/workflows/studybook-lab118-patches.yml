@@ -1,0 +1,37 @@
+name: StudyBook LAB118 - exact source patches offline quality
+on:
+  push:
+    branches:
+      - research/studybook-lab118-claim-ledger-20261111
+    paths:
+      - src/lib/studySourcePatchV118.js
+      - scripts/test-lab118-source-patches.mjs
+      - .github/workflows/studybook-lab118-patches.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-patches:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check source-anchored edit code before running
+        run: |
+          node --check src/lib/studySourcePatchV118.js
+          node --check scripts/test-lab118-source-patches.mjs
+      - name: Test six levels, numeric truth and protected content
+        run: |
+          set -euo pipefail
+          node scripts/test-lab118-source-patches.mjs | tee lab118-source-patches-results.json
+      - name: Preserve outcomes, including failed gates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB118-Source-Delta-Edits-No-Gemini
+          path: lab118-source-patches-results.json
+          if-no-files-found: ignore
+          retention-days: 30
