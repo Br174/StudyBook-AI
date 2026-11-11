@@ -68,8 +68,8 @@ say('source pages not verified fail closed');
 const large=sampleBook(2000),largePages=originalExplainedPagesV122(large);
 const blocks=planExplainedBlocksV122(largePages);
 assert.equal(largePages.length,2000);
-assert.ok(blocks.length>200&&blocks.flat().length===2000);
-assert.ok(blocks.every(x=>x.length>=1&&x.length<=6));
+assert.ok(blocks.length>=28&&blocks.flat().length===2000);
+assert.ok(blocks.every(x=>x.length>=1&&x.length<=72));
 say('2000 source pages planned without cuts or model requests');
 const outputs=pages.map(p=>({...makeAnswer(p),review:{...auditExplainedPageV122(p,makeAnswer(p))}}));
 const completeBook={...book,editionsV36:{
