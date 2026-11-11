@@ -34,7 +34,7 @@ async function mockProviderCall(level,outputLetters,finishReason,capOverride=nul
  const res=response();
  await handler({method:'POST',env:{AI_API_KEY:'MOCK_NO_REAL_TOKEN',AI_MODEL:'gemini-3.5-flash-lite'},
    body:{phase:'draft-v71',draftProtocol:STUDY_DRAFT_PROTOCOL_V71,level,
-     targetLetters:level==='summary'?null:exactRetained(letters,Number(level)),
+     targetLetters:level==='summary'?null:exactRetained(letters,STUDY_TARGET_V67[level].target),
      summaryCapLetters:level==='summary'?(capOverride??Math.round(letters*.45)):null,
      unitBudgets:buildUnitBudgetsV71([unit],level),maxOutputTokens:6000,
      units:[unit]}},res);
