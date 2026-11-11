@@ -2,7 +2,7 @@ name: StudyBook LAB122 Android - one explained book glossary + tested free Gemin
 on:
   push:
     branches:
-      - trial/studybook-lab122-private-bands-android-20261111
+      - trial/studybook-lab122-one-explained-glossary-20261111
     paths:
       - .github/workflows/studybook-trial122-device.yml
   workflow_dispatch:
