@@ -10,6 +10,7 @@ import {studyGeometryPlanV78,studyGeometryReviewV78,wrapStudyWordsV78}
  from './studyGeometryV78.js';
 import {auditFidelity,extractProtectedItems} from './fidelityEngine.js';
 import {immutableViolationsV67} from './immutableFragmentsV67.js';
+import {inspectBestOfV76} from './studyBestOfV76.js';
 import {STUDY_SOURCE_TIERS_V116,composeSourceTiersV116,sourceTierUserV116}
  from './studySourceTiersV116.js';
 
@@ -23,6 +24,9 @@ const sub=(original,output)=>{
  const risk=auditFidelity(original,output);
  if(risk.missingProtected.length||risk.missingHighValue.length||
    risk.qualifierMismatches.length)return null;
+ // A short rewrite can invert a scientific cause while retaining all topic
+ // words. Share the already-existing read-only source-directional caution.
+ if(inspectBestOfV76(original,output,'50').semanticAdvisories.length)return null;
  const src=extractProtectedItems(original).filter(x=>x.kind!=='qualifier');
  const out=extractProtectedItems(output).filter(x=>x.kind!=='qualifier');
  const expected=new Set(src.map(x=>x.kind+':'+x.value.toLocaleLowerCase('it-IT')));
@@ -30,6 +34,28 @@ const sub=(original,output)=>{
   return null;
  return {text:output,issues:[],coverageHeuristic:risk.coveragePercent};
 };
+export function inspectMacroCandidateV117(source,candidate,level){
+ const src=clean(source),dst=clean(candidate);
+ const originalLetters=studyLetters(src),outputLetters=studyLetters(dst);
+ const budget=sourceLetterBudgetV74(originalLetters,level);
+ const fidelity=auditFidelity(src,dst);
+ const directional=inspectBestOfV76(src,dst,level).semanticAdvisories;
+ const immutable=immutableViolationsV67(src,dst);
+ const accepted=Boolean(sub(src,dst));
+ return {originalLetters,outputLetters,
+  actualReduction:Math.round((1-outputLetters/originalLetters)*1000)/10,
+  target:budget.reductionPercent,
+  withinUnitLetterBand:budget.integerFeasible&&
+   outputLetters>=budget.minLetters&&outputLetters<=budget.maxLetters,
+  advisoryOnlyIfUnitCrossesOriginalPage:true,
+  safetyCandidateAccepted:accepted,
+  missingProtected:fidelity.missingProtected.length,
+  missingHighValue:fidelity.missingHighValue.length,
+  qualifierMismatches:fidelity.qualifierMismatches.length,
+  directionalAdvisories:directional,
+  immutableViolations:immutable.map(x=>x.kind),
+  semanticCertified:false};
+}
 export function macroInstructionV117(plan){
  if(plan?.policy!==STUDY_SOURCE_TIERS_V116)
   throw Error('LAB117_REQUIRES_SOURCE_PLAN');
