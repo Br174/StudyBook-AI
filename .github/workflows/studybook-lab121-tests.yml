@@ -15,6 +15,9 @@ on:
       - scripts/test-lab72-negative-closure.mjs
       - scripts/test-lab69-strict-bands.mjs
       - scripts/test-lab67-simplified-precise-rebalance.mjs
+      - scripts/test-lab109-worker-contract.mjs
+      - scripts/test-lab110-source-ledger-contract.mjs
+      - scripts/test-lab110b-worker-contract.mjs
   workflow_dispatch:
 permissions:
   contents: read
@@ -45,6 +48,14 @@ jobs:
           node scripts/test-lab121-private-worker.mjs | tee lab121-worker-test.json
       - name: Scudo360 P1 native quality and source fidelity tests
         run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/trial121-scudo-report.json
+      - name: Historical LAB109 LAB110 LAB110B Worker contracts against LAB121 canonical center
+        run: |
+          set -euo pipefail
+          node scripts/test-lab109-worker-contract.mjs
+          node scripts/test-lab110-source-ledger-contract.mjs
+          node scripts/test-lab110b-worker-contract.mjs
+          node scripts/test-lab110-source-risk-replay.mjs
+          node scripts/test-lab113-traffic-pacing.mjs
       - name: Existing LAB114 one-shot 503 preservation
         run: node scripts/test-lab114-one-shot-failover.mjs
       - name: Existing LAB111 one-call per natural block
