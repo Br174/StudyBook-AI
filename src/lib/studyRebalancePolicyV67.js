@@ -4,12 +4,16 @@
 import {studyLetters,percentReduced} from './studyPillarV38.js';
 export const STUDY_LEVELS_V67=['summary','50','40','30','20','10'];
 export const STUDY_TARGET_V67=Object.freeze({
- summary:{target:60,min:55,max:65},
- '50':{target:50,min:45,max:55},
- '40':{target:40,min:35,max:45},
- '30':{target:30,min:25,max:35},
- '20':{target:20,min:15,max:25},
- '10':{target:10,min:5,max:15}
+ // LAB121 TRIAL ONLY: 5 user-requested private tolerance bands, each
+ // centered for the writer; the separate legacy 50% edition is preserved.
+ // This isolated branch has its own Worker; NEVER merge these pilot bands
+ // into LAB79 or any other installed Android family without approval.
+ summary:{target:55,min:50,max:60},
+ '50':{target:50,min:45,max:55}, // legacy sixth edition unchanged
+ '40':{target:45,min:40,max:50},
+ '30':{target:35,min:30,max:40},
+ '20':{target:25,min:20,max:30},
+ '10':{target:15,min:10,max:20}
 });
 // LAB72: THE canonical numeric assessment for generator, QA and reader.
 // Never infer quality from an upper-bound-only summary or a complete JSON envelope.
