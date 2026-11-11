@@ -18,53 +18,66 @@ const replyFor=pages=>({engine:'ai',version:EXPLAINED_POLICY_V122,pages:pages.ma
 }))});
 const nativeFetch=globalThis.fetch;
 try{
- let calls=[],step=0,firstSnapshot=null;
+ // Test A: 503 means a cooldown, NOT 44 -> 22 -> 11 immediate requests.
+ let calls=[],progress=[];
  globalThis.fetch=async(_,options)=>{
-  const req=JSON.parse(options.body),batch=req.pages;
-  calls.push(batch.map(p=>p.id));
-  if(step++===0)return {ok:false,status:503,json:async()=>({
+  const req=JSON.parse(options.body);
+  calls.push(req.pages.map(p=>p.id));
+  return {ok:false,status:503,json:async()=>({
    code:'AI_TEMPORARY_OVERLOAD',retryAfterSeconds:80})};
-  return {ok:true,status:200,json:async()=>replyFor(batch)};
  };
- const progress=[];
- const completed=await generateExplainedBookV122(book,{
-  onProgress:async s=>{progress.push(s);if(!firstSnapshot&&s.verifiedChunkVariants>0)firstSnapshot=s;}
+ const halted=await generateExplainedBookV122(book,{
+  onProgress:async snapshot=>progress.push(snapshot)
  });
- assert.equal(calls[0].length,44,'LAB51-style initial block covers all short original pages');
- assert.equal(firstSnapshot.verifiedChunkVariants,22,'after 503, half-block saved without waiting for whole book');
- assert.equal(calls[1].length,22,'503 triggers half-block only when needed');
- assert.equal(calls[2].length,22,'second half preserves whole-page order');
- assert.equal(calls.length,3,'initial attempt + only two half-block retries');
- assert.equal(completed.verifiedChunkVariants,44);
- assert.equal(completed.complete,true);
- assert.equal(completed.diagnostics.splits,1);
- assert.equal(progress.some(p=>p.verifiedChunkVariants>=1&&p.verifiedChunkVariants<44),true);
- console.log('PASS LAB124: one large call for 44 source pages, then safe 503 half-block retry, 44/44 checkpoints');
-
- let failures=0;globalThis.fetch=async()=>{
-  failures++;return {ok:false,status:503,json:async()=>({
-   code:'AI_TEMPORARY_OVERLOAD',retryAfterSeconds:90})};
- };
- const stopped=await generateExplainedBookV122(book,{onProgress:async()=>{}});
- assert.equal(stopped.verifiedChunkVariants,0);
- assert.equal(stopped.status,'quota-paused');
- assert.equal(failures,1,'one failed first-page request, no storm');
- assert.ok(Date.parse(stopped.quota.retryAt)>Date.now());
- const readyAt=Date.parse(stopped.quota.retryAt)+1;
- const wake=planStudyAutoResumeV45(stopped,readyAt);
+ assert.equal(calls.length,1,'one 503 must produce exactly ONE attempted request');
+ assert.equal(calls[0].length,44,'first planned block contains all 44 short pages');
+ assert.equal(halted.status,'quota-paused');
+ assert.equal(halted.verifiedChunkVariants,0);
+ assert.ok(Date.parse(halted.quota.retryAt)>Date.now());
+ assert.ok(halted.diagnostics.nextBlockChars<28000);
+ const future=Date.parse(halted.quota.retryAt)+1;
+ const wake=planStudyAutoResumeV45(halted,future);
  assert.equal(wake.reason,'provider-cooldown');
- assert.ok(wake.at>=readyAt);
- let resumedRequests=0;globalThis.fetch=async(_,opts)=>{
-  resumedRequests++;
-  return {ok:true,status:200,json:async()=>replyFor(JSON.parse(opts.body).pages)};
+ assert.ok(wake.at>=future);
+ console.log('PASS LAB124: one 503 pauses exactly once and reduces future block-size budget');
+
+ // Test B: after cooldown, previously saved original pages are reused and
+ // only as many whole-page requests as the new capacity requires are sent.
+ calls=[];
+ globalThis.fetch=async(_,options)=>{
+  const block=JSON.parse(options.body).pages;
+  calls.push(block.map(p=>p.id));
+  return {ok:true,status:200,json:async()=>replyFor(block)};
  };
- const recovered=await generateExplainedBookV122({...book,editionsV36:stopped},
-  {onProgress:async()=>{}});
+ const recovered=await generateExplainedBookV122({...book,editionsV36:halted},{
+  onProgress:async snapshot=>progress.push(snapshot)
+ });
  assert.equal(recovered.complete,true);
  assert.equal(recovered.verifiedChunkVariants,44);
  assert.equal(recovered.quota,undefined);
- assert.equal(resumedRequests,1,'resume sends one full natural block when quota recovered');
- console.log('PASS LAB123: no-progress 503 then 44/44 resumes from saved original');
+ assert.ok(calls.length>=1);
+ assert.ok(calls.every(batch=>batch.length>=1));
+ assert.deepEqual(calls.flat(),Array.from({length:44},(_,i)=>'p'+(i+1)));
+ assert.ok(progress.some(s=>s.verifiedChunkVariants>0&&s.verifiedChunkVariants<44));
+ console.log('PASS LAB124: scheduled recovery completes 44/44 from original and page checkpoints');
+
+ // Test C: a size-error 413 is not a quota 503: halve whole pages safely.
+ calls=[];let attempts=0;
+ globalThis.fetch=async(_,options)=>{
+  const block=JSON.parse(options.body).pages;
+  calls.push(block.map(p=>p.id));
+  if(attempts++===0)return {ok:false,status:413,json:async()=>({
+   code:'V122_BLOCK_TOO_LARGE'})};
+  return {ok:true,status:200,json:async()=>replyFor(block)};
+ };
+ const split=await generateExplainedBookV122(book,{onProgress:async()=>{}});
+ assert.equal(split.complete,true);
+ assert.equal(split.diagnostics.splits,1);
+ assert.equal(calls.length,3,'413: one initial oversize attempt and two half blocks');
+ assert.equal(calls[0].length,44);
+ assert.equal(calls[1].length,22);
+ assert.equal(calls[2].length,22);
+ console.log('PASS LAB124: real size error splits at full-page boundaries');
 
  const blocked=planStudyAutoResumeV45({...stopped,quota:undefined,
   status:'provider-blocked'},readyAt,0);
