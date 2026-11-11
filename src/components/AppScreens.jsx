@@ -534,6 +534,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
                   </div>
                   <small>Una spiegazione e un glossario per pagina. Solo le pagine
                     controllate sono disponibili per lo studio.</small>
+                  {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
+                    editionState.diagnostics.plannedRequests>0&&
+                    <small>Invii Gemini stimati: {editionState.diagnostics.plannedRequests}
+                      {' '}· stima preventiva locale, senza chiamate aggiuntive.</small>}
                   {editionState?.qualityWarnings?.length>0&&
                     <p role="status">La riduzione globale necessita una verifica mirata:
                       la fedeltà al testo originale viene prima del numero.</p>}
