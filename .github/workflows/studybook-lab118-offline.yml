@@ -1,0 +1,37 @@
+name: StudyBook LAB118 - Claim ledger offline safety and six-level compatibility
+on:
+  push:
+    branches:
+      - research/studybook-lab118-claim-ledger-20261111
+    paths:
+      - src/lib/studyClaimLedgerV118.js
+      - scripts/test-lab118-claim-ledger.mjs
+      - .github/workflows/studybook-lab118-offline.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-ledger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JS syntax and trace-contract checks
+        run: |
+          node --check src/lib/studyClaimLedgerV118.js
+          node --check scripts/test-lab118-claim-ledger.mjs
+      - name: Offline 50/summary source claim ledger and adversarial tests
+        run: |
+          set -euo pipefail
+          node scripts/test-lab118-claim-ledger.mjs | tee lab118-offline-checks.json
+      - name: Preserve findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB118-Source-Claim-Ledger-Safety
+          path: lab118-offline-checks.json
+          if-no-files-found: ignore
+          retention-days: 30
