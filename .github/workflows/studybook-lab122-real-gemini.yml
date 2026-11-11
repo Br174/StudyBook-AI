@@ -1,0 +1,28 @@
+name: StudyBook LAB122 - real Gemini one-page quality proof (free tier only)
+on:
+  push:
+    branches:
+      - trial/studybook-lab122-one-explained-glossary-20261111
+    paths:
+      - .github/workflows/studybook-lab122-real-gemini.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-one-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing project dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: One real free-tier Gemini call only - simple legal explanation and glossary
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/test-lab122-real-gemini.mjs
