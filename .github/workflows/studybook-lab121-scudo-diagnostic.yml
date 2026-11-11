@@ -1,0 +1,35 @@
+name: StudyBook LAB121 Scudo diagnostic only - reveal exact native failures
+on:
+  push:
+    branches:
+      - trial/studybook-lab121-private-bands-android-20261111
+    paths:
+      - .github/workflows/studybook-lab121-scudo-diagnostic.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies for real native adapter
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Reveal Cloudflare adapter's exact failed checks
+        continue-on-error: true
+        run: node scripts/StudyBookCloudflare.mjs
+      - name: Reveal LAB72 adapter's exact failed checks
+        continue-on-error: true
+        run: node scripts/StudyBookLab72Targeted.mjs
+      - name: Preserve source native JUnit output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB121-Scudo-Native-Adapter-Failure-Diagnosis
+          path: .motorlab/scudo360-test-results
+          if-no-files-found: ignore
+          retention-days: 14
