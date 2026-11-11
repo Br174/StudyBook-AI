@@ -2,12 +2,12 @@
 // Legacy LAB36-121 editions remain untouched. Checkpoints are snapshots persisted by existing Library owner.
 import {apiEndpoint} from './apiEndpoint.js';
 import {originalExplainedPagesV122,auditExplainedPageV122,
- EXPLAINED_POLICY_V122} from './explainedPolicyV122.js';
+ EXPLAINED_PRIVATE_BAND_V122,EXPLAINED_POLICY_V122} from './explainedPolicyV122.js';
+import {percentReduced} from './studyPillarV38.js';
 
 const BLOCK_SOURCE_LIMIT=16000;
 const BLOCK_PAGE_LIMIT=6;
 const VERSION=EXPLAINED_POLICY_V122;
-const signalError=()=>Object.assign(new Error('Operazione interrotta'),{code:'V122_INTERRUPTED'});
 const withSource=(original,result)=>({
  id:original.id,label:original.label,physicalPage:original.physicalPage,
  segments:Array.isArray(result?.segments)?result.segments:[],
@@ -34,9 +34,22 @@ export function explainedSnapshotV122(book,originalPages,records,status='partial
  const pages=originalPages.map(p=>map.get(p.id)||null);
  const ready=pages.filter(p=>p?.review?.ready===true).length;
  const saved=pages.filter(Boolean).length;
- const all=pages.length,complete=all>0&&ready===all;
+ const all=pages.length,allPagesReady=all>0&&ready===all;
+ const totalSource=originalPages.reduce((n,p)=>n+p.originalBodyLetters,0);
+ const totalOutput=pages.reduce((n,p)=>n+Number(p?.review?.outputLetters||0),0);
+ const achievedReduction=allPagesReady&&totalSource>0?
+  percentReduced(totalSource,totalOutput):null;
+ const numericCompliant=achievedReduction!==null&&
+  achievedReduction>=EXPLAINED_PRIVATE_BAND_V122.min&&
+  achievedReduction<=EXPLAINED_PRIVATE_BAND_V122.max;
+ const complete=allPagesReady&&numericCompliant;
+ const qualityWarnings=[];
+ if(allPagesReady&&!numericCompliant)qualityWarnings.push('V122_BOOK_REDUCTION_OUTSIDE_ACCEPTANCE');
  return {version:VERSION,sourceFingerprint:book.canonicalBookMap.originalFingerprint,
-  originalPages:all,pages,complete,status:complete?'complete':status,
+  originalPages:all,pages,complete,
+  status:complete?'complete':qualityWarnings.length?'quality-review':status,
+  achievedReduction,sourceLetters:totalSource,outputLetters:totalOutput,
+  numericCompliant,qualityWarnings,
   phase:complete?'quality':'draft',verifiedChunkVariants:ready,
   totalChunkVariants:all,verifiedChunks:ready,blockedCells:all-ready,
   draftUnitsSaved:saved,checkpointPersistent:true,
@@ -58,8 +71,19 @@ export async function generateExplainedBookV122(book,{
   records.set(p.id,record);
   if(!review.ready)rejected.add(p.id);
  });
- const pending=originalPages.filter(p=>p.segments.length&&
+ let pending=originalPages.filter(p=>p.segments.length&&
   (!records.has(p.id)||(!records.get(p.id)?.review?.ready&&retryReviewed)));
+ // In a requested targeted retry, a globally nonconforming but fully
+ // source-faithful book can improve only the three most distant pages.
+ if(retryReviewed&&pending.length===0&&records.size===originalPages.length){
+  const previous=explainedSnapshotV122(book,originalPages,[...records.values()]);
+  if(previous.qualityWarnings.includes('V122_BOOK_REDUCTION_OUTSIDE_ACCEPTANCE')){
+   pending=originalPages.filter(p=>p.segments.length).sort((a,b)=>{
+    const d=x=>Math.abs(50-Number(records.get(x.id)?.review?.reduction||0));
+    return d(b)-d(a);
+   }).slice(0,3).sort((a,b)=>a.physicalPage-b.physicalPage);
+  }
+ }
  const diagnostics={requestsSent:0,providerErrors:0,qualityReview:rejected.size,
   originalPages:originalPages.length,mode:'one-explanation-per-source-page'};
  let lastError=null;
@@ -109,6 +133,7 @@ export async function generateExplainedBookV122(book,{
     const review=auditExplainedPageV122(source,answer);
     records.set(source.id,withSource(source,{...answer,review}));
     if(!review.ready){diagnostics.qualityReview++;rejected.add(source.id);}
+    else rejected.delete(source.id);
    }
    diagnostics.lastBlockMs=Date.now()-before;
    await publish();
