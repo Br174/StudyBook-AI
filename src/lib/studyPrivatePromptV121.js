@@ -60,7 +60,7 @@ export function modelOnlyPayloadV121({bookTitle='',units,verifiedPageBudgets,
   pageTargets:pages,...(feedback.length?{pageFeedback:feedback}:{})};
  // Hard fail before network use if private band metadata accidentally
  // becomes part of the Gemini request structure.
- const forbidden=/\"(?:minLetters|maxLetters|tolerancePercentagePoints|acceptanceMinimum|acceptanceMaximum|priorWithinBand|withinBand|range)\"\s*:/iu;
+ const forbidden=/"(?:minLetters|maxLetters|tolerancePercentagePoints|acceptanceMinimum|acceptanceMaximum|priorWithinBand|withinBand|range)\"\s*:/iu;
  if(forbidden.test(JSON.stringify(output)))throw Error('LAB121_PRIVATE_BAND_LEAK');
  return output;
 }
