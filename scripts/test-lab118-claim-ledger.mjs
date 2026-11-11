@@ -2,7 +2,8 @@
 // no false evidence or claim conflation, 0 Gemini calls.
 import assert from 'node:assert/strict';
 import {prepareSourceTiersV116} from '../src/lib/studySourceTiersV116.js';
-import {buildClaimLedgerV118,inspectClaimMacrosV118,
+import {buildClaimLedgerV118,inspectClaimMacrosV118,deriveClaimEvidenceLocallyV118,
+ inspectPartialGeminiReplyV118,
  composeAndAuditClaimsV118,claimPromptV118,claimUserV118}
  from '../src/lib/studyClaimLedgerV118.js';
 const sent='Il programma registra i libri e mostra il titolo richiesto.';
@@ -52,6 +53,22 @@ eq(composed.approvedForApp,false);
 eq(composed.semanticCertified,false);
 eq(composed.additionalGeminiCalls??0,0);
 eq(composed.claimAudit.completePreliminaryUnits,4);
+// Ignore model-provided evidence completely; extract quotes only from
+// the text actually present in the reduced edition.
+const wrongProof=makeReply(plan,{fakeQuote:true});
+const derived=deriveClaimEvidenceLocallyV118(plan,wrongProof);
+eq(derived.allPreliminaryPass,true);
+eq(derived.units[0].levels['50'].claims[0].quoteIsSubstringOfActualOutput,true);
+eq(derived.units[0].levels['50'].modelSuppliedEvidenceIgnored,true);
+const truncated=makeReply(plan);
+truncated.units[0].variants=truncated.units[0].variants.slice(0,2);
+const partial=inspectPartialGeminiReplyV118(plan,truncated);
+eq(partial.allEditCountsValid,false);
+eq(partial.counts[0].sourceFallbackRequired,true);
+eq(partial.counts[0].expectedSentenceEdits,10);
+eq(partial.counts[0].suppliedSentenceEdits,2);
+eq(partial.automaticGeminiCorrections,0);
+eq(partial.approvedForApp,false);
 const missing=inspectClaimMacrosV118(plan,makeReply(plan,{missing:true}));
 eq(missing.units[0].levels['50'].preliminaryPass,false);
 eq(missing.units[0].levels['50'].evidence.missingRequired,1);
