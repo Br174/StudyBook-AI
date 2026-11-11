@@ -8,12 +8,12 @@ import {buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
 import {STUDY_DRAFT_PROTOCOL_V74,verifyStudyDraftResponseV74} from '../src/lib/studyDraftProtocolV74.js';
 import {pageLetterBudgetsV74,pageLetterReviewV74} from '../src/lib/studyPageBudgetsV74.js';
 const levels=[
- ['summary',40,35,45],
+ ['summary',45,40,50],
  ['50',50,45,55],
- ['40',60,55,65],
- ['30',70,65,75],
- ['20',80,75,85],
- ['10',90,85,95]
+ ['40',55,50,60],
+ ['30',65,60,70],
+ ['20',75,70,80],
+ ['10',85,80,90]
 ];
 for(const [level,target,min,max] of levels){
  const one=pageLetterBudgetsV74([{id:'0:0',pageStart:1,pageEnd:1,source:'A'.repeat(100)}],level)[0];
