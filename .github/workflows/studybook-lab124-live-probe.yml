@@ -1,0 +1,22 @@
+name: StudyBook LAB124 - deployed Worker end-to-end, real free Gemini
+on:
+  push:
+    branches:
+      - trial/studybook-lab124-endtoend-0of44-device-recovery-20261111
+    paths:
+      - .github/workflows/studybook-lab124-live-probe.yml
+      - scripts/test-lab124-deployed-worker.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: One real Worker POST and CORS; no secrets, source, or response text in logs
+        run: node scripts/test-lab124-deployed-worker.mjs
