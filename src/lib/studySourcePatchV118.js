@@ -29,9 +29,30 @@ function allOccurrences(source,quote){
  }
  return list;
 }
+// Critical epistemic and procedural qualifiers must not disappear.
+// This is a conservative veto; it does NOT prove full semantic faithfulness.
+const CRITICAL_QUALIFIERS_V118=[
+ ['approximately',/\b(?:circa|all'incirca|approssimativamente|pressappoco)\b/iu,
+  /\b(?:circa|all'incirca|approssimativamente|pressappoco)\b/iu],
+ ['verifiability-not-verified',/\bverificabil[ei]\b/iu,
+  /\b(?:verificabil[ei]|controllabil[ei]|testabil[ei])\b/iu],
+ ['repeatability',/\bripetibil[ei]\b/iu,
+  /\b(?:ripetibil[ei]|riproducibil[ei])\b/iu],
+ ['written-form',/\b(?:scritt[aoie]|per iscritto)\b/iu,
+  /\b(?:scritt[aoie]|per iscritto)\b/iu],
+ ['primarily-not-exclusively',/\b(?:soprattutto|principalmente|prevalentemente)\b/iu,
+  /\b(?:soprattutto|principalmente|prevalentemente|in primo luogo)\b/iu]
+];
+function omittedQualifiersV118(original,replacement){
+ return CRITICAL_QUALIFIERS_V118.filter(([,source,rewrite])=>
+  source.test(original)&&!rewrite.test(replacement)).map(([key])=>key);
+}
+
 function patchSafety(original,replacement){
  if(!original||!replacement||studyLetters(replacement)>=studyLetters(original))
   return {pass:false,reason:'NOT_SHORTER_OR_EMPTY'};
+ if(omittedQualifiersV118(original,replacement).length)
+  return{pass:false,reason:'CRITICAL_MEANING_MODIFIER_DROPPED'};
  const imm=immutableViolationsV67(original,replacement);
  if(imm.length)return{pass:false,reason:'IMMUTABLE_FACT_CHANGED'};
  const fidelity=auditFidelity(original,replacement);
