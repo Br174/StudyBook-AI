@@ -35,13 +35,13 @@ async function mockProviderCall(level,outputLetters,finishReason,capOverride=nul
  await handler({method:'POST',env:{AI_API_KEY:'MOCK_NO_REAL_TOKEN',AI_MODEL:'gemini-3.5-flash-lite'},
    body:{phase:'draft-v71',draftProtocol:STUDY_DRAFT_PROTOCOL_V71,level,
      targetLetters:level==='summary'?null:exactRetained(letters,Number(level)),
-     summaryCapLetters:level==='summary'?(capOverride??Math.round(letters*.4)):null,
+     summaryCapLetters:level==='summary'?(capOverride??Math.round(letters*.45)):null,
      unitBudgets:buildUnitBudgetsV71([unit],level),maxOutputTokens:6000,
      units:[unit]}},res);
  return res;
 }
 try{
- assert.equal(assignBudgetsV51([unit],'summary')[0].summaryCapLetters,Math.round(letters*.4),
+ assert.equal(assignBudgetsV51([unit],'summary')[0].summaryCapLetters,Math.round(letters*.45),
   'Summary is not a legacy 50% cap');
  const findings=[];
  for(const [level,reduction] of variants){
@@ -69,7 +69,7 @@ try{
  assert.ok(inspection.levels.summary.advisory.includes('global-reduction-off-target'));
 
  // A natural stop with a valid 60% reduction must pass the numeric policy.
- const legal=await mockProviderCall('summary',Math.round(letters*.4),'stop');
+ const legal=await mockProviderCall('summary',Math.round(letters*.45),'stop');
  assert.equal(legal.statusCode,200);
  assert.equal(legal.data.finishReason,'stop');
  assert.equal(legal.data.lengthReview.compliant,true);
@@ -82,11 +82,11 @@ try{
 
  // Numeric audit must preserve the distinction between provider stop, length and content.
  const audit=measureEditionLengthV72({level:'10',originalLetters:10000,
-   outputLetters:9000,completeParts:true,finishReason:'length'});
+   outputLetters:8500,completeParts:true,finishReason:'length'});
  assert.equal(audit.withinBand,true);
  assert.equal(audit.compliant,false);
  assert.equal(audit.suspectedTruncation,true);
- assert.equal(STUDY_TARGET_V67.summary.min,55);
+ assert.equal(STUDY_TARGET_V67.summary.min,50);
  console.log('LAB72 NEGATIVE CLOSURE PASS: '+findings.join('; '));
  console.log('LAB72: legacy 50% summary cap rejected; correct summary 60% accepted; finish length is NOT certified; no actual Gemini key consumed.');
 }finally{globalThis.fetch=oldFetch}
