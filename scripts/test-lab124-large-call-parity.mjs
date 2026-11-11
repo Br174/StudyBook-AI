@@ -5,7 +5,7 @@ import {planExplainedBlocksV122} from '../src/lib/explainedGeneratorV122.js';
 import {planNaturalBlocksV51} from '../src/lib/integralPlannerV51.js';
 function pages(count,chars){
  const source=('Il diritto impone una regola precisa, salvo le eccezioni previste dalla legge. ').repeat(
-  Math.ceil(chars/80)).slice(0,chars);
+  Math.ceil(chars/60)).slice(0,chars);
  return Array.from({length:count},(_,i)=>({id:'p'+(i+1),physicalPage:i+1,
    segments:[{id:'p'+(i+1)+'-s0',source}]}));
 }
