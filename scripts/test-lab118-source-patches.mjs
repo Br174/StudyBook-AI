@@ -90,6 +90,28 @@ const attempt={units:[{id:'unique',patches:[{
  occurrence:0,importance:0
 }],macro50:'',macroSummary:''}]};
 eq(validateSourcePatchesV118(mustKeep,attempt).accepted,0);
+// Two edits from REAL Gemini V2 appeared fluent but lost significant meaning.
+// They must never be permitted merely to improve the reported percentage.
+const epistemic=prepareSourceTiersV116([{id:'e:1',pageStart:1,pageEnd:1,
+ source:'Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili. La rivoluzione attorno al Sole dura circa un anno.'}]);
+const epistemicWrong={units:[{id:'e:1',patches:[
+ {from:'Il metodo scientifico richiede ipotesi verificabili e osservazioni ripetibili.',
+  to:'Il metodo richiede ipotesi verificate e osservazioni.',occurrence:0,importance:3},
+ {from:'La rivoluzione attorno al Sole dura circa un anno.',
+  to:'La rivoluzione solare dura un anno.',occurrence:0,importance:3}
+],macro50:'',macroSummary:''}]};
+const invalid=validateSourcePatchesV118(epistemic,epistemicWrong);
+eq(invalid.accepted,0);
+eq(invalid.rejected,2);
+ok(invalid.units[0].rejected.every(x=>x.reason==='CRITICAL_MEANING_MODIFIER_DROPPED'));
+const written=prepareSourceTiersV116([{id:'e:2',pageStart:1,pageEnd:1,
+ source:'La proroga non è automatica: senza conferma scritta resta valida la data iniziale.'}]);
+const unwritten={units:[{id:'e:2',patches:[{
+ from:'La proroga non è automatica: senza conferma scritta resta valida la data iniziale.',
+ to:'La proroga non è automatica: senza conferma vale la data iniziale.',
+ occurrence:0,importance:3
+}],macro50:'',macroSummary:''}]};
+eq(validateSourcePatchesV118(written,unwritten).accepted,0);
 console.log(JSON.stringify({lab:'LAB118-SOURCE-PATCHES',checks,
  pages,originalLettersPerPage:studyLetters(units[0].source),
  acceptedPatches:inspected.accepted,rejectedPatches:0,
