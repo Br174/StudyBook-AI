@@ -37,7 +37,7 @@ jobs:
       - name: Syntax checks for isolated LAB123
         run: |
           set -euo pipefail
-          for f in scripts/test-lab123-503-recovery.mjs src/lib/explainedPolicyV122.js src/lib/explainedGeneratorV122.js src/lib/explainedLayoutV122.js src/lib/explainedViewV122.js src/lib/exportExplainedPdfV122.js api/explainedV122.js scripts/test-lab123-single-explained.mjs; do node --check "$f"; done
+          for f in scripts/test-lab123-503-recovery.mjs src/lib/explainedPolicyV122.js src/lib/explainedGeneratorV122.js src/lib/explainedLayoutV122.js src/lib/explainedViewV122.js src/lib/exportExplainedPdfV122.js api/explainedV122.js scripts/test-lab122-single-explained.mjs; do node --check "$f"; done
       - name: Install existing dependencies without paid services
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Build actual app with native LAB123 and glossario
