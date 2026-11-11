@@ -10,9 +10,11 @@ export function approximateWrapV122(text,widthMm,font='body'){
  for(const paragraph of String(text||'').split(/\n/u)){
   if(!paragraph.trim()){lines.push('');continue;}
   let current='';
-  for(const word of paragraph.trim().split(/\s+/u)){
+  const words=paragraph.trim().match(/\*\*\([^)\n]+\)\*\*|\S+/gu)||[];
+  const visibleLength=value=>String(value).replace(/\*\*/gu,'').length;
+  for(const word of words){
    if(!current){current=word;continue;}
-   if((current+' '+word).length>max){lines.push(current);current=word;}
+   if(visibleLength(current+' '+word)>max){lines.push(current);current=word;}
    else current+=' '+word;
   }
   if(current)lines.push(current);
@@ -22,12 +24,12 @@ export function approximateWrapV122(text,widthMm,font='body'){
 const sentenceUnits=text=>{
  const lines=String(text||'').split(/\n+/u).map(x=>x.trim()).filter(Boolean);
  return lines.flatMap(line=>{
-  const parts=line.match(/[^.!?]+(?:[.!?]+|$)/gu)||[line];
-  return parts.map(x=>x.trim()).filter(Boolean);
+  // Do not split inside art. / artt. / d.lgs. legal citations.
+  const protectedLine=line.replace(/\b(artt?|d\.lgs|d\.l|n)\./giu,(whole)=>whole.replace(/\./gu,'∎'));
+  const parts=protectedLine.match(/[^.!?]+(?:[.!?]+|$)/gu)||[protectedLine];
+  return parts.map(x=>x.trim().replace(/∎/gu,'.')).filter(Boolean);
  });
 };
-const same=(a,b)=>String(a).trim().toLocaleLowerCase('it-IT')===
- String(b).trim().toLocaleLowerCase('it-IT');
 export function composeExplainedSheetsV122(book,{
  wrapText=approximateWrapV122,requireComplete=false
 }={}){
