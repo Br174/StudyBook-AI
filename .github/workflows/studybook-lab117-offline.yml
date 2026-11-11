@@ -1,0 +1,37 @@
+name: StudyBook LAB117 - Offline concept macro safety and numeric tests
+on:
+  push:
+    branches:
+      - research/studybook-lab117-concept-macro-20261111
+    paths:
+      - src/lib/studyConceptMacroV117.js
+      - scripts/test-lab117-concept-macro.mjs
+      - .github/workflows/studybook-lab117-offline.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax review of isolated LAB117
+        run: |
+          node --check src/lib/studyConceptMacroV117.js
+          node --check scripts/test-lab117-concept-macro.mjs
+      - name: Quantitative and adversarial offline checks
+        run: |
+          set -euo pipefail
+          node scripts/test-lab117-concept-macro.mjs | tee lab117-offline-evidence.json
+      - name: Preserve measured evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB117-Offline-Numeric-and-Fidelity
+          path: lab117-offline-evidence.json
+          if-no-files-found: ignore
+          retention-days: 30
