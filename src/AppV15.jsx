@@ -25,6 +25,11 @@ import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
+import {generateExplainedBookV122} from './lib/explainedGeneratorV122.js';
+import {EXPLAINED_POLICY_V122} from './lib/explainedPolicyV122.js';
+import {buildExplainedEditionViewV122,isExplainedBookV122} from './lib/explainedViewV122.js';
+import {exportExplainedPdfV122} from './lib/exportExplainedPdfV122.js';
+import ExplainedReaderV122 from './components/ExplainedReaderV122.jsx';
 import {rebalanceSavedStudyBookV67,canRebalanceBookV67} from './lib/studyRebalanceV67.js';
 import {STUDY_PILLAR_VERSION} from './lib/studyPillarV38.js';
 import {studyHomeAction,sameStoredDocument} from './lib/studyHomeFlowV38.js';
@@ -158,7 +163,9 @@ export default function AppV14() {
   const [refiningKey, setRefiningKey] = useState('');
   const [studyModeOpen, setStudyModeOpen] = useState(false);
   const [libraryId, setLibraryId] = useState('');
-  const precisionBook = useMemo(() => buildPrecisionEdition(studyBook, reduction), [studyBook, reduction]);
+  const precisionBook = useMemo(() => isExplainedBookV122(studyBook)
+    ?buildExplainedEditionViewV122(studyBook):buildPrecisionEdition(studyBook,reduction),
+    [studyBook,reduction]);
   function changeReduction(nextValue) {
     const next = normalizeReduction(nextValue);
     setReduction(next);
@@ -1191,6 +1198,64 @@ export default function AppV14() {
         studyPillarV38:STUDY_PILLAR_VERSION,
         canonicalBookMap: sourceData?.canonicalBookMap || generated.canonicalBookMap || null,
         quality: { ...(generated.quality || {}), sourceIntegrity } };
+      // LAB122 NEW BOOKS: exactly one explained edition per original page.
+      // No legacy six-pass provider requests; old saved books keep their runner.
+      if(result.canonicalBookMap?.pages?.length){
+        const initialSnapshot={
+          version:EXPLAINED_POLICY_V122,
+          sourceFingerprint:result.canonicalBookMap.originalFingerprint,
+          pages:[],originalPages:result.canonicalBookMap.pageCount,
+          complete:false,status:'partial',phase:'draft',
+          verifiedChunkVariants:0,totalChunkVariants:result.canonicalBookMap.pageCount,
+          verifiedChunks:0,draftUnitsSaved:0,checkpointPersistent:true,
+          semanticCertified:false,diagnostics:{requestsSent:0,mode:'one-explanation-per-source-page'}
+        };
+        let explained={...result,editionsV36:initialSnapshot,engine:'misto'};
+        generatedDraft=explained;
+        setStudyBook(explained);setWorkPhase('gemini');
+        setProgress({done:0,total:initialSnapshot.totalChunkVariants});
+        setStatus('Libro spiegato · una versione, testo e glossario per pagina');
+        navigateTo('studio');
+        const firstSaved=await persistBook(explained,sourceData,sourceName,libraryId);
+        if(!firstSaved){
+          setStatus('Originale conservato · impossibile salvare il checkpoint iniziale');
+          return explained;
+        }
+        const savedId=firstSaved.id;
+        const finalSnapshot=await generateExplainedBookV122(explained,{
+          onActivity:()=>{
+            geminiLastActivityRef.current=Date.now();setGeminiStalled(false);
+          },
+          onProgress:async snapshot=>{
+            explained={...result,editionsV36:snapshot,
+              engine:snapshot.complete?'ai':'misto'};
+            generatedDraft=explained;
+            setStudyBook(explained);
+            setProgress({done:snapshot.verifiedChunkVariants||0,
+              total:snapshot.totalChunkVariants||1});
+            setStatus('Libro spiegato · '+(snapshot.verifiedChunkVariants||0)+'/'+
+              (snapshot.totalChunkVariants||0)+' pagine verificate · glossario incluso');
+            await saveLibraryBook({
+              id:savedId,fileName:sourceName,sourceData,
+              studyBook:explained,dsaMode:true,profileId:activeProfileId,
+              originalFile:sourceFile
+            });
+          }
+        });
+        explained={...result,editionsV36:finalSnapshot,
+          engine:finalSnapshot.complete?'ai':'misto'};
+        generatedDraft=explained;
+        setStudyBook(explained);
+        setProgress({done:finalSnapshot.verifiedChunkVariants||0,
+          total:finalSnapshot.totalChunkVariants||1});
+        await persistBook(explained,sourceData,sourceName,savedId);
+        setStatus(finalSnapshot.complete
+          ?'Libro spiegato completo · pagine e glossario pronti per il PDF'
+          :'Libro spiegato parziale · checkpoint conservati · controllare le pagine segnalate');
+        navigateTo('studio');
+        return explained;
+      }
+
       // LAB38 hotfix: local preprocessing is NOT Gemini progress. Only here
       // does the Gemini counter begin, and the book becomes openable.
       setWorkPhase('gemini');
@@ -1392,6 +1457,41 @@ export default function AppV14() {
     const targetSource=record?.sourceData||documentData;
     const targetName=record?.fileName||fileName;
     const targetId=record?.id||libraryId;
+    if(isExplainedBookV122(current)){
+      if(!targetSource||!targetId){setError('Fonte originale non presente.');return;}
+      resumeExecutionRef.current=true;
+      setGenerating(true);setWorkPhase('gemini');setError('');
+      let latest=current;
+      try{
+        const snapshot=await generateExplainedBookV122(current,{
+          retryReviewed:true,
+          onActivity:()=>{geminiLastActivityRef.current=Date.now();},
+          onProgress:async update=>{
+            latest={...current,editionsV36:update,
+              engine:update.complete?'ai':'misto'};
+            setStudyBook(latest);
+            setProgress({done:update.verifiedChunkVariants||0,
+              total:update.totalChunkVariants||1});
+            setStatus('Libro spiegato · '+(update.verifiedChunkVariants||0)+'/'+
+              (update.totalChunkVariants||0)+' pagine verificate');
+            await saveLibraryBook({id:targetId,fileName:targetName,sourceData:targetSource,
+              studyBook:latest,dsaMode:true,profileId:activeProfileId,
+              originalFile:record?.originalFile||sourceFile});
+          }
+        });
+        latest={...current,editionsV36:snapshot,engine:snapshot.complete?'ai':'misto'};
+        setStudyBook(latest);
+        await persistBook(latest,targetSource,targetName,targetId);
+        setStatus(snapshot.complete?'Libro spiegato completo · PDF pronto':
+          'Libro spiegato parziale · controlli di qualità da completare');
+      }catch(error){setError(error?.message||'Ripresa Libro spiegato non riuscita.');
+        await persistBook(latest,targetSource,targetName,targetId);
+      }finally{
+        resumeExecutionRef.current=false;setGenerating(false);setWorkPhase('idle');
+        setGeminiStalled(false);setResumeBusy(false);
+      }
+      return;
+    }
     if(!current?.editionsV36||current.editionsV36.complete||!targetSource){
       setStatus('Nessuna elaborazione parziale recuperabile per questo libro');
       return;
@@ -1969,6 +2069,10 @@ export default function AppV14() {
 
   function exportCurrentBook(format, variant = 'study') {
     if (!precisionBook) return;
+    if(isExplainedBookV122(studyBook)&&(format==='pdf'||format==='print')){
+      return exportExplainedPdfV122(precisionBook,fileName)
+        .catch(error=>setError(error?.message||'PDF Libro spiegato non disponibile'));
+    }
     if(reduction!==0 && precisionBook.editionReadiness?.partial){
       setError('Questa è un’anteprima LAB36: esportazione disponibile dopo la verifica completa delle sei edizioni.');
       return;
@@ -2245,11 +2349,17 @@ export default function AppV14() {
       )}
 
       {studyModeOpen && precisionBook && (
-        <StudyMode
-          book={precisionBook} sourceBook={studyBook} originalFile={sourceFile} bookTitle={fileName} bookId={libraryId} initialMode={studyEntryMode}
-          chapterIndex={selectedChapter} onChapterChange={setSelectedChapter}
-          dsaMode={dsaMode} accessibility={accessibility} onClose={() => setStudyModeOpen(false)}
-        />
+        isExplainedBookV122(studyBook)
+          ? <ExplainedReaderV122 book={precisionBook} bookId={libraryId}
+              bookTitle={fileName} chapterIndex={selectedChapter}
+              onClose={()=>setStudyModeOpen(false)}/>
+          : <StudyMode
+              book={precisionBook} sourceBook={studyBook} originalFile={sourceFile}
+              bookTitle={fileName} bookId={libraryId} initialMode={studyEntryMode}
+              chapterIndex={selectedChapter} onChapterChange={setSelectedChapter}
+              dsaMode={dsaMode} accessibility={accessibility}
+              onClose={()=>setStudyModeOpen(false)}
+            />
       )}
     </main>
   );
