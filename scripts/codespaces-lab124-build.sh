@@ -45,6 +45,14 @@ TMP="$(mktemp -d)"
 cp capacitor.config.json "$TMP/original-capacitor.json"
 say 'Nessuna modifica a main, nessun commit/push, nessuna GitHub Action o deploy Cloudflare.'
 
+PHASE='signer-preflight'
+say 'Verifico subito l’accesso all’artefatto della firma originale, prima di consumare risorse di compilazione.'
+gh auth status -h github.com >/dev/null 2>&1 || fail 'GitHub CLI non autenticata: impossibile recuperare la firma originale'
+mkdir -p "$TMP/signing"
+gh run download 37467723184 --repo "$REPO" --name StudyBook-LAB01-signing-recovery --dir "$TMP/signing" >/dev/null || fail 'Artefatto firma originale non accessibile'
+KEY="$TMP/signing/lab01-debug.keystore"
+[[ -s "$KEY" ]] || fail 'Keystore originale assente'
+
 PHASE='java21'
 if ! java -version 2>&1 | head -n 1 | grep -Eq '"21[.]'; then
   JDK="$TOOLS/temurin-21"
@@ -153,12 +161,7 @@ APK='android/app/build/outputs/apk/debug/app-debug.apk'
 [[ -s "$APK" ]] || fail 'APK assente'
 
 PHASE='signing'
-say 'Recupero solo dalla GitHub CLI autenticata il keystore LAB01 originale, senza divulgarlo.'
-gh auth status -h github.com >/dev/null 2>&1 || fail 'GitHub CLI non autenticata: non posso recuperare la chiave originale'
-mkdir -p "$TMP/signing"
-gh run download 37467723184 --repo "$REPO" --name StudyBook-LAB01-signing-recovery --dir "$TMP/signing" >/dev/null || fail 'Artefatto firma non accessibile'
-KEY="$TMP/signing/lab01-debug.keystore"
-[[ -s "$KEY" ]] || fail 'Keystore originale assente'
+say 'Verifico che il keystore privato recuperato all’inizio sia quello originale.'
 ACTUAL="$(keytool -list -v -keystore "$KEY" -storepass android -alias androiddebugkey 2>/dev/null | sed -n 's/.*SHA256: //p' | head -n 1 | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')"
 [[ "$ACTUAL" = "$CERT" ]] || fail 'Fingerprint del keystore errato: NON firmo'
 SIGNED="$TMP/$NAME-signed.apk"
