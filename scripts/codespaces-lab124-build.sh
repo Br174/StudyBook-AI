@@ -18,15 +18,33 @@ OUT="$PWD/artifacts/LAB124-CODESPACES"
 TMP=''
 CHANGED=0
 PHASE='preflight'
+BLOCK_REASON='Interruzione di un comando o della connessione Codespaces'
 say() { printf '\n[LAB124] %s\n' "$*"; }
-fail() { printf '\n[LAB124 BLOCCATO - %s] %s\n' "$PHASE" "$*" >&2; exit 1; }
+fail() { BLOCK_REASON="$*"; printf '\n[LAB124 BLOCCATO - %s] %s\n' "$PHASE" "$*" >&2; exit 1; }
+report_status() {
+  local status="$1" code="$2" reason="$3" sha
+  sha="$(git rev-parse --short HEAD 2>/dev/null || printf 'HEAD-non-disponibile')"
+  # Solo diagnostica minimizzata e predeterminata: non pubblicare log, token, ambienti, keystore o contenuto di libri.
+  local body="MotorLab LAB124 Codespaces — **${status}**\n\n- Fase: \`${PHASE}\`\n- Codice uscita: \`${code}\`\n- Commit: \`${sha}\`\n- Diagnosi: ${reason}\n- Privacy: nessun log completo, nessuna credenziale o firma caricata."
+  if gh issue comment 12 --repo "$REPO" --body "$(printf '%b' "$body")" >/dev/null 2>&1; then
+    printf '\n[LAB124] Stato comunicato automaticamente a MotorLab: https://github.com/%s/issues/12\n' "$REPO"
+  else
+    printf '\n[LAB124] Impossibile inviare il rapporto GitHub; nessuna credenziale pubblicata.\n' >&2
+  fi
+}
 cleanup() {
-  code=$?
-  if [[ "$CHANGED" = 1 && -f "$TMP/original-capacitor.json" ]]; then
+  local code=$?
+  trap - EXIT
+  if [[ "$CHANGED" = 1 && -n "$TMP" && -f "$TMP/original-capacitor.json" ]]; then
     cp "$TMP/original-capacitor.json" capacitor.config.json || true
   fi
+  if [[ "$code" != 0 ]]; then
+    printf '\n[LAB124] Interrotto in fase %s (codice %s).\n' "$PHASE" "$code" >&2
+    report_status BLOCCATO "$code" "$BLOCK_REASON" || true
+  elif [[ "$PHASE" = complete ]]; then
+    report_status VERIFICATO 0 'Artefatti LAB124 creati e verificati localmente; collaudo sul telefono ancora necessario' || true
+  fi
   if [[ -n "$TMP" && -d "$TMP" ]]; then rm -rf "$TMP"; fi
-  if [[ "$code" != 0 ]]; then printf '\n[LAB124] Interrotto in fase %s (codice %s).\n' "$PHASE" "$code" >&2; fi
 }
 trap cleanup EXIT
 for program in git node npm curl unzip zip sha256sum gh tar df; do
