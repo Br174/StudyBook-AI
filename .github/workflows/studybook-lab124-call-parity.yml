@@ -1,0 +1,51 @@
+name: StudyBook LAB124 - historic big Gemini call parity
+on:
+  push:
+    branches:
+      - trial/studybook-lab124-endtoend-0of44-device-recovery-20261111
+    paths:
+      - .github/workflows/studybook-lab124-call-parity.yml
+      - scripts/test-lab124-large-call-parity.mjs
+      - scripts/test-lab122-single-explained.mjs
+      - scripts/test-lab123-503-recovery.mjs
+      - src/lib/explainedGeneratorV122.js
+      - src/AppV15.jsx
+      - api/editionsV36.js
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verified-large-blocks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify native application compiles without restoring old editions
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run build
+      - name: Prove historic LAB58 six calls across 44 pages
+        run: node scripts/test-lab58-large-block-cadence.mjs
+      - name: Compare same 44-page source, one explained edition, few large calls
+        run: node scripts/test-lab124-large-call-parity.mjs
+      - name: Verify changed call counts and the original legal safeguards
+        run: node scripts/test-lab122-single-explained.mjs
+      - name: Verify one 503 -> smaller whole-page requests -> completed book
+        run: node scripts/test-lab123-503-recovery.mjs
+      - name: Preserve original 503 checkpoint retry regression
+        run: node scripts/test-lab122-recovery.mjs
+      - name: Verify real 30-page PDF and bis/ter
+        run: node scripts/test-lab122-pdf-render.mjs
+      - name: Scudo360 P1 safety gate
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/lab124-scudo-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: LAB124-Historic-Gemini-Call-Parity
+          path: .motorlab/lab124-scudo-report.json
+          if-no-files-found: ignore
+          retention-days: 30
