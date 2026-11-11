@@ -32,8 +32,8 @@ try{
  for(const level of levels){
   const band=STUDY_TARGET_V67[level];
   const budgets=buildUnitBudgetsV71(sources,level);
-  const target=level==='summary'?null:Math.round(sourceLetters*(1-Number(level)/100));
-  const cap=level==='summary'?Math.round(sourceLetters*.40):null;
+  const target=level==='summary'?null:Math.round(sourceLetters*(1-band.target/100));
+  const cap=level==='summary'?Math.round(sourceLetters*(1-STUDY_TARGET_V67.summary.target/100)):null;
   const lengths=sources.map(u=>budgets[u.id].summaryTargetLetters??budgets[u.id].targetLetters);
   const samplePrompt=editionDraftInstructionV71(level,'draft-v71',target,cap,sourceLetters);
   assert.match(samplePrompt,/quote INDICATIVE/);
@@ -85,7 +85,7 @@ try{
  const fail=mockRes();
  await handler({method:'POST',env:{AI_API_KEY:'OFFLINE_MOCK_KEY'},
    body:{phase:'draft-v71',draftProtocol:STUDY_DRAFT_PROTOCOL_V71,
-     level:'10',targetLetters:Math.round(sourceLetters*.9),
+     level:'10',targetLetters:Math.round(sourceLetters*(1-STUDY_TARGET_V67['10'].target/100)),
      units:sources,unitBudgets:bad}},fail);
  assert.equal(fail.statusCode,400);
  assert.equal(fail.data.code,'AI_DRAFT_BUDGET_MISMATCH');
@@ -93,10 +93,10 @@ try{
   level:'10',lengthReview:{sourceLetters}},sourceLetters,'10');
  assert.equal(stale.ok,false);
  const previous=trimToLetters(source,Math.round(studyLetters(source)*.24));
- const feedback=editionDraftInstructionV71('10','repair-v71',Math.round(studyLetters(source)*.9),
+ const feedback=editionDraftInstructionV71('10','repair-v71',Math.round(studyLetters(source)*(1-STUDY_TARGET_V67['10'].target/100)),
     null,studyLetters(source),{observedLetters:studyLetters(previous),
-    desiredLetters:Math.round(studyLetters(source)*.9),
-    gapLetters:Math.round(studyLetters(source)*.9)-studyLetters(previous)});
+    desiredLetters:Math.round(studyLetters(source)*(1-STUDY_TARGET_V67['10'].target/100)),
+    gapLetters:Math.round(studyLetters(source)*(1-STUDY_TARGET_V67['10'].target/100))-studyLetters(previous)});
  assert.match(feedback,/MANCANO [0-9]+ lettere utili/);
 
  const app=readFileSync(new URL('../src/lib/draftFirstV57.js',import.meta.url),'utf8');
