@@ -1,0 +1,253 @@
+name: StudyBook LAB122 Android - one explained book glossary + tested free Gemini
+on:
+  push:
+    branches:
+      - trial/studybook-lab122-private-bands-android-20261111
+    paths:
+      - .github/workflows/studybook-trial122-device.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: studybook-trial122-single-installable
+  cancel-in-progress: false
+jobs:
+  trial-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TRIAL_BASE: StudyBook-AI-TRIAL-122
+      TRIAL_WORKER: studybook-ai-trial122
+      TRIAL_URL: https://studybook-ai-trial122.brunoverlezza.workers.dev
+      STUDYBOOK_APPLICATION_ID: it.studybook.ai.lab.trial111
+      STUDYBOOK_VERSION_CODE: "2026112201"
+      STUDYBOOK_VERSION_NAME: "0.3.122-prova"
+      VITE_NATIVE_API_BASE: https://studybook-ai-trial122.brunoverlezza.workers.dev
+      VITE_STUDYBOOK_TRIAL_111: "1"
+      VITE_STUDYBOOK_TRIAL_113: "1"
+      VITE_STUDYBOOK_TRIAL_114: "1"
+      VITE_STUDYBOOK_TRIAL_121: "1"
+      VITE_STUDYBOOK_TRIAL_122: "1"
+      VITE_STUDYBOOK_GEOMETRY_V78: "1"
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - name: Checkout experiment, never overwrite active Android ref
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify current MotorLab Android family lineage, do not promote it
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node scripts/motorlab-active-guard.mjs --self-test
+          BASE_SHA=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/motorlab/active-studybook-ai" --jq '.object.sha')
+          STATUS=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_SHA...$GITHUB_SHA" --jq '.status')
+          test "$STATUS" = ahead || test "$STATUS" = identical
+          echo "Read-only family ancestry confirmed; Scudo executes after dependency install"
+          echo "Trial is descendant of verified active Android ref; NO ACTIVE REF UPDATE"
+      - name: Install existing project dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build real trial Android/Worker web assets against isolated endpoint
+        run: |
+          set -euo pipefail
+          npm run build
+          grep -Rql 'studybook-ai-trial122.brunoverlezza.workers.dev' dist/assets/
+          grep -Rql 'lab111-original-letters-retention-one-call-v1' dist/assets/
+          grep -Rql 'studybook-503-one-shot-flashlite-v114' dist/assets/
+          grep -Rql 'lab122-one-explained-glossary-v1' dist/assets/
+          node -e "const x=require('./capacitor.config.json'); if(x.appId!=='it.studybook.ai.lab') process.exit(1)"
+      - name: StudyBook LAB79 + LAB110 + LAB111 actual Worker and source-risk gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/trial111-scudo-report.json
+          node scripts/test-lab79-quality-no-loop.mjs
+          node scripts/test-lab79-targeted-recalibration.mjs
+          node scripts/test-lab109-worker-contract.mjs
+          node scripts/test-lab110-source-ledger-contract.mjs
+          node scripts/test-lab110b-worker-contract.mjs
+          node scripts/test-lab110-source-risk-replay.mjs
+          node scripts/test-lab111-lean-worker.mjs
+          node scripts/test-lab111-2000-pages.mjs
+          node scripts/test-lab113-traffic-pacing.mjs
+          node scripts/test-lab114-one-shot-failover.mjs
+          node scripts/test-lab121-private-worker.mjs
+          node scripts/test-lab122-single-explained.mjs
+          node scripts/test-lab122-pdf-render.mjs
+          node --check src/lib/draftFirstV57.js
+          node --check api/editionsBulkV51.js
+      - name: Live Gemini free-tier legal explanation and terminology verification
+        shell: bash
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/test-lab122-real-gemini.mjs
+      - name: Verify existing zero-additional-cost credentials without printing secrets
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test -n "${AI_API_KEY:-${GEMINI_API_KEY:-}}"
+          echo "Existing CF and free Gemini credentials found; no new service"
+      - name: Validate dedicated free-tier Worker before isolated deployment
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --dry-run --config wrangler.trial122.jsonc
+          npm run test:cloudflare
+      - name: Deploy ONLY the isolated LAB122 trial backend (never LAB79 or production)
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          test "$TRIAL_WORKER" = studybook-ai-trial122
+          # Wrangler requires secrets at initial creation, not secret put later.
+          SECRETS_FILE="$(mktemp)"
+          trap 'rm -f "$SECRETS_FILE"' EXIT
+          printf 'AI_API_KEY=%s\n' "${AI_API_KEY:-${GEMINI_API_KEY:-}}" > "$SECRETS_FILE"
+          chmod 600 "$SECRETS_FILE"
+          npx wrangler deploy --config wrangler.trial122.jsonc --secrets-file "$SECRETS_FILE"
+          rm -f "$SECRETS_FILE"
+          trap - EXIT
+          CODE=000
+          for attempt in 1 2 3 4 5 6; do
+            CODE=$(curl -sS --max-time 12 --output /tmp/trial122-worker-verify.json --write-out '%{http_code}' "$TRIAL_URL/api/explained/v122" || true)
+            if [ "$CODE" = 405 ]; then break; fi
+            sleep 3
+          done
+          test "$CODE" = 405
+          echo "ISOLATED_WORKER_READY $TRIAL_URL"
+      - name: Setup Java 21 for Capacitor 8
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Use preinstalled Android SDK 36
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}" >> "$GITHUB_ENV"
+          echo "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "${ANDROID_HOME:-/usr/local/lib/android/sdk}/platform-tools" >> "$GITHUB_PATH"
+          SDKMANAGER="${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+      - name: Update existing LAB113/Prova111 package preserving checkpoints and original signer
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const path='capacitor.config.json';
+          const c=JSON.parse(readFileSync(path,'utf8'));
+          if(c.appId!=='it.studybook.ai.lab')throw Error('Wrong LAB79 parent appId');
+          c.appId='it.studybook.ai.lab.trial111';
+          c.appName='StudyBook AI Prova 122';
+          writeFileSync(path,JSON.stringify(c,null,2)+'\n');
+          NODE
+          rm -rf android
+          npx cap add android
+          npx cap sync android
+          node scripts/prepare-android.mjs
+      - name: Recover and verify original stable StudyBook signing certificate
+        uses: actions/download-artifact@v4
+        with:
+          name: StudyBook-LAB01-signing-recovery
+          path: signing-recovery
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: 37467723184
+      - name: Verify signing key is exact LAB79 family (new package still separate)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.android
+          cp signing-recovery/lab01-debug.keystore ~/.android/debug.keystore
+          KEY_SHA=$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey |
+            sed -n 's/.*SHA256: //p' | head -n1)
+          test "$KEY_SHA" = "D7:BB:93:15:C9:C4:35:18:72:49:54:78:61:0C:48:47:25:08:6E:2B:AB:BC:04:BE:C6:5E:C8:23:45:5F:BD:CC"
+          echo "Verified pinned StudyBook signing identity"
+      - name: Build real test-installable Android APK
+        working-directory: android
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+      - name: Verify SAME package/new version and pinned original certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          SIGNED=android/app/build/outputs/apk/debug/app-trial111-signed.apk
+          APKSIGNER="${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/36.0.0/apksigner"
+          "$APKSIGNER" sign --ks ~/.android/debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out "$SIGNED" "$APK"
+          mv "$SIGNED" "$APK"
+          test "$(apkanalyzer manifest application-id "$APK")" = "$STUDYBOOK_APPLICATION_ID"
+          test "$(apkanalyzer manifest version-code "$APK")" = "$STUDYBOOK_VERSION_CODE"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" > /tmp/trial-apksigner.txt
+          ACTUAL_CERT=$(awk -F': ' '/certificate SHA-256 digest:/ {print toupper($NF)}' /tmp/trial-apksigner.txt | tr -d ':[:space:]')
+          test "$ACTUAL_CERT" = D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC
+          echo "TRIAL122_SIGNED_DISTINCT_APK_CERT_VERIFIED"
+      - name: Pack APK and installer/source ZIP, verify checksums and contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          cp android/app/build/outputs/apk/debug/app-debug.apk "artifacts/$TRIAL_BASE.apk"
+          sha256sum "artifacts/$TRIAL_BASE.apk" > "artifacts/$TRIAL_BASE.sha256"
+          printf 'Mode=INSTALLABLE_TEST_ONLY\nappId=%s\nversionCode=%s\nversionName=%s\nsource=%s\nworker=%s\nsemanticCertified=false\noriginalLAB79Untouched=true\n' \
+            "$STUDYBOOK_APPLICATION_ID" "$STUDYBOOK_VERSION_CODE" "$STUDYBOOK_VERSION_NAME" "$GITHUB_SHA" "$TRIAL_URL" \
+            > "artifacts/$TRIAL_BASE-IDENTITY.txt"
+          (cd artifacts && zip -q "$TRIAL_BASE.zip" "$TRIAL_BASE.apk" "$TRIAL_BASE.sha256" "$TRIAL_BASE-IDENTITY.txt")
+          git archive --format=zip --output="artifacts/$TRIAL_BASE-SORGENTI.zip" HEAD
+          unzip -tq "artifacts/$TRIAL_BASE.zip"
+          unzip -tq "artifacts/$TRIAL_BASE-SORGENTI.zip"
+          sha256sum "artifacts/$TRIAL_BASE.zip" "artifacts/$TRIAL_BASE-SORGENTI.zip" > "artifacts/$TRIAL_BASE-ZIP.sha256"
+          test -s "artifacts/$TRIAL_BASE.apk"
+          echo "TRIAL122_INSTALLABLE_APK_AND_ZIPS_VERIFIED"
+      - name: Publish reproducible GitHub Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyBook-AI-TRIAL-122-Android-APK-ZIP
+          path: artifacts/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Publish OPTIONAL pre-release download assets, never active main
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHORT=${GITHUB_SHA:0:12}
+          TAG="studybook-trial122-$SHORT"
+          if gh release create "$TAG" \
+            "artifacts/$TRIAL_BASE.apk" "artifacts/$TRIAL_BASE.zip" "artifacts/$TRIAL_BASE-SORGENTI.zip" "artifacts/$TRIAL_BASE.sha256" "artifacts/$TRIAL_BASE-IDENTITY.txt" \
+            --title "StudyBook AI LAB122 PROVA (Libro spiegato unico + glossario laterale, test automatici superati)" \
+            --notes "APK sperimentale StudyBook LAB122, versione unica Libro spiegato, obiettivo Gemini 50% e accettazione interna 30–60% non inviata al modello. Termini tecnici in grassetto tra parentesi, glossario laterale, pagine originali e bis/ter, PDF stampabile. Prerequisiti: Scudo360, test della generazione, PDF reale, Worker dedicato, Gemini reale su campione sintetico. L'affidabilita semantica universale non e certificata e il test su telefono richiede verifica dell'utilizzatore. Famiglia Android sperimentale Prova111 aggiornata senza cancellare la app principale. Nessuna chiave esposta, nessun servizio a pagamento, Worker $TRIAL_URL. SHA sorgente $GITHUB_SHA." \
+            --target "$GITHUB_SHA" --prerelease --latest=false; then
+            echo "GitHub release created"
+          else
+            echo "Optional GitHub Release blocked by permissions; workflow artifact remains available"
+          fi
+          echo "TRIAL122_RELEASE=https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
