@@ -1,0 +1,33 @@
+name: StudyBook LAB117 - local 2000 page performance
+on:
+  push:
+    branches:
+      - research/studybook-lab117-concept-macro-20261111
+    paths:
+      - .github/workflows/studybook-lab117-2000.yml
+      - scripts/bench-lab117-2000.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local2000:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Recompose 2000 synthetic pages, no Gemini
+        run: |
+          set -euo pipefail
+          node --check scripts/bench-lab117-2000.mjs
+          node scripts/bench-lab117-2000.mjs | tee lab117-bench-2000.json
+      - name: Preserve throughput and memory evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LAB117-2000-Page-Local-Performance
+          path: lab117-bench-2000.json
+          if-no-files-found: ignore
+          retention-days: 30
