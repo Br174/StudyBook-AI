@@ -1110,6 +1110,24 @@ export default function AppV14() {
   }
 
   function requestActiveGeminiRecovery(){
+    // LAB124: the prior "Verifica richiesta Gemini" button was inert during
+    // a live LAB122-123 run: this runner never registered its AbortController.
+    // Cancel only this one active request and restart serially at its checkpoint.
+    if(isExplainedBookV122(studyBook)){
+      if(restartRequestedRef.current){
+        setStatus('Ripresa già richiesta · nessuna richiesta Gemini duplicata');
+        return;
+      }
+      const controller=geminiAbortRef.current;
+      if(!controller){
+        setStatus('Verifico il checkpoint locale: nessuna richiesta Gemini interrompibile in questo istante');
+        return;
+      }
+      restartRequestedRef.current=true;
+      setStatus('Interrompo la richiesta Gemini corrente · riparto dalle pagine già salvate');
+      controller.abort();
+      return;
+    }
     if(!geminiStalled){
       setStatus('Elaborazione già attiva · attendi o apri lo stato del libro; nessun riavvio necessario');
       navigateTo('studio');
@@ -1160,6 +1178,47 @@ export default function AppV14() {
         return snapshot;
       }
       setStatus('Checkpoint recuperati · riprendo soltanto le parti ancora mancanti…');
+    }
+  }
+
+  // LAB124: one serial owner, one AbortController for both NEW and RESUMED
+  // explained books. The manual recovery control cancels an in-flight request
+  // and the same runner retries from the last persisted verified pages.
+  async function runExplainedWithSafeRestart(book,{
+    retryReviewed=false,onProgress=async()=>{},onActivity=()=>{}
+  }={}){
+    let working=book,restarts=0;
+    for(;;){
+      restartRequestedRef.current=false;
+      const controller=new AbortController();
+      geminiAbortRef.current=controller;
+      geminiLastActivityRef.current=Date.now();
+      setGeminiStalled(false);
+      let snapshot;
+      try{
+        snapshot=await generateExplainedBookV122(working,{
+          retryReviewed,signal:controller.signal,onProgress,
+          onActivity:info=>{
+            geminiLastActivityRef.current=Date.now();
+            setGeminiStalled(false);
+            const start=info?.pageStart||'?';
+            const end=info?.pageEnd||start;
+            setStatus('Gemini · richiesta pagin'+(start===end?'a ':'e ')+
+              start+(start===end?'':'–'+end)+' in corso · risultati salvati pagina per pagina');
+            onActivity(info);
+          }
+        });
+      }finally{
+        if(geminiAbortRef.current===controller)geminiAbortRef.current=null;
+      }
+      working={...working,editionsV36:snapshot};
+      if(restartRequestedRef.current&&snapshot?.status==='interrupted'&&restarts<2){
+        restarts++;
+        setStatus('Richiesta interrotta · riparto dal checkpoint senza duplicare il libro');
+        continue;
+      }
+      restartRequestedRef.current=false;
+      return snapshot;
     }
   }
 
@@ -1222,11 +1281,8 @@ export default function AppV14() {
           return explained;
         }
         const savedId=firstSaved.id;
-        const finalSnapshot=await generateExplainedBookV122(explained,{
-          onActivity:()=>{
-            geminiLastActivityRef.current=Date.now();setGeminiStalled(false);
-          },
-          onProgress:async snapshot=>{
+        const finalSnapshot=await runExplainedWithSafeRestart(explained,{
+          onProgress:async (snapshot,meta)=>{
             explained={...result,editionsV36:snapshot,
               engine:snapshot.complete?'ai':'misto'};
             generatedDraft=explained;
@@ -1235,11 +1291,13 @@ export default function AppV14() {
               total:snapshot.totalChunkVariants||1});
             setStatus('Libro spiegato · '+(snapshot.verifiedChunkVariants||0)+'/'+
               (snapshot.totalChunkVariants||0)+' pagine verificate · glossario incluso');
-            await saveLibraryBook({
-              id:savedId,fileName:sourceName,sourceData,
-              studyBook:explained,dsaMode:true,profileId:activeProfileId,
-              originalFile:sourceFile
-            });
+            if(meta?.persist!==false){
+              await saveLibraryBook({
+                id:savedId,fileName:sourceName,sourceData,
+                studyBook:explained,dsaMode:true,profileId:activeProfileId,
+                originalFile:sourceFile
+              });
+            }
           }
         });
         explained={...result,editionsV36:finalSnapshot,
@@ -1448,7 +1506,7 @@ export default function AppV14() {
 
   async function resumeGeminiEditions(record=null){
     if(generating){
-      if(geminiStalled)requestActiveGeminiRecovery();
+      if(isExplainedBookV122(studyBook)||geminiStalled)requestActiveGeminiRecovery();
       else {setStatus('Gemini sta già lavorando · nessuna nuova richiesta avviata');navigateTo('studio');}
       return;
     }
@@ -1459,14 +1517,20 @@ export default function AppV14() {
     const targetId=record?.id||libraryId;
     if(isExplainedBookV122(current)){
       if(!targetSource||!targetId){setError('Fonte originale non presente.');return;}
+      const retryAt=Date.parse(String(current.editionsV36?.quota?.retryAt||''));
+      if(Number.isFinite(retryAt)&&Date.now()<retryAt){
+        setStatus('Pausa Gemini ancora in corso fino alle '+
+          new Date(retryAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+
+          ' · il libro e i checkpoint sono conservati');
+        return;
+      }
       resumeExecutionRef.current=true;
       setGenerating(true);setWorkPhase('gemini');setError('');
       let latest=current;
       try{
-        const snapshot=await generateExplainedBookV122(current,{
+        const snapshot=await runExplainedWithSafeRestart(current,{
           retryReviewed:true,
-          onActivity:()=>{geminiLastActivityRef.current=Date.now();},
-          onProgress:async update=>{
+          onProgress:async (update,meta)=>{
             latest={...current,editionsV36:update,
               engine:update.complete?'ai':'misto'};
             setStudyBook(latest);
@@ -1474,9 +1538,11 @@ export default function AppV14() {
               total:update.totalChunkVariants||1});
             setStatus('Libro spiegato · '+(update.verifiedChunkVariants||0)+'/'+
               (update.totalChunkVariants||0)+' pagine verificate');
-            await saveLibraryBook({id:targetId,fileName:targetName,sourceData:targetSource,
-              studyBook:latest,dsaMode:true,profileId:activeProfileId,
-              originalFile:record?.originalFile||sourceFile});
+            if(meta?.persist!==false){
+              await saveLibraryBook({id:targetId,fileName:targetName,sourceData:targetSource,
+                studyBook:latest,dsaMode:true,profileId:activeProfileId,
+                originalFile:record?.originalFile||sourceFile});
+            }
           }
         });
         latest={...current,editionsV36:snapshot,engine:snapshot.complete?'ai':'misto'};
