@@ -5,6 +5,7 @@ import coverAiHandler from '../api/coverAi.js';
 import editionsV36Handler from '../api/editionsV36.js';
 import pageSimpleV49Handler from '../api/pageSimpleV49.js';
 import editionsBulkV51Handler from '../api/editionsBulkV51.js';
+import explainedV122Handler from '../api/explainedV122.js';
 
 const API_ROUTES = new Map([
   ['/api/summarize', summarizeHandler],
@@ -14,6 +15,7 @@ const API_ROUTES = new Map([
   ['/api/editions/v36', editionsV36Handler],
   ['/api/page-simple/v49', pageSimpleV49Handler],
   ['/api/editions/bulk/v51', editionsBulkV51Handler],
+  ['/api/explained/v122', explainedV122Handler],
 ]);
 
 const NATIVE_ORIGINS = new Set([
