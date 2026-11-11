@@ -103,13 +103,13 @@ export function editionRewriteInstructionV65(level,phase,target,cap){
  // SIMPLER exposition, NEVER simplistic interpretation. Numeric targets are
  // meaningful on the block and full book, not rigid for every paragraph.
 export function editionRewriteInstructionV67(level,phase,target,cap,sourceLetters){
- const reduction=level==='summary'?60:Number(level);
- const desired=level==='summary'?Math.round(sourceLetters*.40):target;
+ const reduction=STUDY_TARGET_V67[String(level)].target;
+ const desired=level==='summary'?Math.round(sourceLetters*(1-STUDY_TARGET_V67.summary.target/100)):target;
  const lower=Math.round(sourceLetters*(1-(reduction+4)/100));
  const upper=Math.round(sourceLetters*(1-(reduction-4)/100));
  const summaryMax=Math.min(cap,Math.round(sourceLetters*.45));
  const goal=level==='summary'
-   ?'RIASSUNTO: mira a circa il 60% di riduzione, conservando al massimo '+summaryMax+
+   ?'RIASSUNTO: mira a circa il '+reduction+'% di riduzione, conservando al massimo '+summaryMax+
       ' lettere alfabetiche, se compatibile con le informazioni fondamentali.'
    :'Riduzione obiettivo '+reduction+'%: la risposta COMPLESSIVA di questo blocco deve' +
       ' avvicinarsi a '+desired+' lettere alfabetiche (fascia indicativa '+lower+'-'+upper+
