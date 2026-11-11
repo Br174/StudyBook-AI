@@ -685,8 +685,9 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       {exportOpen && !v36Partial && (
         <article className="sb-export-card">
           <div className="sb-export-head">
-            <div><small>ESPORTA</small><h2>Scarica libro</h2><p className="sb-export-description">{isOriginalOnly ? 'Scegli il formato: il file importato rimane invariato.' : '{explainedV122 ? 'Scarica o stampa il Libro spiegato con il glossario laterale.' :
-                'Scegli la versione del libro e il formato da scaricare o stampare.'}'}</p></div>
+            <div><small>ESPORTA</small><h2>Scarica libro</h2><p className="sb-export-description">{isOriginalOnly ? 'Scegli il formato: il file importato rimane invariato.' :
+              explainedV122 ? 'Scarica o stampa il Libro spiegato con il glossario laterale.' :
+                'Scegli la versione del libro e il formato da scaricare o stampare.'}</p></div>
           </div>
           <div className="sb-export-formats">
             {isOriginalOnly && <button type="button" onClick={() => onExport('original', 'original')}>Formato originale</button>}
