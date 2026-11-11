@@ -7,6 +7,7 @@ import {planTargetedRepairV72,targetedRepairSummaryV72}
 import {buildUnitBudgetsV71} from '../src/lib/studyDraftProtocolV71.js';
 import {STUDY_DRAFT_PROTOCOL_V72} from '../src/lib/studyDraftProtocolV72.js';
 import {studyLetters,exactRetained} from '../src/lib/studyPillarV38.js';
+import {STUDY_TARGET_V67} from '../src/lib/studyRebalancePolicyV67.js';
 
 const source=[
  'La Luna non produce luce propria: la superficie lunare riflette quella del Sole.',
@@ -46,7 +47,7 @@ const fake=()=>({statusCode:200,payload:null,setHeader(){return this},
 let actualModelCalls=0;
 try{
  const units=[{id:'0:0',source,pageStart:1,pageEnd:1}];
- const letterCount=studyLetters(source),wanted=exactRetained(letterCount,10);
+ const letterCount=studyLetters(source),wanted=exactRetained(letterCount,STUDY_TARGET_V67['10'].target);
  globalThis.fetch=async(url,opts)=>{
   if(String(url).includes(':countTokens'))
    return new Response(JSON.stringify({totalTokens:512}),{status:200});
