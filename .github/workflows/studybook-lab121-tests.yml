@@ -8,6 +8,7 @@ on:
       - src/lib/studyPrivatePromptV121.js
       - src/lib/studyRebalancePolicyV67.js
       - src/lib/integralPlannerV51.js
+      - src/lib/studyLinearPlannerV111.js
       - src/lib/draftFirstV57.js
       - api/editionsBulkV51.js
       - scripts/test-lab121-private-worker.mjs
