@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 jobs:
-  2000pages:
+  local2000:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
