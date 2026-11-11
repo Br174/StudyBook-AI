@@ -2,7 +2,8 @@
 // No model-visible acceptance intervals; canonical sources, references and formulas stay immutable.
 import {studyLetters,percentReduced} from './studyPillarV38.js';
 import {immutableFragmentsV67,immutableViolationsV67} from './immutableFragmentsV67.js';
-import {auditFidelity,buildConceptInventory} from './fidelityEngine.js';
+import {auditFidelity,buildConceptInventory,auditProgressiveConcepts} from './fidelityEngine.js';
+import {sourceRiskReviewV110} from './studySourceRiskV110.js';
 
 export const EXPLAINED_POLICY_V122='lab122-one-explained-glossary-v1';
 export const EXPLAINED_TARGET_V122=50;
@@ -110,7 +111,7 @@ function detectTerms(body,glossary){
  return issues;
 }
 export function auditExplainedPageV122(sourcePage,result,{allowShort=true}={}){
- const issues=[];
+ const issues=[],advisories=[];
  if(!result||result.id!==sourcePage.id||!Array.isArray(result.segments)||
     !Array.isArray(result.glossary))return {
      ready:false,issues:['V122_INVALID_PAGE_STRUCTURE'],semanticCertified:false};
@@ -123,8 +124,12 @@ export function auditExplainedPageV122(sourcePage,result,{allowShort=true}={}){
  const original=sourcePage.segments.map(s=>s.source).join('\n');
  const simple=plain(text),sourceLetters=studyLetters(original),outputLetters=studyLetters(simple);
  const reduction=sourceLetters>0?percentReduced(sourceLetters,outputLetters):0;
+ // The user's 30-60 interval is for the whole book; an essential legal quote
+ // may legitimately make a single page unusually long. Do NOT remove facts
+ // merely to satisfy a per-page quota.
  if(sourceLetters>=100 && (reduction<EXPLAINED_PRIVATE_BAND_V122.min||
-    reduction>EXPLAINED_PRIVATE_BAND_V122.max))issues.push('V122_REDUCTION_OUTSIDE_PRIVATE_BAND');
+    reduction>EXPLAINED_PRIVATE_BAND_V122.max))
+  advisories.push('V122_PAGE_REDUCTION_OUTSIDE_PREFERRED_BAND');
  if(!allowShort&&sourceLetters<100&&sourceLetters!==outputLetters)
   issues.push('V122_SHORT_PAGE_CHANGED');
  const exact=immutableViolationsV67(original,simple,{requireNormativeQuotation:true,
@@ -134,11 +139,23 @@ export function auditExplainedPageV122(sourcePage,result,{allowShort=true}={}){
  if(semantic.missingProtected.length)issues.push('V122_PROTECTED_MEANING_MISSING');
  if(semantic.missingHighValue.length)issues.push('V122_ESSENTIAL_CONCEPT_REVIEW');
  if(semantic.qualifierMismatches.length)issues.push('V122_CONDITION_OR_MODALITY_REVIEW');
+ const support=auditProgressiveConcepts(original,simple);
+ if(support.issues.includes('new-protected-fact-not-in-source'))
+  issues.push('V122_UNSUPPORTED_PROTECTED_FACT');
+ if(sourceLetters>=160&&semantic.coveragePercent<55)
+  issues.push('V122_SOURCE_MEANING_REVIEW_REQUIRED');
+ const risk=sourceRiskReviewV110(sourcePage.segments,
+  result.segments.map(s=>({id:s.id,text:s.text})));
+ if(risk.signalCount>0)issues.push('V122_SOURCE_RELATION_RISK');
+ const technicalSource=/\b(?:norme? imperative|nullità|inderogabile|inadempimento|prescrizione|decadenza|usucapione|contraddittorio|giurisdizione|fattispecie)\b/iu;
+ if(technicalSource.test(original)&&result.glossary.length===0)
+  issues.push('V122_LEGAL_GLOSSARY_REQUIRED');
  issues.push(...detectTerms(text,result.glossary));
  if(/\[\[|\]\]|\{\{\s*TODO|\.\.\.\s*$/u.test(text))
   issues.push('V122_PLACEHOLDER_OR_TRUNCATION');
  return {ready:issues.length===0,issues:[...new Set(issues)],
-   reduction,sourceLetters,outputLetters,glossaryCount:result.glossary.length,
+   advisories,reduction,sourceLetters,outputLetters,glossaryCount:result.glossary.length,
+   lexicalSupportPercent:semantic.coveragePercent,
    fidelity:{protectedCount:semantic.protectedCount,missingProtected:semantic.missingProtected.length,
      missingHighValue:semantic.missingHighValue.length,
      qualifierMismatches:semantic.qualifierMismatches.length},
