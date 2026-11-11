@@ -112,6 +112,13 @@ const unwritten={units:[{id:'e:2',patches:[{
  occurrence:0,importance:3
 }],macro50:'',macroSummary:''}]};
 eq(validateSourcePatchesV118(written,unwritten).accepted,0);
+const essentialPlan=prepareSourceTiersV116([{id:'e:3',pageStart:1,pageEnd:1,
+ source:'Le condizioni sono essenziali per applicare correttamente la procedura.'}]);
+const essentialWrong={units:[{id:'e:3',patches:[{
+ from:'Le condizioni sono essenziali per applicare correttamente la procedura.',
+ to:'Le condizioni servono per la procedura.',occurrence:0,importance:3
+}],macro50:'',macroSummary:''}]};
+eq(validateSourcePatchesV118(essentialPlan,essentialWrong).accepted,0);
 console.log(JSON.stringify({lab:'LAB118-SOURCE-PATCHES',checks,
  pages,originalLettersPerPage:studyLetters(units[0].source),
  acceptedPatches:inspected.accepted,rejectedPatches:0,
