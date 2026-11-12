@@ -138,6 +138,18 @@ fi
 [[ "$(node -p 'process.versions.node.split(".")[0]')" == 22 ]] || fail 'Node 22 non disponibile'
 say "Node allineato al workflow LAB124: $(node --version)"
 
+# LAB124 targeted validation: no Android SDK/Java work, no Gemini requests, no deployment.
+if [[ "${1:-}" == '--scudo-only' ]]; then
+  PHASE='test'
+  say 'Eseguo solo Scudo360 con Node 22 e codice Cloudflare corrente.'
+  [[ -s dist/index.html ]] || fail 'Asset web mancanti; non eseguo test con build incompleta'
+  node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab "$OUT/scudo360-report.json" || fail 'Scudo360 fallito'
+  PHASE='scudo-only-complete'
+  say 'Scudo360 superato con Node 22. APK e ZIP NON generati da questo controllo.'
+  report_status SCUDO_PASS 0 'Solo Scudo360 superato con Node 22; APK e ZIP ancora da compilare' || true
+  exit 0
+fi
+
 PHASE='java21'
 if ! java -version 2>&1 | head -n 1 | grep -Eq '"21[.]'; then
   JDK="$TOOLS/temurin-21"
