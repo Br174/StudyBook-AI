@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 umask 077
 BRANCH='trial/studybook-lab124-endtoend-0of44-device-recovery-20261111'
-BASE_SHA='e88638253e4f5d8c7c934a9d5f82605caa771b45'
+BASE_SHA='ac786508fb66d4f5278b7479088a961172d4e284'
 REPO='Br174/StudyBook-AI'
 CERT='D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC'
 APP_ID='it.studybook.ai.lab.trial111'
@@ -93,7 +93,7 @@ for program in git node npm curl unzip zip sha256sum gh tar df; do
   command -v "$program" >/dev/null || fail "Strumento mancante: $program"
 done
 [[ "$(git branch --show-current)" = "$BRANCH" ]] || fail 'Non sei sul ramo LAB124'
-git merge-base --is-ancestor "$BASE_SHA" HEAD || fail 'HEAD non discende dal checkpoint LAB124'
+git merge-base --is-ancestor "$BASE_SHA" HEAD || fail 'Codespace non aggiornato al checkpoint corretto LAB124: non compilo APK vecchie'
 [[ "$(node -p "require('./capacitor.config.json').appId")" = 'it.studybook.ai.lab' ]] || fail 'App ID sorgente inatteso'
 git diff --quiet -- capacitor.config.json || fail 'capacitor.config.json già modificato: non sovrascrivo'
 [[ "$(uname -m)" = x86_64 ]] || fail 'Supportato solo Codespaces Linux x86_64'
