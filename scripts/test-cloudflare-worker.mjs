@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
 import { after, before, beforeEach, describe, test } from 'node:test';
 import { createTestHarness } from 'wrangler';
@@ -80,7 +81,7 @@ describe('Cloudflare migration: production configuration in workerd', { concurre
       provider.listen(0, '127.0.0.1', resolve);
     });
     workerOptions = {
-      configPath: new URL('../wrangler.jsonc', import.meta.url),
+      configPath: fileURLToPath(new URL('../wrangler.jsonc', import.meta.url)),
       vars: { AI_API_URL: 'http://127.0.0.1:' + provider.address().port + '/v1/chat/completions' },
       secrets: { AI_API_KEY: testSecret },
     };
