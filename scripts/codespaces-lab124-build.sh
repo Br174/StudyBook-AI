@@ -26,6 +26,11 @@ report_status() {
   sha="$(git rev-parse --short HEAD 2>/dev/null || printf 'HEAD-non-disponibile')"
   # Solo diagnostica minimizzata e predeterminata: non pubblicare log, token, ambienti, keystore o contenuto di libri.
   local body="MotorLab LAB124 Codespaces — **${status}**\n\n- Fase: \`${PHASE}\`\n- Codice uscita: \`${code}\`\n- Commit: \`${sha}\`\n- Diagnosi: ${reason}\n- Privacy: nessun log completo, nessuna credenziale o firma caricata."
+  if [[ "$status" == BLOCCATO && "$PHASE" == test && "$reason" == 'Scudo360 fallito' && -s "$OUT/scudo360-report.json" && -f scripts/lab124-scudo-safe-diagnostic.mjs ]]; then
+    local detail
+    detail="$(node scripts/lab124-scudo-safe-diagnostic.mjs "$OUT/scudo360-report.json" 2>/dev/null)" || detail='Safe classification unavailable'
+    body="$body\n\n$detail"
+  fi
   if gh issue comment 12 --repo "$REPO" --body "$(printf '%b' "$body")" >/dev/null 2>&1; then
     printf '\n[LAB124] Stato comunicato automaticamente a MotorLab: https://github.com/%s/issues/12\n' "$REPO"
   else
@@ -76,6 +81,10 @@ process.stdout.write(lines.join('\n'));
 NODE
 )" || fail 'Non posso analizzare il report Scudo360'
   [[ -n "$BODY" ]] || fail 'Report diagnostico vuoto'
+  SAFE_DETAIL="$(node scripts/lab124-scudo-safe-diagnostic.mjs "$REPORT")" || fail 'Classificazione sicura del test Cloudflare fallita'
+  BODY="$BODY
+
+$SAFE_DETAIL"
   gh issue comment 12 --repo "$REPO" --body "$BODY" >/dev/null || fail 'Invio diagnostica a GitHub non riuscito'
   say 'Diagnostica Scudo360 pubblicata nel registro privato GitHub Issue #12.'
   exit 0
