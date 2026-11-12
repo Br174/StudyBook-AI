@@ -105,13 +105,16 @@ TMP="$(mktemp -d)"
 cp capacitor.config.json "$TMP/original-capacitor.json"
 say 'Nessuna modifica a main, nessun commit/push, nessuna GitHub Action o deploy Cloudflare.'
 
-PHASE='signer-preflight'
-say 'Verifico subito l’accesso all’artefatto della firma originale, prima di consumare risorse di compilazione.'
-gh auth status -h github.com >/dev/null 2>&1 || fail 'GitHub CLI non autenticata: impossibile recuperare la firma originale'
-mkdir -p "$TMP/signing"
-gh run download 37467723184 --repo "$REPO" --name StudyBook-LAB01-signing-recovery --dir "$TMP/signing" >/dev/null || fail 'Artefatto firma originale non accessibile'
-KEY="$TMP/signing/lab01-debug.keystore"
-[[ -s "$KEY" ]] || fail 'Keystore originale assente'
+# Only full APK mode needs the private signer. Targeted Scudo must not access keystores.
+if [[ "${1:-}" != '--scudo-only' ]]; then
+  PHASE='signer-preflight'
+  say 'Verifico subito l’accesso all’artefatto della firma originale, prima di consumare risorse di compilazione.'
+  gh auth status -h github.com >/dev/null 2>&1 || fail 'GitHub CLI non autenticata: impossibile recuperare la firma originale'
+  mkdir -p "$TMP/signing"
+  gh run download 37467723184 --repo "$REPO" --name StudyBook-LAB01-signing-recovery --dir "$TMP/signing" >/dev/null || fail 'Artefatto firma originale non accessibile'
+  KEY="$TMP/signing/lab01-debug.keystore"
+  [[ -s "$KEY" ]] || fail 'Keystore originale assente'
+fi
 
 PHASE='node22'
 # Match the canonical LAB124 Actions workflow (actions/setup-node@v4, node-version 22).
