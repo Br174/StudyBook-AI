@@ -2,11 +2,11 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "LAB124 — Compila APK e ZIP (solo Codespaces, zero Actions)",
+      "label": "LAB124 — Auto-compila APK+ZIP all'apertura Codespaces (senza Actions)",
       "type": "shell",
       "command": "bash",
       "args": [
-        "scripts/codespaces-lab124-build.sh"
+        "scripts/codespaces-lab124-autobuild.sh"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -22,6 +22,11 @@
         "focus": false,
         "clear": true,
         "showReuseMessage": false
+      },
+      "runOptions": {
+        "runOn": "folderOpen",
+        "instanceLimit": 1,
+        "instancePolicy": "silent"
       }
     }
   ]
