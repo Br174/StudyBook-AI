@@ -58,7 +58,8 @@ for candidate in "$STATE"/job-*/repo; do
 done
 LAST="$STATE/last-attempt-$SHA"
 NOW_SEC="$(date +%s)"
-if [[ -f "$LAST" ]]; then
+# An explicit retry after fixing authentication still shares the build lock.
+if [[ "${1:-}" != '--retry-now' && -f "$LAST" ]]; then
   OLD="$(cat "$LAST" 2>/dev/null || echo 0)"
   if [[ "$OLD" =~ ^[0-9]+$ ]] && ((NOW_SEC >= OLD && NOW_SEC - OLD < 21600)); then
     printf '[LAB124 AUTO] Tentativo rinviato: pausa anti-consumo di 6 ore.\n'
