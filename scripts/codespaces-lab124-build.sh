@@ -111,9 +111,23 @@ if [[ "${1:-}" != '--scudo-only' ]]; then
   say 'Verifico subito l’accesso all’artefatto della firma originale, prima di consumare risorse di compilazione.'
   gh auth status -h github.com >/dev/null 2>&1 || fail 'GitHub CLI non autenticata: impossibile recuperare la firma originale'
   mkdir -p "$TMP/signing"
-  gh run download 37467723184 --repo "$REPO" --name StudyBook-LAB01-signing-recovery --dir "$TMP/signing" >/dev/null || fail 'Artefatto firma originale non accessibile'
+  # GitHub's artifact service may return transient 5xx even for an unexpired signer.
+  # Bounded recovery only: never create or substitute a signing identity.
+  SIGNER_READY=0
+  for attempt in 1 2 3; do
+    if gh run download 37467723184 --repo "$REPO" --name StudyBook-LAB01-signing-recovery --dir "$TMP/signing" >/dev/null 2>&1; then
+      if [[ -s "$TMP/signing/lab01-debug.keystore" ]]; then
+        SIGNER_READY=1
+        break
+      fi
+    fi
+    if [[ "$attempt" -lt 3 ]]; then
+      say "Firma LAB01: tentativo $attempt non riuscito; nuova verifica limitata."
+      sleep $((attempt * 2))
+    fi
+  done
+  [[ "$SIGNER_READY" == 1 ]] || fail 'Artefatto firma originale non recuperabile dopo 3 tentativi; nessuna chiave sostitutiva'
   KEY="$TMP/signing/lab01-debug.keystore"
-  [[ -s "$KEY" ]] || fail 'Keystore originale assente'
 fi
 
 PHASE='node22'
