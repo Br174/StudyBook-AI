@@ -121,7 +121,7 @@ if [[ "$(node -p 'process.versions.node.split(".")[0]')" != 22 ]]; then
   if [[ ! -x "$NODE22_BIN" ]]; then
     say 'LAB124 ufficiale usa Node 22; preparo Node 22 isolato con SHA256 ufficiale.'
     curl -fLsS --retry 2 --max-time 30 https://nodejs.org/dist/index.json -o "$TMP/node-index.json" || fail 'Indice versioni ufficiali Node.js non disponibile'
-    VERSION="$(node -e 'const versions=require(process.argv[1]);const a=versions.find(x=>/^v22[.]\\d+[.]\\d+$/.test(x.version)&&x.files?.includes("linux-x64"));if(!a)process.exit(1);console.log(a.version)' "$TMP/node-index.json")" || fail 'Impossibile individuare Node 22 ufficiale'
+    VERSION="$(node -e 'const versions=require(process.argv[1]);const a=versions.find(x=>/^v22[.][0-9]+[.][0-9]+$/.test(x.version)&&x.files?.includes("linux-x64"));if(!a)process.exit(1);console.log(a.version)' "$TMP/node-index.json")" || fail 'Impossibile individuare Node 22 ufficiale'
     [[ "$VERSION" =~ ^v22[.][0-9]+[.][0-9]+$ ]] || fail 'Versione Node 22 non valida'
     TARBALL="node-$VERSION-linux-x64.tar.gz"
     BASE_URL="https://nodejs.org/dist/$VERSION"
@@ -129,7 +129,7 @@ if [[ "$(node -p 'process.versions.node.split(".")[0]')" != 22 ]]; then
     HASH="$(awk -v f="$TARBALL" '$2==f {print $1}' "$TMP/node22-sha.txt")"
     [[ "$HASH" =~ ^[a-fA-F0-9]{64}$ ]] || fail 'Checksum Node 22 non valido'
     curl -fLsS --retry 2 "$BASE_URL/$TARBALL" -o "$TMP/node22.tar.gz" || fail 'Download Node 22 fallito'
-    printf '%s  %s\\n' "$HASH" "$TMP/node22.tar.gz" | sha256sum -c - >/dev/null || fail 'Checksum Node 22 errato'
+    printf '%s  %s\n' "$HASH" "$TMP/node22.tar.gz" | sha256sum -c - >/dev/null || fail 'Checksum Node 22 errato'
     mkdir -p "$TOOLS/node22"
     tar -xzf "$TMP/node22.tar.gz" -C "$TOOLS/node22" --strip-components=1 || fail 'Estrazione Node 22 fallita'
   fi
