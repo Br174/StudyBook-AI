@@ -115,6 +115,9 @@ if [[ "${1:-}" != '--scudo-only' ]]; then
   # Bounded recovery only: never create or substitute a signing identity.
   SIGNER_READY=0
   for attempt in 1 2 3; do
+    # Remove only this invocation's temporary partial download, never a real user file.
+    rm -rf "$TMP/signing"
+    mkdir -p "$TMP/signing"
     if gh run download 37467723184 --repo "$REPO" --name StudyBook-LAB01-signing-recovery --dir "$TMP/signing" >/dev/null 2>&1; then
       if [[ -s "$TMP/signing/lab01-debug.keystore" ]]; then
         SIGNER_READY=1
