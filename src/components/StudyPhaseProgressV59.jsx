@@ -7,30 +7,27 @@ import {studyPhaseProgressV59} from '../lib/studyPhaseProgressV59.js';
 export default function StudyPhaseProgressV59({book=null,acquisition=null,generating=false,activeStatus=''}) {
  const editionState=book?.editionsV36;
  if(editionState?.version===EXPLAINED_POLICY_V122){
+   const total=editionState.totalChunkVariants||0;
+   const verified=editionState.verifiedChunkVariants||0;
+   const received=Math.min(total,Math.max(verified,editionState.draftUnitsSaved||0));
    const message=generating?activeStatus:explainedProgressMessageV122(editionState);
    return (
-    <div className="sb-v122-page-progress" role="group" aria-label="Libro spiegato · pagine verificate"
+    <div className="sb-v122-page-progress" role="group" aria-label="Libro spiegato · avanzamento"
       style={{padding:'10px 12px',border:'1px solid #dce6f1',borderRadius:12}}>
       <div style={{display:'flex',justifyContent:'space-between',gap:8}}>
         <strong>Libro spiegato · unica versione</strong>
-        <span>{editionState?.verifiedChunkVariants||0}/
-          {editionState?.totalChunkVariants||0} pagine</span>
+        <span>{received}/{total} pagine ricevute</span>
       </div>
-      <div role="progressbar" aria-label="Pagine spiegate e verificate"
-        aria-valuenow={editionState?.verifiedChunkVariants||0} aria-valuemin={0}
-        aria-valuemax={editionState?.totalChunkVariants||1}
+      <div role="progressbar" aria-label="Pagine ricevute"
+        aria-valuenow={received} aria-valuemin={0} aria-valuemax={total||1}
         className="sb-download-progress-track sb-ia-progress-track"
         style={{marginTop:8}}>
-        <span style={{width:(editionState?.totalChunkVariants
-          ?Math.round(100*(editionState?.verifiedChunkVariants||0)/
-            editionState.totalChunkVariants):0)+'%'}}/>
+        <span style={{width:(total?Math.round(100*received/total):0)+'%'}}/>
       </div>
-      <small>Una spiegazione e un glossario per pagina. Solo le pagine
-        controllate sono disponibili per lo studio.</small>
+      <small>{verified}/{total} pagine verificate. Le bozze leggibili sono indicate nel lettore.</small>
       {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
         editionState.diagnostics.plannedRequests>0&&
-        <small style={{display:'block'}}>Invii Gemini stimati: {editionState.diagnostics.plannedRequests}
-          {' '}· stima preventiva locale, senza chiamate aggiuntive.</small>}
+        <small style={{display:'block'}}>Richieste previste: {editionState.diagnostics.plannedRequests}</small>}
       {message && <p role="status">{message}</p>}
       {editionState?.qualityWarnings?.length>0&&
         <p role="status">La riduzione globale necessita una verifica mirata:

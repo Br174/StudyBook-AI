@@ -30,6 +30,16 @@ const sentenceUnits=text=>{
   return parts.map(x=>x.trim().replace(/∎/gu,'.')).filter(Boolean);
  });
 };
+// Keep draft rendering separate from approval and PDF export.
+export function hasReadableExplainedDraftV122(original,record){
+ if(!original.segments.length||!Array.isArray(record?.segments)||
+    record.segments.length!==original.segments.length)return false;
+ return original.segments.every((segment,index)=>{
+  const draft=record.segments[index];
+  return draft?.id===segment.id&&typeof draft.text==='string'&&
+    draft.text.trim()&&!/\[\[|\]\]|\{\{\s*TODO|\.\.\.\s*$/u.test(draft.text);
+ });
+}
 export function composeExplainedSheetsV122(book,{
  wrapText=approximateWrapV122,requireComplete=false
 }={}){
@@ -41,6 +51,7 @@ export function composeExplainedSheetsV122(book,{
  for(const original of originals){
   const record=records.get(original.id);
   const ready=record?.review?.ready===true;
+  const draft=!ready&&!requireComplete&&hasReadableExplainedDraftV122(original,record);
   if(requireComplete&&!ready)
    throw Object.assign(new Error('Pagina '+original.label+' non verificata.'),{code:'V122_PAGE_NOT_READY'});
   const widthMm=Math.max(100,mm(original.widthPt)),heightMm=Math.max(140,mm(original.heightPt));
@@ -53,13 +64,14 @@ export function composeExplainedSheetsV122(book,{
     continuationLabel(original.label,continuation),
     sourcePage:original.physicalPage,widthMm,heightMm,
     textWidth,glossaryWidth,margin,gap,top,bottom,
-    ready,rows:[],sourceLetters:original.originalBodyLetters,
+    ready,draft,rows:[],sourceLetters:original.originalBodyLetters,
     reduction:record?.review?.reduction??null};
    sheets.push(sheet);continuation++;
    return sheet;
   };
   let sheet=newSheet(),currentY=top;
-  const glossary=Array.isArray(record?.glossary)?record.glossary:[];
+  const glossary=Array.isArray(record?.glossary)?record.glossary.filter(item=>
+    typeof item?.term==='string'&&typeof item.definition==='string'):[];
   const emittedTerms=new Set();
   const noteFor=text=>{
    const result=[];
@@ -76,7 +88,7 @@ export function composeExplainedSheetsV122(book,{
   };
   const rows=[];
   const segments=original.segments;
-  if(!ready)rows.push({kind:'pending',text:'Pagina in elaborazione o da verificare: originale conservato.'});
+  if(!ready&&!draft)rows.push({kind:'pending',text:'Testo della pagina non ancora disponibile.'});
   else{
    for(let i=0;i<=segments.length;i++){
     for(const heading of original.headings.filter(x=>x.position===i))

@@ -37,7 +37,7 @@ export function explainedProgressMessageV122(snapshot){
    return 'Configurazione Gemini del Worker da verificare ('+code+').';
  if(code)return 'Elaborazione sospesa ('+code+'). Le pagine già salvate sono disponibili.';
  if(diagnostics?.qualityReview)return 'Pagine da rivedere: '+diagnostics.qualityReview+
-   '. Riprendi per elaborare solo quelle ancora da verificare.';
+   '. Puoi leggere le bozze disponibili. Riprendi per correggere le pagine segnalate.';
  return '';
 }
 
@@ -207,12 +207,7 @@ export async function generateExplainedBookV122(book,{
  // LAB124: the LAB51/58 pattern packages as many whole pages as estimated
  // INPUT and OUTPUT capacity allow. A previous overload reduces the next
  // session's budget rather than firing several requests against a busy model.
- const newPages=pending.filter(page=>!rejected.has(page.id));
- const pagesToReview=pending.filter(page=>rejected.has(page.id));
- const queue=[
-   ...planExplainedBlocksV122(newPages,{maxChars:blockCharBudget}),
-   ...planExplainedBlocksV122(pagesToReview,{maxChars:blockCharBudget,maxPages:4})
- ];
+ const queue=planExplainedBlocksV122(pending,{maxChars:blockCharBudget});
  const estimate=preflightExplainedCallsV124(pending,{maxChars:blockCharBudget,
   preplannedBlocks:queue});
  let qualityRetryQueued=false;

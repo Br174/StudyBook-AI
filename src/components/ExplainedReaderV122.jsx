@@ -62,7 +62,8 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
    <button type="button" disabled={index===pages.length-1} onClick={()=>setIndex(Math.min(pages.length-1,index+1))}>›</button>
   </div>
   {!page.ready&&<p role="status" className="sb-explained-notice">
-   Pagina {page.label} non ancora verificata. Il testo originale rimane conservato.</p>}
+   {page.draft?'Bozza di Gemini da verificare. Il testo può contenere omissioni.':
+     'Il testo elaborato di questa pagina non è ancora disponibile.'}</p>}
   <article className="sb-explained-sheet" aria-label={'Pagina '+page.label}
    style={{aspectRatio:page.widthMm+' / '+page.heightMm}}>
    <header className="sb-explained-pagehead">Libro spiegato · Pagina {page.label}</header>
