@@ -58,7 +58,6 @@ grep -Fxq "source=$SHA" "$OUT/$NAME-IDENTITY.txt" || fail 'Identita APK differen
 grep -Fxq 'signerSha256=D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC' "$OUT/$NAME-IDENTITY.txt" || fail 'Firma originale non confermata'
 grep -Fxq 'appId=it.studybook.ai.lab.trial111' "$OUT/$NAME-IDENTITY.txt" || fail 'Application ID errato'
 grep -Fxq 'versionCode=2026112403' "$OUT/$NAME-IDENTITY.txt" || fail 'VersionCode errato'
-grep -Fxq 'backendSourceGuidanceRevision=2' "$OUT/$NAME-IDENTITY.txt" || fail 'Worker LAB124 non verificato'
 (cd "$OUT" && sha256sum -c "$NAME.sha256" >/dev/null) || fail 'Hash APK errato'
 (cd "$OUT" && unzip -tq "$NAME.zip" >/dev/null && unzip -tq "$NAME-SORGENTI.zip" >/dev/null) || fail 'ZIP non integri'
 if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
@@ -72,7 +71,7 @@ else
     "$OUT/$NAME.apk" "$OUT/$NAME.zip" "$OUT/$NAME.sha256" "$OUT/$NAME-IDENTITY.txt" "$OUT/$NAME-SORGENTI.zip" \
     --repo "$REPO" --target "$SHA" \
     --title 'StudyBook AI TRIAL124 — Libro spiegato ~50% — Codespaces' \
-    --notes 'APK di prova compilata da Codespaces, una sola versione Libro spiegato con glossario e checkpoint. Scudo360 e firma originale sono obbligatori nello script locale. Test Android reale ancora necessario. GitHub Actions non usato per la build.' \
+    --notes 'APK di prova compilata da Codespaces, una sola versione Libro spiegato con glossario e checkpoint. Scudo360 e firma originale sono obbligatori nello script locale. Il pacchetto usa il Worker LAB124 gia pubblicato. Il file IDENTITY registra la revisione rilevata durante la build. Le nuove istruzioni Gemini richiedono la revisione 2 del Worker. Collaudo Android ancora necessario. GitHub Actions non usato per la build.' \
     --prerelease || fail 'Pubblicazione GitHub non riuscita'
 fi
 URL="https://github.com/$REPO/releases/tag/$TAG"

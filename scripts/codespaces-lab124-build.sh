@@ -246,33 +246,15 @@ npm run test:cloudflare || fail 'Test Worker locali falliti'
 say 'Non eseguo test Gemini reali, per evitare richieste API e costi.'
 
 PHASE='backend'
-worker_guidance_revision() {
-  curl -fsS --max-time 12 -X OPTIONS -o /dev/null \
-    -H 'Origin: https://localhost' "$WORKER_URL/api/explained/v122" >/dev/null || return 1
-  curl -sS --max-time 12 -D - -o /dev/null "$WORKER_URL/api/explained/v122" |
-    awk 'tolower($1) == "x-studybook-source-guidance:" { sub(/\r$/, "", $2); print $2 }'
-}
-DEPLOYMENT='ALREADY_CURRENT'
-if [[ "$(worker_guidance_revision)" != 2 ]]; then
-  say 'Aggiorno il solo Worker di prova LAB124 con le istruzioni di recupero.'
-  grep -Eq '"name"[[:space:]]*:[[:space:]]*"studybook-ai-trial124"' wrangler.trial124.jsonc ||
-    fail 'Configurazione Worker LAB124 inattesa'
-  # Confirm that the trial Worker already exists in the authenticated account.
-  # Never create a Worker or copy credentials from another environment.
-  npx --no-install wrangler deployments list --config wrangler.trial124.jsonc >/dev/null ||
-    fail 'Il Codespace non ha accesso al Worker Cloudflare LAB124 esistente'
-  npx --no-install wrangler deploy --config wrangler.trial124.jsonc ||
-    fail 'Aggiornamento Worker Cloudflare LAB124 non riuscito'
-  DEPLOYMENT='TRIAL124_UPDATED'
-  for attempt in 1 2 3; do
-    [[ "$(worker_guidance_revision)" == 2 ]] && break
-    sleep 3
-  done
+# Read-only probe. Packaging remains independent of Worker deployment.
+HTTP="$(curl -sS --max-time 12 -D "$TMP/lab124-backend-headers" -o /dev/null -w '%{http_code}' "$WORKER_URL/api/explained/v122" || true)"
+HTTP="${HTTP:-000}"
+GUIDANCE="$(awk 'tolower($1) == "x-studybook-source-guidance:" && $2 ~ /^[0-9]+\r?$/ { print $2+0 }' "$TMP/lab124-backend-headers" 2>/dev/null || true)"
+if [[ "$HTTP" = 405 && "$GUIDANCE" = 2 ]]; then
+  say 'Worker LAB124 raggiungibile con istruzioni Gemini revisione 2.'
+else
+  say "Worker LAB124: HTTP $HTTP, revisione istruzioni ${GUIDANCE:-non confermata}. Proseguo con APK e ZIP."
 fi
-[[ "$(worker_guidance_revision)" == 2 ]] ||
-  fail 'Worker LAB124 raggiungibile ma revisione delle istruzioni non confermata'
-HTTP=405
-say 'Revisione 2 delle istruzioni confermata sul Worker di prova.'
 
 PHASE='capacitor'
 say 'Genero package Android di prova; non cancello versioni Android già esistenti.'
@@ -322,8 +304,8 @@ cp "$SIGNED" "$OUT/$NAME.apk"
   echo "signerSha256=$CERT"
   echo "backendHttp=$HTTP"
   echo 'realGeminiTest=NOT_RUN'
-  echo "deployment=$DEPLOYMENT"
-  echo 'backendSourceGuidanceRevision=2'
+  echo 'deployment=NOT_PERFORMED'
+  echo "backendSourceGuidanceRevision=${GUIDANCE:-UNCONFIRMED}"
   echo 'androidDeviceTest=PENDING'
 } > "$OUT/$NAME-IDENTITY.txt"
 (cd "$OUT" && zip -q "$NAME.zip" "$NAME.apk" "$NAME.sha256" "$NAME-IDENTITY.txt")
