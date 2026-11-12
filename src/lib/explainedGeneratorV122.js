@@ -228,8 +228,11 @@ export async function generateExplainedBookV122(book,{
  for(let index=0;index<queue.length;index++){
   const block=queue[index];
   if(signal?.aborted){lastError='V122_INTERRUPTED';break;}
-  const pages=block.map(p=>({id:p.id,segments:p.segments,
-   label:p.label,physicalPage:p.physicalPage}));
+  const pages=block.map(p=>{
+   const review=records.get(p.id)?.review;
+   return {id:p.id,segments:p.segments,label:p.label,physicalPage:p.physicalPage,
+    ...(review?.ready===false&&review.repair?{repair:review.repair}:{})};
+  });
   const before=Date.now();
   try{
    diagnostics.activePages=block.map(p=>p.physicalPage);

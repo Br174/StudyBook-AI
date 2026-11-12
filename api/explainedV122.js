@@ -22,6 +22,7 @@ function parseContent(value){
  try{return JSON.parse(value.trim().replace(/^\x60{3}(?:json)?\s*/iu,'').replace(/\s*\x60{3}$/u,''))}catch{return null}
 }
 export default async function handler(req,res){
+ res.setHeader('X-StudyBook-Source-Guidance','2');
  if(req.method!=='POST'){res.setHeader('Allow','POST');return fail(res,405,'METHOD_NOT_ALLOWED','Usare POST.');}
  const env=req.env||{},key=env.AI_API_KEY||env.GEMINI_API_KEY;
  if(!key)return fail(res,503,'AI_NOT_CONFIGURED','Il modello gratuito non è configurato.');
@@ -102,6 +103,7 @@ export default async function handler(req,res){
    pages:audited,model:outcome.model,finishReason,
    providerRequests:outcome.attempts,failoverRecovered:outcome.failoverRecovered,
    readyPages:audited.filter(p=>p.review.ready).length,
+   sourceGuidanceRevision:2,
    semanticCertified:false,privateBandDisclosedToGemini:false});
  }catch(err){
   return fail(res,controller.signal.aborted?504:502,

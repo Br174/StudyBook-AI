@@ -2,7 +2,7 @@
 // No model-visible acceptance intervals; canonical sources, references and formulas stay immutable.
 import {studyLetters,percentReduced} from './studyPillarV38.js';
 import {immutableFragmentsV67,immutableViolationsV67} from './immutableFragmentsV67.js';
-import {auditFidelity,buildConceptInventory,auditProgressiveConcepts} from './fidelityEngine.js';
+import {auditFidelity,buildConceptInventory,extractProtectedItems,auditProgressiveConcepts} from './fidelityEngine.js';
 import {sourceRiskReviewV110} from './studySourceRiskV110.js';
 
 export const EXPLAINED_POLICY_V122='lab122-one-explained-glossary-v1';
@@ -74,6 +74,9 @@ export function modelInstructionV122(){
   'Non tagliare un concetto unico per raggiungere la misura: se necessario conserva più testo. Elimina ripetizioni, giri di parole e artifici, NON fatti, cause, effetti, definizioni, condizioni o esempi indispensabili.',
   'Mantieni precisamente formule, simboli, numeri, citazioni letterali della legge, articoli, codici e termini giuridici fondamentali. Non inventare articoli, norme, interpretazioni, giurisprudenza o esempi.',
   'Conserva negazioni, eccezioni, obblighi, possibilità e differenze: NON può non diventa può; SOLO SE non diventa sempre; verificabile non diventa verificato.',
+  'Per ciascuna pagina usa protectedOriginals ed essentialConcepts come lista di controllo. Conserva ogni proposizione essenziale e le sue condizioni nella spiegazione, anche quando la frase viene riformulata. Le voci in requiredQualifiers devono rimanere nel testo del corpo, nella stessa proposizione a cui si riferiscono.',
+  'Quando la semplificazione rischia di cancellare una condizione, un’eccezione o un limite, conserva la clausola originale. Per arrivare all’obiettivo elimina prima le frasi ripetitive e i passaggi accessori.',
+  'Se una pagina contiene repair, rigenera soltanto quella pagina a partire dalla fonte: integra tutti i missingEssentialConcepts e ripristina i missingProtectedItems nel segmento pertinente. I campi repair e i codici di controllo non vanno copiati nel risultato.',
   'Per ogni termine tecnico necessario scrivi nel corpo **(termine tecnico)**, seguito subito da parole semplici che lo chiariscono; aggiungi nel glossario la voce termine/definition. La definizione deve corrispondere al contesto originale.',
   'I titoli originali sono conservati dall’applicazione e non devono essere copiati nei testi dei segmenti. Mantieni separati e ordinati TUTTI gli id di pagina e segmento forniti.',
   'Per ogni pagina restituisci id, segments con id e text, e glossary con term e definition. Nessun contenuto va spostato alla pagina successiva, nessun segmento omesso.',
@@ -82,13 +85,26 @@ export function modelInstructionV122(){
  ].join('\n');
 }
 export function modelPayloadV122(pages){
- const output={pages:pages.map(p=>({
-  id:p.id,segments:p.segments.map(s=>({id:s.id,source:s.source})),
-  protectedOriginals:immutableFragmentsV67(p.segments.map(s=>s.source).join('\n'))
-    .map(x=>({kind:x.kind,value:x.value})),
-  essentialConcepts:buildConceptInventory(p.segments.map(s=>s.source).join('\n'))
-    .filter(x=>x.protected).slice(0,60).map(x=>x.text)
- }))};
+ const output={pages:pages.map(p=>{
+  const original=p.segments.map(s=>s.source).join('\n');
+  const concepts=buildConceptInventory(original).filter(item=>item.protected);
+  const protectedItems=extractProtectedItems(original);
+  const hint=p.repair;
+  const conceptIds=Array.isArray(hint?.conceptIds)?hint.conceptIds.slice(0,60):[];
+  const protectedIndexes=Array.isArray(hint?.protectedIndexes)?hint.protectedIndexes.slice(0,40):[];
+  const issueCodes=Array.isArray(hint?.issueCodes)?hint.issueCodes.slice(0,12)
+    .filter(code=>typeof code==='string'&&/^V122_[A-Z_]{1,48}$/u.test(code)):[];
+  return {
+   id:p.id,segments:p.segments.map(s=>({id:s.id,source:s.source})),
+   protectedOriginals:immutableFragmentsV67(original).map(x=>({kind:x.kind,value:x.value})),
+   essentialConcepts:concepts.slice(0,60).map(x=>x.text),
+   requiredQualifiers:protectedItems.filter(x=>x.kind==='qualifier').map(x=>x.value),
+   ...(hint?{repair:{issueCodes,
+    missingEssentialConcepts:concepts.filter(x=>conceptIds.includes(x.id)).map(x=>x.text),
+    missingProtectedItems:protectedItems.filter((_,i)=>protectedIndexes.includes(i))
+   }}:{})
+  };
+ })};
  if(/"minLetters"|"maxLetters"|"acceptanceMinimum"|"acceptanceMaximum"|"tolerancePercentagePoints"/u.test(JSON.stringify(output)))
   throw Error('V122_PRIVATE_BAND_LEAK');
  return output;
@@ -172,6 +188,7 @@ export function auditExplainedPageV122(sourcePage,result,{allowShort=true}={}){
   requireLegalReference:true});
  for(const item of exact)issues.push('V122_IMMUTABLE:'+item.kind+':'+item.value);
  const semantic=auditFidelity(original,simple);
+ const protectedItems=extractProtectedItems(original);
  if(semantic.missingProtected.length)issues.push('V122_PROTECTED_MEANING_MISSING');
  if(semantic.missingHighValue.length)issues.push('V122_ESSENTIAL_CONCEPT_REVIEW');
  if(semantic.qualifierMismatches.length)issues.push('V122_CONDITION_OR_MODALITY_REVIEW');
@@ -192,6 +209,12 @@ export function auditExplainedPageV122(sourcePage,result,{allowShort=true}={}){
  return {ready:issues.length===0,issues:[...new Set(issues)],
    advisories,reduction,sourceLetters,outputLetters,glossaryCount:result.glossary.length,
    lexicalSupportPercent:semantic.coveragePercent,
+   repair:{
+     conceptIds:semantic.missingHighValue.map(item=>item.id),
+     protectedIndexes:semantic.missingProtected.map(item=>protectedItems.findIndex(
+       candidate=>candidate.kind===item.kind&&candidate.value===item.value)).filter(i=>i>=0),
+     issueCodes:[...new Set(issues.map(issue=>issue.split(':')[0]))]
+   },
    fidelity:{protectedCount:semantic.protectedCount,missingProtected:semantic.missingProtected.length,
      missingHighValue:semantic.missingHighValue.length,
      qualifierMismatches:semantic.qualifierMismatches.length},

@@ -144,3 +144,24 @@ try{
 }finally{globalThis.fetch=originalFetch;}
 console.log(JSON.stringify({test:'LAB122',passed:true,checks:13,workerCalls,modelCalls,
  privateBandDisclosedToGemini:false,semanticCertified:false}));
+
+{
+ const source={id:'p1',segments:[{id:'p1-s0',
+  source:'Una disposizione non può derogare alla fonte superiore, salvo che questa lo consenta. Questo significa che una disposizione inferiore non può derogare alla fonte superiore, salvo che questa lo consenta.'}]};
+ const candidate={id:'p1',segments:[{id:'p1-s0',text:'La norma inferiore non può violare la fonte superiore.'}],glossary:[]};
+ const review=auditExplainedPageV122(source,candidate);
+ assert.equal(review.ready,false);
+ const prepared=modelPayloadV122([{...source,repair:review.repair}]).pages[0];
+ assert.ok(prepared.requiredQualifiers.includes('salvo'));
+ assert.ok(prepared.repair.missingProtectedItems.some(item=>item.value==='salvo'));
+ assert.ok(prepared.repair.missingEssentialConcepts.some(text=>text.includes('salvo')));
+ const corrected={id:'p1',segments:[{id:'p1-s0',
+  text:'Una disposizione non può **(derogare)** alla fonte superiore, salvo che questa lo consenta.'}],
+  glossary:[{term:'derogare',definition:'Fare eccezione a una regola.'}]};
+ const repaired=auditExplainedPageV122(source,corrected);
+ assert.equal(repaired.ready,true);
+ assert.ok(repaired.reduction>=40&&repaired.reduction<=60);
+ assert.ok(modelInstructionV122().includes('missingEssentialConcepts'));
+ assert.ok(!JSON.stringify(prepared).includes('30-60'));
+ console.log('PASS: legal exception remains mandatory and the retry gets source-grounded correction hints');
+}

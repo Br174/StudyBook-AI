@@ -7,8 +7,8 @@ BASE_SHA='ac786508fb66d4f5278b7479088a961172d4e284'
 REPO='Br174/StudyBook-AI'
 CERT='D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC'
 APP_ID='it.studybook.ai.lab.trial111'
-VERSION_CODE='2026112402'
-VERSION_NAME='0.3.124-prova.2'
+VERSION_CODE='2026112403'
+VERSION_NAME='0.3.124-prova.3'
 NAME='StudyBook-AI-TRIAL-124'
 WORKER_URL='https://studybook-ai-trial124.brunoverlezza.workers.dev'
 TOOLS="$HOME/.local/share/studybook-lab124"
@@ -103,7 +103,7 @@ FREE_GB="$(df -Pk . | awk 'NR==2 {printf "%d", $4/1024/1024}')"
 mkdir -p "$TOOLS" "$OUT"
 TMP="$(mktemp -d)"
 cp capacitor.config.json "$TMP/original-capacitor.json"
-say 'Nessuna modifica a main, nessun commit/push, nessuna GitHub Action o deploy Cloudflare.'
+say 'Nessuna modifica a main, nessun commit/push e nessuna GitHub Action.'
 
 # Only full APK mode needs the private signer. Targeted Scudo must not access keystores.
 if [[ "${1:-}" != '--scudo-only' ]]; then
@@ -246,13 +246,33 @@ npm run test:cloudflare || fail 'Test Worker locali falliti'
 say 'Non eseguo test Gemini reali, per evitare richieste API e costi.'
 
 PHASE='backend'
-HTTP="$(curl -sS --max-time 12 -o /dev/null -w '%{http_code}' "$WORKER_URL/api/explained/v122" || true)"
-[[ -n "$HTTP" ]] || HTTP='000'
-if [[ "$HTTP" = 405 ]]; then
-  say 'Worker LAB124 raggiungibile, HTTP 405.'
-else
-  say "ATTENZIONE: backend LAB124 non verificato (HTTP $HTTP); app online non certificata."
+worker_guidance_revision() {
+  curl -fsS --max-time 12 -X OPTIONS -o /dev/null \
+    -H 'Origin: https://localhost' "$WORKER_URL/api/explained/v122" >/dev/null || return 1
+  curl -sS --max-time 12 -D - -o /dev/null "$WORKER_URL/api/explained/v122" |
+    awk 'tolower($1) == "x-studybook-source-guidance:" { sub(/\r$/, "", $2); print $2 }'
+}
+DEPLOYMENT='ALREADY_CURRENT'
+if [[ "$(worker_guidance_revision)" != 2 ]]; then
+  say 'Aggiorno il solo Worker di prova LAB124 con le istruzioni di recupero.'
+  grep -Eq '"name"[[:space:]]*:[[:space:]]*"studybook-ai-trial124"' wrangler.trial124.jsonc ||
+    fail 'Configurazione Worker LAB124 inattesa'
+  # Confirm that the trial Worker already exists in the authenticated account.
+  # Never create a Worker or copy credentials from another environment.
+  npx --no-install wrangler deployments list --config wrangler.trial124.jsonc >/dev/null ||
+    fail 'Il Codespace non ha accesso al Worker Cloudflare LAB124 esistente'
+  npx --no-install wrangler deploy --config wrangler.trial124.jsonc ||
+    fail 'Aggiornamento Worker Cloudflare LAB124 non riuscito'
+  DEPLOYMENT='TRIAL124_UPDATED'
+  for attempt in 1 2 3; do
+    [[ "$(worker_guidance_revision)" == 2 ]] && break
+    sleep 3
+  done
 fi
+[[ "$(worker_guidance_revision)" == 2 ]] ||
+  fail 'Worker LAB124 raggiungibile ma revisione delle istruzioni non confermata'
+HTTP=405
+say 'Revisione 2 delle istruzioni confermata sul Worker di prova.'
 
 PHASE='capacitor'
 say 'Genero package Android di prova; non cancello versioni Android già esistenti.'
@@ -302,7 +322,8 @@ cp "$SIGNED" "$OUT/$NAME.apk"
   echo "signerSha256=$CERT"
   echo "backendHttp=$HTTP"
   echo 'realGeminiTest=NOT_RUN'
-  echo 'deployment=NOT_PERFORMED'
+  echo "deployment=$DEPLOYMENT"
+  echo 'backendSourceGuidanceRevision=2'
   echo 'androidDeviceTest=PENDING'
 } > "$OUT/$NAME-IDENTITY.txt"
 (cd "$OUT" && zip -q "$NAME.zip" "$NAME.apk" "$NAME.sha256" "$NAME-IDENTITY.txt")
