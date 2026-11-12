@@ -1,7 +1,7 @@
 import {spawnSync} from 'node:child_process';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
-const r=spawnSync(process.execPath,['--test','scripts/test-cloudflare-worker.mjs'],{encoding:'utf8',timeout:240000,maxBuffer:8000000});
+const r=spawnSync(process.execPath,['--test','--test-reporter=tap','scripts/test-cloudflare-worker.mjs'],{encoding:'utf8',timeout:240000,maxBuffer:8000000});
 const output=(r.stdout||'')+'\n'+(r.stderr||'');
 process.stdout.write(output.slice(-12000));
 const number=key=>{const match=output.match(new RegExp('^# '+key+' (\\d+)\\s*$','m'));return match?Number(match[1]):null;};
