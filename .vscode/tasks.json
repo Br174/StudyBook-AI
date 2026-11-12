@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "LAB124 — Compila APK e ZIP (solo Codespaces, zero Actions)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/codespaces-lab124-build.sh"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false,
+        "clear": true,
+        "showReuseMessage": false
+      }
+    }
+  ]
+}
