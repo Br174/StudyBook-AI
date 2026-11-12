@@ -47,6 +47,39 @@ cleanup() {
   if [[ -n "$TMP" && -d "$TMP" ]]; then rm -rf "$TMP"; fi
 }
 trap cleanup EXIT
+# Read-only reuse of the EXISTING Scudo360 report; no Java, SDK, tests or build repeated.
+if [[ "${1:-}" == '--diagnose' ]]; then
+  PHASE='scudo360-diagnostica'
+  REPORT='artifacts/LAB124-CODESPACES/scudo360-report.json'
+  [[ -s "$REPORT" ]] || fail "Rapporto Scudo360 locale non trovato: $REPORT"
+  command -v node >/dev/null || fail 'Node.js non disponibile'
+  command -v gh >/dev/null || fail 'GitHub CLI non disponibile'
+  BODY="$(node --input-type=module - "$REPORT" <<'NODE'
+import fs from 'node:fs';
+const report=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+if(report.gate!=='MotorLab-Scudo360')throw Error('Formato report Scudo360 inatteso');
+const safeId=x=>String(x||'').replace(/[^a-zA-Z0-9._-]/g,'').slice(0,120);
+const suites=(report.suites||[]).map(s=>({id:safeId(s.id),status:safeId(s.status),exitCode:s.exitCode??'null',tests:s.tests??0,failures:s.failures??0,errors:s.errors??0,skipped:s.skipped??0}));
+const contracts=(report.contracts||[]).filter(c=>c.status!=='passed').map(c=>safeId(c.id)+':'+safeId(c.status));
+const preflight=(report.preflight?.errors||[]).map(e=>safeId(e.code));
+const errors=(report.errors||[]).map(e=>safeId(e.code)+':'+safeId(e.detail));
+const lines=['**SCUDO360 — diagnostica locale LAB124**',
+'Risultato: '+(report.passed?'PASS':'FAILED'),
+'Preflight: '+(report.preflight?.valid?'PASS':'FAILED'),
+'Suites:'];
+for(const s of suites)lines.push('- '+s.id+' = '+s.status+'; exit='+s.exitCode+'; tests='+s.tests+'; failures='+s.failures+'; errors='+s.errors+'; skipped='+s.skipped);
+lines.push('Contratti non superati: '+(contracts.join(', ')||'nessuno'));
+lines.push('Errori preflight: '+(preflight.join(', ')||'nessuno'));
+lines.push('Errori valutazione: '+(errors.join(', ')||'nessuno'));
+lines.push('Rapporto limitato a identificativi e conteggi. Nessun log, testo, token, credenziale o keystore.');
+process.stdout.write(lines.join('\n'));
+NODE
+)" || fail 'Non posso analizzare il report Scudo360'
+  [[ -n "$BODY" ]] || fail 'Report diagnostico vuoto'
+  gh issue comment 12 --repo "$REPO" --body "$BODY" >/dev/null || fail 'Invio diagnostica a GitHub non riuscito'
+  say 'Diagnostica Scudo360 pubblicata nel registro privato GitHub Issue #12.'
+  exit 0
+fi
 for program in git node npm curl unzip zip sha256sum gh tar df; do
   command -v "$program" >/dev/null || fail "Strumento mancante: $program"
 done
