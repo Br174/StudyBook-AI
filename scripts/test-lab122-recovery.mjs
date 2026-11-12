@@ -42,6 +42,25 @@ try{
  assert.equal(finished.verifiedChunkVariants,1);
  assert.equal(finished.quota,undefined);
  assert.equal(requests,2);
+ let qualityCalls=0;
+ const validResponse=globalThis.fetch;
+ globalThis.fetch=async(uri,options)=>{
+  qualityCalls++;
+  const response=await validResponse(uri,options);
+  if(qualityCalls>1)return response;
+  const output=await response.json();
+  output.pages[0].glossary=[];
+  return {...response,json:async()=>output};
+ };
+ const repaired=await generateExplainedBookV122(book);
+ assert.equal(qualityCalls,2);
+ assert.equal(repaired.diagnostics.qualityRetryPages,1);
+ assert.equal(repaired.diagnostics.qualityReview,0);
+ assert.equal(repaired.verifiedChunkVariants,1);
+ globalThis.fetch=async()=>{throw new TypeError('Network request failed');};
+ const disconnected=await generateExplainedBookV122(book);
+ assert.equal(disconnected.diagnostics.lastCode,'V122_NETWORK');
+ assert.equal(disconnected.verifiedChunkVariants,0);
  console.log(JSON.stringify({test:'LAB122_RESUME',passed:true,
   provider503Recovered:true,checkpointPreserved:true,
   realModelRequests:0,semanticCertified:false}));

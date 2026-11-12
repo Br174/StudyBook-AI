@@ -515,44 +515,15 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         {!isOriginalOnly && studyBook && !editionState?.complete && (
           <div className="sb-studio-inline-progress sb-studio-inline-progress-v68"
             aria-label="Avanzamento del libro in preparazione">
-            {explainedV122
-              ? <div className="sb-v122-page-progress" role="group" aria-label="Libro spiegato · pagine verificate"
-                  style={{padding:'10px 12px',border:'1px solid #dce6f1',borderRadius:12}}>
-                  <div style={{display:'flex',justifyContent:'space-between',gap:8}}>
-                    <strong>Libro spiegato · unica versione</strong>
-                    <span>{editionState?.verifiedChunkVariants||0}/
-                      {editionState?.totalChunkVariants||0} pagine</span>
-                  </div>
-                  <div role="progressbar" aria-label="Pagine spiegate e verificate"
-                    aria-valuenow={editionState?.verifiedChunkVariants||0} aria-valuemin={0}
-                    aria-valuemax={editionState?.totalChunkVariants||1}
-                    className="sb-download-progress-track sb-ia-progress-track"
-                    style={{marginTop:8}}>
-                    <span style={{width:(editionState?.totalChunkVariants
-                      ?Math.round(100*(editionState?.verifiedChunkVariants||0)/
-                        editionState.totalChunkVariants):0)+'%'}}/>
-                  </div>
-                  <small>Una spiegazione e un glossario per pagina. Solo le pagine
-                    controllate sono disponibili per lo studio.</small>
-                  {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
-                    editionState.diagnostics.plannedRequests>0&&
-                    <small>Invii Gemini stimati: {editionState.diagnostics.plannedRequests}
-                      {' '}· stima preventiva locale, senza chiamate aggiuntive.</small>}
-                  {editionState?.qualityWarnings?.length>0&&
-                    <p role="status">La riduzione globale necessita una verifica mirata:
-                      la fedeltà al testo originale viene prima del numero.</p>}
-                </div>
-              : <StudyPhaseProgressV59 book={studyBook}
-                  acquisition={{done:sourceData?.structure?.pageCount||
-                    studyBook?.canonicalBookMap?.pageCount||0,
-                    total:sourceData?.structure?.pageCount||
-                    studyBook?.canonicalBookMap?.pageCount||0}}/>}
+            <StudyPhaseProgressV59 book={studyBook} generating={generating} activeStatus={status}
+              acquisition={{done:sourceData?.structure?.pageCount||studyBook?.canonicalBookMap?.pageCount||0,
+                total:sourceData?.structure?.pageCount||studyBook?.canonicalBookMap?.pageCount||0}}/>
             {v36Partial&&resumeWait.label&&
               <small className="sb-gemini-wait-note" role="status">{resumeWait.label}</small>}
             {v36Partial&&!auditedNeedsRepair&&<button type="button" className="sb-resume-manual"
-              onClick={onResumeGemini}>
+              onClick={onResumeGemini} disabled={explainedV122&&generating&&!geminiStalled}>
               {geminiStalled?'↻ Recupera richiesta bloccata':
-                generating?'↻ Verifica richiesta Gemini':
+                generating?(explainedV122?'Richiesta Gemini in corso':'↻ Verifica richiesta Gemini'):
                 resumeWait.label?resumeWait.button:
                 explainedV122?'↻ Riprendi Libro spiegato dai checkpoint':
                 '↻ Riprendi elaborazione dal checkpoint'}

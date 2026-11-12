@@ -25,7 +25,7 @@ import { HomeDashboardV16 } from './components/HomeDashboardV16.jsx';
 import StudyMode from './components/StudyMode.jsx';
 import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.js';
 import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
-import {generateExplainedBookV122} from './lib/explainedGeneratorV122.js';
+import {EXPLAINED_REQUEST_TIMEOUT_V122,explainedProgressMessageV122,generateExplainedBookV122} from './lib/explainedGeneratorV122.js';
 import {EXPLAINED_POLICY_V122} from './lib/explainedPolicyV122.js';
 import {buildExplainedEditionViewV122,isExplainedBookV122} from './lib/explainedViewV122.js';
 import {exportExplainedPdfV122} from './lib/exportExplainedPdfV122.js';
@@ -488,13 +488,14 @@ export default function AppV14() {
   useEffect(()=>{
     if(!generating)return;
     const timer=setInterval(()=>{
-      if(geminiAbortRef.current && Date.now()-geminiLastActivityRef.current>90000){
+      const timeout=isExplainedBookV122(studyBook)?EXPLAINED_REQUEST_TIMEOUT_V122:90000;
+      if(geminiAbortRef.current && Date.now()-geminiLastActivityRef.current>timeout){
         setGeminiStalled(true);
         setStatus('Gemini senza nuovi segnali · puoi interrompere e riprendere dal checkpoint');
       }
     },15000);
     return ()=>clearInterval(timer);
-  },[generating]);
+  },[generating,studyBook?.editionsV36?.version]);
 
   /* LAB19 — asynchronous cover pipeline. No scanner images sent to AI, no mutation
      of original PDF/eBook bytes, and never wait for artwork before showing the book.
@@ -1309,7 +1310,7 @@ export default function AppV14() {
         await persistBook(explained,sourceData,sourceName,savedId);
         setStatus(finalSnapshot.complete
           ?'Libro spiegato completo · pagine e glossario pronti per il PDF'
-          :'Libro spiegato parziale · checkpoint conservati · controllare le pagine segnalate');
+          :explainedProgressMessageV122(finalSnapshot));
         navigateTo('studio');
         return explained;
       }
@@ -1506,7 +1507,7 @@ export default function AppV14() {
 
   async function resumeGeminiEditions(record=null){
     if(generating){
-      if(isExplainedBookV122(studyBook)||geminiStalled)requestActiveGeminiRecovery();
+      if(geminiStalled)requestActiveGeminiRecovery();
       else {setStatus('Gemini sta già lavorando · nessuna nuova richiesta avviata');navigateTo('studio');}
       return;
     }
@@ -1549,7 +1550,7 @@ export default function AppV14() {
         setStudyBook(latest);
         await persistBook(latest,targetSource,targetName,targetId);
         setStatus(snapshot.complete?'Libro spiegato completo · PDF pronto':
-          'Libro spiegato parziale · controlli di qualità da completare');
+          explainedProgressMessageV122(snapshot));
       }catch(error){setError(error?.message||'Ripresa Libro spiegato non riuscita.');
         await persistBook(latest,targetSource,targetName,targetId);
       }finally{

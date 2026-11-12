@@ -76,7 +76,7 @@ git -C "$WORK" checkout --quiet -B "$BRANCH" "$SHA" || fail 'Ramo LAB124 non sel
 [[ ! -e "$WORK/node_modules" ]] || fail 'Dipendenze inattese nel clone: blocco'
 ln -s "$ROOT/node_modules" "$WORK/node_modules" || fail 'Dipendenze Codespaces non riutilizzabili'
 (cd "$WORK" && grep -q 'EXPLAINED_TARGET_V122=50' src/lib/explainedPolicyV122.js) || fail 'Target 50% assente'
-(cd "$WORK" && grep -q 'Libro spiegato · unica versione' src/components/AppScreens.jsx) || fail 'Schermata a versione unica assente'
+(cd "$WORK" && grep -q 'Libro spiegato · unica versione' src/components/StudyPhaseProgressV59.jsx) || fail 'Schermata a versione unica assente'
 printf '[LAB124 AUTO] Compilazione isolata del commit %s, senza Actions.\n' "$SHORT"
 (cd "$WORK" && bash scripts/codespaces-lab124-build.sh) || fail 'Compilazione Android/Scudo360 fallita'
 (cd "$WORK" && bash scripts/codespaces-lab124-publish.sh) || fail 'APK compilata ma pubblicazione automatica fallita'

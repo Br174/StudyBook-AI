@@ -1,8 +1,43 @@
+import {EXPLAINED_POLICY_V122} from '../lib/explainedPolicyV122.js';
+import {explainedProgressMessageV122} from '../lib/explainedGeneratorV122.js';
 import {studyPhaseProgressV59} from '../lib/studyPhaseProgressV59.js';
 
 // LAB59: exactly ONE progress graphic, selected by current work phase.
 // The six rows are physical-page counts, never Gemini paragraphs or 714 jobs.
-export default function StudyPhaseProgressV59({book=null,acquisition=null}){
+export default function StudyPhaseProgressV59({book=null,acquisition=null,generating=false,activeStatus=''}) {
+ const editionState=book?.editionsV36;
+ if(editionState?.version===EXPLAINED_POLICY_V122){
+   const message=generating?activeStatus:explainedProgressMessageV122(editionState);
+   return (
+    <div className="sb-v122-page-progress" role="group" aria-label="Libro spiegato · pagine verificate"
+      style={{padding:'10px 12px',border:'1px solid #dce6f1',borderRadius:12}}>
+      <div style={{display:'flex',justifyContent:'space-between',gap:8}}>
+        <strong>Libro spiegato · unica versione</strong>
+        <span>{editionState?.verifiedChunkVariants||0}/
+          {editionState?.totalChunkVariants||0} pagine</span>
+      </div>
+      <div role="progressbar" aria-label="Pagine spiegate e verificate"
+        aria-valuenow={editionState?.verifiedChunkVariants||0} aria-valuemin={0}
+        aria-valuemax={editionState?.totalChunkVariants||1}
+        className="sb-download-progress-track sb-ia-progress-track"
+        style={{marginTop:8}}>
+        <span style={{width:(editionState?.totalChunkVariants
+          ?Math.round(100*(editionState?.verifiedChunkVariants||0)/
+            editionState.totalChunkVariants):0)+'%'}}/>
+      </div>
+      <small>Una spiegazione e un glossario per pagina. Solo le pagine
+        controllate sono disponibili per lo studio.</small>
+      {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
+        editionState.diagnostics.plannedRequests>0&&
+        <small style={{display:'block'}}>Invii Gemini stimati: {editionState.diagnostics.plannedRequests}
+          {' '}· stima preventiva locale, senza chiamate aggiuntive.</small>}
+      {message && <p role="status">{message}</p>}
+      {editionState?.qualityWarnings?.length>0&&
+        <p role="status">La riduzione globale necessita una verifica mirata:
+          la fedeltà al testo originale viene prima del numero.</p>}
+    </div>
+   );
+ }
  const progress=studyPhaseProgressV59(book,{acquisition});
  const traffic=book?.editionsV36?.diagnostics?.geminiTrafficV113;
  const measuredTraffic=traffic?.policy==='studybook-local-gemini-traffic-v113'?traffic:null;

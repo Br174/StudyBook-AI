@@ -1,3 +1,4 @@
+import {EXPLAINED_POLICY_V122} from '../lib/explainedPolicyV122.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StudyIcon } from './StudyUiIcons.jsx';
 import '../appShellV16.css';
@@ -60,6 +61,10 @@ export function HomeDashboardV16({
   const coverUrl=progressBook?.coverCustom||progressBook?.coverOriginal||
     progressBook?.coverAI||progressBook?.coverUrl||null;
   const scannerActive = Boolean(scanContent);
+  const activeBook=progressBookId===currentBookId?progressStudyBook:null;
+  const edition=activeBook?.editionsV36||resumeCandidate?.edition;
+  const explained=edition?.version===EXPLAINED_POLICY_V122;
+  const displayedBook=activeBook||(explained?{editionsV36:edition}:null);
   const resumeWait=geminiResumeDisplayV55(resumeEdition||resumeCandidate?.edition);
   const needsCorrection=requiresRecalibrationV79(resumeEdition||resumeCandidate?.edition);
 
@@ -82,7 +87,7 @@ export function HomeDashboardV16({
             <p>{documentData.chapters?.length || 0} capitoli</p></div>
           <button type="button" onClick={onCreateBook}>{homeAction==='open'?'Apri libro di studio':'Crea Testo di studio'}</button>
         </div>}
-      {generating && <p role="status">
+      {generating && !explained && <p role="status">
         {workPhase==='preparing'
           ? 'Preparazione del documento, non ancora elaborazione IA · '+status
           : 'Elaborazione Gemini in corso · '+status}
@@ -96,14 +101,15 @@ export function HomeDashboardV16({
           <div className="sb-download-book-content">
             <strong>{activeTitle}</strong>
             <small>Pagine totali: {physical.total||'in rilevamento'}</small>
-            {(importing||generating||progressStudyBook)
+            {(importing||generating||displayedBook)
               ? <StudyPhaseProgressV59
-                  book={importing||workPhase==='preparing'?null:progressStudyBook}
+                  book={importing||workPhase==='preparing'?null:displayedBook}
+                  generating={generating} activeStatus={status}
                   acquisition={{done:physical.acquired,total:physical.total}} />
               : <small>Apri il libro per consultare la compressione e la verifica delle singole pagine.</small>}
           </div>
         </div>
-        {!importing && <div className="sb-resume-ia-details">
+        {!importing && !explained && <div className="sb-resume-ia-details">
           <small>{generating
             ? (workPhase==='preparing'?'Sto preparando la struttura del libro.'
               :'Elaborazione Gemini in corso; le pagine originali restano disponibili.')

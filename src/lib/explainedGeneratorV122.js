@@ -15,9 +15,55 @@ const BLOCK_OUTPUT_TOKEN_LIMIT=30000;
 const SPLITTABLE_HTTP=new Set([413,422]);
 const CAP_MIN_CHARS=1200;
 // Error from provider != evidence that more requests at once will help.
-const isProviderCooldown=(status,code)=>status===429||status===503||
+const isProviderCooldown=(status,code)=>status===429||
+ (status===503&&!['AI_NOT_CONFIGURED','AI_MODEL_NOT_ALLOWLISTED'].includes(code))||
  (status===502||status===504)&&/AI_PROVIDER_(?:NETWORK|TIMEOUT|REJECTED)|V122_NETWORK/iu.test(code||'');
 const VERSION=EXPLAINED_POLICY_V122;
+export const EXPLAINED_REQUEST_TIMEOUT_V122=165000;
+
+export function explainedProgressMessageV122(snapshot){
+ const diagnostics=snapshot?.diagnostics;
+ const code=diagnostics?.lastCode;
+ if(snapshot?.status==='quota-paused'&&snapshot.quota?.retryAt){
+   const time=new Date(snapshot.quota.retryAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+   const reason=code==='AI_QUOTA_LIMIT'?'Limite Gemini raggiunto':
+     code?.includes('TIMEOUT')?'Tempo di risposta Gemini scaduto':'Gemini temporaneamente indisponibile';
+   return reason+' · ripresa possibile dalle '+time+' · progressi conservati.';
+ }
+ if(snapshot?.status==='interrupted')return 'Richiesta interrotta · riprendi dalle pagine salvate.';
+ if(code==='V122_REQUEST_TIMEOUT')return 'Il Worker non ha risposto in tempo. Riprova dalle pagine salvate.';
+ if(code==='V122_NETWORK')return 'Connessione al Worker interrotta. Riprova dalle pagine salvate.';
+ if(code==='AI_NOT_CONFIGURED'||code==='AI_MODEL_NOT_ALLOWLISTED')
+   return 'Configurazione Gemini del Worker da verificare ('+code+').';
+ if(code)return 'Elaborazione sospesa ('+code+'). Le pagine già salvate sono disponibili.';
+ if(diagnostics?.qualityReview)return 'Pagine da rivedere: '+diagnostics.qualityReview+
+   '. Riprendi per elaborare solo quelle ancora da verificare.';
+ return '';
+}
+
+async function requestExplainedBlock(pages,signal){
+ const controller=new AbortController();
+ const abort=()=>controller.abort();
+ signal?.addEventListener('abort',abort,{once:true});
+ if(signal?.aborted)abort();
+ const timer=setTimeout(abort,EXPLAINED_REQUEST_TIMEOUT_V122);
+ try{
+   const reply=await fetch(apiEndpoint('/api/explained/v122'),{
+     method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({policy:VERSION,pages,timeoutMs:150000})
+   });
+   const response=await reply.json().catch(()=>null);
+   if(controller.signal.aborted)throw new Error('Richiesta interrotta');
+   return {reply,response};
+ }catch{
+   const code=signal?.aborted?'V122_INTERRUPTED':
+     controller.signal.aborted?'V122_REQUEST_TIMEOUT':'V122_NETWORK';
+   throw Object.assign(new Error(code),{code});
+ }finally{
+   clearTimeout(timer);
+   signal?.removeEventListener('abort',abort);
+ }
+}
 const withSource=(original,result)=>({
  id:original.id,label:original.label,physicalPage:original.physicalPage,
  segments:Array.isArray(result?.segments)?result.segments:[],
@@ -161,9 +207,15 @@ export async function generateExplainedBookV122(book,{
  // LAB124: the LAB51/58 pattern packages as many whole pages as estimated
  // INPUT and OUTPUT capacity allow. A previous overload reduces the next
  // session's budget rather than firing several requests against a busy model.
- const queue=planExplainedBlocksV122(pending,{maxChars:blockCharBudget});
+ const newPages=pending.filter(page=>!rejected.has(page.id));
+ const pagesToReview=pending.filter(page=>rejected.has(page.id));
+ const queue=[
+   ...planExplainedBlocksV122(newPages,{maxChars:blockCharBudget}),
+   ...planExplainedBlocksV122(pagesToReview,{maxChars:blockCharBudget,maxPages:4})
+ ];
  const estimate=preflightExplainedCallsV124(pending,{maxChars:blockCharBudget,
   preplannedBlocks:queue});
+ let qualityRetryQueued=false;
  diagnostics.splits=0;
  diagnostics.plannedRequests=estimate.plannedRequests;
  diagnostics.plannedPagesPerRequest=estimate.details.map(block=>block.pages);
@@ -186,11 +238,7 @@ export async function generateExplainedBookV122(book,{
     pageEnd:block.at(-1).physicalPage,pages:block.length,
     sourceChars:block.reduce((total,p)=>total+p.segments.reduce((n,s)=>n+s.source.length,0),0)});
 
-   const reply=await fetch(apiEndpoint('/api/explained/v122'),{
-    method:'POST',signal,headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({policy:VERSION,pages,timeoutMs:150000})
-   });
-   const response=await reply.json().catch(()=>null);
+   const {reply,response}=await requestExplainedBlock(pages,signal);
    diagnostics.requestsSent++;
    if(!reply.ok){
     const code=response?.code||'HTTP_'+reply.status;
@@ -236,9 +284,11 @@ export async function generateExplainedBookV122(book,{
     if(answer?.id!==source.id)throw Object.assign(new Error('Pagine fuori ordine'),{code:'V122_PAGE_ID_MISMATCH'});
     // Revalidate on device: never trust a flag "ready" returned by the Worker.
     const review=auditExplainedPageV122(source,answer);
+    if(!review.ready&&records.get(source.id)?.review?.ready)continue;
     records.set(source.id,withSource(source,{...answer,review}));
-    if(!review.ready){diagnostics.qualityReview++;rejected.add(source.id);}
-    else rejected.delete(source.id);
+    if(review.ready)rejected.delete(source.id);
+    else rejected.add(source.id);
+    diagnostics.qualityReview=rejected.size;
    }
    diagnostics.lastBlockMs=Date.now()-before;
    // Validated successes preserve the learned budget; no unnecessary tiny
@@ -247,11 +297,22 @@ export async function generateExplainedBookV122(book,{
    diagnostics.activePages=[];
    diagnostics.lastHttpStatus=200;
    diagnostics.lastBlockPages=block.length;
-   await publish();
   }catch(err){
-   lastError=signal?.aborted?'V122_INTERRUPTED':err?.code||'V122_NETWORK_OR_STORAGE';
+   lastError=signal?.aborted?'V122_INTERRUPTED':err?.code||'V122_NETWORK';
    diagnostics.providerErrors++;
    break;
+  }
+  await publish();
+  // Try one rejected page separately if the initial blocks yielded no usable text.
+  // A provider error stops before this point and does not trigger this request.
+  if(!retryReviewed&&!qualityRetryQueued&&index===queue.length-1&&rejected.size&&
+     ![...records.values()].some(page=>page.segments.length&&page.review.ready)){
+    const firstRejected=pending.find(page=>rejected.has(page.id));
+    if(firstRejected){
+      queue.push([firstRejected]);
+      qualityRetryQueued=true;
+      diagnostics.qualityRetryPages=1;
+    }
   }
  }
  diagnostics.lastCode=lastError;
