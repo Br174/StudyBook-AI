@@ -101,18 +101,30 @@ FREE_GB="$(df -Pk . | awk 'NR==2 {printf "%d", $4/1024/1024}')"
 [[ "$FREE_GB" -ge 7 ]] || fail 'Spazio insufficiente, servono almeno 7 GB liberi'
 [[ -d node_modules ]] || fail 'node_modules non presente: preservo package-lock.json, installazione manuale necessaria'
 
-# Preflight read-only: do not sign an Android APK whose backend is unavailable.
+# LAB126 Worker may return old routes briefly during Cloudflare edge propagation.
+# Bounded read-only HEAD retries. No Gemini or deployment requests.
 PHASE='backend-preflight'
-say 'Verifico la route LAB126 senza chiamare Gemini.'
+say 'Verifico il Worker LAB126 con retry di propagazione, senza chiamare Gemini.'
 WORKER_HEADERS="$(mktemp)"
-BACKEND_HTTP="$(curl -sS --head --max-time 18 -D "$WORKER_HEADERS" -o /dev/null -w '%{http_code}' "$WORKER_URL/api/explained/v126" || true)"
-if [[ "$BACKEND_HTTP" != '405' ]] || ! grep -Eiq '^X-StudyBook-Phase-Contract:[[:space:]]*lab126[[:space:]]*$' "$WORKER_HEADERS"; then
-  rm -f "$WORKER_HEADERS"
-  fail "Worker LAB126 non disponibile (HTTP $BACKEND_HTTP). Evito di consegnare una APK senza servizi."
-fi
+BACKEND_STABLE=0
+BACKEND_READY=0
+BACKEND_HTTP=''
+for attempt in 1 2 3 4 5 6 7 8 9; do
+  : > "$WORKER_HEADERS"
+  BACKEND_HTTP="$(curl -sS --head --max-time 18 -D "$WORKER_HEADERS" -o /dev/null -w '%{http_code}' "$WORKER_URL/api/explained/v126" || true)"
+  if [[ "$BACKEND_HTTP" == '405' ]] && grep -Eiq '^X-StudyBook-Phase-Contract:[[:space:]]*lab126[[:space:]]*$' "$WORKER_HEADERS"; then
+    BACKEND_STABLE=$((BACKEND_STABLE+1))
+    if [[ "$BACKEND_STABLE" -ge 2 ]]; then BACKEND_READY=1; break; fi
+  else
+    BACKEND_STABLE=0
+    say "Worker LAB126 in propagazione: HTTP $BACKEND_HTTP, verifica $attempt/9"
+  fi
+  [[ "$attempt" -eq 9 ]] || sleep 4
+done
 rm -f "$WORKER_HEADERS"
+[[ "$BACKEND_READY" == 1 ]] || fail "Worker LAB126 non stabile dopo 9 controlli, ultimo HTTP $BACKEND_HTTP. APK non compilata."
 PHASE='preflight'
-say 'Worker LAB126 trovato: riuso Codespaces e firma originale.'
+say 'Worker LAB126 confermato due volte consecutive, procedo con la firma originale.'
 mkdir -p "$TOOLS" "$OUT"
 TMP="$(mktemp -d)"
 cp capacitor.config.json "$TMP/original-capacitor.json"
