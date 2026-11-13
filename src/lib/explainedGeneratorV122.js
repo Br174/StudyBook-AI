@@ -22,6 +22,13 @@ const VERSION=EXPLAINED_POLICY_V122;
 export const EXPLAINED_REQUEST_TIMEOUT_V122=165000;
 
 export function explainedProgressMessageV122(snapshot){
+ if(snapshot?.version==='lab126-whole-book-comprehension-v1'&&
+   snapshot?.comprehensionV126?.complete!==true&&
+   !snapshot?.quota?.retryAt&&snapshot?.status!=='provider-blocked'){
+  const c=snapshot.comprehensionV126;
+  return 'Comprensione dell’intero libro · '+(c?.verifiedPages||0)+'/'+
+   (c?.totalPages||snapshot.originalPages||0)+' pagine comprese. La riscrittura inizierà soltanto dopo la lettura completa.';
+ }
  const diagnostics=snapshot?.diagnostics;
  const code=diagnostics?.lastCode;
  if(snapshot?.status==='quota-paused'&&snapshot.quota?.retryAt){
