@@ -1,7 +1,7 @@
 // LAB122 deterministic 70/30 mirror layout. Gemini NEVER decides paper breaks.
 // Original pages are anchors; overflow is emitted only as bis, tris, quater...
 import {continuationLabel} from './libroSpecchioV35.js';
-import {originalExplainedPagesV122} from './explainedPolicyV122.js';
+import {originalExplainedPagesV122,isVerifiedExplainedPageV125} from './explainedPolicyV122.js';
 const mm=pt=>Number(pt||0)*25.4/72;
 const clean=x=>String(x||'').replace(/\*\*/gu,'').trim();
 export function approximateWrapV122(text,widthMm,font='body'){
@@ -50,7 +50,7 @@ export function composeExplainedSheetsV122(book,{
  const margin=15,gap=4,top=25,bottom=22;
  for(const original of originals){
   const record=records.get(original.id);
-  const ready=record?.review?.ready===true;
+  const ready=isVerifiedExplainedPageV125(original,record);
   // Only conforming pages are readable/studiable; drafts remain in checkpoints.
   const draft=false;
   if(requireComplete&&!ready)
@@ -126,5 +126,6 @@ export function composeExplainedSheetsV122(book,{
   }
  }
  return {pages:sheets,issues,sourcePages:originals.length,
-  extraPages:sheets.length-originals.length,allReady:originals.every(p=>records.get(p.id)?.review?.ready)};
+  extraPages:sheets.length-originals.length,allReady:originals.every(p=>
+   isVerifiedExplainedPageV125(p,records.get(p.id)))};
 }
