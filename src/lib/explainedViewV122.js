@@ -21,8 +21,8 @@ export function buildExplainedEditionViewV122(book){
     record.review.ready!==true||record.review.sizeCompliant!==true)return false;
   if(readAuditV126.has(record))return readAuditV126.get(record);
   const map=s.comprehensionV126?.pages?.[original.physicalPage-1];
-  const valid=Boolean(s.comprehensionV126?.complete)&&
-   auditExplainedPageV126(original,record,map).ready===true;
+  // A verified page is readable even when another source page still needs repair.
+  const valid=Boolean(map&&auditExplainedPageV126(original,record,map).ready===true);
   readAuditV126.set(record,valid);
   return valid;
  };
