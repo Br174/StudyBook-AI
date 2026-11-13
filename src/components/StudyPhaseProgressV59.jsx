@@ -2,6 +2,7 @@ import {EXPLAINED_POLICY_V122} from '../lib/explainedPolicyV122.js';
 import {EXPLAINED_POLICY_V126} from '../lib/explainedStagesV126.js';
 import {explainedProgressMessageV122} from '../lib/explainedGeneratorV122.js';
 import {studyPhaseProgressV59} from '../lib/studyPhaseProgressV59.js';
+import {recoveryProgressV128} from '../lib/explainedProviderRecoveryV128.js';
 
 // LAB59: exactly ONE progress graphic, selected by current work phase.
 // The six rows are physical-page counts, never Gemini paragraphs or 714 jobs.
@@ -11,21 +12,20 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
    const understanding=editionState?.version===EXPLAINED_POLICY_V126&&
      editionState?.phase==='comprehension'&&
      editionState?.comprehensionV126?.complete!==true;
-   const total=editionState.totalChunkVariants||0;
-   const verified=Number.isInteger(book?.editionReadiness?.readyPages)
-     ?book.editionReadiness.readyPages:(editionState.verifiedChunkVariants||0);
-   const received=understanding
-     ?editionState?.comprehensionV126?.verifiedPages||0
-     :Math.min(total,Math.max(verified,editionState.draftUnitsSaved||0));
+   const metrics=recoveryProgressV128(editionState);
+   const total=metrics.total;
+   const verified=metrics.verified;
+   const received=understanding?metrics.understood:
+     Math.min(total,metrics.verified+metrics.reserved);
    const message=generating?activeStatus:explainedProgressMessageV122(editionState);
    return (
     <div className="sb-v122-page-progress" role="group" aria-label="Libro spiegato · avanzamento"
       style={{padding:'10px 12px',border:'1px solid #dce6f1',borderRadius:12}}>
       <div style={{display:'flex',justifyContent:'space-between',gap:8}}>
         <strong>{understanding?'Prima comprensione dell’intero libro':'Libro spiegato · unica versione'}</strong>
-        <span>{received}/{total} {understanding?'pagine comprese':'pagine ricevute'}</span>
+        <span>{received}/{total} {understanding?'pagine comprese':'pagine completate'}</span>
       </div>
-      <div role="progressbar" aria-label={understanding?'Pagine comprese':'Pagine ricevute'}
+      <div role="progressbar" aria-label={understanding?'Pagine comprese':'Pagine completate'}
         aria-valuenow={received} aria-valuemin={0} aria-valuemax={total||1}
         className="sb-download-progress-track sb-ia-progress-track"
         style={{marginTop:8}}>
@@ -33,9 +33,18 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
       </div>
       <small>{understanding
         ?'Gemini sta leggendo il libro. Le pagine già comprese sono conservate; eventuali pagine mancanti non impediranno di riscrivere le altre.'
-        :verified+'/'+total+' pagine conformi e studiabili sul telefono. Le altre restano in elaborazione.'}</small>
+        :verified+' pagine conformi, '+metrics.reserved+' con riserva, '+
+         metrics.missing+' ancora da spiegare su '+total+'.'}</small>
       {editionState?.version===EXPLAINED_POLICY_V126&&
-       <small style={{display:'block'}}>Comprensione: {editionState?.comprehensionV126?.verifiedPages||0}/{total} pagine; spiegazione verificata: {verified}/{total}. Le pagine da correggere non interrompono il resto.</small>}
+       <small style={{display:'block'}}>Comprensione: {metrics.understood}/{total} pagine.
+         Spiegazione verificata: {verified}/{total}. Pagine incomplete: {metrics.missing}.
+         Nessuna pagina originale in attesa viene certificata come spiegata.</small>}
+      {Number(editionState?.providerRecoveryV128?.overloadStrikes)>0&&
+        <small style={{display:'block'}}>Gemini ha restituito errori 503:
+          {editionState.providerRecoveryV128.overloadStrikes} consecutivi.
+          Al prossimo tentativo il blocco massimo sarà di circa
+          {' '}{editionState.providerRecoveryV128.maxBlockChars} caratteri.
+          I checkpoint sono conservati.</small>}
       {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
         editionState.diagnostics.plannedRequests>0&&
         <small style={{display:'block'}}>Richieste previste: {editionState.diagnostics.plannedRequests}</small>}
