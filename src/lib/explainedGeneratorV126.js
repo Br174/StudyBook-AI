@@ -11,13 +11,14 @@ import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,COMPREHENSION_REVISION_V126,
 import {percentReduced} from './studyPillarV38.js';
 import {MAX_CORRECTIONS_V127,repairAttemptV127,correctionRemainingV127,
  betterExplainedDraftV127,reservedExplainedPageV127,reserveAcceptedV127,
- reservationReportV127} from './explainedRepairV127.js';
+ reservationReportV127,reserveUnreadPageV127} from './explainedRepairV127.js';
 
 const MAX_STAGE_SOURCE=30000;
 const TIMEOUT=EXPLAINED_REQUEST_TIMEOUT_V122;
 const MAX_STAGE_INPUT_TOKENS=30000;
 const MAX_STAGE_OUTPUT_TOKENS=30000;
 const MAX_SPLITS=64; // isolate a failing page without stranding the remaining book
+const MAX_COMPREHENSION_TECH_ATTEMPTS=3; // initial + two targeted rereads
 const isCooldown=(status,code)=>status===429||(status===503&&
  !['AI_NOT_CONFIGURED','AI_MODEL_NOT_ALLOWLISTED'].includes(code))||
  ((status===502||status===504)&&/AI_PROVIDER_(?:NETWORK|TIMEOUT|REJECTED)|V126_NETWORK/iu.test(code||''));
@@ -121,6 +122,13 @@ export async function generateExplainedBookV126(book,{
  const maps=new Map(),saved=new Map(),rejected=new Set();
  // Persistent per-page correction state survives Android restarts.
  const repairs=new Map(Object.entries(previous?.repairStateV127||{}));
+ const readAttempts=new Map(Object.entries(previous?.comprehensionAttemptsV127||{}));
+ const markUnread=(p,code='')=>{
+  const tries=Number(readAttempts.get(p.id)?.tries||0)+1;
+  readAttempts.set(p.id,{tries,lastCode:String(code||'').slice(0,150)});
+  if(tries>=MAX_COMPREHENSION_TECH_ATTEMPTS)
+   saved.set(p.id,reserveUnreadPageV127(p));
+ };
  const markAttempt=(p,code='')=>{
   const updated=repairAttemptV127(repairs.get(p.id),code);
   repairs.set(p.id,updated);
@@ -136,10 +144,10 @@ export async function generateExplainedBookV126(book,{
   if(oldMap?.id===p.id)maps.set(p.id,{...oldMap,
     review:auditComprehensionV126(p,oldMap)});
   const oldPage=previous?.pages?.[i];
-  if(oldPage?.id===p.id&&maps.get(p.id)?.review?.ready===true){
-   if(reserveAcceptedV127(p,oldPage)){
-    saved.set(p.id,pageWithSource(p,oldPage));
-   }else{
+  if(oldPage?.id===p.id&&reserveAcceptedV127(p,oldPage)){
+   saved.set(p.id,pageWithSource(p,oldPage));
+  }else if(oldPage?.id===p.id&&maps.get(p.id)?.review?.ready===true){
+   {
     const check=auditExplainedPageV126(p,oldPage,maps.get(p.id));
     saved.set(p.id,pageWithSource(p,{...oldPage,review:check}));
     if(!check.ready){
@@ -177,6 +185,7 @@ export async function generateExplainedBookV126(book,{
    status:done?(reserved?'complete-with-reservations':'complete'):status,
    completeWithReservations:done&&reserved>0,
    reservedPagesV127:anomalies,repairStateV127:Object.fromEntries(repairs),
+   comprehensionAttemptsV127:Object.fromEntries(readAttempts),
    phase:done?'quality':accepted+reserved>0||comprehensionV126.complete?'draft':'comprehension',
    sourceUnits:unitSource,outputUnits:unitOutput,
    achievedReduction:done&&!reserved?percentReduced(unitSource,unitOutput):null,
@@ -232,6 +241,9 @@ export async function generateExplainedBookV126(book,{
      diagnostics.providerErrors++;
      diagnostics.lastProviderCode=code;
      diagnostics.lastHttpStatus=reply.status;
+     if(['AI_NOT_CONFIGURED','AI_MODEL_NOT_ALLOWLISTED','METHOD_NOT_ALLOWED'].includes(code)){
+      lastError=code;break;
+     }
      if(isCooldown(reply.status,code)){
       const rawSeconds=Number(response?.retryAfterSeconds??
        reply.headers?.get?.('Retry-After')??90);
@@ -251,6 +263,7 @@ export async function generateExplainedBookV126(book,{
      diagnostics.lastCode=code;
      diagnostics.failedPages.push(...group.map(p=>p.physicalPage));
      if(phase==='explain')for(const p of group)markAttempt(p,code);
+     else for(const p of group)markUnread(p,code);
      await publish(phase==='comprehend'?'comprehension':'partial');
      continue;
     }
@@ -269,13 +282,17 @@ export async function generateExplainedBookV126(book,{
      }
      diagnostics.failedPages.push(...group.map(p=>p.physicalPage));
      if(phase==='explain')for(const p of group)markAttempt(p,code);
+     else for(const p of group)markUnread(p,code);
      await publish(phase==='comprehend'?'comprehension':'partial');
      continue;
     }
     for(let i=0;i<group.length;i++){
      const p=group[i],ans=response.pages[i];
      if(phase==='comprehend'){
-      maps.set(p.id,{...ans,review:auditComprehensionV126(p,ans)});
+      const map={...ans,review:auditComprehensionV126(p,ans)};
+      maps.set(p.id,map);
+      if(!map.review.ready)markUnread(p,map.review.issues?.[0]);
+      else readAttempts.delete(p.id);
      }else{
       const review=auditExplainedPageV126(p,ans,maps.get(p.id));
       if(saved.get(p.id)?.review?.ready===true&&!review.ready)continue;
@@ -306,6 +323,7 @@ export async function generateExplainedBookV126(book,{
     diagnostics.failedPages.push(...group.map(p=>p.physicalPage));
     diagnostics.lastCode=code;
     if(phase==='explain')for(const p of group)markAttempt(p,code);
+    else for(const p of group)markUnread(p,code);
     // If the connection itself fails repeatedly, respect a real cooldown
     // instead of issuing hundreds of doomed requests on a 2000-page book.
     consecutiveTransportErrors++;
@@ -320,9 +338,16 @@ export async function generateExplainedBookV126(book,{
   diagnostics.activePages=[];
  };
  // First scan ALL source pages, regardless of paragraph/page segmentation.
- const unread=source.filter(p=>p.segments.length&&
-  maps.get(p.id)?.review?.ready!==true);
+ const missingUnderstanding=()=>source.filter(p=>p.segments.length&&
+  maps.get(p.id)?.review?.ready!==true&&
+  !reserveAcceptedV127(p,saved.get(p.id)));
+ const unread=missingUnderstanding();
  if(unread.length)await runStage('comprehend',unread);
+ for(let cycle=1;cycle<MAX_COMPREHENSION_TECH_ATTEMPTS&&!lastError;cycle++){
+  const missing=missingUnderstanding();
+  if(!missing.length)break;
+  await runStage('comprehend',missing);
+ }
  const checked=contextCheckpoint(source,maps);
  if(lastError){
   diagnostics.stage='comprehension';
