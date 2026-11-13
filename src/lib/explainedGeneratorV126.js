@@ -177,8 +177,13 @@ export async function generateExplainedBookV126(book,{
   for(let index=0;index<queue.length;index++){
    const group=queue[index];
    if(signal?.aborted){lastError='V126_INTERRUPTED';break;}
-   const pages=group.map(p=>sourceEnvelope(p,p.repair,
-      phase==='explain'?maps.get(p.id):null));
+   const pages=group.map(p=>{
+    const envelope=sourceEnvelope(p,p.repair,
+      phase==='explain'?maps.get(p.id):null);
+    const reviewIssues=maps.get(p.id)?.review?.issues;
+    return phase==='comprehend'&&Array.isArray(reviewIssues)&&reviewIssues.length
+     ?{...envelope,comprehensionRepair:reviewIssues}:envelope;
+   });
    onActivity({phase:phase==='comprehend'?'book-comprehension':'explained-page-block',
     pageStart:group[0].physicalPage,pageEnd:group.at(-1).physicalPage,
     pages:group.length,stage:phase});
