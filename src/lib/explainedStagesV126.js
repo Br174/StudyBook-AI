@@ -88,10 +88,23 @@ export function lessonPayloadV126(pages,maps,bookContext=[]){
   const source=sourceBody(pages[i]),originalBodyUnits=studyUnitsV126(source);
   const {targetBodyLetters,...rest}=page;
   const {targetBodyLetters:oldRepairTarget,...repair}=page.repair||{};
+  const incoming=pages[i]?.repair||{};
+  const extraCodes=(incoming.issueCodes||[]).filter(code=>
+   typeof code==='string'&&/^V126_[A-Z_]{1,64}$/u.test(code));
+  const guidance={
+   V126_PAGE_REDUCTION_OUT_OF_RANGE:'La spiegazione precedente era troppo corta oppure troppo lunga rispetto all’obiettivo del 50%. Riparti dalla fonte e dalla mappa, produci frasi complete e dettagliate, senza riempitivi.',
+   V126_TRIVIAL_OR_ONE_LINE_BODY:'La pagina era stata svuotata in una frase. Riscrivi spiegando tutti i concetti presenti nell’originale e nella mappa di comprensione.',
+   V126_MAP_CONTENT_COVERAGE_LOW:'Rimetti nel corpo i concetti della mappa che la bozza precedente aveva omesso.',
+   V126_COMPREHENSION_UNVERIFIED:'Prima di riscrivere deve essere validata la comprensione della pagina.',
+   V126_SHORT_SOURCE_NOT_SIMPLIFIED:'Per una pagina breve mantieni le informazioni e rendi il linguaggio realmente più semplice.'
+  };
   return {...rest,originalBodyUnits,targetBodyUnits:Math.round(originalBodyUnits/2),
    shortSource:originalBodyUnits<=SHORT_SOURCE_UNITS_V126,
    comprehension:maps[i],
-   ...(page.repair?{repair:{...repair,targetBodyUnits:Math.round(originalBodyUnits/2)}}:{})};
+   ...(page.repair?{repair:{...repair,targetBodyUnits:Math.round(originalBodyUnits/2),
+    issueCodes:[...new Set([...(repair.issueCodes||[]),...extraCodes])],
+    correctionNotes:[...(repair.correctionNotes||[]),
+     ...extraCodes.map(code=>guidance[code]).filter(Boolean)]}}:{})};
  }),bookContext:(Array.isArray(bookContext)?bookContext:[]).slice(0,100)};
 }
 
@@ -130,5 +143,7 @@ export function auditExplainedPageV126(source,result,comprehension){
   exactReduction:actualReduction,reduction:Math.round(actualReduction*10)/10,
   originalBodyLetters:studyLetters(original),outputLetters:studyLetters(body),
   auditRevision:EXPLAINED_AUDIT_V126,comprehensionRevision:COMPREHENSION_REVISION_V126,
-  mapTokenCoverage:Math.round(tokenCoverage*1000)/10,semanticCertified:false};
+  mapTokenCoverage:Math.round(tokenCoverage*1000)/10,semanticCertified:false,
+  repair:{...old.repair,issueCodes:[...new Set([...(old.repair?.issueCodes||[]),
+   ...issues.filter(code=>typeof code==='string'&&code.startsWith('V126_'))])]}};
 }
