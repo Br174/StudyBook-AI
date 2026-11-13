@@ -467,6 +467,33 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
   const editionState=studyBook?.editionsV36;
   const explainedV122=Boolean(studyBook?.explainedV122);
+  const explainedReviewRows=explainedV122?(editionState?.pages||[]).flatMap((entry,index)=>{
+    if(!entry?.review)return [];
+    const hard=entry.review.issues||[],soft=entry.review.advisories||[];
+    return hard.length||soft.length?[{
+      page:Number(entry.sourcePage||index+1),
+      hard,soft,reduction:entry.review.reduction
+    }]:[];
+  }):[];
+  const reviewLabel=issue=>{
+    const key=String(issue||'').split(':')[0];
+    const names={
+      V125_PAGE_REDUCTION_OUT_OF_RANGE:'Riduzione fuori fascia: rigenerazione mirata',
+      V125_SHORT_PAGE_NOT_SIMPLIFIED:'Pagina corta da spiegare con parole più semplici',
+      V125_PRIMARY_SECONDARY_RELATION_REVERSED:'Ruolo delle norme primarie e secondarie da correggere',
+      V125_PRIMARY_SANCTION_RELATION_REVERSED:'Rapporto tra norma sanzionatoria e precettiva da correggere',
+      V125_VALIDITY_EFFICACY_REVERSED:'Rapporto tra validità ed efficacia da correggere',
+      V125_AUTHOR_THEORY_REVERSED:'Attribuzione autore/teoria da correggere',
+      V125_PERMISSION_OBLIGATION_CHANGED:'Possibilità e obbligo confusi',
+      V125_PLURAL_LEGAL_REFERENCE_CHANGED:'Riferimento ad articoli di legge da correggere',
+      V125_GLOSSARY_FOUNDATIONAL_NORM_CONTRADICTION:'Definizione di glossario contraddittoria',
+      V122_ESSENTIAL_CONCEPT_REVIEW:'Verificare che tutti i concetti siano espressi chiaramente',
+      V122_SOURCE_MEANING_REVIEW_REQUIRED:'Rilettura consigliata per forte riformulazione',
+      V122_PROTECTED_MEANING_MISSING:'Negazione, limite o condizione da ripristinare',
+      V122_LEGAL_GLOSSARY_REQUIRED:'Spiegazione del termine tecnico da aggiungere'
+    };
+    return names[key]||'Controllo '+key+' da esaminare';
+  };
   // LAB79: LAB78 numeric failure means "complete:false", yet all raw
   // drafts are saved. That is exactly when the correction control is needed.
   const auditedNeedsRepair=Boolean(editionState?.draftComplete&&
@@ -549,6 +576,21 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             }
           </div>
         )}
+        {!isOriginalOnly&&explainedV122&&explainedReviewRows.length>0&&
+          <details className="sb-studio-inline-progress" style={{marginTop:10}}>
+            <summary>Controllo per pagina · {explainedReviewRows.length} pagine con note</summary>
+            <ol style={{maxHeight:260,overflowY:'auto',paddingLeft:22}}>
+              {explainedReviewRows.map(row=><li key={row.page} style={{paddingBottom:8}}>
+                <strong>Pagina {row.page}</strong>
+                {Number.isFinite(row.reduction)&&' · Riduzione '+row.reduction.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'}
+                <ul>
+                  {row.hard.map((code,i)=><li key={'error-'+i}>{reviewLabel(code)}</li>)}
+                  {row.soft.map((code,i)=><li key={'note-'+i}>Nota: {reviewLabel(code)}</li>)}
+                </ul>
+              </li>)}
+            </ol>
+          </details>
+        }
         {!isOriginalOnly && studyBook && !explainedV122 && (
           <div className="sb-edition-switcher-v68" role="group"
             aria-label="Scegli la riduzione del libro">
