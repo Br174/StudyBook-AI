@@ -14,7 +14,8 @@
     "test:fidelity": "node scripts/test-fidelity-engine.mjs",
     "android:sync": "npm run build && npx cap sync android",
     "android:add": "npm run build && npx cap add android",
-    "test:lab126": "node scripts/test-lab126-whole-book-gate.mjs"
+    "test:lab126": "node scripts/test-lab126-whole-book-gate.mjs",
+    "test:lab127": "node scripts/test-lab127-nonblocking-recovery.mjs"
   },
   "dependencies": {
     "@posthog/react": "^1.11.3",
