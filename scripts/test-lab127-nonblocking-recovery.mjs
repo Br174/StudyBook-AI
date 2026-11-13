@@ -24,7 +24,8 @@ const reply=(phase,pages,code=0)=>code?{
   retryAfterSeconds:90})
 }:{
  ok:true,status:200,headers:{get:()=>null},
- json:async()=>({engine:'ai',version:EXPLAINED_POLICY_V126,phase,pages})
+ json:async()=>({engine:'ai',repairContractV127:'lab127-automatic-recovery-v1',
+  version:EXPLAINED_POLICY_V126,phase,pages})
 };
 const calls=[];
 const originalFetch=globalThis.fetch;
