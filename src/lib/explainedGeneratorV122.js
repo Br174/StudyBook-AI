@@ -37,7 +37,7 @@ export function explainedProgressMessageV122(snapshot){
    return 'Configurazione Gemini del Worker da verificare ('+code+').';
  if(code)return 'Elaborazione sospesa ('+code+'). Le pagine già salvate sono disponibili.';
  if(diagnostics?.qualityReview)return 'Pagine da rivedere: '+diagnostics.qualityReview+
-   '. Puoi leggere le bozze disponibili. Riprendi per correggere le pagine segnalate.';
+   '. Puoi studiare le pagine conformi; le altre saranno corrette dai checkpoint.';
  return '';
 }
 
@@ -208,9 +208,8 @@ export async function generateExplainedBookV122(book,{
  // eligible on resume, including automatic recovery after a completed block.
  const pending=originalPages.filter(p=>p.segments.length&&
    records.get(p.id)?.review?.ready!==true);
- // A provider overload is not proof of a size limit. Nevertheless, record a
- // conservative reduction for the NEXT scheduled attempt, not an immediate
- // cascade of new provider calls. Restore this budget from durable checkpoint.
+ // A provider overload is not proof of a size limit: preserve the previously
+ // calibrated block budget and resume only after the provider cooldown.
  const previousDiag=book?.editionsV36?.diagnostics||{};
  const savedCharBudget=Number(previousDiag.nextBlockChars);
  const blockCharBudget=Number.isFinite(savedCharBudget)&&savedCharBudget>=CAP_MIN_CHARS
