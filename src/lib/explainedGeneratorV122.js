@@ -26,8 +26,8 @@ export function explainedProgressMessageV122(snapshot){
    snapshot?.comprehensionV126?.complete!==true&&
    !snapshot?.quota?.retryAt&&snapshot?.status!=='provider-blocked'){
   const c=snapshot.comprehensionV126;
-  return 'Comprensione dell’intero libro · '+(c?.verifiedPages||0)+'/'+
-   (c?.totalPages||snapshot.originalPages||0)+' pagine comprese. La riscrittura inizierà soltanto dopo la lettura completa.';
+  return 'Comprensione del libro · '+(c?.verifiedPages||0)+'/'+
+   (c?.totalPages||snapshot.originalPages||0)+' pagine lette. Le pagine già comprese possono essere riscritte; quelle mancanti si riprendono dal checkpoint.';
  }
  const diagnostics=snapshot?.diagnostics;
  const code=diagnostics?.lastCode;
