@@ -34,3 +34,47 @@
 /* LAB68: only two savings metrics, at the bottom of each study page. */
 .sb-mirror-statistics>span{font-size:11px;line-height:1.4;color:#253954}
 .sb-mirror-statistics>span b{font-weight:800;color:#176caf}
+
+
+/* LAB129 — mobile reading is a scrollable document, not a clipped A4 canvas.
+   PDF printing is intentionally unaffected. */
+.sb-mirror-reader{
+  flex:1 1 auto;min-height:0;
+  overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scroll-padding-top:78px;
+  padding-bottom:calc(55px + env(safe-area-inset-bottom));
+}
+.sb-mirror-page-nav{
+  box-sizing:border-box;display:grid;
+  grid-template-columns:48px minmax(0,1fr) 48px;
+  width:min(100%,670px);gap:10px;
+  background:#f7faff;border:1px solid #dae5ef;
+  border-radius:14px;padding:8px;box-shadow:0 4px 18px #172b4813;
+}
+.sb-mirror-page-nav button{
+  min-width:0;width:48px;min-height:46px;
+  font-size:23px;line-height:1;padding:0;
+}
+.sb-mirror-page-nav select{
+  min-width:0;width:100%;max-width:none;
+  min-height:46px;font-weight:750;
+  background:#fff;text-align:center;
+}
+@media(max-width:720px){
+ .sb-mirror-reader{gap:10px;padding:9px 8px calc(58px + env(safe-area-inset-bottom))}
+ .sb-mirror-page-nav{top:0;grid-template-columns:44px minmax(0,1fr) 44px;gap:7px;padding:7px}
+ .sb-mirror-page-nav button{width:44px;min-height:44px}
+ .sb-mirror-page-nav select{min-height:44px}
+ .sb-mirror-sheet{
+   height:auto;min-height:52dvh;max-height:none;
+   aspect-ratio:auto!important;
+   overflow:visible;padding:20px 16px 23px;
+   flex:0 0 auto;
+ }
+ .sb-mirror-content{
+   overflow:visible;max-height:none;min-height:0;
+   flex:0 0 auto;font-size:clamp(13.5px,3.5vw,16px);line-height:1.68;
+ }
+ .sb-mirror-statistics{margin-top:18px;padding-top:10px;line-height:1.5}
+}
