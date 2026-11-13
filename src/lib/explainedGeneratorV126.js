@@ -239,6 +239,12 @@ export async function generateExplainedBookV126(book,{
     const {reply,response}=await requestPhaseV126(phase,pages,context,signal,correction);
     consecutiveTransportErrors=0;
     diagnostics.requestsSent++;
+    if(reply.ok&&response?.repairContractV127!=='lab127-automatic-recovery-v1'){
+     lastError='V127_WORKER_UPDATE_REQUIRED';
+     diagnostics.lastCode=lastError;
+     diagnostics.lastProviderCode=lastError;
+     break;
+    }
     if(!reply.ok){
      const code=response?.code||'HTTP_'+reply.status;
      diagnostics.providerErrors++;
