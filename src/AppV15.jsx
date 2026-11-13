@@ -2168,8 +2168,9 @@ export default function AppV14() {
   function exportCurrentBook(format, variant = 'study') {
     if (!precisionBook) return;
     if(isExplainedBookV122(studyBook)&&(format==='pdf'||format==='print')){
-      return exportExplainedPdfV122(precisionBook,fileName)
-        .catch(error=>setError(error?.message||'PDF Libro spiegato non disponibile'));
+      return exportExplainedPdfV122(precisionBook,fileName,{
+        provisional:studyBook?.editionsV36?.complete!==true
+      }).catch(error=>setError(error?.message||'PDF Libro spiegato non disponibile'));
     }
     if(reduction!==0 && precisionBook.editionReadiness?.partial){
       setError('Questa è un’anteprima LAB36: esportazione disponibile dopo la verifica completa delle sei edizioni.');
