@@ -6,6 +6,8 @@ import {originalExplainedPagesV122} from '../src/lib/explainedPolicyV122.js';
 import {auditComprehensionV126,lessonPayloadV126,
  EXPLAINED_POLICY_V126} from '../src/lib/explainedStagesV126.js';
 import {reservationReportV127} from '../src/lib/explainedRepairV127.js';
+import {composeExplainedSheetsV122} from '../src/lib/explainedLayoutV122.js';
+import {buildExplainedEditionViewV122} from '../src/lib/explainedViewV122.js';
 import {planStudyAutoResumeV45} from '../src/lib/studyAutoResumeV45.js';
 
 const PHRASE='Il mare è calmo e la barca naviga vicino al porto. ';
@@ -75,6 +77,18 @@ try{
  assert.equal(fortyFour.repairStateV127.p6.corrections,2);
  assert.equal(fortyFour.reservedPagesV127.find(p=>p.page===9).sourceTextFallback,true);
  assert.equal(fortyFour.reservedPagesV127.find(p=>p.page===5).corrections,5);
+ const reservableBook={...makeBook(44),editionsV36:fortyFour};
+ const reader=buildExplainedEditionViewV122(reservableBook);
+ assert.equal(reader.editionReadiness.complete,true);
+ assert.equal(reader.editionReadiness.readyPages,44);
+ assert.equal(reader.editionReadiness.verifiedPages,42);
+ assert.equal(reader.editionReadiness.reservedPages,2);
+ assert.equal(reader.precisionEdition.reductionCompliant,false);
+ const layout=composeExplainedSheetsV122(reservableBook,{requireComplete:true});
+ assert.equal(layout.sourcePages,44);
+ assert.equal(layout.allReady,true);
+ assert.ok(layout.pages.find(p=>p.sourcePage===9&&p.reserved),
+  'An original-text fallback must print with an explicit reserve flag.');
  assert.equal(calls.some(c=>c.phase==='explain'&&c.ids.includes('p9')),false);
  const correctionCalls=calls.filter(c=>c.phase==='explain'&&c.ids.includes('p5'));
  assert.deepEqual(correctionCalls.map(c=>c.cycles[c.ids.indexOf('p5')]),
