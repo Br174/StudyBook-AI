@@ -27,6 +27,8 @@ import { buildPrecisionEdition, normalizeReduction } from './lib/precisionCore.j
 import { generateGeminiEditionsV36 } from './lib/generativeEditionsV36.js';
 import {EXPLAINED_REQUEST_TIMEOUT_V122,explainedProgressMessageV122,generateExplainedBookV122} from './lib/explainedGeneratorV122.js';
 import {EXPLAINED_POLICY_V122} from './lib/explainedPolicyV122.js';
+import {EXPLAINED_POLICY_V126} from './lib/explainedStagesV126.js';
+import {generateExplainedBookV126} from './lib/explainedGeneratorV126.js';
 import {buildExplainedEditionViewV122,isExplainedBookV122} from './lib/explainedViewV122.js';
 import {exportExplainedPdfV122} from './lib/exportExplainedPdfV122.js';
 import ExplainedReaderV122 from './components/ExplainedReaderV122.jsx';
@@ -1197,15 +1199,19 @@ export default function AppV14() {
       setGeminiStalled(false);
       let snapshot;
       try{
-        snapshot=await generateExplainedBookV122(working,{
+        snapshot=await (working?.editionsV36?.version===EXPLAINED_POLICY_V126
+          ?generateExplainedBookV126:generateExplainedBookV122)(working,{
           retryReviewed,signal:controller.signal,onProgress,
           onActivity:info=>{
             geminiLastActivityRef.current=Date.now();
             setGeminiStalled(false);
             const start=info?.pageStart||'?';
             const end=info?.pageEnd||start;
-            setStatus('Gemini · richiesta pagin'+(start===end?'a ':'e ')+
-              start+(start===end?'':'–'+end)+' in corso · risultati salvati pagina per pagina');
+            setStatus(info?.stage==='comprehend'
+              ?'Gemini · comprensione dell’intero libro, pagine '+start+
+                (start===end?'':'–'+end)+' · nessuna compressione ancora avviata'
+              :'Gemini · richiesta pagin'+(start===end?'a ':'e ')+
+                start+(start===end?'':'–'+end)+' in corso · risultati salvati pagina per pagina');
             onActivity(info);
           }
         });
@@ -1262,19 +1268,19 @@ export default function AppV14() {
       // No legacy six-pass provider requests; old saved books keep their runner.
       if(result.canonicalBookMap?.pages?.length){
         const initialSnapshot={
-          version:EXPLAINED_POLICY_V122,
+          version:EXPLAINED_POLICY_V126,
           sourceFingerprint:result.canonicalBookMap.originalFingerprint,
           pages:[],originalPages:result.canonicalBookMap.pageCount,
-          complete:false,status:'partial',phase:'draft',
+          complete:false,status:'comprehension',phase:'comprehension',
           verifiedChunkVariants:0,totalChunkVariants:result.canonicalBookMap.pageCount,
           verifiedChunks:0,draftUnitsSaved:0,checkpointPersistent:true,
-          semanticCertified:false,diagnostics:{requestsSent:0,mode:'one-explanation-per-source-page'}
+          semanticCertified:false,diagnostics:{requestsSent:0,mode:'lab126-understand-entire-book-first'}
         };
         let explained={...result,editionsV36:initialSnapshot,engine:'misto'};
         generatedDraft=explained;
         setStudyBook(explained);setWorkPhase('gemini');
         setProgress({done:0,total:initialSnapshot.totalChunkVariants});
-        setStatus('Libro spiegato · una versione, testo e glossario per pagina');
+        setStatus('Libro spiegato · fase 1: comprensione di tutto il libro');
         navigateTo('studio');
         const firstSaved=await persistBook(explained,sourceData,sourceName,libraryId);
         if(!firstSaved){
@@ -1288,10 +1294,15 @@ export default function AppV14() {
               engine:snapshot.complete?'ai':'misto'};
             generatedDraft=explained;
             setStudyBook(explained);
-            setProgress({done:snapshot.verifiedChunkVariants||0,
+            setProgress({done:snapshot.phase==='comprehension'
+              ?snapshot.comprehensionV126?.verifiedPages||0:snapshot.verifiedChunkVariants||0,
               total:snapshot.totalChunkVariants||1});
-            setStatus('Libro spiegato · '+(snapshot.verifiedChunkVariants||0)+'/'+
-              (snapshot.totalChunkVariants||0)+' pagine verificate · glossario incluso');
+            setStatus(snapshot.phase==='comprehension'
+              ?'Comprensione di tutto il libro · '+
+                (snapshot.comprehensionV126?.verifiedPages||0)+'/'+
+                (snapshot.comprehensionV126?.totalPages||0)+' pagine comprese · nessuna compressione avviata'
+              :'Libro spiegato · '+(snapshot.verifiedChunkVariants||0)+'/'+
+                (snapshot.totalChunkVariants||0)+' pagine verificate · glossario incluso');
             if(meta?.persist!==false){
               await saveLibraryBook({
                 id:savedId,fileName:sourceName,sourceData,
@@ -1535,10 +1546,15 @@ export default function AppV14() {
             latest={...current,editionsV36:update,
               engine:update.complete?'ai':'misto'};
             setStudyBook(latest);
-            setProgress({done:update.verifiedChunkVariants||0,
+            setProgress({done:update.phase==='comprehension'
+              ?update.comprehensionV126?.verifiedPages||0:update.verifiedChunkVariants||0,
               total:update.totalChunkVariants||1});
-            setStatus('Libro spiegato · '+(update.verifiedChunkVariants||0)+'/'+
-              (update.totalChunkVariants||0)+' pagine verificate');
+            setStatus(update.phase==='comprehension'
+              ?'Comprensione dell’intero libro · '+
+                (update.comprehensionV126?.verifiedPages||0)+'/'+
+                (update.comprehensionV126?.totalPages||0)+' pagine'
+              :'Libro spiegato · '+(update.verifiedChunkVariants||0)+'/'+
+                (update.totalChunkVariants||0)+' pagine verificate');
             if(meta?.persist!==false){
               await saveLibraryBook({id:targetId,fileName:targetName,sourceData:targetSource,
                 studyBook:latest,dsaMode:true,profileId:activeProfileId,
