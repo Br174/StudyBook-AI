@@ -303,6 +303,9 @@ export async function generateExplainedBookV126(book,{
       const best=betterExplainedDraftV127(p,saved.get(p.id),candidate);
       saved.set(p.id,best);
       if(review.ready){
+       // Count a successful repair too; only failed fifth calls enter reserve.
+       if(repairs.get(p.id)?.initial===true)
+        repairs.set(p.id,repairAttemptV127(repairs.get(p.id)));
        rejected.delete(p.id);
       }else{
        rejected.add(p.id);
