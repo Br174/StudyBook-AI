@@ -1,4 +1,5 @@
 import {EXPLAINED_POLICY_V122} from '../lib/explainedPolicyV122.js';
+import {EXPLAINED_POLICY_V126} from '../lib/explainedStagesV126.js';
 import {explainedProgressMessageV122} from '../lib/explainedGeneratorV122.js';
 import {studyPhaseProgressV59} from '../lib/studyPhaseProgressV59.js';
 
@@ -6,26 +7,32 @@ import {studyPhaseProgressV59} from '../lib/studyPhaseProgressV59.js';
 // The six rows are physical-page counts, never Gemini paragraphs or 714 jobs.
 export default function StudyPhaseProgressV59({book=null,acquisition=null,generating=false,activeStatus=''}) {
  const editionState=book?.editionsV36;
- if(editionState?.version===EXPLAINED_POLICY_V122){
+ if([EXPLAINED_POLICY_V122,EXPLAINED_POLICY_V126].includes(editionState?.version)){
+   const understanding=editionState?.version===EXPLAINED_POLICY_V126&&
+     editionState?.comprehensionV126?.complete!==true;
    const total=editionState.totalChunkVariants||0;
    const verified=Number.isInteger(book?.editionReadiness?.readyPages)
      ?book.editionReadiness.readyPages:(editionState.verifiedChunkVariants||0);
-   const received=Math.min(total,Math.max(verified,editionState.draftUnitsSaved||0));
+   const received=understanding
+     ?editionState?.comprehensionV126?.verifiedPages||0
+     :Math.min(total,Math.max(verified,editionState.draftUnitsSaved||0));
    const message=generating?activeStatus:explainedProgressMessageV122(editionState);
    return (
     <div className="sb-v122-page-progress" role="group" aria-label="Libro spiegato · avanzamento"
       style={{padding:'10px 12px',border:'1px solid #dce6f1',borderRadius:12}}>
       <div style={{display:'flex',justifyContent:'space-between',gap:8}}>
-        <strong>Libro spiegato · unica versione</strong>
-        <span>{received}/{total} pagine ricevute</span>
+        <strong>{understanding?'Prima comprensione dell’intero libro':'Libro spiegato · unica versione'}</strong>
+        <span>{received}/{total} {understanding?'pagine comprese':'pagine ricevute'}</span>
       </div>
-      <div role="progressbar" aria-label="Pagine ricevute"
+      <div role="progressbar" aria-label={understanding?'Pagine comprese':'Pagine ricevute'}
         aria-valuenow={received} aria-valuemin={0} aria-valuemax={total||1}
         className="sb-download-progress-track sb-ia-progress-track"
         style={{marginTop:8}}>
         <span style={{width:(total?Math.round(100*received/total):0)+'%'}}/>
       </div>
-      <small>{verified}/{total} pagine conformi e studiabili sul telefono. Le altre restano in elaborazione.</small>
+      <small>{understanding
+        ?'Gemini deve terminare la comprensione di tutte le pagine prima di iniziare la riscrittura. Nessuna pagina viene compressa durante questa fase.'
+        :verified+'/'+total+' pagine conformi e studiabili sul telefono. Le altre restano in elaborazione.'}</small>
       {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
         editionState.diagnostics.plannedRequests>0&&
         <small style={{display:'block'}}>Richieste previste: {editionState.diagnostics.plannedRequests}</small>}
