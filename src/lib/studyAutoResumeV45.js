@@ -27,6 +27,9 @@ export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0
       const at=Date.parse(String(quota.retryAt||''));
       return Number.isFinite(at)?{reason:'provider-cooldown',at:Math.max(now,at)}:null;
     }
+    if(snapshot.status==='provider-blocked'&&
+      ['V127_WORKER_UPDATE_REQUIRED','AI_NOT_CONFIGURED',
+       'AI_MODEL_NOT_ALLOWLISTED'].includes(snapshot.diagnostics?.lastCode))return null;
     if(snapshot.status==='provider-blocked'&&stalledAttempts<2)
       return {reason:'lab126-provider-recovery',at:now+45000*Math.pow(2,stalledAttempts)};
     if(snapshot.status==='interrupted'&&stalledAttempts<2)
