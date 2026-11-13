@@ -418,6 +418,15 @@ export function auditCriticalRelationsV125(source, simplified, glossary = []) {
        (must.test(src)&&!may.test(src)&&may.test(dst)&&!must.test(dst))))
     add('V125_PERMISSION_OBLIGATION_CHANGED');
 
+  // An explicitly TWO-SIDED source claim must not become an exclusive
+  // one-sided claim. This is source-grounded, not a universal doctrine.
+  if(/\bsia\b.{0,100}\bsia\b/iu.test(src)&&
+     /\b(?:solo|soltanto|esclusivamente)\b/iu.test(dst)){
+    const relevant=['deontic','fenomenologic','descrittiv','prescrittiv'];
+    const retained=relevant.filter(term=>src.includes(term));
+    if(retained.length>=2&&retained.some(term=>!dst.includes(term)))
+      add('V125_DUAL_ASPECT_REDUCED_TO_SINGLE_ASPECT');
+  }
   // Legal article plural lists must not silently change their members.
   const articleLists=text=>[...text.matchAll(/\bartt\.?\s*\d{1,4}(?:\s*(?:,|e|ed|-)\s*\d{1,4})+/giu)]
     .map(hit=>(hit[0].match(/\d{1,4}/gu)||[]).join(',')).sort();
