@@ -467,6 +467,8 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
   const editionState=studyBook?.editionsV36;
   const explainedV122=Boolean(studyBook?.explainedV122);
+  const readyExplainedV125=Number.isInteger(studyBook?.editionReadiness?.readyPages)
+    ?studyBook.editionReadiness.readyPages:(editionState?.verifiedChunkVariants||0);
   const explainedReviewRows=explainedV122?(editionState?.pages||[]).flatMap((entry,index)=>{
     if(!entry?.review)return [];
     const hard=entry.review.issues||[],soft=entry.review.advisories||[];
@@ -573,7 +575,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             <p><strong>Riduzione effettiva:</strong> {Number.isFinite(reductionMeta?.achievedLettersPercent)
               ?reductionMeta.achievedLettersPercent.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'
               :'In elaborazione'} · obiettivo Gemini 50%.</p>
-            <p><strong>Pagine pronte sul telefono:</strong> {editionState?.verifiedChunkVariants||0}/
+            <p><strong>Pagine pronte sul telefono:</strong> {readyExplainedV125}/
               {editionState?.totalChunkVariants||0}. Le altre restano in elaborazione.</p>
             {!editionState?.complete&&Number.isFinite(editionState?.draftAchievedReduction)&&
               <p><strong>Riduzione provvisoria del testo ricevuto:</strong>{' '}
@@ -693,7 +695,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
           consultabili senza interrompere il lavoro. I progressi reali
           sono nel grafico della fase in corso.</p>}
         <p>ANTEPRIMA PARZIALE · le pagine già verificate restano consultabili; nessuna bozza non verificata è pubblicata.</p>
-        {explainedV122&&<p>Libro spiegato · {editionState?.verifiedChunkVariants||0}/
+        {explainedV122&&<p>Libro spiegato · {readyExplainedV125}/
           {editionState?.totalChunkVariants||0} pagine. Testo e glossario vengono generati insieme.
           Controllo automatico superato non significa certificazione semantica infallibile.</p>}
         <p>Il PDF e il download del libro completo saranno disponibili dopo la verifica finale.</p>
