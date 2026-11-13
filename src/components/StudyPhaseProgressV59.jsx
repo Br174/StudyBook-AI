@@ -9,6 +9,7 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
  const editionState=book?.editionsV36;
  if([EXPLAINED_POLICY_V122,EXPLAINED_POLICY_V126].includes(editionState?.version)){
    const understanding=editionState?.version===EXPLAINED_POLICY_V126&&
+     editionState?.phase==='comprehension'&&
      editionState?.comprehensionV126?.complete!==true;
    const total=editionState.totalChunkVariants||0;
    const verified=Number.isInteger(book?.editionReadiness?.readyPages)
@@ -38,7 +39,12 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
       {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
         editionState.diagnostics.plannedRequests>0&&
         <small style={{display:'block'}}>Richieste previste: {editionState.diagnostics.plannedRequests}</small>}
-      {message && <p role="status">{message}</p>}
+      {Number(editionState?.diagnostics?.correctionCycle)>0&&
+        <p role="status"><strong>Correzione automatica: ciclo
+          {' '}{editionState.diagnostics.correctionCycle}/5</strong>
+          {' · '}Pagine {(editionState?.diagnostics?.activePages||[]).join(', ')}
+        </p>}
+      {message && <p role="status">{message}</p>
       {editionState?.qualityWarnings?.length>0&&
         <p role="status">Una o più pagine richiedono un controllo mirato individuale;
           la media del libro non sostituisce la verifica per pagina.</p>}
