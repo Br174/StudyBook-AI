@@ -169,6 +169,23 @@ try {
  assert.equal(finalPdf.provisionalOriginalPages,0);
  assert.ok(!finalPdf.fileName.includes('BOZZA_INCOMPLETA'));
 
+ // Verify the adaptive planner grows real request groups within a live phase.
+ stage='healthy';calls.length=0;
+ const growing=input(120);
+ const elastic=await generateExplainedBookV126({
+  ...growing,editionsV36:{
+   version:EXPLAINED_POLICY_V126,
+   sourceFingerprint:growing.canonicalBookMap.originalFingerprint,
+   providerRecoveryV128:{maxBlockChars:15000,overloadStrikes:2,
+    successfulBlocks:0},pages:[],comprehensionV126:{pages:[]}
+  }
+ });
+ assert.equal(elastic.complete,true);
+ const readCalls=calls.filter(c=>c.phase==='comprehend');
+ assert.ok(readCalls.length>=3);
+ assert.ok(readCalls[2].pages.length>readCalls[1].pages.length,
+  'After two successful 15k requests, the third group must already be larger.');
+
  stage='quota';
  const limit=await generateExplainedBookV126(input(1));
  assert.equal(limit.status,'quota-paused');
