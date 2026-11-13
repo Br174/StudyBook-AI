@@ -81,7 +81,7 @@ function EmptyTool({ children }) {
   return <div className="study-tool-empty">{children}</div>;
 }
 
-export default function StudyMode({ book, sourceBook = book, originalFile = null, bookTitle, bookId='', initialMode = 'reader', chapterIndex, onChapterChange, dsaMode, accessibility, onClose }) {
+export default function StudyMode({ book, sourceBook = book, originalFile = null, bookTitle, bookId='', initialMode = 'reader', chapterIndex, onChapterChange, dsaMode, accessibility, onClose, onRead }) {
   const [target, setTarget] = useState(null);
   const [answer, setAnswer] = useState(null);
   const [assistantBusy, setAssistantBusy] = useState(false);
@@ -293,6 +293,9 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
       <header className="study-mode-header sb-lab06-compact-header">
         <button type="button" className="sb-lab06-back" onClick={closeReader} aria-label="Torna alla pagina del libro" title="Torna alla pagina del libro"><StudyBackIcon /></button>
         <strong className="sb-lab06-brand">StudyBook <span>AI</span></strong>
+        {!isReader&&typeof onRead==='function'&&
+          <button type="button" className="sb-lab129-reader-link"
+            onClick={onRead}>Leggi</button>}
         <button type="button" className={`sb-lab06-audio${ttsSpeaking ? ' playing' : ''}`} onClick={ttsSpeaking ? stopReading : listenToCurrentContent} aria-label={ttsSpeaking ? 'Ferma la lettura vocale' : isReader ? 'Ascolta il capitolo' : 'Ascolta il contenuto di studio'} title={ttsSpeaking ? 'Ferma audio' : 'Ascolta'}><StudySoundIcon /></button>
       </header>
       {ttsError && <div className="sb-lab05-tts-error" role="alert">{ttsError} <button type="button" onClick={() => { void installItalianSpeechVoice().catch(error => setTtsError(error?.message || 'Controlla la sintesi vocale Android.')); }}>Installa voce italiana</button></div>}
