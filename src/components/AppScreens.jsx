@@ -467,6 +467,8 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
   const editionState=studyBook?.editionsV36;
   const explainedV122=Boolean(studyBook?.explainedV122);
+  const reservedPagesV127=explainedV122?(editionState?.reservedPagesV127||[]):[];
+  const activeCorrectionCycle=Number(editionState?.diagnostics?.correctionCycle||0);
   const readyExplainedV125=Number.isInteger(studyBook?.editionReadiness?.readyPages)
     ?studyBook.editionReadiness.readyPages:(editionState?.verifiedChunkVariants||0);
   const explainedReviewRows=explainedV122?(editionState?.pages||[]).flatMap((entry,index)=>{
@@ -503,7 +505,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       V122_ESSENTIAL_CONCEPT_REVIEW:'Verificare che tutti i concetti siano espressi chiaramente',
       V122_SOURCE_MEANING_REVIEW_REQUIRED:'Rilettura consigliata per forte riformulazione',
       V122_PROTECTED_MEANING_MISSING:'Negazione, limite o condizione da ripristinare',
-      V122_LEGAL_GLOSSARY_REQUIRED:'Spiegazione del termine tecnico da aggiungere'
+      V122_LEGAL_GLOSSARY_REQUIRED:'Spiegazione del termine tecnico da aggiungere',
+      V127_NO_USABLE_EXPLANATION:'Impossibile ottenere una spiegazione valida; riportato il testo originale',
+      V127_REWRITE_NOT_VERIFIED:'Riscrittura non conforme dopo cinque correzioni',
+      V127_COMPREHENSION_UNAVAILABLE:'Lettura preliminare non acquisita; riportato il testo originale'
     };
     return names[key]||'Controllo '+key+' da esaminare';
   };
@@ -582,6 +587,11 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
               :'In elaborazione'} · obiettivo Gemini 50%.</p>
             <p><strong>Pagine pronte sul telefono:</strong> {readyExplainedV125}/
               {editionState?.totalChunkVariants||0}. Le altre restano in elaborazione.</p>
+            {activeCorrectionCycle>0&&!editionState?.complete&&
+              <p role="status"><strong>Correzione automatica:</strong> ciclo {activeCorrectionCycle}/5
+                {' · '}pagine {Array.isArray(editionState?.diagnostics?.activePages)?
+                  editionState.diagnostics.activePages.join(', '):'in verifica'}.
+                Alla quinta correzione fallita la pagina sarà inclusa con riserva.</p>}
             {!editionState?.complete&&Number.isFinite(editionState?.draftAchievedReduction)&&
               <p><strong>Riduzione provvisoria del testo ricevuto:</strong>{' '}
                 {editionState.draftAchievedReduction.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'}
@@ -589,6 +599,23 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             }
           </div>
         )}
+        {!isOriginalOnly&&explainedV122&&reservedPagesV127.length>0&&
+          <section className="sb-studio-inline-progress" role="status"
+            aria-label="Pagine accettate con riserva">
+            <strong>Libro con {reservedPagesV127.length} pagine da rivedere</strong>
+            <p>Il libro può essere scaricato. Le pagine seguenti non hanno superato i controlli;
+              il PDF includerà un rapporto finale con i problemi riscontrati.</p>
+            <ol style={{maxHeight:260,overflowY:'auto',paddingLeft:22}}>
+              {reservedPagesV127.map(item=><li key={item.page}>
+                <strong>Pagina {item.label}</strong> · {item.sourceTextFallback?
+                  'Testo originale, non riscritto':'Spiegazione accettata con riserva'}
+                {' · '}{item.corrections>0?item.corrections+' tentativi di correzione':
+                  'Lettura tecnica non riuscita'}
+                {(item.issues||[]).map((code,i)=><p key={i}
+                  style={{margin:'2px 0 8px',fontSize:12}}>{reviewLabel(code)}</p>)}
+              </li>)}
+            </ol>
+          </section>}
         {!isOriginalOnly&&explainedV122&&explainedReviewRows.length>0&&
           <details className="sb-studio-inline-progress" style={{marginTop:10}}>
             <summary>Controllo per pagina · {explainedReviewRows.length} pagine con note</summary>
@@ -703,7 +730,9 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         {explainedV122&&<p>Libro spiegato · {readyExplainedV125}/
           {editionState?.totalChunkVariants||0} pagine. Testo e glossario vengono generati insieme.
           Controllo automatico superato non significa certificazione semantica infallibile.</p>}
-        <p>Il PDF e il download del libro completo saranno disponibili dopo la verifica finale.</p>
+        <p>Il PDF e il download del libro saranno disponibili dopo le verifiche o dopo
+          il completamento automatico delle pagine con riserva. Nessuna pagina difettosa
+          sarà presentata come certificata.</p>
         {studyBook.editionsV36?.diagnostics?.sourceBlocked>0 && <p>
           {studyBook.editionsV36.diagnostics.sourceBlocked} parti del documento
           richiedono verifica della pagina originale. Le altre parti sicure vengono elaborate.
