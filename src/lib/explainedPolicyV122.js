@@ -84,6 +84,7 @@ export function modelInstructionV122(){
   'Per ciascuna pagina usa protectedOriginals ed essentialConcepts come lista di controllo. Conserva ogni proposizione essenziale e le sue condizioni nella spiegazione, anche quando la frase viene riformulata. Le voci in requiredQualifiers devono rimanere nel testo del corpo, nella stessa proposizione a cui si riferiscono.',
   'Quando la semplificazione rischia di cancellare una condizione, un’eccezione o un limite, conserva la clausola originale. Per arrivare all’obiettivo elimina prima le frasi ripetitive e i passaggi accessori.',
   'Se una pagina contiene repair, rigenera soltanto quella pagina a partire dalla fonte: integra tutti i missingEssentialConcepts e ripristina i missingProtectedItems nel segmento pertinente. I campi repair e i codici di controllo non vanno copiati nel risultato.',
+   'Il campo targetBodyLetters indica un riferimento numerico per il solo obiettivo del 50%: conta esclusivamente le lettere del corpo, non titoli, segni di marcatura o glossario. Mantieni prima la correttezza dei concetti.',
   'Per ogni termine tecnico necessario scrivi nel corpo **(termine tecnico)**, seguito subito da parole semplici che lo chiariscono; aggiungi nel glossario la voce termine/definition. La definizione deve corrispondere al contesto originale.',
   'I titoli originali sono conservati dall’applicazione e non devono essere copiati nei testi dei segmenti. Mantieni separati e ordinati TUTTI gli id di pagina e segmento forniti.',
   'Per ogni pagina restituisci id, segments con id e text, e glossary con term e definition. Nessun contenuto va spostato alla pagina successiva, nessun segmento omesso.',
@@ -99,14 +100,32 @@ export function modelPayloadV122(pages){
   const hint=p.repair;
   const conceptIds=Array.isArray(hint?.conceptIds)?hint.conceptIds.slice(0,60):[];
   const protectedIndexes=Array.isArray(hint?.protectedIndexes)?hint.protectedIndexes.slice(0,40):[];
+  // LAB125: preserve diagnostic codes from BOTH owners on targeted retries.
+  // Private 40–60 thresholds are never disclosed in the request.
   const issueCodes=Array.isArray(hint?.issueCodes)?hint.issueCodes.slice(0,12)
-    .filter(code=>typeof code==='string'&&/^V122_[A-Z_]{1,48}$/u.test(code)):[];
+    .filter(code=>typeof code==='string'&&/^V12[25]_[A-Z_]{1,64}$/u.test(code)):[];
+  const repairGuidance={
+   V125_PAGE_REDUCTION_OUT_OF_RANGE:'Riformula di nuovo per arrivare all’obiettivo del 50% di lettere eliminate, preservando tutte le informazioni essenziali.',
+   V125_PRIMARY_SECONDARY_RELATION_REVERSED:'Verifica quale categoria di norme impone obblighi e quale conferisce poteri: non invertirle.',
+   V125_PRIMARY_SANCTION_RELATION_REVERSED:'Verifica la distinzione tra norma sanzionatoria e norma precettiva, e attribuisci correttamente la tesi.',
+   V125_VALIDITY_EFFICACY_REVERSED:'Ripristina l’esatta relazione tra validità, efficacia, dover essere ed essere presente nell’originale.',
+   V125_AUTHOR_THEORY_REVERSED:'Ripristina l’attribuzione corretta di ogni tesi al rispettivo autore.',
+   V125_PERMISSION_OBLIGATION_CHANGED:'Mantieni il valore di possibilità oppure obbligo: può e deve non sono equivalenti.',
+   V125_PLURAL_LEGAL_REFERENCE_CHANGED:'Ripristina i numeri precisi di TUTTI gli articoli normativi citati nella fonte.',
+   V125_SHORT_PAGE_NOT_SIMPLIFIED:'Riscrivi con parole davvero più semplici, senza limitarti a ricopiare l’originale.',
+   V125_GLOSSARY_FOUNDATIONAL_NORM_CONTRADICTION:'Correggi la definizione del glossario perché non contraddica il significato della fonte.',
+   V125_DUAL_ASPECT_REDUCED_TO_SINGLE_ASPECT:'Mantieni entrambi gli aspetti della tesi, senza trasformarla in una posizione esclusiva.'
+  };
+  const targetBodyLetters=Math.round(studyLetters(original)*0.5);
   return {
    id:p.id,segments:p.segments.map(s=>({id:s.id,source:s.source})),
+   targetBodyLetters,
    protectedOriginals:immutableFragmentsV67(original).map(x=>({kind:x.kind,value:x.value})),
    essentialConcepts:concepts.slice(0,60).map(x=>x.text),
    requiredQualifiers:protectedItems.filter(x=>x.kind==='qualifier').map(x=>x.value),
    ...(hint?{repair:{issueCodes,
+    correctionNotes:issueCodes.map(code=>repairGuidance[code]).filter(Boolean),
+    targetBodyLetters,
     missingEssentialConcepts:concepts.filter(x=>conceptIds.includes(x.id)).map(x=>x.text),
     missingProtectedItems:protectedItems.filter((_,i)=>protectedIndexes.includes(i))
    }}:{})
