@@ -2,12 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "LAB126 — Auto-compila APK+ZIP all'apertura Codespaces (senza Actions)",
+      "label": "LAB127 — Auto-compila APK+ZIP all'apertura Codespaces (senza Actions)",
       "type": "process",
       "command": "bash",
       "args": [
         "-c",
-        "set -euo pipefail\nbranch='trial/studybook-lab126-deep-content-recovery-20261113'\n[[ \"$(git branch --show-current)\" == \"$branch\" ]] || { echo '[LAB126] Apri il ramo LAB126 prima di compilare.' >&2; exit 1; }\ncase \"$(git remote get-url origin)\" in\n  https://github.com/Br174/StudyBook-AI|https://github.com/Br174/StudyBook-AI.git|git@github.com:Br174/StudyBook-AI.git|ssh://git@github.com/Br174/StudyBook-AI.git) ;;\n  *) echo '[LAB126] Repository origin inatteso.' >&2; exit 1 ;;\nesac\nremote_ref=\"refs/remotes/origin/$branch\"\ngit fetch --no-tags origin \"refs/heads/$branch:$remote_ref\"\nscript=\"$(git show \"$remote_ref:scripts/codespaces-lab126-autobuild.sh\")\"\n[[ -n \"$script\" ]]\nexec bash -c \"$script\" scripts/codespaces-lab126-autobuild.sh"
+        "set -euo pipefail\nbranch='trial/studybook-lab127-nonblocking-recovery-20261113'\n[[ \"$(git branch --show-current)\" == \"$branch\" ]] || { echo '[LAB127] Apri il ramo LAB127 prima di compilare.' >&2; exit 1; }\ncase \"$(git remote get-url origin)\" in\n  https://github.com/Br174/StudyBook-AI|https://github.com/Br174/StudyBook-AI.git|git@github.com:Br174/StudyBook-AI.git|ssh://git@github.com/Br174/StudyBook-AI.git) ;;\n  *) echo '[LAB127] Repository origin inatteso.' >&2; exit 1 ;;\nesac\nremote_ref=\"refs/remotes/origin/$branch\"\ngit fetch --no-tags origin \"refs/heads/$branch:$remote_ref\"\nscript=\"$(git show \"$remote_ref:scripts/codespaces-lab127-autobuild.sh\")\"\n[[ -n \"$script\" ]]\nexec bash -c \"$script\" scripts/codespaces-lab127-autobuild.sh"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -31,11 +31,11 @@
       }
     },
     {
-      "label": "LAB126 — Avvia Worker di prova e compila APK+ZIP (manuale)",
+      "label": "LAB127 — Avvia Worker di prova e compila APK+ZIP (manuale)",
       "type": "process",
       "command": "bash",
       "args": [
-        "scripts/codespaces-lab126-backend-and-build.sh",
+        "scripts/codespaces-lab127-backend-and-build.sh",
         "--deploy-test-worker"
       ],
       "options": {
