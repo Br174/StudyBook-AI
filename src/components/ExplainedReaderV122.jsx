@@ -2,25 +2,13 @@ import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {composeExplainedSheetsV122} from '../lib/explainedLayoutV122.js';
 import {explainStudyPageOnDemandV49} from '../lib/pageSimpleV49.js';
 import {readSimplePageV50,saveSimplePageV50} from '../lib/simplePagesStoreV50.js';
+import {glossaryForExplainedPageV129} from '../lib/explainedMobileLayoutV129.js';
 import './ExplainedReaderV122.css';
 
 function RichText({value}){
  return <>{String(value||'').split(/(\\*\\*\\([^)\\n]+\\)\\*\\*)/gu).filter(Boolean).map((part,i)=>
   /^\\*\\*\\([^)\\n]+\\)\\*\\*$/u.test(part)?
    <strong key={i}>{part.slice(2,-2)}</strong>:<React.Fragment key={i}>{part}</React.Fragment>)}</>;
-}
-
-// A single, source-ordered glossary starts at the top of the page on Android.
-// It intentionally does NOT try to align notes to specific paragraph rows.
-export function glossaryForExplainedPageV129(rows=[]){
- const seen=new Set();
- return (Array.isArray(rows)?rows:[]).flatMap(row=>row.notes||[]).filter(note=>{
-  const term=String(note?.term||'').trim();
-  const definition=String(note?.definition||'').trim();
-  const key=term.toLocaleLowerCase('it-IT');
-  if(!term||!definition||seen.has(key))return false;
-  seen.add(key);return true;
- });
 }
 
 export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapterIndex=0,onClose,onStudy}){
