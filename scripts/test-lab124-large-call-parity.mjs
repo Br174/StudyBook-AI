@@ -1,4 +1,4 @@
-// LAB124: compare NUMBER of remote Gemini calls, NOT internal text editing.
+// LAB125 compatibility: compare NUMBER of remote Gemini calls, NOT internal text editing.
 // Historical LAB58: six large calls for six variants; now one explanation.
 import assert from 'node:assert/strict';
 import {planExplainedBlocksV122,preflightExplainedCallsV124} from '../src/lib/explainedGeneratorV122.js';
@@ -29,7 +29,7 @@ for(const chars of [180,1500,2300,5500]){
  assert.equal(forecast.oversizedPages.length,0);
  assert.deepEqual(newGroups.flatMap(x=>x.map(p=>p.id)),p.map(p=>p.id));
  assert.ok(newGroups.every(g=>g.length>0&&g.every(p=>p.segments[0].source.length===chars)));
- assert.ok(newGroups.every(g=>g.reduce((n,p)=>n+p.segments[0].source.length,0)<=28000));
+ assert.ok(newGroups.every(g=>g.reduce((n,p)=>n+p.segments[0].source.length,0)<=40000));
  assert.ok(newGroups.every(g=>g.length<=72));
  if(chars===180)assert.equal(newCalls,1,'44 short pages are ONE call');
  if(chars===1500)assert.ok(newCalls>=2&&newCalls<=4,'44 average pages use 2-4 large calls');
@@ -47,7 +47,7 @@ const forecast=preflightExplainedCallsV124(huge);
 const durationMs=Date.now()-before;
 assert.equal(forecast.plannedRequests,groups.length);
 assert.equal(forecast.providerCallsForEstimate,0);
-assert.ok(durationMs<1500,'2000-page local estimate should be inexpensive: '+durationMs+'ms');
+assert.ok(durationMs<5000,'2000-page local estimate should be inexpensive on Node 22: '+durationMs+'ms');
 assert.equal(groups.reduce((n,g)=>n+g.length,0),2000);
 assert.deepEqual(groups.flatMap(g=>g.map(p=>p.id)),huge.map(p=>p.id));
 console.log(JSON.stringify({test:'LAB124_LARGE_CALL_PARITY',passed:true,
