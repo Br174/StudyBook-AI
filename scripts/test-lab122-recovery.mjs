@@ -52,9 +52,13 @@ try{
   output.pages[0].glossary=[];
   return {...response,json:async()=>output};
  };
- const repaired=await generateExplainedBookV122(book);
- assert.equal(qualityCalls,2);
- assert.equal(repaired.diagnostics.qualityRetryPages,1);
+ const firstReview=await generateExplainedBookV122(book);
+ assert.equal(qualityCalls,1,'No immediate extra Gemini call while reviewing page');
+ assert.equal(firstReview.status,'quality-review');
+ assert.equal(firstReview.verifiedChunkVariants,0);
+ const repaired=await generateExplainedBookV122({...book,editionsV36:firstReview},
+  {retryReviewed:true});
+ assert.equal(qualityCalls,2,'Only the rejected page is retried on resume');
  assert.equal(repaired.diagnostics.qualityReview,0);
  assert.equal(repaired.verifiedChunkVariants,1);
  globalThis.fetch=async()=>{throw new TypeError('Network request failed');};
