@@ -71,7 +71,7 @@ else
     "$OUT/$NAME.apk" "$OUT/$NAME.zip" "$OUT/$NAME.sha256" "$OUT/$NAME-IDENTITY.txt" "$OUT/$NAME-SORGENTI.zip" \
     --repo "$REPO" --target "$SHA" \
     --title 'StudyBook AI TRIAL128 — Correzione automatica non bloccante, pagine con riserva — Codespaces' \
-    --notes 'Prova LAB128: recupero HTTP503 con attesa esponenziale e blocchi adattivi ai successivi tentativi, checkpoint intatti, PDF provvisorio con originali non rielaborati e avvisi espliciti. Firma originale obbligatoria, QA Scudo360 e gate sul nuovo endpoint del Worker. Il controllo HEAD non certifica la qualita della risposta Gemini o il collaudo Android, ancora da eseguire sul telefono. Nessuna GitHub Action usata.' \
+    --notes 'Prova LAB128: recupero HTTP503 con attesa esponenziale e blocchi adattivi ai successivi tentativi, checkpoint intatti, PDF provvisorio con originali non rielaborati e avvisi espliciti. Firma originale obbligatoria, QA Scudo360 e verifica read-only del Worker LAB127 esistente, senza nuovo deploy. Il controllo HEAD non certifica la qualita della risposta Gemini o il collaudo Android, ancora da eseguire sul telefono. Nessuna GitHub Action usata.' \
     --prerelease || fail 'Pubblicazione GitHub non riuscita'
 fi
 URL="https://github.com/$REPO/releases/tag/$TAG"
