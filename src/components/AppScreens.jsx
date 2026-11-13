@@ -538,8 +538,15 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             <p>Unica spiegazione completa in parole semplici, con termini tecnici e glossario laterale.
               Pagine originali conservate e fogli bis, ter dove necessari.</p>
             <p><strong>Riduzione effettiva:</strong> {Number.isFinite(reductionMeta?.achievedLettersPercent)
-              ?reductionMeta.achievedLettersPercent.toLocaleString('it-IT',{maximumFractionDigits:1})+'%'
-              :'In elaborazione'} · obiettivo 50%.</p>
+              ?reductionMeta.achievedLettersPercent.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'
+              :'In elaborazione'} · obiettivo Gemini 50%.</p>
+            <p><strong>Pagine pronte sul telefono:</strong> {editionState?.verifiedChunkVariants||0}/
+              {editionState?.totalChunkVariants||0}. Le altre restano in elaborazione.</p>
+            {!editionState?.complete&&Number.isFinite(editionState?.draftAchievedReduction)&&
+              <p><strong>Riduzione provvisoria del testo ricevuto:</strong>{' '}
+                {editionState.draftAchievedReduction.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'}
+                {' '}· dato informativo, non sostituisce il controllo di ogni pagina.</p>
+            }
           </div>
         )}
         {!isOriginalOnly && studyBook && !explainedV122 && (
@@ -593,7 +600,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
           </div>
         )}
         <div className="sb-book-quick-actions">
-          <button type="button" onClick={onRead}><span className="sb-action-icon"><StudyIcon name="book" size={25} /></span><strong>{explainedV122&&v36Partial?'Leggi anteprima':'Leggi sul telefono'}</strong></button>
+          <button type="button" onClick={onRead}><span className="sb-action-icon"><StudyIcon name="book" size={25} /></span><strong>{explainedV122&&v36Partial?'Leggi pagine pronte':'Leggi sul telefono'}</strong></button>
           <button type="button" disabled={v36Partial&&!isOriginalOnly} onClick={() => isOriginalOnly ? onExport('pdf', 'original') : onExport('pdf', 'study')}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>Leggi in PDF</strong></button>
           {isOriginalOnly
             ? <button type="button" onClick={() => setPrepareOpen(true)}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>
