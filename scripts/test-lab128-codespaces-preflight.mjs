@@ -22,7 +22,7 @@ const autobuild=readFileSync(root+'autobuild.sh','utf8');
 const backend=readFileSync(root+'backend-and-build.sh','utf8');
 const pkg=JSON.parse(readFileSync('package.json','utf8'));
 const tasks=JSON.parse(readFileSync('.vscode/tasks.json','utf8'));
-assert.ok(pkg.scripts['test:lab127']?.includes('test-lab128-503-recovery'));
+assert.ok(pkg.scripts['test:lab128']?.includes('test-lab128-503-recovery'));
 assert.ok(build.includes('X-StudyBook-Recovery-Contract:[[:space:]]*lab127'));
 assert.ok(backend.includes('X-StudyBook-Recovery-Contract:[[:space:]]*lab127'));
 assert.ok(build.includes('X-StudyBook-Phase-Contract:[[:space:]]*lab126'));
