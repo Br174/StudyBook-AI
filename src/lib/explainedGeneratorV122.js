@@ -131,7 +131,7 @@ export function explainedSnapshotV122(book,originalPages,records,status='partial
   percentReduced(totalSource,totalOutput):null;
  // Publication is a conjunction of individual page checks, not an average.
  const numericCompliant=allPagesReady&&pages.every(page=>
-   page?.review?.sizeCompliant===true);
+   (page?.review?.sizeCompliant===true||page?.review?.sourceLetters===0));
  const complete=allPagesReady&&numericCompliant;
  const draftedSource=originalPages.reduce((n,p,i)=>n+(pages[i]?p.originalBodyLetters:0),0);
  const draftAchievedReduction=saved>0&&draftedSource>0?
@@ -193,7 +193,7 @@ export async function generateExplainedBookV122(book,{
  for(const p of originalPages.filter(p=>p.segments.length===0)){
   if(!records.has(p.id))records.set(p.id,withSource(p,{
    segments:[],glossary:[],review:{ready:true,issues:[],sourceLetters:0,
-    outputLetters:0,reduction:0,semanticCertified:false}
+    outputLetters:0,reduction:0,sourceLineCount:0,shortPage:true,sizeCompliant:true,semanticCertified:false}
   }));
  }
  // Initial source snapshot was already persisted by the book owner before
