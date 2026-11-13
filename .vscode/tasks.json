@@ -29,6 +29,29 @@
         "instanceLimit": 1,
         "instancePolicy": "silent"
       }
+    },
+    {
+      "label": "LAB126 — Avvia Worker di prova e compila APK+ZIP (manuale)",
+      "type": "process",
+      "command": "bash",
+      "args": [
+        "scripts/codespaces-lab126-backend-and-build.sh",
+        "--deploy-test-worker"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false,
+        "clear": true
+      },
+      "runOptions": {
+        "instanceLimit": 1,
+        "instancePolicy": "silent"
+      }
     }
   ]
 }
