@@ -1,4 +1,4 @@
-// LAB126: globally gated book comprehension, then the unchanged explained-book pedagogy.
+// LAB127: technically verified reading, then nonblocking explanatory rewriting.
 // No line count, A4 geometry or page display format is a compression metric.
 import {studyLetters} from './studyPillarV38.js';
 import {modelInstructionV122,modelPayloadV122,auditExplainedPageV122} from './explainedPolicyV122.js';
@@ -65,7 +65,7 @@ export function lessonInstructionV126(){
   !line.startsWith('Per pagine originali con cinque righe')&&
   !line.startsWith('Il campo targetBodyLetters'));
  return [
-  'StudyBook AI LAB126 — FASE 2: RISCRITTURA. La FASE 1 ha già letto e mappato TUTTO il libro prima di questa richiesta.',
+  'StudyBook AI LAB127 — FASE 2: RISCRITTURA. La FASE 1 ha letto e mappato le pagine di questa richiesta. Non assumere che ogni altra pagina del libro sia già disponibile.',
   ...kept,
   'La didattica è INVARIATA: spiega con parole semplici, frasi complete, termini tecnici chiariti, definizioni, cause/effetti, eccezioni, esempi indispensabili e glossario coerente. Non produrre estratti telegrafici o elenchi di poche parole.',
   'Per CIASCUNA pagina conserva la stessa pagina e gli stessi ID di segmento. Devi trasferire TUTTI i concetti presenti nella mappa comprehension e verificare nuovamente il testo originale; la mappa NON sostituisce la fonte.',
