@@ -24,9 +24,10 @@ export function providerPauseV128(previous,{httpStatus=503,code='',
  const old=providerRecoveryStateV128(previous);
  const overload=httpStatus===503;
  const quota=httpStatus===429;
- const overloadStrikes=overload?old.overloadStrikes+1:old.overloadStrikes;
- const quotaStrikes=quota?old.quotaStrikes+1:old.quotaStrikes;
- const nextSize=overload&&overloadStrikes>=2?
+ const overloadStrikes=overload?old.overloadStrikes+1:0;
+ const quotaStrikes=quota?old.quotaStrikes+1:0;
+ // Two consecutive 503s trigger ONE downshift; the third does not.
+ const nextSize=overload&&overloadStrikes%2===0?
   Math.max(V128_MIN_BLOCK_CHARS,Math.floor(old.maxBlockChars/2)):
   old.maxBlockChars;
  const strikes=overload?overloadStrikes:quota?quotaStrikes:1;
@@ -45,13 +46,15 @@ export function providerPauseV128(previous,{httpStatus=503,code='',
 }
 export function providerSuccessfulBlockV128(previous){
  const old=providerRecoveryStateV128(previous);
- // Retain smaller block sizes for this book, even if one block succeeds.
- // Return to large blocks only after sustained success to avoid 503 thrashing.
+ // Two consecutive validated HTTP-200 blocks trigger a gentle 50% increase;
+ // never exceed the original 30k limit. A 503 resets the success streak.
  const success=old.successfulBlocks+1;
- const nextSize=success>=8&&old.maxBlockChars<V128_DEFAULT_BLOCK_CHARS?
-   Math.min(V128_DEFAULT_BLOCK_CHARS,old.maxBlockChars*2):old.maxBlockChars;
+ const shouldGrow=success>=2&&old.maxBlockChars<V128_DEFAULT_BLOCK_CHARS;
+ const nextSize=shouldGrow?
+   Math.min(V128_DEFAULT_BLOCK_CHARS,Math.floor(old.maxBlockChars*1.5)):
+   old.maxBlockChars;
  return {...old,overloadStrikes:0,quotaStrikes:0,
-  maxBlockChars:nextSize,successfulBlocks:nextSize>old.maxBlockChars?0:success,
+  maxBlockChars:nextSize,successfulBlocks:success>=2?0:success,
   lastStatus:200,lastCode:''};
 }
 export function recoveryProgressV128(snapshot){
