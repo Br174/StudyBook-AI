@@ -1520,7 +1520,9 @@ export default function AppV14() {
 
   async function resumeGeminiEditions(record=null){
     if(generating){
-      if(geminiStalled)requestActiveGeminiRecovery();
+      // LAB127: the existing single runner can be interrupted explicitly,
+      // even before the stall timer marks it stuck. Resume is serialized.
+      if(isExplainedBookV122(studyBook)||geminiStalled)requestActiveGeminiRecovery();
       else {setStatus('Gemini sta già lavorando · nessuna nuova richiesta avviata');navigateTo('studio');}
       return;
     }
