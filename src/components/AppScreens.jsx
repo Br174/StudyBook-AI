@@ -481,6 +481,11 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
     const key=String(issue||'').split(':')[0];
     const names={
       V125_PAGE_REDUCTION_OUT_OF_RANGE:'Riduzione fuori fascia: rigenerazione mirata',
+       V126_PAGE_REDUCTION_OUT_OF_RANGE:'LAB126: testo fuori dall’obiettivo del 50%',
+       V126_TRIVIAL_OR_ONE_LINE_BODY:'Testo troppo breve: spiegazione incompleta',
+       V126_COMPREHENSION_UNVERIFIED:'Comprensione dei contenuti non verificata',
+       V126_MAP_CONTENT_COVERAGE_LOW:'Concetti della lettura preliminare non presenti nella spiegazione',
+       V126_SHORT_SOURCE_NOT_SIMPLIFIED:'Breve testo da spiegare con parole più semplici',
       V125_SHORT_PAGE_NOT_SIMPLIFIED:'Pagina corta da spiegare con parole più semplici',
       V125_PRIMARY_SECONDARY_RELATION_REVERSED:'Ruolo delle norme primarie e secondarie da correggere',
       V125_PRIMARY_SANCTION_RELATION_REVERSED:'Rapporto tra norma sanzionatoria e precettiva da correggere',
