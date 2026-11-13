@@ -1,12 +1,12 @@
 // LAB125: deterministic integration regressions. Runs with node >=22 and npm install.
 // Gemini requests are mocked; DO NOT confuse this with provider or phone QA.
 import assert from 'node:assert/strict';
-import {auditExplainedPageV122,modelInstructionV122,
+import {auditExplainedPageV122,modelInstructionV122,modelPayloadV122,
   EXPLAINED_PRIVATE_BAND_V122,EXPLAINED_POLICY_V122}
  from '../src/lib/explainedPolicyV122.js';
 import {auditItalianGrammarV125,auditCriticalRelationsV125}
  from '../src/lib/fidelityEngine.js';
-import {planExplainedBlocksV122,preflightExplainedCallsV124,
+import {planExplainedBlocksV122,preflightExplainedCallsV124,estimateSerializedInputTokensV125,
   generateExplainedBookV122} from '../src/lib/explainedGeneratorV122.js';
 import {buildExplainedEditionViewV122}
  from '../src/lib/explainedViewV122.js';
@@ -104,6 +104,10 @@ const sourcePages=originals.map((p,i)=>({
  physicalPage:i+1,id:'p'+(i+1),
  segments:[{id:'p'+(i+1)+'-s0',source:p.text}]
 }));
+const measuredJson=JSON.stringify(modelPayloadV122(sourcePages.slice(0,5))).length;
+const predictedTokens=Math.ceil((measuredJson+modelInstructionV122().length)/2.6);
+test(estimateSerializedInputTokensV125(sourcePages.slice(0,5))===predictedTokens,
+ 'Cached per-page payload estimation must equal exact complete JSON serialization');
 const plan=planExplainedBlocksV122(sourcePages);
 const estimate=preflightExplainedCallsV124(sourcePages);
 test(plan.flat().length===44&&plan.length>=3&&plan.length<=5,
