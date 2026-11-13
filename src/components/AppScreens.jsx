@@ -547,7 +547,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             <p>{isOriginalOnly ? 'Scegli come utilizzare il libro. Il file originale resta invariato; potrai decidere se creare un testo di studio.' : 'Leggi, studia o porta con te il contenuto elaborato di questo libro.'}</p>
           </div>
         </div>
-        {!isOriginalOnly && studyBook && !editionState?.complete && (
+        {!isOriginalOnly && studyBook && (v36Partial || !editionState?.complete) && (
           <div className="sb-studio-inline-progress sb-studio-inline-progress-v68"
             aria-label="Avanzamento del libro in preparazione">
             <StudyPhaseProgressV59 book={studyBook} generating={generating} activeStatus={status}
