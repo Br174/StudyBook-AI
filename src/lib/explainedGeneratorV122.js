@@ -42,6 +42,8 @@ export function explainedProgressMessageV122(snapshot){
  if(snapshot?.status==='interrupted')return 'Richiesta interrotta · riprendi dalle pagine salvate.';
  if(code==='V122_REQUEST_TIMEOUT')return 'Il Worker non ha risposto in tempo. Riprova dalle pagine salvate.';
  if(code==='V122_NETWORK')return 'Connessione al Worker interrotta. Riprova dalle pagine salvate.';
+ if(code==='V127_WORKER_UPDATE_REQUIRED')
+   return 'Aggiornamento Worker LAB127 necessario prima di riprendere. Il libro e tutti i checkpoint sono conservati.';
  if(code==='AI_NOT_CONFIGURED'||code==='AI_MODEL_NOT_ALLOWLISTED')
    return 'Configurazione Gemini del Worker da verificare ('+code+').';
  if(code)return 'Elaborazione sospesa ('+code+'). Le pagine già salvate sono disponibili.';
