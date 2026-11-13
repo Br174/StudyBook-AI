@@ -3,10 +3,11 @@
   "tasks": [
     {
       "label": "LAB124 — Auto-compila APK+ZIP all'apertura Codespaces (senza Actions)",
-      "type": "shell",
+      "type": "process",
       "command": "bash",
       "args": [
-        "scripts/codespaces-lab124-autobuild.sh"
+        "-c",
+        "set -euo pipefail\nbranch='trial/studybook-lab124-endtoend-0of44-device-recovery-20261111'\n[[ \"$(git branch --show-current)\" == \"$branch\" ]] || { echo '[LAB124] Apri il ramo LAB124 prima di compilare.' >&2; exit 1; }\ncase \"$(git remote get-url origin)\" in\n  https://github.com/Br174/StudyBook-AI|https://github.com/Br174/StudyBook-AI.git|git@github.com:Br174/StudyBook-AI.git|ssh://git@github.com/Br174/StudyBook-AI.git) ;;\n  *) echo '[LAB124] Repository origin inatteso.' >&2; exit 1 ;;\nesac\nremote_ref=\"refs/remotes/origin/$branch\"\ngit fetch --no-tags origin \"refs/heads/$branch:$remote_ref\"\nscript=\"$(git show \"$remote_ref:scripts/codespaces-lab124-autobuild.sh\")\"\n[[ -n \"$script\" ]]\nexec bash -c \"$script\" scripts/codespaces-lab124-autobuild.sh"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
