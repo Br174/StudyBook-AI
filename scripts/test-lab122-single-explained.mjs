@@ -30,7 +30,7 @@ const book=sampleBook(),pages=originalExplainedPagesV122(book);
 assert.equal(pages.length,2);assert.equal(pages[0].segments.length,1);
 const valid=makeAnswer(pages[0]),review=auditExplainedPageV122(pages[0],valid);
 assert.equal(review.ready,true,'A faithful half-length simple explanation must be accepted: '+review.issues.join(', '));
-assert.ok(review.reduction>=30&&review.reduction<=60);
+assert.ok(review.reduction>=40&&review.reduction<=60);
 say('one explained page true reduction and anchored glossary');
 const prompt=modelInstructionV122(),payload=modelPayloadV122(pages);
 assert.ok(prompt.includes('50%'),'Only central target is model-visible');
@@ -38,7 +38,7 @@ assert.ok(!/30\s*[%–-]|60\s*[%–-]|30.{0,20}60/iu.test(prompt));
 for(const word of ['minLetters','maxLetters','tolerancePercentagePoints','acceptanceMinimum','acceptanceMaximum']){
  assert.ok(!JSON.stringify(payload).includes('"'+word+'"'));
 }
-assert.deepEqual(EXPLAINED_PRIVATE_BAND_V122,{min:30,max:60});
+assert.deepEqual(EXPLAINED_PRIVATE_BAND_V122,{min:40,max:60});
 say('provider sees only precise 50 percent target, not private margins');
 const badTerm=makeAnswer(pages[0]);badTerm.glossary=[];
 assert.equal(auditExplainedPageV122(pages[0],badTerm).ready,false);
@@ -162,6 +162,7 @@ console.log(JSON.stringify({test:'LAB122',passed:true,checks:13,workerCalls,mode
  assert.equal(repaired.ready,true);
  assert.ok(repaired.reduction>=40&&repaired.reduction<=60);
  assert.ok(modelInstructionV122().includes('missingEssentialConcepts'));
- assert.ok(!JSON.stringify(prepared).includes('30-60'));
+ assert.ok(!JSON.stringify(prepared).includes('40-60'));
+ assert.ok(!JSON.stringify(prepared).includes('minLetters'));
  console.log('PASS: legal exception remains mandatory and the retry gets source-grounded correction hints');
 }
