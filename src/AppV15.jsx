@@ -30,6 +30,7 @@ import {EXPLAINED_POLICY_V122} from './lib/explainedPolicyV122.js';
 import {EXPLAINED_POLICY_V126} from './lib/explainedStagesV126.js';
 import {generateExplainedBookV126} from './lib/explainedGeneratorV126.js';
 import {buildExplainedEditionViewV122,isExplainedBookV122} from './lib/explainedViewV122.js';
+import {studyToolBookForExplainedV129} from './lib/explainedStudyToolsV129.js';
 import {exportExplainedPdfV122} from './lib/exportExplainedPdfV122.js';
 import ExplainedReaderV122 from './components/ExplainedReaderV122.jsx';
 import {rebalanceSavedStudyBookV67,canRebalanceBookV67} from './lib/studyRebalanceV67.js';
@@ -168,6 +169,9 @@ export default function AppV14() {
   const precisionBook = useMemo(() => isExplainedBookV122(studyBook)
     ?buildExplainedEditionViewV122(studyBook):buildPrecisionEdition(studyBook,reduction),
     [studyBook,reduction]);
+  const studyToolBook = useMemo(()=>isExplainedBookV122(studyBook)
+    ?studyToolBookForExplainedV129(precisionBook,studyBook):precisionBook,
+    [precisionBook,studyBook]);
   function changeReduction(nextValue) {
     const next = normalizeReduction(nextValue);
     setReduction(next);
@@ -2454,9 +2458,13 @@ export default function AppV14() {
               onStudy={()=>setStudyEntryMode('study')}
               onClose={()=>setStudyModeOpen(false)}/>
           : <StudyMode
-              book={precisionBook} sourceBook={studyBook} originalFile={sourceFile}
+              book={studyToolBook} sourceBook={studyBook} originalFile={sourceFile}
               bookTitle={fileName} bookId={libraryId} initialMode={studyEntryMode}
-              chapterIndex={selectedChapter} onChapterChange={setSelectedChapter}
+              chapterIndex={Math.min(selectedChapter,
+                Math.max(0,(studyToolBook?.chapters?.length||1)-1))}
+              onChapterChange={setSelectedChapter}
+              onRead={isExplainedBookV122(studyBook)?
+                ()=>setStudyEntryMode('reader'):undefined}
               dsaMode={dsaMode} accessibility={accessibility}
               onClose={()=>setStudyModeOpen(false)}
             />
