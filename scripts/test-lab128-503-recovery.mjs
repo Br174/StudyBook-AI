@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import {generateExplainedBookV126} from '../src/lib/explainedGeneratorV126.js';
 import {EXPLAINED_POLICY_V126} from '../src/lib/explainedStagesV126.js';
 import {buildProvisionalExplainedBookV128} from '../src/lib/explainedProvisionalV128.js';
-import {providerPauseV128,recoveryProgressV128} from '../src/lib/explainedProviderRecoveryV128.js';
+import {providerPauseV128,providerSuccessfulBlockV128,
+  recoveryProgressV128} from '../src/lib/explainedProviderRecoveryV128.js';
 import {exportExplainedPdfV122} from '../src/lib/exportExplainedPdfV122.js';
 import {planStudyAutoResumeV45} from '../src/lib/studyAutoResumeV45.js';
 
@@ -58,6 +59,39 @@ try {
  assert.equal(twice.state.overloadStrikes,2);
  assert.equal(twice.state.maxBlockChars,15000);
  assert.ok(twice.seconds>=180);
+ const thirdFailure=providerPauseV128(twice.state,{
+  httpStatus:503,code:'AI_TEMPORARY_OVERLOAD',now:270000});
+ assert.equal(thirdFailure.state.overloadStrikes,3);
+ assert.equal(thirdFailure.state.maxBlockChars,15000,
+  'Third consecutive 503 does not prematurely shrink a second time.');
+ const fourthFailure=providerPauseV128(thirdFailure.state,{
+  httpStatus:503,code:'AI_TEMPORARY_OVERLOAD',now:630000});
+ assert.equal(fourthFailure.state.maxBlockChars,7500,
+  'Fourth consecutive 503 triggers second downshift.');
+ const firstSuccess=providerSuccessfulBlockV128(twice.state);
+ assert.equal(firstSuccess.maxBlockChars,15000,
+  'One success does not yet enlarge the packet.');
+ assert.equal(firstSuccess.successfulBlocks,1);
+ const secondSuccess=providerSuccessfulBlockV128(firstSuccess);
+ assert.equal(secondSuccess.maxBlockChars,22500,
+  'Two consecutive successes enlarge the packet by 50%.');
+ assert.equal(secondSuccess.successfulBlocks,0);
+ const thirdSuccess=providerSuccessfulBlockV128(secondSuccess);
+ assert.equal(thirdSuccess.maxBlockChars,22500);
+ const fourthSuccess=providerSuccessfulBlockV128(thirdSuccess);
+ assert.equal(fourthSuccess.maxBlockChars,30000,
+  'Four consecutive successes recover the original limit.');
+ assert.equal(providerSuccessfulBlockV128(fourthSuccess).maxBlockChars,30000,
+  'Never exceed the original size.');
+ const failedAfterSuccess=providerPauseV128(firstSuccess,{
+  httpStatus:503,code:'AI_TEMPORARY_OVERLOAD',now:0});
+ assert.equal(failedAfterSuccess.state.successfulBlocks,0,
+  'A failure resets the two-success counter.');
+ assert.equal(failedAfterSuccess.state.overloadStrikes,1);
+ const quotaBetweenFailures=providerPauseV128(twice.state,{
+  httpStatus:429,code:'AI_QUOTA_LIMIT',now:0});
+ assert.equal(quotaBetweenFailures.state.overloadStrikes,0,
+  '429 is not a consecutive HTTP503 failure.');
  const authoritative=providerPauseV128(twice.state,{
   httpStatus:503,retryAfterSeconds:1200,now:0});
  assert.ok(authoritative.seconds>=1200);
@@ -117,8 +151,10 @@ try {
  assert.equal(third.complete,true);
  assert.equal(third.verifiedChunkVariants,44);
  assert.equal(third.reservedPagesV127.length,0);
- assert.equal(third.providerRecoveryV128.maxBlockChars,15000,
-  'Do not immediately upsize blocks after first success.');
+ assert.ok(third.providerRecoveryV128.maxBlockChars>=22500,
+  'Two validated successful blocks should begin restoring packet size.');
+ assert.ok(third.providerRecoveryV128.maxBlockChars<=30000,
+  'Restoration must never exceed the 30k ceiling.');
  assert.ok(!calls.slice(thirdStart).some(c=>
   c.phase==='explain'&&c.pages.some(p=>known.includes(p))));
  assert.ok(calls.slice(thirdStart).some(c=>c.phase==='explain'));
@@ -138,7 +174,7 @@ try {
  assert.equal(limit.status,'quota-paused');
  assert.equal(limit.providerRecoveryV128.maxBlockChars,30000);
  assert.equal(limit.repairStateV127.p1?.corrections||0,0);
- console.log('LAB128 PASS: adaptive 503 30k->15k, safe exponential provider pauses,');
+ console.log('LAB128 PASS: 2x503 30k->15k, 2x200 15k->22.5k->30k, adaptive pauses,');
  console.log('persistent 44-page checkpoints, no re-request of approved pages,');
  console.log('original-only PDF provisional report and final full PDF. Zero Gemini calls.');
 }finally{globalThis.fetch=originalFetch;}
