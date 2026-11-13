@@ -1209,11 +1209,15 @@ export default function AppV14() {
             setGeminiStalled(false);
             const start=info?.pageStart||'?';
             const end=info?.pageEnd||start;
-            setStatus(info?.stage==='comprehend'
-              ?'Gemini · comprensione dell’intero libro, pagine '+start+
-                (start===end?'':'–'+end)+' · nessuna compressione ancora avviata'
-              :'Gemini · richiesta pagin'+(start===end?'a ':'e ')+
-                start+(start===end?'':'–'+end)+' in corso · risultati salvati pagina per pagina');
+            setStatus(info?.phase==='explained-page-repair'
+              ?'Gemini · correzione automatica ciclo '+info.correctionCycle+
+                '/'+info.correctionMax+' · pagin'+(start===end?'a ':'e ')+
+                start+(start===end?'':'–'+end)
+              :info?.stage==='comprehend'
+              ?'Gemini · comprensione del libro, pagine '+start+
+                (start===end?'':'–'+end)
+              :'Gemini · riscrittura pagin'+(start===end?'a ':'e ')+
+                start+(start===end?'':'–'+end)+' · salvataggio progressivo');
             onActivity(info);
           }
         });
@@ -1322,7 +1326,10 @@ export default function AppV14() {
           total:finalSnapshot.totalChunkVariants||1});
         await persistBook(explained,sourceData,sourceName,savedId);
         setStatus(finalSnapshot.complete
-          ?'Libro spiegato completo · pagine e glossario pronti per il PDF'
+          ?finalSnapshot.completeWithReservations?
+            'Libro spiegato esportabile con '+finalSnapshot.reservedPagesV127.length+
+              ' pagine accettate con riserva · rapporto nel PDF':
+            'Libro spiegato completo · pagine e glossario pronti per il PDF'
           :explainedProgressMessageV122(finalSnapshot));
         navigateTo('studio');
         return explained;
@@ -1569,7 +1576,11 @@ export default function AppV14() {
         latest={...current,editionsV36:snapshot,engine:snapshot.complete?'ai':'misto'};
         setStudyBook(latest);
         await persistBook(latest,targetSource,targetName,targetId);
-        setStatus(snapshot.complete?'Libro spiegato completo · PDF pronto':
+        setStatus(snapshot.complete?
+          snapshot.completeWithReservations?
+            'Libro spiegato esportabile con '+snapshot.reservedPagesV127.length+
+              ' pagine accettate con riserva':
+            'Libro spiegato completo · PDF pronto':
           explainedProgressMessageV122(snapshot));
       }catch(error){setError(error?.message||'Ripresa Libro spiegato non riuscita.');
         await persistBook(latest,targetSource,targetName,targetId);
