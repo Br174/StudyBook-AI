@@ -80,7 +80,9 @@ export function composeExplainedSheetsV122(book,{
     continuationLabel(original.label,continuation),
     sourcePage:original.physicalPage,widthMm,heightMm,
     textWidth,glossaryWidth,margin,gap,top,bottom,
-    ready,draft,reserved,rows:[],sourceLetters:original.originalBodyLetters,
+    ready,draft,reserved,
+    provisionalOriginal:record?.review?.provisionalOriginal===true,
+    rows:[],sourceLetters:original.originalBodyLetters,
     reduction:record?.review?.reduction??null};
    sheets.push(sheet);continuation++;
    return sheet;
