@@ -170,12 +170,14 @@ export async function generateExplainedBookV126(book,{
   const comprehensionV126=contextCheckpoint(source,maps);
   const snapshot=explainedSnapshotV122(book,source,[...saved.values()],status,diagnostics);
   const unitSource=totalSourceUnits(source);
-  const unitOutput=source.reduce((n,p)=>n+(
-    saved.get(p.id)?.review?.outputUnits||0),0);
+  const unitOutput=source.reduce((n,p)=>n+studyUnitsV126(
+    (saved.get(p.id)?.segments||[]).map(s=>String(s?.text||''))
+      .join('\n').replace(/\*\*/gu,'')),0);
   const accepted=source.filter(p=>saved.get(p.id)?.review?.ready===true).length;
   const reserved=source.filter(p=>reserveAcceptedV127(p,saved.get(p.id))).length;
   const unread=source.filter(p=>p.segments.length&&
-    maps.get(p.id)?.review?.ready!==true).length;
+    maps.get(p.id)?.review?.ready!==true&&
+    !reserveAcceptedV127(p,saved.get(p.id))).length;
   const done=accepted+reserved===source.length;
   const anomalies=reservationReportV127([...saved.values()]);
   const draftReduction=saved.size&&unitSource?
@@ -406,7 +408,8 @@ export async function generateExplainedBookV126(book,{
   await runStage('explain',retry.map(repairInput),{correction:true});
  }
  diagnostics.qualityReview=rejected.size+source.filter(p=>p.segments.length&&
-  maps.get(p.id)?.review?.ready!==true).length;
+  maps.get(p.id)?.review?.ready!==true&&
+  !reserveAcceptedV127(p,saved.get(p.id))).length;
  diagnostics.lastCode=lastError||diagnostics.lastCode||null;
  if(!lastError&&diagnostics.qualityReview)
   diagnostics.nextReviewAt=new Date(Date.now()+45000).toISOString();
