@@ -12,6 +12,8 @@ import {percentReduced} from './studyPillarV38.js';
 import {MAX_CORRECTIONS_V127,repairAttemptV127,correctionRemainingV127,
  betterExplainedDraftV127,reservedExplainedPageV127,reserveAcceptedV127,
  reservationReportV127,reserveUnreadPageV127} from './explainedRepairV127.js';
+import {V128_DEFAULT_BLOCK_CHARS,providerRecoveryStateV128,providerPauseV128,
+ providerSuccessfulBlockV128} from './explainedProviderRecoveryV128.js';
 
 const MAX_STAGE_SOURCE=30000;
 const TIMEOUT=EXPLAINED_REQUEST_TIMEOUT_V122;
@@ -78,10 +80,12 @@ function globalContextV126(pages,maps){
  for(let i=0;i<80;i++)selected.push(notes[Math.floor(i*(notes.length-1)/79)]);
  return [...new Set(selected)];
 }
-function planStageBlocksV126(pages,{stage,maps,context=[]}){
+function planStageBlocksV126(pages,{stage,maps,context=[],
+ maxSourceChars=V128_DEFAULT_BLOCK_CHARS}){
  const preliminary=planExplainedBlocksV122(pages,{
-  maxChars:MAX_STAGE_SOURCE,maxInputTokens:MAX_STAGE_INPUT_TOKENS,
-  maxOutputTokens:MAX_STAGE_OUTPUT_TOKENS});
+  maxChars:Math.min(MAX_STAGE_SOURCE,maxSourceChars),
+  maxInputTokens:Math.min(MAX_STAGE_INPUT_TOKENS,Math.max(7000,maxSourceChars*2)),
+  maxOutputTokens:Math.min(MAX_STAGE_OUTPUT_TOKENS,Math.max(7000,maxSourceChars*2))});
  if(stage!=='explain')return preliminary;
  const groups=[];
  const instructionSize=lessonInstructionV126().length;
@@ -123,6 +127,7 @@ export async function generateExplainedBookV126(book,{
  // Persistent per-page correction state survives Android restarts.
  const repairs=new Map(Object.entries(previous?.repairStateV127||{}));
  const readAttempts=new Map(Object.entries(previous?.comprehensionAttemptsV127||{}));
+ let providerRecoveryV128=providerRecoveryStateV128(previous?.providerRecoveryV128);
  const markUnread=(p,code='')=>{
   const tries=Number(readAttempts.get(p.id)?.tries||0)+1;
   readAttempts.set(p.id,{tries,lastCode:String(code||'').slice(0,150)});
@@ -161,7 +166,7 @@ export async function generateExplainedBookV126(book,{
  const diagnostics={
   requestsSent:0,providerErrors:0,qualityReview:rejected.size,
   originalPages:source.length,stage:'comprehension',
-  mode:'lab127-understand-then-auto-repair-or-reserve',
+  mode:'lab128-overload-backoff-and-provisional-pdf',
   priorProviderErrors:Number(diagnosticBefore.providerErrors||0),
   failedPages:[],preflightProviderCalls:0
  };
@@ -188,6 +193,7 @@ export async function generateExplainedBookV126(book,{
    completeWithReservations:done&&reserved>0,
    reservedPagesV127:anomalies,repairStateV127:Object.fromEntries(repairs),
    comprehensionAttemptsV127:Object.fromEntries(readAttempts),
+   providerRecoveryV128,
    phase:done?'quality':accepted+reserved>0||comprehensionV126.complete?'draft':'comprehension',
    sourceUnits:unitSource,outputUnits:unitOutput,
    achievedReduction:done&&!reserved?percentReduced(unitSource,unitOutput):null,
@@ -198,7 +204,9 @@ export async function generateExplainedBookV126(book,{
    diagnostics:{...diagnostics,comprehensionPages:comprehensionV126.verifiedPages,
      comprehensionTotal:source.length,qualityReview:unread+rejected.size,
      understandingPending:unread,explanationPending:source.length-accepted-reserved,
-     correctionPending:rejected.size,reservedPages:reserved}};
+     correctionPending:rejected.size,reservedPages:reserved,
+     providerOverloadStrikes:providerRecoveryV128.overloadStrikes,
+     providerMaxBlockChars:providerRecoveryV128.maxBlockChars}};
   await onProgress(s,meta);
   return s;
  };
@@ -210,7 +218,8 @@ export async function generateExplainedBookV126(book,{
  }
  const runStage=async(phase,initial,{correction=false}={})=>{
   const context=phase==='explain'?globalContextV126(source,maps):[];
-  const queue=planStageBlocksV126(initial,{stage:phase,maps,context});
+  const queue=planStageBlocksV126(initial,{stage:phase,maps,context,
+   maxSourceChars:providerRecoveryV128.maxBlockChars});
   diagnostics.stage=phase==='comprehend'?'comprehension':'explanation';
   diagnostics.plannedRequests=queue.length;
   diagnostics.plannedPagesPerRequest=queue.map(b=>b.length);
@@ -256,10 +265,14 @@ export async function generateExplainedBookV126(book,{
       lastError=code;break;
      }
      if(isCooldown(reply.status,code)){
-      const rawSeconds=Number(response?.retryAfterSeconds??
-       reply.headers?.get?.('Retry-After')??90);
-      diagnostics.retryAt=new Date(Date.now()+Math.max(60,
-       Math.min(172800,Number.isFinite(rawSeconds)&&rawSeconds>0?rawSeconds:90))*1000).toISOString();
+      const pause=providerPauseV128(providerRecoveryV128,{
+       httpStatus:reply.status,code,
+       retryAfterSeconds:response?.retryAfterSeconds??
+        reply.headers?.get?.('Retry-After')??null
+      });
+      providerRecoveryV128=pause.state;
+      diagnostics.retryAt=pause.retryAt;
+      diagnostics.retrySeconds=pause.seconds;
       diagnostics.retryReason=code;lastError=code;break;
      }
      // HTTP 413/422/invalid-source: isolate the single failing page.
@@ -321,6 +334,7 @@ export async function generateExplainedBookV126(book,{
       }
      }
     }
+    providerRecoveryV128=providerSuccessfulBlockV128(providerRecoveryV128);
     diagnostics.lastHttpStatus=200;
     diagnostics.lastBlockPages=group.length;
     diagnostics.activePages=[];
@@ -343,7 +357,12 @@ export async function generateExplainedBookV126(book,{
     consecutiveTransportErrors++;
     if(consecutiveTransportErrors>=3){
      lastError=code;
-     diagnostics.retryAt=new Date(Date.now()+120000).toISOString();
+     const pause=providerPauseV128(providerRecoveryV128,{
+      httpStatus:0,code,retryAfterSeconds:null
+     });
+     providerRecoveryV128=pause.state;
+     diagnostics.retryAt=pause.retryAt;
+     diagnostics.retrySeconds=pause.seconds;
      break;
     }
     await publish(phase==='comprehend'?'comprehension':'partial');
