@@ -47,8 +47,21 @@ if ! probe '/api/explained/v126'; then
   WRANGLER_SEND_METRICS=false npx --no-install wrangler deploy --config wrangler.trial124.jsonc ||
     { echo '[LAB127] Deploy fallito; nessuna APK incompatibile.' >&2; exit 1; }
   echo '[LAB127] Verifico che entrambe le API rispondano.'
-  probe '/api/explained/v122' && probe '/api/explained/v126' ||
-    { echo '[LAB127] Controllo API post-deploy fallito. APK bloccata.' >&2; exit 1; }
+  probe '/api/explained/v122' ||
+    { echo '[LAB127] API precedente v122 non disponibile. APK bloccata.' >&2; exit 1; }
+  STABLE=0
+  for attempt in 1 2 3 4 5 6 7 8 9; do
+    if probe '/api/explained/v126'; then
+      STABLE=$((STABLE+1))
+      if [[ "$STABLE" -ge 2 ]]; then break; fi
+    else
+      STABLE=0
+      echo "[LAB127] Propagazione Worker trial in corso: verifica $attempt/9."
+    fi
+    [[ "$attempt" -eq 9 ]] || sleep 4
+  done
+  [[ "$STABLE" -ge 2 ]] ||
+    { echo '[LAB127] Worker LAB127 non stabile su due letture consecutive. APK bloccata.' >&2; exit 1; }
 fi
 echo '[LAB127] Worker compatibile. Compilo APK+ZIP firmati, senza GitHub Actions.'
 bash scripts/codespaces-lab127-autobuild.sh
