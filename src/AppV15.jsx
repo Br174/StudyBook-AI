@@ -2448,9 +2448,10 @@ export default function AppV14() {
       )}
 
       {studyModeOpen && precisionBook && (
-        isExplainedBookV122(studyBook)
+        isExplainedBookV122(studyBook) && studyEntryMode==='reader'
           ? <ExplainedReaderV122 book={precisionBook} bookId={libraryId}
               bookTitle={fileName} chapterIndex={selectedChapter}
+              onStudy={()=>setStudyEntryMode('study')}
               onClose={()=>setStudyModeOpen(false)}/>
           : <StudyMode
               book={precisionBook} sourceBook={studyBook} originalFile={sourceFile}
