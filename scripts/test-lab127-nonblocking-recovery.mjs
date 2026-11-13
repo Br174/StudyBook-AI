@@ -46,8 +46,9 @@ globalThis.fetch=async (_url,options)=>{
  }:{
   id:p.id,glossary:[],
   segments:p.segments.map(s=>({id:s.id,
-   text:mode==='mixed'&&
-    (p.id==='p5'||p.id==='p6'&&Number(p.repair?.correctionCycle||0)<2)
+   text:(mode==='quota'&&!p.repair?.correctionCycle)||
+    (mode==='mixed'&&
+    (p.id==='p5'||p.id==='p6'&&Number(p.repair?.correctionCycle||0)<2))
       ?'Testo non sufficiente.':
     mode==='large'?'Il mare è tranquillo e la barca viaggia vicino al porto.':
       PHRASE.repeat(10)}))
