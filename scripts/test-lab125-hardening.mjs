@@ -31,6 +31,23 @@ checks++;
 test(!/40\s*[%–-]|60\s*[%–-]|40.{0,15}60/iu.test(modelInstructionV122()),
   'Acceptance interval leaked into provider instructions');
 
+const retryInput={id:'p30',sourceLineCount:9,
+ segments:[{id:'p30-s0',source:'La norma può attribuire poteri ai privati, ma non cambia gli obblighi in automatico.'}],
+ repair:{issueCodes:['V125_PERMISSION_OBLIGATION_CHANGED','V125_PAGE_REDUCTION_OUT_OF_RANGE'],
+ conceptIds:[],protectedIndexes:[]}};
+const repairPayload=modelPayloadV122([retryInput]).pages[0];
+test(repairPayload.repair.issueCodes.includes('V125_PERMISSION_OBLIGATION_CHANGED'),
+ 'New LAB125 diagnosis must reach targeted Gemini retries');
+test(repairPayload.repair.correctionNotes.some(note=>note.includes('possibilità oppure obbligo')),
+ 'Retry must describe the failed concept, not only an opaque code');
+test(repairPayload.targetBodyLetters===Math.round(
+ (retryInput.segments[0].source.match(/\\p{L}/gu)||[]).length*0.5),
+ 'Only the 50-percent letter target may be sent to Gemini');
+test(!JSON.stringify(repairPayload).includes('40–60')&&
+ !JSON.stringify(repairPayload).includes('40-60'),
+ 'The private acceptance band must never leak into repair payloads');
+
+
 bad('Hart definisce primarie le norme che regolano la condotta e secondarie quelle che conferiscono poteri.',
     'Hart definisce secondarie le norme che regolano la condotta e primarie quelle che conferiscono poteri.',
     'V125_PRIMARY_SECONDARY_RELATION_REVERSED');
