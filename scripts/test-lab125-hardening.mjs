@@ -228,6 +228,24 @@ for(const [status,code,wait] of [[429,'AI_QUOTA_LIMIT',7200],
    'Retry-After must be preserved: '+status);
  }finally{globalThis.fetch=old;}
 }
+// LAB124 compatibility: a stale globally "complete" record must not unlock
+// a page or a PDF unless each page satisfies LAB125 constraints locally.
+const oldBook={...book,
+ canonicalBookMap:{...book.canonicalBookMap,pageCount:2,pages:originals.slice(0,2)},
+ chapters:[{...book.chapters[0],pageEnd:2,
+  paragraphs:book.chapters[0].paragraphs.slice(0,2)}],
+ editionsV36:{version:EXPLAINED_POLICY_V122,complete:true,
+  pages:[{id:'p1',sourcePage:1,segments:[{id:'p1-s0',text}],
+     glossary:[],review:{ready:true,reduction:0}},
+    {id:'p2',sourcePage:2,segments:[{id:'p2-s0',text:reduced}],
+     glossary:[],review:{ready:true,reduction:52}}]}};
+const oldView=buildExplainedEditionViewV122(oldBook);
+test(oldView.editionReadiness.complete===false&&
+ oldView.editionReadiness.readyPages===1,
+ 'Legacy global-complete flag must be revalidated per page before phone reading');
+assert.throws(()=>composeExplainedSheetsV122(oldBook,{requireComplete:true}),
+ /non verificata/iu);
+checks++;
 console.log(JSON.stringify({suite:'LAB125 hardening',passed:true,checks,
  mockedRequests:requests,providerCalls:providerRequests,
  realGeminiCalls:0,realAndroidTests:0,realPDFSourceInThisSuite:false}));
