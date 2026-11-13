@@ -6,6 +6,19 @@ const TRANSIENT=['AI_TIMEOUT_OR_NETWORK','AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETW
   'AI_NETWORK_REVIEW_REQUIRED','INVALID_EDITION_RESPONSE','AI_FORMAT_REVIEW_REQUIRED'];
 export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0){
   if(!snapshot||snapshot.complete)return null;
+  // LAB125 single-edition: a quality-review is not terminal. The same
+  // foreground scheduler performs bounded, targeted retries; no second timer.
+  // Progress (more accepted pages) resets stalledAttempts in AppV15.
+  if(snapshot.version==='lab122-one-explained-glossary-v1' &&
+     snapshot.status==='quality-review' &&
+     Number(snapshot.diagnostics?.qualityReview||0)>0){
+    if(stalledAttempts>=2)return null;
+    const savedAt=Date.parse(String(snapshot.diagnostics?.nextReviewAt||''));
+    const minimum=now+30000*Math.pow(2,stalledAttempts);
+    return {reason:'explained-targeted-quality-retry',
+      at:Number.isFinite(savedAt)?Math.max(minimum,savedAt):minimum};
+  }
+
   // LAB66: old books stuck after finishing ALL drafts migrate locally with
   // zero provider traffic. This runs even if Gemini has a provider cooldown.
   // LAB79: a LAB78 audit that already checked 44x6 pages is terminal
