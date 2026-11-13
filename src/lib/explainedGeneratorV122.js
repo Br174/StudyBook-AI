@@ -8,7 +8,7 @@ import {percentReduced} from './studyPillarV38.js';
 // LAB124: restore the LAB51/58 TRANSPORT concept: a few large natural
 // page-boundary requests, bounded by estimated input/output capacity.
 // No legacy six-edition text generation or 680-character request splitting.
-const BLOCK_SOURCE_LIMIT=28000; // Worker hard cap is 30000 source chars.
+const BLOCK_SOURCE_LIMIT=40000; // Candidate: Worker hard cap 42000; validate on live Gemini before promotion.
 const BLOCK_PAGE_LIMIT=72;
 const BLOCK_INPUT_TOKEN_LIMIT=35000;
 const BLOCK_OUTPUT_TOKEN_LIMIT=30000;
@@ -78,7 +78,7 @@ export function planExplainedBlocksV122(pages,{
  // Same principle as LAB51 natural-boundary planner: estimate BOTH input
  // and output, fill the largest safe request, cut only at whole-page borders.
  // Page count is not an arbitrary 4-page limit.
- const groups=[],charCap=Math.max(512,Math.min(30000,Math.floor(maxChars))),
+ const groups=[],charCap=Math.max(512,Math.min(42000,Math.floor(maxChars))),
   pageCap=Math.max(1,Math.min(72,Math.floor(maxPages))),
   inputCap=Math.max(2000,Math.floor(maxInputTokens)),
   outputCap=Math.max(4000,Math.floor(maxOutputTokens));
@@ -115,7 +115,7 @@ export function preflightExplainedCallsV124(pages,options={}){
     estimatedOutputTokens:Math.ceil(chars*0.58/1.4)+count*420+segments*115+1800};
  });
  return {plannedRequests:blocks.length,totalPages:pages.length,
-  details,oversizedPages:details.filter(d=>d.sourceChars>30000||d.pages>72||
+  details,oversizedPages:details.filter(d=>d.sourceChars>BLOCK_SOURCE_LIMIT||d.pages>72||
     d.estimatedOutputTokens>30000).map(d=>d.fromPage),
   estimatedLocally:true,providerCallsForEstimate:0};
 }
@@ -129,16 +129,20 @@ export function explainedSnapshotV122(book,originalPages,records,status='partial
  const totalOutput=pages.reduce((n,p)=>n+Number(p?.review?.outputLetters||0),0);
  const achievedReduction=allPagesReady&&totalSource>0?
   percentReduced(totalSource,totalOutput):null;
- const numericCompliant=achievedReduction!==null&&
-  achievedReduction>=EXPLAINED_PRIVATE_BAND_V122.min&&
-  achievedReduction<=EXPLAINED_PRIVATE_BAND_V122.max;
+ // Publication is a conjunction of individual page checks, not an average.
+ const numericCompliant=allPagesReady&&pages.every(page=>
+   page?.review?.sizeCompliant===true);
  const complete=allPagesReady&&numericCompliant;
+ const draftedSource=originalPages.reduce((n,p,i)=>n+(pages[i]?p.originalBodyLetters:0),0);
+ const draftAchievedReduction=saved>0&&draftedSource>0?
+   percentReduced(draftedSource,totalOutput):null;
  const qualityWarnings=[];
  if(allPagesReady&&!numericCompliant)qualityWarnings.push('V122_BOOK_REDUCTION_OUTSIDE_ACCEPTANCE');
  return {version:VERSION,sourceFingerprint:book.canonicalBookMap.originalFingerprint,
   originalPages:all,pages,complete,
   status:complete?'complete':qualityWarnings.length?'quality-review':status,
-  achievedReduction,sourceLetters:totalSource,outputLetters:totalOutput,
+  achievedReduction,draftAchievedReduction,
+  sourceLetters:totalSource,outputLetters:totalOutput,
   numericCompliant,qualityWarnings,
   phase:complete?'quality':'draft',verifiedChunkVariants:ready,
   totalChunkVariants:all,verifiedChunks:ready,blockedCells:all-ready,
@@ -163,19 +167,10 @@ export async function generateExplainedBookV122(book,{
   records.set(p.id,record);
   if(!review.ready)rejected.add(p.id);
  });
- let pending=originalPages.filter(p=>p.segments.length&&
-  (!records.has(p.id)||(!records.get(p.id)?.review?.ready&&retryReviewed)));
- // In a requested targeted retry, a globally nonconforming but fully
- // source-faithful book can improve only the three most distant pages.
- if(retryReviewed&&pending.length===0&&records.size===originalPages.length){
-  const previous=explainedSnapshotV122(book,originalPages,[...records.values()]);
-  if(previous.qualityWarnings.includes('V122_BOOK_REDUCTION_OUTSIDE_ACCEPTANCE')){
-   pending=originalPages.filter(p=>p.segments.length).sort((a,b)=>{
-    const d=x=>Math.abs(50-Number(records.get(x.id)?.review?.reduction||0));
-    return d(b)-d(a);
-   }).slice(0,3).sort((a,b)=>a.physicalPage-b.physicalPage);
-  }
- }
+ // A retry never regenerates accepted pages. Nonconforming pages are always
+ // eligible on resume, including automatic recovery after a completed block.
+ const pending=originalPages.filter(p=>p.segments.length&&
+   records.get(p.id)?.review?.ready!==true);
  // A provider overload is not proof of a size limit. Nevertheless, record a
  // conservative reduction for the NEXT scheduled attempt, not an immediate
  // cascade of new provider calls. Restore this budget from durable checkpoint.
@@ -210,7 +205,6 @@ export async function generateExplainedBookV122(book,{
  const queue=planExplainedBlocksV122(pending,{maxChars:blockCharBudget});
  const estimate=preflightExplainedCallsV124(pending,{maxChars:blockCharBudget,
   preplannedBlocks:queue});
- let qualityRetryQueued=false;
  diagnostics.splits=0;
  diagnostics.plannedRequests=estimate.plannedRequests;
  diagnostics.plannedPagesPerRequest=estimate.details.map(block=>block.pages);
@@ -226,6 +220,7 @@ export async function generateExplainedBookV122(book,{
   const pages=block.map(p=>{
    const review=records.get(p.id)?.review;
    return {id:p.id,segments:p.segments,label:p.label,physicalPage:p.physicalPage,
+    sourceLineCount:p.sourceLineCount,
     ...(review?.ready===false&&review.repair?{repair:review.repair}:{})};
   });
   const before=Date.now();
@@ -301,20 +296,15 @@ export async function generateExplainedBookV122(book,{
    break;
   }
   await publish();
-  // Try one rejected page separately if the initial blocks yielded no usable text.
-  // A provider error stops before this point and does not trigger this request.
-  if(!retryReviewed&&!qualityRetryQueued&&index===queue.length-1&&rejected.size&&
-     ![...records.values()].some(page=>page.segments.length&&page.review.ready)){
-    const firstRejected=pending.find(page=>rejected.has(page.id));
-    if(firstRejected){
-      queue.push([firstRejected]);
-      qualityRetryQueued=true;
-      diagnostics.qualityRetryPages=1;
-    }
-  }
+  // Save quality results and let the existing foreground recovery scheduler
+  // plan one bounded targeted retry; no surprise provider burst here.
  }
  diagnostics.lastCode=lastError;
  diagnostics.activePages=[];
+ // Only the existing LAB45 resume scheduler may act on this timestamp.
+ // No duplicate timer or immediate quota-heavy quality-retry cascade.
+ if(!lastError&&rejected.size)diagnostics.nextReviewAt=
+   new Date(Date.now()+45000).toISOString();
  const final=await publish(lastError?(lastError==='V122_INTERRUPTED'?'interrupted':
    diagnostics.retryAt?'quota-paused':'provider-blocked'):
    rejected.size?'quality-review':'partial');
