@@ -244,13 +244,13 @@ export async function generateExplainedBookV122(book,{
       // The next foreground attempt starts only AFTER the bounded cooldown.
       const rawSeconds=Number(response?.retryAfterSeconds??reply.headers?.get?.('Retry-After')??90);
       const seconds=Number.isFinite(rawSeconds)&&rawSeconds>0?rawSeconds:90;
-      diagnostics.retryAt=new Date(Date.now()+Math.max(60,Math.min(3600,seconds))*1000).toISOString();
+      // A provider-supplied Retry-After can be much longer than one hour
+      // (e.g. a daily free-tier quota). Never shorten the provider's pause.
+      diagnostics.retryAt=new Date(Date.now()+Math.max(60,Math.min(172800,seconds))*1000).toISOString();
       diagnostics.retryReason=code;
-      const thisChars=block.reduce((n,p)=>n+p.segments.reduce((m,seg)=>m+seg.source.length,0),0);
-      const largestPage=Math.max(0,...block.map(p=>p.segments.reduce((m,seg)=>m+seg.source.length,0)));
-      const smaller=Math.floor(Math.min(blockCharBudget,thisChars)*0.65);
-      diagnostics.nextBlockChars=Math.max(CAP_MIN_CHARS,
-        Math.min(BLOCK_SOURCE_LIMIT,Math.max(largestPage,smaller)));
+      // HTTP 429/503 are NOT proof that the payload was oversized.
+      // Keep the calibrated block budget; only a real 413/422 may split.
+      diagnostics.nextBlockChars=blockCharBudget;
       lastError=code;break;
     }
     if(SPLITTABLE_HTTP.has(reply.status)&&block.length>1&&diagnostics.splits<12){
