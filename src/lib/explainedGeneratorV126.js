@@ -334,7 +334,18 @@ export async function generateExplainedBookV126(book,{
       }
      }
     }
+    const blockLimitBefore=providerRecoveryV128.maxBlockChars;
     providerRecoveryV128=providerSuccessfulBlockV128(providerRecoveryV128);
+    if(providerRecoveryV128.maxBlockChars!==blockLimitBefore&&index+1<queue.length){
+     // Replan only NOT-YET-SENT pages, so two successful blocks actually
+     // increase packet sizes immediately rather than on the next restart.
+     const remaining=queue.slice(index+1).flat();
+     const replanned=planStageBlocksV126(remaining,{
+      stage:phase,maps,context,maxSourceChars:providerRecoveryV128.maxBlockChars
+     });
+     queue.splice(index+1,queue.length-index-1,...replanned);
+     diagnostics.plannedRequests=queue.length;
+    }
     diagnostics.lastHttpStatus=200;
     diagnostics.lastBlockPages=group.length;
     diagnostics.activePages=[];
