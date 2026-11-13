@@ -561,11 +561,11 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             {v36Partial&&resumeWait.label&&
               <small className="sb-gemini-wait-note" role="status">{resumeWait.label}</small>}
             {v36Partial&&!auditedNeedsRepair&&<button type="button" className="sb-resume-manual"
-              onClick={onResumeGemini} disabled={explainedV122&&generating&&!geminiStalled}>
+              onClick={onResumeGemini}>
               {geminiStalled?'↻ Recupera richiesta bloccata':
-                generating?(explainedV122?'Richiesta Gemini in corso':'↻ Verifica richiesta Gemini'):
+                generating?(explainedV122?'↻ Interrompi e riprendi Gemini dal checkpoint':'↻ Verifica richiesta Gemini'):
                 resumeWait.label?resumeWait.button:
-                explainedV122?'↻ Riprendi Libro spiegato dai checkpoint':
+                explainedV122?'↻ Correggi e riprova con Gemini':
                 '↻ Riprendi elaborazione dal checkpoint'}
             </button>}
           </div>
