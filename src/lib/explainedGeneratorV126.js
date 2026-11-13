@@ -1,4 +1,4 @@
-// LAB126 native orchestration: comprehension of ALL original pages, then explanation.
+// LAB127 orchestration: whole-book reading attempt, then nonblocking explanation and reserve.
 // Reuses the LAB122 page planner and the existing Android single foreground scheduler.
 // Both stages are checkpointed in editionsV36; no background timers or duplicate writers.
 import {apiEndpoint} from './apiEndpoint.js';
@@ -161,7 +161,7 @@ export async function generateExplainedBookV126(book,{
  const diagnostics={
   requestsSent:0,providerErrors:0,qualityReview:rejected.size,
   originalPages:source.length,stage:'comprehension',
-  mode:'lab126-understand-entire-book-first',
+  mode:'lab127-understand-then-auto-repair-or-reserve',
   priorProviderErrors:Number(diagnosticBefore.providerErrors||0),
   failedPages:[],preflightProviderCalls:0
  };
