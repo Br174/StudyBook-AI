@@ -474,3 +474,57 @@
 .sb-simple-library-page{border:1px solid #d1dfea;border-radius:12px;background:#fff;padding:14px}
 .sb-simple-library-page summary{font-weight:700;cursor:pointer}
 .sb-simple-library-page article{margin:12px 0;font-size:16px;line-height:1.6;overflow-wrap:anywhere}
+
+
+/* LAB129 — the restored phone study tools are always reachable and scrollable.
+   No changes to PDF, Gemini or the book's stored edition. */
+.study-mode .sb-lab129-reader-link{
+  flex:0 0 auto;min-height:38px;
+  border:1px solid #bdd6ee;border-radius:10px;
+  padding:7px 10px;background:#e9f4ff;
+  color:#205987;font-size:13px;font-weight:800;
+}
+.study-mode .study-tool-stage{
+  min-height:0;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(100px + env(safe-area-inset-bottom));
+}
+@media(max-width:640px){
+ .study-mode .sb-lab06-compact-header{
+  gap:7px;min-height:60px;
+  padding:8px 10px;
+ }
+ .study-mode .sb-lab06-brand{
+  flex:1 1 auto;min-width:0;
+  font-size:clamp(14px,4vw,19px);
+  letter-spacing:-.02em;white-space:nowrap;
+ }
+ .study-mode .sb-lab129-reader-link{min-height:40px;padding:7px 9px;font-size:12px}
+ .study-mode .sb-lab06-chapter-nav{
+  display:grid;grid-template-columns:44px minmax(0,1fr) 44px;
+  gap:7px;padding:9px 10px;
+ }
+ .study-mode .sb-lab06-chapter-nav>button{
+  width:44px;min-height:44px;
+  font-size:20px;border-radius:11px;
+ }
+ .study-mode .sb-lab05-study-tabs{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:5px;overflow:visible;padding:7px 9px 9px;
+ }
+ .study-mode .sb-lab05-study-tabs button{
+  display:flex;flex-direction:column;align-items:center;
+  gap:3px;justify-content:center;
+  min-width:0;min-height:60px;
+  padding:6px 2px;white-space:normal;
+  border-radius:12px;font-size:11px;
+  text-align:center;line-height:1.18;
+ }
+ .study-mode .sb-lab05-study-tabs button span{
+  font-size:11px;line-height:1.2;
+  letter-spacing:normal;
+ }
+ .study-mode .study-tool-stage{padding:12px 10px calc(80px + env(safe-area-inset-bottom))}
+ .study-mode .study-flashcard{min-height:240px;padding:25px 15px}
+ .study-mode .study-quiz-card,.study-mode .study-oral-card{padding:18px 15px}
+}
