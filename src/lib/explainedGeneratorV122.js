@@ -22,6 +22,9 @@ const VERSION=EXPLAINED_POLICY_V122;
 export const EXPLAINED_REQUEST_TIMEOUT_V122=165000;
 
 export function explainedProgressMessageV122(snapshot){
+ if(snapshot?.completeWithReservations===true)return
+  'Libro spiegato esportabile con '+(snapshot.reservedPagesV127||[]).length+
+  ' pagine accettate con riserva. Il PDF include il rapporto delle anomalie.';
  if(snapshot?.version==='lab126-whole-book-comprehension-v1'&&
    snapshot?.comprehensionV126?.complete!==true&&
    !snapshot?.quota?.retryAt&&snapshot?.status!=='provider-blocked'){
