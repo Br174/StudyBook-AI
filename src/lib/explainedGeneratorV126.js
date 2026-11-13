@@ -225,13 +225,16 @@ export async function generateExplainedBookV126(book,{
     return phase==='comprehend'&&Array.isArray(reviewIssues)&&reviewIssues.length
      ?{...envelope,comprehensionRepair:reviewIssues}:envelope;
    });
+   diagnostics.activePages=group.map(p=>p.physicalPage);
+   diagnostics.correctionCycle=correction?Math.max(1,...group.map(p=>
+    Number(repairs.get(p.id)?.corrections||0)+1)):0;
+   await publish(phase==='comprehend'?'comprehension':'partial',{persist:false});
    onActivity({phase:phase==='comprehend'?'book-comprehension':
      correction?'explained-page-repair':'explained-page-block',
     pageStart:group[0].physicalPage,pageEnd:group.at(-1).physicalPage,
     pages:group.length,stage:phase,correctionCycle:correction?
      Math.max(1,...group.map(p=>Number(repairs.get(p.id)?.corrections||0)+1)):0,
     correctionMax:MAX_CORRECTIONS_V127});
-   diagnostics.activePages=group.map(p=>p.physicalPage);
    try{
     const {reply,response}=await requestPhaseV126(phase,pages,context,signal,correction);
     consecutiveTransportErrors=0;
@@ -336,6 +339,7 @@ export async function generateExplainedBookV126(book,{
    }
   }
   diagnostics.activePages=[];
+  diagnostics.correctionCycle=0;
  };
  // First scan ALL source pages, regardless of paragraph/page segmentation.
  const missingUnderstanding=()=>source.filter(p=>p.segments.length&&
