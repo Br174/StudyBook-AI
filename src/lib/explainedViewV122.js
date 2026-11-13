@@ -33,17 +33,19 @@ export function buildExplainedEditionViewV122(book){
  const resultingLetters=(s.pages||[]).filter(p=>p?.review?.ready===true).reduce((n,p)=>n+
    (Number(p.review?.outputLetters)||0),0);
  const complete=s.complete===true;
+ const readyPages=(s.pages||[]).filter(p=>p?.review?.ready===true).length;
  const achieved=complete&&originalLetters?
    percentReduced(originalLetters,resultingLetters):null;
  return {...book,chapters,explainedV122:true,
-  editionReadiness:{complete,partial:!complete,
+  editionReadiness:{complete,partial:!complete,readyPages,
    verifiedParagraphs:s.verifiedChunkVariants||0,
    totalParagraphs:s.totalChunkVariants||0,
    source:'explained-v122',status:complete?'available-with-quality-notes':'preview-only'},
   precisionEdition:{level:'explained',label:'Libro spiegato',
    targetPercent:50,achievedPercent:achieved,achievedLettersPercent:achieved,
+   draftAchievedPercent:s.draftAchievedReduction??null,
    originalLetters,resultingLetters:complete?resultingLetters:null,
    qualityGuard:{semanticCertification:false,status:complete?
     'source-guards-passed-not-semantic-certified':'preview-only'},
-   reductionCompliant:complete&&achieved!==null&&achieved>=30&&achieved<=60}};
+   reductionCompliant:complete&&(s.pages||[]).every(p=>p?.review?.sizeCompliant===true)}};
 }
