@@ -8,7 +8,8 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
  const editionState=book?.editionsV36;
  if(editionState?.version===EXPLAINED_POLICY_V122){
    const total=editionState.totalChunkVariants||0;
-   const verified=editionState.verifiedChunkVariants||0;
+   const verified=Number.isInteger(book?.editionReadiness?.readyPages)
+     ?book.editionReadiness.readyPages:(editionState.verifiedChunkVariants||0);
    const received=Math.min(total,Math.max(verified,editionState.draftUnitsSaved||0));
    const message=generating?activeStatus:explainedProgressMessageV122(editionState);
    return (
@@ -24,14 +25,14 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
         style={{marginTop:8}}>
         <span style={{width:(total?Math.round(100*received/total):0)+'%'}}/>
       </div>
-      <small>{verified}/{total} pagine verificate. Le bozze leggibili sono indicate nel lettore.</small>
+      <small>{verified}/{total} pagine conformi e studiabili sul telefono. Le altre restano in elaborazione.</small>
       {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
         editionState.diagnostics.plannedRequests>0&&
         <small style={{display:'block'}}>Richieste previste: {editionState.diagnostics.plannedRequests}</small>}
       {message && <p role="status">{message}</p>}
       {editionState?.qualityWarnings?.length>0&&
-        <p role="status">La riduzione globale necessita una verifica mirata:
-          la fedeltà al testo originale viene prima del numero.</p>}
+        <p role="status">Una o più pagine richiedono un controllo mirato individuale;
+          la media del libro non sostituisce la verifica per pagina.</p>}
     </div>
    );
  }
