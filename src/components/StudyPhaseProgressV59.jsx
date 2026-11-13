@@ -44,7 +44,7 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
           {' '}{editionState.diagnostics.correctionCycle}/5</strong>
           {' · '}Pagine {(editionState?.diagnostics?.activePages||[]).join(', ')}
         </p>}
-      {message && <p role="status">{message}</p>
+      {message && <p role="status">{message}</p>}
       {editionState?.qualityWarnings?.length>0&&
         <p role="status">Una o più pagine richiedono un controllo mirato individuale;
           la media del libro non sostituisce la verifica per pagina.</p>}
