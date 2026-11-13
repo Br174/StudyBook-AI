@@ -15,7 +15,8 @@
     "android:sync": "npm run build && npx cap sync android",
     "android:add": "npm run build && npx cap add android",
     "test:lab126": "node scripts/test-lab126-whole-book-gate.mjs",
-    "test:lab127": "node scripts/test-lab127-nonblocking-recovery.mjs && node scripts/test-lab127-worker-contract.mjs && node scripts/test-lab127-codespaces-preflight.mjs"
+    "test:lab127": "node scripts/test-lab127-nonblocking-recovery.mjs && node scripts/test-lab127-worker-contract.mjs && node scripts/test-lab127-codespaces-preflight.mjs",
+    "test:lab128": "node scripts/test-lab128-503-recovery.mjs && node scripts/test-lab127-nonblocking-recovery.mjs && node scripts/test-lab127-worker-contract.mjs && node scripts/test-lab128-codespaces-preflight.mjs"
   },
   "dependencies": {
     "@posthog/react": "^1.11.3",
