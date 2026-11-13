@@ -1,6 +1,7 @@
 import {EXPLAINED_POLICY_V122,originalExplainedPagesV122,isVerifiedExplainedPageV125} from './explainedPolicyV122.js';
 import {studyLetters,percentReduced} from './studyPillarV38.js';
 import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,COMPREHENSION_REVISION_V126,auditExplainedPageV126} from './explainedStagesV126.js';
+import {reserveAcceptedV127} from './explainedRepairV127.js';
 const readAuditV126=new WeakMap();
 const PENDING='Pagina non ancora verificata: attendere il completamento del Libro spiegato.';
 export function isExplainedBookV122(book){
@@ -15,6 +16,7 @@ export function buildExplainedEditionViewV122(book){
  const ready=(original,record)=>{
   if(!original||!record)return false;
   if(s.version!==EXPLAINED_POLICY_V126)return isVerifiedExplainedPageV125(original,record);
+  if(reserveAcceptedV127(original,record))return true;
   if(!original.segments.length)return record.review?.ready===true&&record.segments.length===0;
   if(record.review?.auditRevision!==EXPLAINED_AUDIT_V126||
     record.review?.comprehensionRevision!==COMPREHENSION_REVISION_V126||
@@ -37,7 +39,9 @@ export function buildExplainedEditionViewV122(book){
     consumed.add(page);
     const record=byPage.get(page);
     if(ready(originalByPage.get(page),record)){
-     chunks.push((record.segments||[]).map(x=>x.text).join('\n\n'));
+     const reserved=reserveAcceptedV127(originalByPage.get(page),record);
+     chunks.push((reserved?'Pagina '+page+' accettata con riserva: spiegazione non conforme ai controlli.\n\n':'')+
+      (record.segments||[]).map(x=>x.text).join('\n\n'));
     }else{pending=true;chunks.push(PENDING);}
    }
    const explained=chunks.filter(Boolean).join('\n\n');
@@ -52,6 +56,8 @@ export function buildExplainedEditionViewV122(book){
    (Number(p.review?.outputLetters)||0),0);
  const complete=s.complete===true&&originalPages.every(original=>
   ready(original,byPage.get(original.physicalPage)));
+ const reservedCount=originalPages.filter(p=>reserveAcceptedV127(p,
+   byPage.get(p.physicalPage))).length;
  const readyPages=originalPages.filter(original=>
   ready(original,byPage.get(original.physicalPage))).length;
  const achieved=complete?(s.version===EXPLAINED_POLICY_V126
@@ -61,14 +67,16 @@ export function buildExplainedEditionViewV122(book){
    percentReduced(originalLetters,resultingLetters):null;
  return {...book,chapters,explainedV122:true,
   editionReadiness:{complete,partial:!complete,readyPages,
-   verifiedParagraphs:readyPages,
+   verifiedPages:readyPages-reservedCount,reservedPages:reservedCount,
+   verifiedParagraphs:readyPages-reservedCount,
    totalParagraphs:s.totalChunkVariants||0,
-   source:'explained-v122',status:complete?'available-with-quality-notes':'preview-only'},
+   source:'explained-v122',status:complete?
+    reservedCount?'available-with-reservations':'available-with-quality-notes':'preview-only'},
   precisionEdition:{level:'explained',label:'Libro spiegato',
    targetPercent:50,achievedPercent:achieved,achievedLettersPercent:lettersOnly,
    draftAchievedPercent:s.draftAchievedReduction??null,
    originalLetters,resultingLetters:complete?resultingLetters:null,
    qualityGuard:{semanticCertification:false,status:complete?
-    'source-guards-passed-not-semantic-certified':'preview-only'},
-   reductionCompliant:complete}};
+    reservedCount?'contains-explicitly-reserved-pages':'source-guards-passed-not-semantic-certified':'preview-only'},
+   reductionCompliant:complete&&reservedCount===0}};
 }
