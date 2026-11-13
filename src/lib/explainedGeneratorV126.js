@@ -9,6 +9,9 @@ import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,COMPREHENSION_REVISION_V126,
  auditComprehensionV126,auditExplainedPageV126,lessonPayloadV126,lessonInstructionV126,
  studyUnitsV126} from './explainedStagesV126.js';
 import {percentReduced} from './studyPillarV38.js';
+import {MAX_CORRECTIONS_V127,repairAttemptV127,correctionRemainingV127,
+ betterExplainedDraftV127,reservedExplainedPageV127,reserveAcceptedV127,
+ reservationReportV127} from './explainedRepairV127.js';
 
 const MAX_STAGE_SOURCE=30000;
 const TIMEOUT=EXPLAINED_REQUEST_TIMEOUT_V122;
@@ -30,16 +33,17 @@ const pageWithSource=(original,answer)=>({
 const totalSourceUnits=pages=>pages.reduce((n,p)=>n+studyUnitsV126(
  p.segments.map(s=>s.source).join('\n')),0);
 
-async function requestPhaseV126(phase,pages,bookContext,signal){
+async function requestPhaseV126(phase,pages,bookContext,signal,correction=false){
  const controller=new AbortController(),cancel=()=>controller.abort();
  signal?.addEventListener('abort',cancel,{once:true});
  if(signal?.aborted)cancel();
- const timer=setTimeout(cancel,TIMEOUT);
+ const timeout=correction?100000:TIMEOUT;
+ const timer=setTimeout(cancel,timeout);
  try{
   const reply=await fetch(apiEndpoint('/api/explained/v126'),{
    method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},
    body:JSON.stringify({policy:EXPLAINED_POLICY_V126,phase,pages,
-     ...(phase==='explain'?{bookContext}:{}),timeoutMs:150000})
+     ...(phase==='explain'?{bookContext}:{}),timeoutMs:correction?90000:150000})
   });
   const response=await reply.json().catch(()=>null);
   if(controller.signal.aborted)throw Object.assign(new Error('Interrotto'),{
@@ -115,6 +119,17 @@ export async function generateExplainedBookV126(book,{
   book.editionsV36.sourceFingerprint===book.canonicalBookMap.originalFingerprint
    ?book.editionsV36:null;
  const maps=new Map(),saved=new Map(),rejected=new Set();
+ // Persistent per-page correction state survives Android restarts.
+ const repairs=new Map(Object.entries(previous?.repairStateV127||{}));
+ const markAttempt=(p,code='')=>{
+  const updated=repairAttemptV127(repairs.get(p.id),code);
+  repairs.set(p.id,updated);
+  if(updated.corrections>=MAX_CORRECTIONS_V127){
+   const fallback=reservedExplainedPageV127(p,saved.get(p.id),updated);
+   saved.set(p.id,fallback);rejected.delete(p.id);
+  }
+  return updated;
+ };
  source.forEach((p,i)=>{
   if(!p.segments.length)return;
   const oldMap=previous?.comprehensionV126?.pages?.[i];
@@ -122,9 +137,16 @@ export async function generateExplainedBookV126(book,{
     review:auditComprehensionV126(p,oldMap)});
   const oldPage=previous?.pages?.[i];
   if(oldPage?.id===p.id&&maps.get(p.id)?.review?.ready===true){
-   const check=auditExplainedPageV126(p,oldPage,maps.get(p.id));
-   saved.set(p.id,pageWithSource(p,{...oldPage,review:check}));
-   if(!check.ready)rejected.add(p.id);
+   if(reserveAcceptedV127(p,oldPage)){
+    saved.set(p.id,pageWithSource(p,oldPage));
+   }else{
+    const check=auditExplainedPageV126(p,oldPage,maps.get(p.id));
+    saved.set(p.id,pageWithSource(p,{...oldPage,review:check}));
+    if(!check.ready){
+     rejected.add(p.id);
+     if(!repairs.has(p.id))repairs.set(p.id,{initial:true,corrections:0});
+    }
+   }
   }
  });
  const diagnosticBefore=previous?.diagnostics||{};
@@ -143,23 +165,29 @@ export async function generateExplainedBookV126(book,{
   const unitOutput=source.reduce((n,p)=>n+(
     saved.get(p.id)?.review?.outputUnits||0),0);
   const accepted=source.filter(p=>saved.get(p.id)?.review?.ready===true).length;
+  const reserved=source.filter(p=>reserveAcceptedV127(p,saved.get(p.id))).length;
   const unread=source.filter(p=>p.segments.length&&
     maps.get(p.id)?.review?.ready!==true).length;
-  const done=accepted===source.length&&comprehensionV126.complete&&
-    source.every(p=>saved.get(p.id)?.review?.sizeCompliant===true);
+  const done=accepted+reserved===source.length;
+  const anomalies=reservationReportV127([...saved.values()]);
   const draftReduction=saved.size&&unitSource?
     percentReduced(unitSource,unitOutput):null;
   const s={...snapshot,version:EXPLAINED_POLICY_V126,
-   comprehensionV126,complete:done,status:done?'complete':status,
-   phase:done?'quality':accepted>0||comprehensionV126.complete?'draft':'comprehension',
+   comprehensionV126,complete:done,
+   status:done?(reserved?'complete-with-reservations':'complete'):status,
+   completeWithReservations:done&&reserved>0,
+   reservedPagesV127:anomalies,repairStateV127:Object.fromEntries(repairs),
+   phase:done?'quality':accepted+reserved>0||comprehensionV126.complete?'draft':'comprehension',
    sourceUnits:unitSource,outputUnits:unitOutput,
-   achievedReduction:done?percentReduced(unitSource,unitOutput):null,
+   achievedReduction:done&&!reserved?percentReduced(unitSource,unitOutput):null,
    draftAchievedReduction:draftReduction,
-   verifiedChunkVariants:accepted,verifiedChunks:accepted,blockedCells:source.length-accepted,
-   draftUnitsSaved:saved.size,semanticCertified:false,
+   verifiedChunkVariants:accepted,verifiedChunks:accepted,blockedCells:source.length-accepted-reserved,
+   draftUnitsSaved:saved.size,acceptedWithReserveV127:reserved,
+   semanticCertified:false,
    diagnostics:{...diagnostics,comprehensionPages:comprehensionV126.verifiedPages,
      comprehensionTotal:source.length,qualityReview:unread+rejected.size,
-     understandingPending:unread,explanationPending:source.length-accepted}};
+     understandingPending:unread,explanationPending:source.length-accepted-reserved,
+     correctionPending:rejected.size,reservedPages:reserved}};
   await onProgress(s,meta);
   return s;
  };
@@ -169,13 +197,14 @@ export async function generateExplainedBookV126(book,{
    ready:true,issues:[],sizeCompliant:true,sourceUnits:0,outputUnits:0,
    auditRevision:EXPLAINED_AUDIT_V126,semanticCertified:false}}));
  }
- const runStage=async(phase,initial)=>{
+ const runStage=async(phase,initial,{correction=false}={})=>{
   const context=phase==='explain'?globalContextV126(source,maps):[];
   const queue=planStageBlocksV126(initial,{stage:phase,maps,context});
   diagnostics.stage=phase==='comprehend'?'comprehension':'explanation';
   diagnostics.plannedRequests=queue.length;
   diagnostics.plannedPagesPerRequest=queue.map(b=>b.length);
   diagnostics.splits=0;
+  let consecutiveTransportErrors=0;
   await publish(phase==='comprehend'?'comprehension':'partial',{persist:false});
   for(let index=0;index<queue.length;index++){
    const group=queue[index];
@@ -187,12 +216,16 @@ export async function generateExplainedBookV126(book,{
     return phase==='comprehend'&&Array.isArray(reviewIssues)&&reviewIssues.length
      ?{...envelope,comprehensionRepair:reviewIssues}:envelope;
    });
-   onActivity({phase:phase==='comprehend'?'book-comprehension':'explained-page-block',
+   onActivity({phase:phase==='comprehend'?'book-comprehension':
+     correction?'explained-page-repair':'explained-page-block',
     pageStart:group[0].physicalPage,pageEnd:group.at(-1).physicalPage,
-    pages:group.length,stage:phase});
+    pages:group.length,stage:phase,correctionCycle:correction?
+     Math.max(1,...group.map(p=>Number(repairs.get(p.id)?.corrections||0)+1)):0,
+    correctionMax:MAX_CORRECTIONS_V127});
    diagnostics.activePages=group.map(p=>p.physicalPage);
    try{
-    const {reply,response}=await requestPhaseV126(phase,pages,context,signal);
+    const {reply,response}=await requestPhaseV126(phase,pages,context,signal,correction);
+    consecutiveTransportErrors=0;
     diagnostics.requestsSent++;
     if(!reply.ok){
      const code=response?.code||'HTTP_'+reply.status;
@@ -217,6 +250,8 @@ export async function generateExplainedBookV126(book,{
      }
      diagnostics.lastCode=code;
      diagnostics.failedPages.push(...group.map(p=>p.physicalPage));
+     if(phase==='explain')for(const p of group)markAttempt(p,code);
+     await publish(phase==='comprehend'?'comprehension':'partial');
      continue;
     }
     const validShape=response?.engine==='ai'&&
@@ -233,6 +268,8 @@ export async function generateExplainedBookV126(book,{
       diagnostics.splits++;index--;continue;
      }
      diagnostics.failedPages.push(...group.map(p=>p.physicalPage));
+     if(phase==='explain')for(const p of group)markAttempt(p,code);
+     await publish(phase==='comprehend'?'comprehension':'partial');
      continue;
     }
     for(let i=0;i<group.length;i++){
@@ -242,8 +279,15 @@ export async function generateExplainedBookV126(book,{
      }else{
       const review=auditExplainedPageV126(p,ans,maps.get(p.id));
       if(saved.get(p.id)?.review?.ready===true&&!review.ready)continue;
-      saved.set(p.id,pageWithSource(p,{...ans,review}));
-      if(review.ready)rejected.delete(p.id);else rejected.add(p.id);
+      const candidate=pageWithSource(p,{...ans,review});
+      const best=betterExplainedDraftV127(p,saved.get(p.id),candidate);
+      saved.set(p.id,best);
+      if(review.ready){
+       rejected.delete(p.id);
+      }else{
+       rejected.add(p.id);
+       markAttempt(p,review.issues?.[0]||'V127_REWRITE_NOT_VERIFIED');
+      }
      }
     }
     diagnostics.lastHttpStatus=200;
@@ -251,8 +295,26 @@ export async function generateExplainedBookV126(book,{
     diagnostics.activePages=[];
     await publish(phase==='comprehend'?'comprehension':'partial');
    }catch(err){
-    lastError=signal?.aborted?'V126_INTERRUPTED':err?.code||'V126_NETWORK';
-    diagnostics.providerErrors++;break;
+    const code=signal?.aborted?'V126_INTERRUPTED':err?.code||'V126_NETWORK';
+    diagnostics.providerErrors++;
+    if(signal?.aborted){lastError=code;break;}
+    if(group.length>1&&diagnostics.splits<MAX_SPLITS){
+     const mid=Math.floor(group.length/2);
+     queue.splice(index,1,group.slice(0,mid),group.slice(mid));
+     diagnostics.splits++;index--;continue;
+    }
+    diagnostics.failedPages.push(...group.map(p=>p.physicalPage));
+    diagnostics.lastCode=code;
+    if(phase==='explain')for(const p of group)markAttempt(p,code);
+    // If the connection itself fails repeatedly, respect a real cooldown
+    // instead of issuing hundreds of doomed requests on a 2000-page book.
+    consecutiveTransportErrors++;
+    if(consecutiveTransportErrors>=3){
+     lastError=code;
+     diagnostics.retryAt=new Date(Date.now()+120000).toISOString();
+     break;
+    }
+    await publish(phase==='comprehend'?'comprehension':'partial');
    }
   }
   diagnostics.activePages=[];
@@ -274,13 +336,37 @@ export async function generateExplainedBookV126(book,{
  diagnostics.globalComprehensionGate=checked.complete
   ?'verified-'+source.length+'-of-'+source.length
   :'partial-'+checked.verifiedPages+'-of-'+source.length;
- const pending=source.filter(p=>p.segments.length&&
+ const pendingPages=()=>source.filter(p=>p.segments.length&&
   maps.get(p.id)?.review?.ready===true&&
-  saved.get(p.id)?.review?.ready!==true).map(p=>({
-  ...p,...(saved.get(p.id)?.review?.repair?{
-    repair:saved.get(p.id).review.repair}:{})
- }));
- if(pending.length)await runStage('explain',pending);
+  saved.get(p.id)?.review?.ready!==true&&
+  !reserveAcceptedV127(p,saved.get(p.id)));
+ const repairInput=p=>{
+  const previousDraft=saved.get(p.id);
+  const state=repairs.get(p.id);
+  const issues=previousDraft?.review?.issues||[];
+  return {...p,repair:{
+   ...(previousDraft?.review?.repair||{}),
+   issueCodes:[...new Set(issues.map(x=>String(x).split(':')[0]))].slice(0,15),
+   previousDraft:previousDraft?.segments?.length?{
+    segments:previousDraft.segments.map(s=>({id:s.id,text:s.text})),
+    glossary:previousDraft.glossary||[]}:null,
+   previousReduction:previousDraft?.review?.reduction??null,
+   correctionCycle:Number(state?.corrections||0)+1,
+   correctionStrategy:['mirata','guidata','strutturale','concetti','finale'][
+    Math.min(4,Number(state?.corrections||0))]}}};
+ };
+ const initial=pendingPages().map(p=>repairs.get(p.id)?.initial
+  ?repairInput(p):p);
+ if(initial.length)await runStage('explain',initial,{
+  correction:initial.every(p=>repairs.get(p.id)?.initial)});
+ // A quality failure is recoverable locally, without making the user
+ // tap the button or restarting the whole book. Only rejected pages return.
+ for(let round=0;round<MAX_CORRECTIONS_V127&&!lastError;round++){
+  const retry=pendingPages().filter(p=>correctionRemainingV127(
+   repairs.get(p.id))>0);
+  if(!retry.length)break;
+  await runStage('explain',retry.map(repairInput),{correction:true});
+ }
  diagnostics.qualityReview=rejected.size+source.filter(p=>p.segments.length&&
   maps.get(p.id)?.review?.ready!==true).length;
  diagnostics.lastCode=lastError||diagnostics.lastCode||null;
