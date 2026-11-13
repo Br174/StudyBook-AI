@@ -122,6 +122,10 @@ try {
  assert.ok(!calls.slice(thirdStart).some(c=>
   c.phase==='explain'&&c.pages.some(p=>known.includes(p))));
  assert.ok(calls.slice(thirdStart).some(c=>c.phase==='explain'));
+ const before503=calls.find(c=>c.phase==='explain');
+ const after503=calls.slice(thirdStart).find(c=>c.phase==='explain');
+ assert.ok(after503.pages.length<before503.pages.length,
+  'A second HTTP 503 must make future requests smaller, not only record a number.');
  const finalPdf=await exportExplainedPdfV122({
   ...book,editionsV36:third},'prova-lab128.pdf',
   {download:false,provisional:true});
