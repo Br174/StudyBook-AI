@@ -63,6 +63,16 @@ export function reserveUnreadPageV127(original){
    semanticCertified:false}};
 }
 export function reserveAcceptedV127(original,record){
+ if(record?.review?.provisionalOriginal===true){
+  // A PDF-only original may legitimately contain square brackets, citations
+  // or ellipses that must never be interpreted as Gemini placeholders.
+  const source=original?.segments||[],segments=record?.segments;
+  return Boolean(record.review.acceptedWithReserve===true&&
+   record.review.sourceTextFallback===true&&
+   Array.isArray(segments)&&segments.length===source.length&&
+   source.every((item,i)=>segments[i]?.id===item.id&&
+    segments[i]?.text===item.source));
+ }
  return Boolean(record?.review?.acceptedWithReserve===true&&
   (record.review?.correctionAttempts===MAX_CORRECTIONS_V127||
     record.review?.comprehensionUnavailable===true)&&
