@@ -107,7 +107,8 @@ export async function exportExplainedPdfV122(book,fileName,{download=true}={}){
    V126_MAP_CONTENT_COVERAGE_LOW:'Concetti rilevanti non rintracciati',
    V122_PROTECTED_MEANING_MISSING:'Riferimento o condizione mancante',
    V127_NO_USABLE_EXPLANATION:'Nessuna spiegazione valida: inserito originale',
-   V127_REWRITE_NOT_VERIFIED:'Riscrittura non verificata'
+   V127_REWRITE_NOT_VERIFIED:'Riscrittura non verificata',
+   V127_COMPREHENSION_UNAVAILABLE:'Lettura preliminare non acquisita; originale conservato'
   };
   const reportWidth=first.widthMm,reportHeight=first.heightMm;
   const safeWidth=reportWidth-30;
@@ -135,7 +136,9 @@ export async function exportExplainedPdfV122(book,fileName,{download=true}={}){
   y+=3;
   for(const item of reservations){
    if(y>reportHeight-38)reportPage();
-   writeLine('Pagina originale '+item.label+' - 5 correzioni automatiche senza esito.',{bold:true});
+   writeLine('Pagina originale '+item.label+' - '+
+     (item.corrections>0?item.corrections+' correzioni automatiche senza esito.':
+      'lettura tecnica incompleta; originale conservato.'),{bold:true});
    if(item.sourceTextFallback)writeLine('ATTENZIONE: contenuto originale, non riscritto.');
    for(const code of item.issues.slice(0,12))
     writeLine('Problema: '+(explanation[code]||code));
