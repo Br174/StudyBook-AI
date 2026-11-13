@@ -2,12 +2,12 @@
 // No model-visible acceptance intervals; canonical sources, references and formulas stay immutable.
 import {studyLetters,percentReduced} from './studyPillarV38.js';
 import {immutableFragmentsV67,immutableViolationsV67} from './immutableFragmentsV67.js';
-import {auditFidelity,buildConceptInventory,extractProtectedItems,auditProgressiveConcepts} from './fidelityEngine.js';
+import {auditFidelity,buildConceptInventory,extractProtectedItems,auditProgressiveConcepts,auditCriticalRelationsV125} from './fidelityEngine.js';
 import {sourceRiskReviewV110} from './studySourceRiskV110.js';
 
 export const EXPLAINED_POLICY_V122='lab122-one-explained-glossary-v1';
 export const EXPLAINED_TARGET_V122=50;
-export const EXPLAINED_PRIVATE_BAND_V122=Object.freeze({min:30,max:60});
+export const EXPLAINED_PRIVATE_BAND_V122=Object.freeze({min:40,max:60});
 const clean=value=>String(value??'').normalize('NFC').trim();
 const normalized=value=>clean(value).replace(/\s+/gu,' ').toLocaleLowerCase('it-IT');
 const plain=value=>String(value||'').replace(/\*\*/g,'');
@@ -61,6 +61,7 @@ export function originalExplainedPagesV122(book){
    ordered.push({kind:h.kind,text:h.text,position:0});
   const intro=ordered.sort((a,b)=>a.position-b.position);
   return {id:'p'+number,physicalPage:number,label:String(page.label||number),
+   sourceLineCount:lines.filter(line=>line.trim()).length,
    widthPt:page.widthPt||595.28,heightPt:page.heightPt||841.89,
    source,segments,headings:intro,
    originalBodyLetters:segments.reduce((n,s)=>n+studyLetters(s.source),0)};
@@ -71,6 +72,10 @@ export function modelInstructionV122(){
   'StudyBook AI LAB122. Sei un docente universitario italiano capace di spiegare concetti complessi a un ragazzo delle scuole medie, senza impoverire la materia.',
   'Riscrivi UNA SOLA VERSIONE per ogni pagina: spiegazione completa, frasi brevi, linguaggio concreto, niente elenchi schematici inutili.',
   'Obiettivo preciso: ELIMINA circa il 50% delle LETTERE ALFABETICHE del corpo originale; il numero riguarda le lettere eliminate, non le parole o le righe. Il GLOSSARIO non fa parte della lunghezza del testo principale.',
+  'Per pagine originali con cinque righe o meno, riscrivi comunque in modo realmente più semplice: la chiarezza viene prima dell\'accorciamento; non ricopiare semplicemente le frasi difficili.',
+  'Italiano corretto: accenti, articoli, concordanze, tempi verbali, punteggiatura, frasi complete, nessuna ripetizione artificiosa o testo tronco.',
+  'Proteggi i LEGAMI tra concetti: non invertire chi sostiene una teoria, norme primarie e secondarie, validità ed efficacia, causa ed effetto, possibilità e obbligo, necessità e sufficienza.',
+  'Il glossario deve definire i termini tecnici secondo il significato nel testo originale: non inventare leggi, nomi, funzioni o definizioni estranee. Usa esempi esplicativi solo se fedeli alla fonte.',
   'Non tagliare un concetto unico per raggiungere la misura: se necessario conserva più testo. Elimina ripetizioni, giri di parole e artifici, NON fatti, cause, effetti, definizioni, condizioni o esempi indispensabili.',
   'Mantieni precisamente formule, simboli, numeri, citazioni letterali della legge, articoli, codici e termini giuridici fondamentali. Non inventare articoli, norme, interpretazioni, giurisprudenza o esempi.',
   'Conserva negazioni, eccezioni, obblighi, possibilità e differenze: NON può non diventa può; SOLO SE non diventa sempre; verificabile non diventa verificato.',
@@ -175,39 +180,48 @@ export function auditExplainedPageV122(sourcePage,result,{allowShort=true}={}){
   issues.push('V122_EMPTY_SEGMENT');
  const original=sourcePage.segments.map(s=>s.source).join('\n');
  const simple=plain(text),sourceLetters=studyLetters(original),outputLetters=studyLetters(simple);
+ const sourceLineCount=Number.isInteger(sourcePage.sourceLineCount)?
+   sourcePage.sourceLineCount:original.split(/\r?\n/u).filter(x=>x.trim()).length;
+ const shortPage=sourceLineCount<=5;
+ const exactReduction=sourceLetters>0?(sourceLetters-outputLetters)*100/sourceLetters:0;
  const reduction=sourceLetters>0?percentReduced(sourceLetters,outputLetters):0;
- // The user's 30-60 interval is for the whole book; an essential legal quote
- // may legitimately make a single page unusually long. Do NOT remove facts
- // merely to satisfy a per-page quota.
- if(sourceLetters>=100 && (reduction<EXPLAINED_PRIVATE_BAND_V122.min||
-    reduction>EXPLAINED_PRIVATE_BAND_V122.max))
-  advisories.push('V122_PAGE_REDUCTION_OUTSIDE_PREFERRED_BAND');
- if(!allowShort&&sourceLetters<100&&sourceLetters!==outputLetters)
-  issues.push('V122_SHORT_PAGE_CHANGED');
+ // Compare integer letter counts, never the rounded display value.
+ const sizeCompliant=shortPage||sourceLetters===0||
+   ((sourceLetters-outputLetters)*100>=sourceLetters*EXPLAINED_PRIVATE_BAND_V122.min&&
+    (sourceLetters-outputLetters)*100<=sourceLetters*EXPLAINED_PRIVATE_BAND_V122.max);
+ if(!sizeCompliant)issues.push('V125_PAGE_REDUCTION_OUT_OF_RANGE');
+ // Short pages must become clearer even when no percentage is required.
+ if(shortPage&&sourceLetters>=30&&normalized(original)===normalized(simple))
+   issues.push('V125_SHORT_PAGE_NOT_SIMPLIFIED');
+ if(!allowShort&&shortPage&&sourceLetters!==outputLetters)
+   advisories.push('V122_SHORT_PAGE_CHANGED_LEGACY');
  const exact=immutableViolationsV67(original,simple,{requireNormativeQuotation:true,
   requireLegalReference:true});
  for(const item of exact)issues.push('V122_IMMUTABLE:'+item.kind+':'+item.value);
  const semantic=auditFidelity(original,simple);
  const protectedItems=extractProtectedItems(original);
  if(semantic.missingProtected.length)issues.push('V122_PROTECTED_MEANING_MISSING');
- if(semantic.missingHighValue.length)issues.push('V122_ESSENTIAL_CONCEPT_REVIEW');
+ if(semantic.missingHighValue.length)advisories.push('V122_ESSENTIAL_CONCEPT_REVIEW');
  if(semantic.qualifierMismatches.length)issues.push('V122_CONDITION_OR_MODALITY_REVIEW');
  const support=auditProgressiveConcepts(original,simple);
  if(support.issues.includes('new-protected-fact-not-in-source'))
   issues.push('V122_UNSUPPORTED_PROTECTED_FACT');
  if(sourceLetters>=160&&semantic.coveragePercent<55)
-  issues.push('V122_SOURCE_MEANING_REVIEW_REQUIRED');
+  advisories.push('V122_SOURCE_MEANING_REVIEW_REQUIRED');
  const risk=sourceRiskReviewV110(sourcePage.segments,
   result.segments.map(s=>({id:s.id,text:s.text})));
- if(risk.signalCount>0)issues.push('V122_SOURCE_RELATION_RISK');
- const technicalSource=/\b(?:norme? imperative|nullità|inderogabile|inadempimento|prescrizione|decadenza|usucapione|contraddittorio|giurisdizione|fattispecie)\b/iu;
+ if(risk.signalCount>0)advisories.push('V122_SOURCE_RELATION_RISK');
+ const critical=auditCriticalRelationsV125(original,simple,result.glossary);
+ issues.push(...critical.issues);
+ const technicalSource=/\b(?:norme? imperative|nullità|inderogabile|inadempimento|prescrizione|decadenza|usucapione|contraddittorio|giurisdizione|fattispecie|nomodinamica|effettività|norma fondamentale|norma di riconoscimento)\b/iu;
  if(technicalSource.test(original)&&result.glossary.length===0)
   issues.push('V122_LEGAL_GLOSSARY_REQUIRED');
  issues.push(...detectTerms(text,result.glossary));
  if(/\[\[|\]\]|\{\{\s*TODO|\.\.\.\s*$/u.test(text))
   issues.push('V122_PLACEHOLDER_OR_TRUNCATION');
  return {ready:issues.length===0,issues:[...new Set(issues)],
-   advisories,reduction,sourceLetters,outputLetters,glossaryCount:result.glossary.length,
+   advisories:[...new Set(advisories)],reduction,exactReduction,
+   shortPage,sourceLineCount,sizeCompliant,sourceLetters,outputLetters,glossaryCount:result.glossary.length,
    lexicalSupportPercent:semantic.coveragePercent,
    repair:{
      conceptIds:semantic.missingHighValue.map(item=>item.id),
