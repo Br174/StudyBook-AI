@@ -11,3 +11,16 @@ READINESS=Non promettere APK completata prima dell'esito success del relativo wo
 MOTORLAB=Usare CORE e Fantastici 20 in affiancamento al motore nativo StudyBook AI.
 PRECHANGE=Le nuove modifiche rispettano il pre-change report e richiedono approvazione successiva al piano; non usare questa preferenza per saltare il gate.
 PERSISTENCE=Questa istruzione e' conservata nel repository del progetto e va consultata alle riaperture insieme a MOTORLAB_PROJECT_HOOK.txt.
+
+# AGGIORNAMENTO CONTINUITÀ — 2026-11-13 — LAB124/LAB125/LAB126 (NON sostituire la regola generale)
+PREVIOUS_WORK_FIRST=OBBLIGATORIO: prima di qualsiasi nuova istruzione operativa, consultare l'ultimo metodo realmente riuscito, script/workflow e log/issue del ramo corrente, verifica file e artifact già presenti nel Codespace, anziché ripartire da zero.
+LAST_PROVEN_ANDROID_BUILD=2026-11-13 LAB125 Codespaces super eureka: build Android exit 0, APK+ZIP firmati in cartella locale APK-LAB125; pubblicazione GitHub Releases fallita ma non la compilazione.
+AUTOMATIC_BUILD_OWNER=.vscode/tasks.json (runOn=folderOpen) + scripts/codespaces-lab125-autobuild.sh sul ramo LAB125. LAB126 usa lo STESSO metodo sotto .vscode/tasks.json + scripts/codespaces-lab126-autobuild.sh, NON un altro motore.
+CODESPACE_REUSE=Aprire il Codespace ESISTENTE super eureka; NON ricreare ambiente, reinstallare Node/Gradle/Android SDK, rigenerare firma, configurare Github Actions o far ripetere all'utente l'intera preparazione.
+CODESPACE_TOOLCHAIN_REUSE=$HOME/.local/share/studybook-lab125 contiene strumenti necessari della build precedente; salvo prova contraria mantenere e riutilizzare.
+AUTO_BUILD_TRIGGER=All'apertura della cartella se presente il ramo compatibile; se già aperta, selezionare il task di compilazione esistente. Non promettere avvio remoto da ChatGPT: il connettore GitHub non esegue terminali Codespaces.
+BUILD_AND_PUBLICATION_SEPARATE=Exit 0 build con file locali NON equivale a GitHub Release; non ricompilare inutilmente se fallisce solo la pubblicazione. Facilitare recupero dei file APK+ZIP dal Codespace.
+LAB126_SOURCE=trial/studybook-lab126-deep-content-recovery-20261113; il codice è nuovo, la procedura di compilazione resta LAB125 compatibile.
+LAB126_BACKEND_NEW_DEPENDENCY=/api/explained/v126: il Worker già utilizzato dalla LAB125 può mancare di questa route. È una nuova dipendenza applicativa, NON una perdita dei permessi di compilazione Codespaces; verificare se presente prima di chiedere nuove autenticazioni o setup. Eventuale deploy SOLO sul Worker di prova autorizzato con preflight e protezione delle vecchie API.
+LAB126_BUILD_SCRIPT=scripts/codespaces-lab126-build.sh; ricostruito dalla base LAB125 e controllato per assenza di sezioni duplicate.
+PERSISTENT_CHECKPOINT=docs/LAB126_APK_ZIP_DELIVERY_PREPARED_20261113.md, docs/LAB126_IMPLEMENTATION_CHECKPOINT_20261113.md, GitHub issue #12 e stato di Codespaces corrente prevalgono su ledger storico.
