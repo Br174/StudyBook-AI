@@ -1,4 +1,4 @@
-// LAB126 isolated two-phase Gemini endpoint. No deployment without a separate verified gate.
+// LAB127 strict compatibility handshake: deploy worker before distributing the LAB127 APK.
 import {
  EXPLAINED_POLICY_V126,comprehensionInstructionV126,comprehensionPayloadV126,
  auditComprehensionV126,lessonInstructionV126,lessonPayloadV126,auditExplainedPageV126
@@ -37,6 +37,7 @@ function parseContent(value){
 }
 export default async function handler(req,res){
  res.setHeader('X-StudyBook-Phase-Contract','lab126');
+ res.setHeader('X-StudyBook-Recovery-Contract','lab127');
  if(req.method!=='POST'){res.setHeader('Allow','POST');
   return fail(res,405,'METHOD_NOT_ALLOWED','Usare POST.');}
  const env=req.env||{},key=env.AI_API_KEY||env.GEMINI_API_KEY;
@@ -118,7 +119,8 @@ export default async function handler(req,res){
    const normalized=normalizeExplainedAnchorsV122(p);
    return {...normalized,review:auditExplainedPageV126(pages[i],normalized,pages[i].comprehension)};
   });
-  return res.status(200).json({engine:'ai',version:EXPLAINED_POLICY_V126,
+  return res.status(200).json({engine:'ai',repairContractV127:'lab127-automatic-recovery-v1',
+   version:EXPLAINED_POLICY_V126,
    phase,pages:audited,model:outcome.model,providerRequests:outcome.attempts,
    validated:audited.filter(p=>p.review.ready).length,
    semanticCertified:false,privateBandDisclosedToGemini:false});
