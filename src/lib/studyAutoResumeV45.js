@@ -9,7 +9,7 @@ export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0
   // LAB125 single-edition: a quality-review is not terminal. The same
   // foreground scheduler performs bounded, targeted retries; no second timer.
   // Progress (more accepted pages) resets stalledAttempts in AppV15.
-  if(snapshot.version==='lab122-one-explained-glossary-v1' &&
+  if(['lab122-one-explained-glossary-v1','lab126-whole-book-comprehension-v1'].includes(snapshot.version) &&
      snapshot.status==='quality-review' &&
      Number(snapshot.diagnostics?.qualityReview||0)>0){
     if(stalledAttempts>=2)return null;
@@ -17,6 +17,23 @@ export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0
     const minimum=now+30000*Math.pow(2,stalledAttempts);
     return {reason:'explained-targeted-quality-retry',
       at:Number.isFinite(savedAt)?Math.max(minimum,savedAt):minimum};
+  }
+
+  // LAB126: resume understanding only through the already-existing LAB45
+  // foreground scheduler; do NOT begin the explanation before all source maps.
+  if(snapshot.version==='lab126-whole-book-comprehension-v1'){
+    const quota=snapshot.quota;
+    if(quota?.automatic){
+      const at=Date.parse(String(quota.retryAt||''));
+      return Number.isFinite(at)?{reason:'provider-cooldown',at:Math.max(now,at)}:null;
+    }
+    if(snapshot.status==='provider-blocked'&&stalledAttempts<2)
+      return {reason:'lab126-provider-recovery',at:now+45000*Math.pow(2,stalledAttempts)};
+    if(snapshot.status==='interrupted'&&stalledAttempts<2)
+      return {reason:'interrupted-checkpoint',at:now+1500};
+    if(['comprehension','partial'].includes(snapshot.status)&&stalledAttempts<2)
+      return {reason:'lab126-unfinished-bookwide-phase',at:now+1500};
+    return null;
   }
 
   // LAB66: old books stuck after finishing ALL drafts migrate locally with
