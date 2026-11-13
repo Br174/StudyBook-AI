@@ -42,7 +42,7 @@ assert.ok(autobuild.includes('flock -n 9'),'Build lock must prevent duplicates')
 assert.ok(!autobuild.includes('gh workflow run'),'No GitHub Actions request permitted');
 assert.ok(Array.isArray(tasks.tasks)&&tasks.tasks.length===2);
 assert.equal(tasks.tasks[0].runOptions.runOn,'folderOpen');
-assert.ok(tasks.tasks[0].args[2]?.includes(branch));
+assert.ok(tasks.tasks[0].args[1]?.includes(branch));
 assert.equal(tasks.tasks[1].args[1],'--deploy-test-worker');
 console.log('LAB127 PASS: Codespaces script syntax, branch, Worker contract,');
 console.log('same signing identity, no paid runner, isolated test deploy, Scudo360 and tasks.');
