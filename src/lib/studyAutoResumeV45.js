@@ -19,8 +19,8 @@ export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0
       at:Number.isFinite(savedAt)?Math.max(minimum,savedAt):minimum};
   }
 
-  // LAB126: resume understanding only through the already-existing LAB45
-  // foreground scheduler; do NOT begin the explanation before all source maps.
+  // LAB127: retry only through the existing LAB45 foreground scheduler.
+  // Readable source maps may be explained while other pages need recovery.
   if(snapshot.version==='lab126-whole-book-comprehension-v1'){
     const quota=snapshot.quota;
     if(quota?.automatic){
