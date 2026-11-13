@@ -31,8 +31,10 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
         <span style={{width:(total?Math.round(100*received/total):0)+'%'}}/>
       </div>
       <small>{understanding
-        ?'Gemini deve terminare la comprensione di tutte le pagine prima di iniziare la riscrittura. Nessuna pagina viene compressa durante questa fase.'
+        ?'Gemini sta leggendo il libro. Le pagine già comprese sono conservate; eventuali pagine mancanti non impediranno di riscrivere le altre.'
         :verified+'/'+total+' pagine conformi e studiabili sul telefono. Le altre restano in elaborazione.'}</small>
+      {editionState?.version===EXPLAINED_POLICY_V126&&
+       <small style={{display:'block'}}>Comprensione: {editionState?.comprehensionV126?.verifiedPages||0}/{total} pagine; spiegazione verificata: {verified}/{total}. Le pagine da correggere non interrompono il resto.</small>}
       {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
         editionState.diagnostics.plannedRequests>0&&
         <small style={{display:'block'}}>Richieste previste: {editionState.diagnostics.plannedRequests}</small>}
