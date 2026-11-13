@@ -683,11 +683,11 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         )}
         <div className="sb-book-quick-actions">
           <button type="button" onClick={onRead}><span className="sb-action-icon"><StudyIcon name="book" size={25} /></span><strong>{explainedV122&&v36Partial?'Leggi pagine pronte':'Leggi sul telefono'}</strong></button>
-          <button type="button" disabled={v36Partial&&!isOriginalOnly} onClick={() => isOriginalOnly ? onExport('pdf', 'original') : onExport('pdf', 'study')}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>Leggi in PDF</strong></button>
+          <button type="button" disabled={v36Partial&&!isOriginalOnly&&!explainedV122} onClick={() => isOriginalOnly ? onExport('pdf', 'original') : onExport('pdf', 'study')}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>{explainedV122&&v36Partial?'PDF provvisorio':'Leggi in PDF'}</strong></button>
           {isOriginalOnly
             ? <button type="button" onClick={() => setPrepareOpen(true)}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>
             : <button type="button" onClick={onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>}
-          <button type="button" disabled={v36Partial&&!isOriginalOnly} className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>Scarica libro</strong></button>
+          <button type="button" disabled={v36Partial&&!isOriginalOnly&&!explainedV122} className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>{explainedV122&&v36Partial?'Scarica bozza PDF':'Scarica libro'}</strong></button>
         </div>
         {!explainedV122&&canImprove&&improvementLeft&&
           <div style={{marginTop:12,padding:'12px 14px',
@@ -730,9 +730,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         {explainedV122&&<p>Libro spiegato · {readyExplainedV125}/
           {editionState?.totalChunkVariants||0} pagine. Testo e glossario vengono generati insieme.
           Controllo automatico superato non significa certificazione semantica infallibile.</p>}
-        <p>Il PDF e il download del libro saranno disponibili dopo le verifiche o dopo
-          il completamento automatico delle pagine con riserva. Nessuna pagina difettosa
-          sarà presentata come certificata.</p>
+        <p>Puoi già scaricare una BOZZA PDF con le pagine spiegate e le pagine
+          originali non ancora rielaborate, segnalate. Il PDF definitivo resta
+          disponibile soltanto dopo il completamento: le pagine non verificate
+          non sono certificate come corrette.</p>
         {studyBook.editionsV36?.diagnostics?.sourceBlocked>0 && <p>
           {studyBook.editionsV36.diagnostics.sourceBlocked} parti del documento
           richiedono verifica della pagina originale. Le altre parti sicure vengono elaborate.
@@ -780,6 +781,10 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
               explainedV122 ? 'Scarica o stampa il Libro spiegato con il glossario laterale.' :
                 'Scegli la versione del libro e il formato da scaricare o stampare.'}</p></div>
           </div>
+          {explainedV122&&v36Partial&&
+            <p role="status"><strong>BOZZA INCOMPLETA:</strong> il PDF conterrà le pagine
+              già spiegate e, nelle altre, il testo originale chiaramente segnalato
+              come non rielaborato. Il libro resta in elaborazione: non perdere i checkpoint.</p>}
           <div className="sb-export-formats">
             {isOriginalOnly && <button type="button" onClick={() => onExport('original', 'original')}>Formato originale</button>}
             <button type="button" onClick={() => onExport('pdf', isOriginalOnly ? 'original' : exportVariant)}>PDF</button>
