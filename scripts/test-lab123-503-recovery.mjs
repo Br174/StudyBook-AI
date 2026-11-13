@@ -34,7 +34,7 @@ try{
  assert.equal(halted.status,'quota-paused');
  assert.equal(halted.verifiedChunkVariants,0);
  assert.ok(Date.parse(halted.quota.retryAt)>Date.now());
- assert.ok(halted.diagnostics.nextBlockChars<28000);
+ assert.equal(halted.diagnostics.nextBlockChars,40000,'503 is a quota/overload signal, never evidence of a large payload');
  const future=Date.parse(halted.quota.retryAt)+1;
  const wake=planStudyAutoResumeV45(halted,future);
  assert.equal(wake.reason,'provider-cooldown');
