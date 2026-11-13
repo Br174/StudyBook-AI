@@ -186,6 +186,44 @@ try {
    env:{AI_API_KEY:'local-mock',AI_MODEL:'gemini-3.5-flash-lite'}});
  test(rejected.status===413,'Worker must enforce 42k hard cap');
 } finally {globalThis.fetch=originalFetch;}
+// Empty original pages must preserve numbering and never block PDF completion.
+const blankBook={...book,canonicalBookMap:{...book.canonicalBookMap,
+ pageCount:2,pages:[{...originals[0],text:''},{...originals[1],physicalPage:2,label:'2'}]}};
+const fetchBeforeBlank=globalThis.fetch;
+globalThis.fetch=async(url,options)=>{
+ const req=JSON.parse(options.body);
+ if(String(url).includes('/api/explained/v122')){
+  const data=await fakeWorker({method:'POST',body:req,
+    env:{AI_API_KEY:'local-mock',AI_MODEL:'gemini-3.5-flash-lite'}});
+  return {ok:data.status===200,status:data.status,headers:new Headers(),
+   json:async()=>data.body};
+ }
+ return {ok:true,status:200,headers:new Headers(),
+  json:async()=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify({
+   pages:JSON.parse(JSON.parse(options.body).messages[1].content).pages.map(p=>({
+    id:p.id,segments:p.segments.map(s=>({id:s.id,text:reduced})),glossary:[]}))})}}]})};
+};
+try {
+ const blank=await generateExplainedBookV122(blankBook,{onProgress:async()=>{}});
+ test(blank.complete&&blank.verifiedChunkVariants===2&&
+   blank.pages[0].review.sizeCompliant===true,
+   'Blank cover must remain numbered and not block completion');
+} finally {globalThis.fetch=fetchBeforeBlank;}
+// HTTP 429/503 must retain the calibrated request size and the durable pause.
+// Never split or re-request from an overloaded free provider immediately.
+for(const [status,code,wait] of [[429,'AI_QUOTA_LIMIT',7200],
+  [503,'AI_TEMPORARY_OVERLOAD',120]]){
+ const old=globalThis.fetch;
+ globalThis.fetch=async()=>({ok:false,status,headers:new Headers({'Retry-After':String(wait)}),
+   json:async()=>({code,retryAfterSeconds:wait})});
+ try{
+  const paused=await generateExplainedBookV122(book,{onProgress:async()=>{}});
+  test(paused.status==='quota-paused'&&paused.diagnostics.nextBlockChars===40000,
+   '429/503 must not poison the calibrated block capacity: '+status);
+  test(Date.parse(paused.quota.retryAt)-Date.now()>=wait*1000-2000,
+   'Retry-After must be preserved: '+status);
+ }finally{globalThis.fetch=old;}
+}
 console.log(JSON.stringify({suite:'LAB125 hardening',passed:true,checks,
  mockedRequests:requests,providerCalls:providerRequests,
  realGeminiCalls:0,realAndroidTests:0,realPDFSourceInThisSuite:false}));
