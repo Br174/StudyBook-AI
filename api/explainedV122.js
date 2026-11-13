@@ -1,11 +1,11 @@
 // LAB122 isolated Worker route. One provider generation for a contiguous set of original pages.
-// The strict 50% model target and the private 30-60 acceptance are deliberately separated.
+// The strict 50% model target and the private page-level 40-60 acceptance are deliberately separated.
 import {modelInstructionV122,modelPayloadV122,auditExplainedPageV122,normalizeExplainedAnchorsV122,
  EXPLAINED_POLICY_V122} from '../src/lib/explainedPolicyV122.js';
 import {invoke503FailoverV114} from '../src/lib/study503FailoverV114.js';
 const ENDPOINT='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 const ALLOWED=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
-const MAX_SOURCE_CHARS=30000;
+const MAX_SOURCE_CHARS=42000; // LAB125 candidate, 2k above 40k planner budget
 const fail=(res,status,code,message,extra={})=>res.status(status).json({code,error:message,...extra});
 const SCHEMA={type:'json_schema',json_schema:{name:'studybook_explained_pages_v122',strict:true,
  schema:{type:'object',additionalProperties:false,properties:{
