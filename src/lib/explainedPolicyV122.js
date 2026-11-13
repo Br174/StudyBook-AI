@@ -2,7 +2,7 @@
 // No model-visible acceptance intervals; canonical sources, references and formulas stay immutable.
 import {studyLetters,percentReduced} from './studyPillarV38.js';
 import {immutableFragmentsV67,immutableViolationsV67} from './immutableFragmentsV67.js';
-import {auditFidelity,buildConceptInventory,extractProtectedItems,auditProgressiveConcepts,auditCriticalRelationsV125} from './fidelityEngine.js';
+import {auditFidelity,buildConceptInventory,extractProtectedItems,auditProgressiveConcepts,auditCriticalRelationsV125,auditItalianGrammarV125} from './fidelityEngine.js';
 import {sourceRiskReviewV110} from './studySourceRiskV110.js';
 
 export const EXPLAINED_POLICY_V122='lab122-one-explained-glossary-v1';
@@ -213,6 +213,9 @@ export function auditExplainedPageV122(sourcePage,result,{allowShort=true}={}){
  if(risk.signalCount>0)advisories.push('V122_SOURCE_RELATION_RISK');
  const critical=auditCriticalRelationsV125(original,simple,result.glossary);
  issues.push(...critical.issues);
+ const grammar=auditItalianGrammarV125(simple);
+ issues.push(...grammar.issues);
+ advisories.push(...grammar.advisories);
  const technicalSource=/\b(?:norme? imperative|nullità|inderogabile|inadempimento|prescrizione|decadenza|usucapione|contraddittorio|giurisdizione|fattispecie|nomodinamica|effettività|norma fondamentale|norma di riconoscimento)\b/iu;
  if(technicalSource.test(original)&&result.glossary.length===0)
   issues.push('V122_LEGAL_GLOSSARY_REQUIRED');
