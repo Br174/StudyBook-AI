@@ -270,7 +270,7 @@ for testname in \
   test-lab122-single-explained test-lab124-large-call-parity \
   test-lab123-503-recovery test-lab122-recovery test-lab122-pdf-render \
   test-lab125-hardening test-lab125-didactic-matrix \
-  test-lab127-nonblocking-recovery test-lab127-worker-contract; do
+  test-lab127-nonblocking-recovery test-lab127-worker-contract test-lab127-codespaces-preflight; do
   say "Test: $testname"
   node "scripts/$testname.mjs" || fail "Test fallito: $testname"
 done
