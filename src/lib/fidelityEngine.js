@@ -342,3 +342,104 @@ export function auditProgressiveConcepts(source,generated){
   return {supported:issues.length===0,issues,sharedTopicCount:shared.length,
     sourceTopicCount:sourceTopics.length,generatedTopicCount:generatedTopics.length};
 }
+
+
+// LAB125: source-grounded, deterministic checks for semantic relation reversals.
+// This extends the existing fidelity owner. It is not a second reviewer, model,
+// quota consumer or semantic-certification service.
+export function auditCriticalRelationsV125(source, simplified, glossary = []) {
+  const normalize = value => normalizeFidelityText(value)
+    .normalize('NFC').toLocaleLowerCase('it-IT').replace(/[’]/gu, "'");
+  const src = normalize(source), dst = normalize(simplified), issues = [];
+  const add = code => { if (!issues.includes(code)) issues.push(code); };
+  // Locate the relation after its subject, never steal a predicate from the
+  // next contrasting subject or the next sentence.
+  function relation(text, role, property, peers) {
+    for (const match of text.matchAll(role)) {
+      const start = match.index + match[0].length;
+      let tail = text.slice(start, start + 130);
+      const period = tail.search(/[.;!?]/u);
+      if (period >= 0) tail = tail.slice(0, period);
+      for (const peer of peers) {
+        const found = new RegExp(peer.source, 'iu').exec(tail);
+        if (found) tail = tail.slice(0, found.index);
+      }
+      if (property.test(tail)) return true;
+    }
+    return false;
+  }
+  const roleTests = [
+    {roles:[/\bprimari[ae]\b/giu, /\bsecondari[ae]\b/giu],
+     values:[/\b(?:regol\w*.{0,36}condott\w*|impon\w*.{0,30}obbligh\w*)/iu,
+             /\bconfer\w*.{0,40}poter\w*/iu],
+     code:'V125_PRIMARY_SECONDARY_RELATION_REVERSED'},
+    {roles:[/\bprimari[ae]\b/giu],
+     values:[/\bsanzionator\w*/iu, /\bprecettiv\w*/iu],
+     code:'V125_PRIMARY_SANCTION_RELATION_REVERSED'},
+    {roles:[/\bvalidit[àa]\b/giu, /\befficaci[ae]\b/giu],
+     values:[/\bdover essere\b/iu, /(?<!dover )\bessere\b/iu],
+     code:'V125_VALIDITY_EFFICACY_REVERSED'},
+    {roles:[/\bgerarchic[oa]\b/giu, /\bcronologic[oa]\b/giu],
+     values:[/\bsuperior\w*/iu, /\bposterior\w*/iu],
+     code:'V125_HIERARCHY_CHRONOLOGY_REVERSED'},
+    {roles:[/\bistituzionalistic[oa]\b/giu, /\bnormativistic[oa]\b/giu],
+     values:[/\borganizzazion\w*/iu, /\bnorm[ae]\b/iu],
+     code:'V125_INSTITUTION_NORM_REVERSED'},
+    {roles:[/\bkelsen\b/giu, /\bhart\b/giu],
+     values:[/\bnorma fondamentale\b/iu, /\bnorma di riconoscimento\b/iu],
+     code:'V125_AUTHOR_THEORY_REVERSED'}
+  ];
+  for (const rule of roleTests) {
+    const [left, right] = rule.roles, [a,b] = rule.values;
+    const peers = rule.roles;
+    const leftA = relation(src,left,a,peers), leftB = relation(src,left,b,peers);
+    const targetLeftA = relation(dst,left,a,peers), targetLeftB = relation(dst,left,b,peers);
+    if ((leftA && !leftB && targetLeftB && !targetLeftA) ||
+        (leftB && !leftA && targetLeftA && !targetLeftB)) add(rule.code);
+    if (right) {
+      const rightA=relation(src,right,a,peers),rightB=relation(src,right,b,peers);
+      const targetRightA=relation(dst,right,a,peers),targetRightB=relation(dst,right,b,peers);
+      if ((rightA&&!rightB&&targetRightB&&!targetRightA)||
+          (rightB&&!rightA&&targetRightA&&!targetRightB)) add(rule.code);
+    }
+  }
+  // A "may" -> "must" reversal in a substantially unchanged proposition
+  // is not a lexical simplification; it changes the legal modality.
+  const may=/\b(?:può|possono)\b/iu, must=/\b(?:deve|devono)\b/iu;
+  const words=t=>new Set(t.match(/[\p{L}]{3,}/gu)||[]);
+  const sourceWords=words(src),targetWords=words(dst);
+  const overlap=[...sourceWords].filter(x=>targetWords.has(x)).length/
+    Math.max(1,Math.min(sourceWords.size,targetWords.size));
+  if (overlap>=0.6&&
+      ((may.test(src)&&!must.test(src)&&must.test(dst)&&!may.test(dst))||
+       (must.test(src)&&!may.test(src)&&may.test(dst)&&!must.test(dst))))
+    add('V125_PERMISSION_OBLIGATION_CHANGED');
+
+  // Legal article plural lists must not silently change their members.
+  const articleLists=text=>[...text.matchAll(/\bartt\.?\s*\d{1,4}(?:\s*(?:,|e|ed|-)\s*\d{1,4})+/giu)]
+    .map(hit=>(hit[0].match(/\d{1,4}/gu)||[]).join(',')).sort();
+  const articleOriginal=articleLists(src),articleTarget=articleLists(dst);
+  if (articleOriginal.length&&JSON.stringify(articleOriginal)!==JSON.stringify(articleTarget))
+    add('V125_PLURAL_LEGAL_REFERENCE_CHANGED');
+
+  // The glossary must not invent protected dates/articles, nor claim a
+  // presupposed foundational norm is an ordinary parliamentary enactment.
+  const protectedInSource=new Set(extractProtectedItems(source)
+    .filter(item=>item.kind!=='qualifier').map(item=>item.kind+':'+normalize(item.value)));
+  for (const entry of glossary||[]) {
+    const definition=normalize(entry?.definition);
+    if (!definition) continue;
+    const addedFact=extractProtectedItems(definition)
+      .filter(item=>item.kind!=='qualifier' &&
+        !protectedInSource.has(item.kind+':'+normalize(item.value)));
+    if (addedFact.length) add('V125_GLOSSARY_UNSUPPORTED_REFERENCE');
+    if (/norma fondamentale/u.test(normalize(entry?.term))&&
+        /presuppost/u.test(src)&&
+        /(?:legge ordinaria|approvat.{0,35}parlament|approvat.{0,35}president)/u.test(definition)&&
+        !/(?:legge ordinaria|approvat.{0,35}parlament|approvat.{0,35}president)/u.test(src))
+      add('V125_GLOSSARY_FOUNDATIONAL_NORM_CONTRADICTION');
+  }
+  if (/[\uFFFD]|(?:Ã[¨©²¹])/u.test(String(simplified||'')))
+    add('V125_BROKEN_ACCENTS_OR_ENCODING');
+  return {issues, semanticCertified:false};
+}
