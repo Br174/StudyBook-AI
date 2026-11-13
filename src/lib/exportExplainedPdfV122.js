@@ -1,6 +1,7 @@
 import {jsPDF} from 'jspdf';
 import {deliverBlob} from './fileDelivery.js';
 import {composeExplainedSheetsV122} from './explainedLayoutV122.js';
+import {reservationReportV127} from './explainedRepairV127.js';
 const clean=x=>String(x||'').replace(/\*\*/gu,'');
 const safe=x=>String(x||'StudyBook').replace(/\.[^.]+$/u,'').replace(/[^a-zA-Z0-9_-]+/gu,'_');
 const FONT={heading:13,body:10.5,glossary:9.2};
@@ -41,6 +42,7 @@ function measuredWrap(pdf,value,width,font){
  return lines.length?lines:[''];
 }
 export async function exportExplainedPdfV122(book,fileName,{download=true}={}){
+ const reservations=reservationReportV127(book?.editionsV36?.pages||[]);
  if(book?.editionsV36?.complete!==true)
   throw Object.assign(new Error('Il Libro spiegato non è ancora completo e verificato.'),{
    code:'V122_PDF_INCOMPLETE'});
@@ -49,7 +51,8 @@ export async function exportExplainedPdfV122(book,fileName,{download=true}={}){
  const first=paper.pages[0],pdf=new jsPDF({unit:'mm',
   format:[first.widthMm,first.heightMm],compress:true});
  pdf.setProperties({title:'Libro spiegato - '+String(fileName||'StudyBook'),
-  subject:'Studio in italiano semplice con glossario laterale'});
+  subject:reservations.length?'Studio con pagine esplicitamente accettate con riserva':
+    'Studio in italiano semplice con glossario laterale'});
  const layout=composeExplainedSheetsV122(book,{
   requireComplete:true,wrapText:(text,width,font)=>measuredWrap(pdf,text,width,font)});
  if(layout.issues.length)throw Object.assign(new Error('Errore nell’impaginazione: verifica la pagina.'),{
@@ -63,7 +66,8 @@ export async function exportExplainedPdfV122(book,fileName,{download=true}={}){
   pdf.setDrawColor(205,216,229);
   pdf.line(margin,19,widthMm-margin,19);
   pdf.setTextColor(63,77,99);pdf.setFont('helvetica','normal');pdf.setFontSize(8.5);
-  pdf.text('Libro spiegato · Pagina '+sheet.label,margin,16);
+  pdf.text('Libro spiegato · Pagina '+sheet.label+
+    (sheet.reserved?' · CON RISERVA':''),margin,16);
   pdf.setDrawColor(215,227,237);
   pdf.line(asideX-2,top-3,asideX-2,heightMm-sheet.bottom+1);
   for(const row of sheet.rows){
@@ -96,10 +100,55 @@ export async function exportExplainedPdfV122(book,fileName,{download=true}={}){
   pdf.text('Pagina originale '+sheet.sourcePage,margin,heightMm-12);
   pdf.text('Pagina '+sheet.label,widthMm-margin,heightMm-12,{align:'right'});
  }
+ if(reservations.length){
+  const explanation={
+   V126_PAGE_REDUCTION_OUT_OF_RANGE:'Riduzione del testo fuori intervallo',
+   V126_TRIVIAL_OR_ONE_LINE_BODY:'Testo troppo sintetico',
+   V126_MAP_CONTENT_COVERAGE_LOW:'Concetti rilevanti non rintracciati',
+   V122_PROTECTED_MEANING_MISSING:'Riferimento o condizione mancante',
+   V127_NO_USABLE_EXPLANATION:'Nessuna spiegazione valida: inserito originale',
+   V127_REWRITE_NOT_VERIFIED:'Riscrittura non verificata'
+  };
+  const reportWidth=first.widthMm,reportHeight=first.heightMm;
+  const safeWidth=reportWidth-30;
+  let y=27;
+  const reportPage=()=>{
+   pdf.addPage([reportWidth,reportHeight],
+    reportWidth>reportHeight?'landscape':'portrait');
+   pdf.setFont('helvetica','bold');pdf.setFontSize(13);
+   pdf.setTextColor(30,42,60);
+   pdf.text('Rapporto pagine accettate con riserva',15,17);
+   y=27;
+  };
+  reportPage();
+  const writeLine=(value,{bold=false,size=9.1}={})=>{
+   pdf.setFont('helvetica',bold?'bold':'normal');pdf.setFontSize(size);
+   const lines=pdf.splitTextToSize(String(value),safeWidth);
+   for(const line of lines){
+    if(y>reportHeight-22)reportPage();
+    pdf.text(line,15,y);y+=4.9;
+   }
+  };
+  writeLine(reservations.length+' pagine non conformi; non certificate.',{bold:true});
+  writeLine('Queste pagine sono incluse per permettere di terminare il libro.');
+  writeLine('Rileggere il testo originale in caso di dubbi.');
+  y+=3;
+  for(const item of reservations){
+   if(y>reportHeight-38)reportPage();
+   writeLine('Pagina originale '+item.label+' - 5 correzioni automatiche senza esito.',{bold:true});
+   if(item.sourceTextFallback)writeLine('ATTENZIONE: contenuto originale, non riscritto.');
+   for(const code of item.issues.slice(0,12))
+    writeLine('Problema: '+(explanation[code]||code));
+   y+=4;
+  }
+ }
  const blob=pdf.output('blob');
- const outputName=safe(fileName)+'_Libro_spiegato.pdf';
+ const outputName=safe(fileName)+(reservations.length?
+   '_Libro_spiegato_CON_RISERVE.pdf':'_Libro_spiegato.pdf');
  if(download)await deliverBlob(blob,outputName,'Esporta Libro spiegato');
  return {blob,fileName:outputName,sourcePages:layout.sourcePages,
   outputPages:layout.pages.length,additionalPages:layout.extraPages,
+  pagesWithReservations:reservations.length,
+  reportPages:pdf.getNumberOfPages()-layout.pages.length,
   policy:'lab122-one-explained-glossary-v1'};
 }
