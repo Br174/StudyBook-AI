@@ -7,7 +7,7 @@ export function usableExplainedDraftV127(original,record){
  return Array.isArray(parts)&&parts.length===expected.length&&
   expected.every((seg,i)=>parts[i]?.id===seg.id&&
    typeof parts[i].text==='string'&&parts[i].text.trim()&&
-   !/\\[\\[|\\]\\]|\\{\\{\\s*TODO|\\.\\.\\.\\s*$/u.test(parts[i].text));
+   !/[[]\[|\]\]|\{\{\s*TODO|\.\.\.\s*$/u.test(parts[i].text));
 }
 export function repairAttemptV127(previous={},errorCode=''){
  const initial=previous.initial===true;
