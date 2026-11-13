@@ -1,0 +1,92 @@
+{
+  "schema": "studybook-gemini-block-profile-v1",
+  "project": "StudyBook-AI",
+  "date": "2026-11-13",
+  "status": "CANDIDATE_LOCAL_MEASURED_PENDING_REAL_GEMINI_AND_ANDROID_VERIFICATION",
+  "scope": "single-explained-edition-LAB124-successors",
+  "lifecycle": {
+    "profileOwner": "single native StudyBook transport planner",
+    "noSecondPlanner": true,
+    "requiresExplicitRecalibrationOnModelOrGatewayChange": true
+  },
+  "model": {
+    "allowedModels": [
+      "gemini-3.1-flash-lite",
+      "gemini-3.5-flash-lite"
+    ],
+    "requireVerifiedFreeTier": true,
+    "strictReductionTargetShownToGemini": 50,
+    "neverDisclosePrivateReductionBandToModel": true
+  },
+  "planner": {
+    "maxSourceCharsPerBlock": 40000,
+    "requiredWorkerHardCapSourceChars": 42000,
+    "maxEstimatedInputTokensPerBlock": 35000,
+    "maxEstimatedOutputTokensPerBlock": 30000,
+    "providerMaxTokensOutput": 36000,
+    "providerMaxPagesPerBlock": 72,
+    "minSourceCharsForNextAttemptAfterVerifiedSizeError": 1200,
+    "maxProviderRequestsForPreflight": 0,
+    "pageBoundaryGrouping": true,
+    "preserveCompleteOriginalPages": true,
+    "minimumSafeBlockCount": true,
+    "accountForStructuredJsonAndGlossary": true,
+    "estimateInputTokensFormula": "ceil(totalSourceChars*0.62)+pageCount*190+segmentCount*65+1500",
+    "estimateOutputTokensFormula": "ceil(totalSourceChars*0.58/1.4)+pageCount*420+segmentCount*115+1800",
+    "compareEstimatesBeforeAddingEachWholePage": true,
+    "oversizedSingleSourcePagePolicy": "FLAG_SPECIAL_CASE_DO_NOT_TRUNCATE_PAGE",
+    "countFromBook": [
+      "physicalPageCount",
+      "sourceCharsByPage",
+      "unicodeLettersByPage",
+      "nonEmptyLinesByPage",
+      "segmentCountByPage"
+    ]
+  },
+  "timeout": {
+    "providerRequestMs": 150000,
+    "clientRequestMs": 165000,
+    "policy": "do_not_increase_before_real_latency_tests"
+  },
+  "safety": {
+    "reserveOutputTokensToCurrentWorkerMax": 6000,
+    "reserveWorkerSourceChars": 2000,
+    "inputEstimateIsHeuristicNotActualTokenizer": true,
+    "quotaLimits": "PROJECT_AND_MODEL_SPECIFIC_DO_NOT_HARDCODE_UNVERIFIED_RPM_TPM_RPD",
+    "quotaBackoff": "RESPECT_RETRY_AFTER_AND_DURABLE_CHECKPOINT_NO_IMMEDIATE_RETRY_STORM",
+    "splitOnlyOnVerifiedSizeOrOutputTruncation": "SPLIT_AFFECTED_BLOCK_AT_WHOLE_PAGE_BOUNDARY",
+    "regeneration": "ONLY_NONCOMPLIANT_OR_MISSING_PAGES_NEVER_REGENERATE_ACCEPTED_PAGES",
+    "noPaidProviderOrTier": true,
+    "noApkUntilRealTest": true
+  },
+  "pageAcceptance": {
+    "sourceNonEmptyLinesAtMost": 5,
+    "forShortPages": "SIMPLIFICATION_REQUIRED_NO_PERCENTAGE_THRESHOLD",
+    "forLongPages": "40_TO_60_PERCENT_REDUCTION_INCLUSIVE_PER_PAGE",
+    "exactCheck": "integer_unicode_letter_counts_compare_without_rounding",
+    "displayDecimalPlaces": 2,
+    "globalAverageCannotOverrideIndividualPage": true,
+    "studyOnAndroid": "EACH_READY_PAGE_IMMEDIATELY_READABLE_EVEN_IF_EARLIER_PAGE_PENDING",
+    "pdfAndPrint": "ONLY_WHEN_ALL_ORIGINAL_PAGES_ARE_READY"
+  },
+  "localCalibrationEvidence": {
+    "testPdf": "Filosofia del diritto appunti+sbobine.pdf",
+    "source": "PyMuPDF get_text('text') local, page groups may change in app canonical source",
+    "physicalPages": 44,
+    "extractedCharsIncludingSpaces": 116920,
+    "extractedUnicodeLetters": 95691,
+    "pagesWithAtMostFiveNonemptyLines": 1,
+    "page44NonemptyLines": 3,
+    "simulatedBlocksAt28000Chars": 5,
+    "simulatedBlocksAt40000CharsWithOneOrTwoSegmentsPerPage": 3,
+    "simulatedBlocksAt60000CharsWithCurrentTokenOutputCap": 3,
+    "reasonNoTwoBlockNow": "estimated output tokens above 30000, exceeds current safe cap; provider max output 36000",
+    "hypothetical2000PagesByRepeatingThisPdfCharsOneSegmentPerPage": 137,
+    "callsToGeminiInCalibration": 0
+  },
+  "sourceOfTruth": {
+    "specifications": "docs/STUDYBOOK_PILASTRO_BLOCCHI_DINAMICI_V1.md",
+    "codeStillCurrent": "28k planner chars/30k Worker source chars; candidate thresholds NOT active",
+    "productionState": "UNMODIFIED"
+  }
+}
