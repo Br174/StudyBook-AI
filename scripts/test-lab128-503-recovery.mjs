@@ -10,7 +10,7 @@ import {planStudyAutoResumeV45} from '../src/lib/studyAutoResumeV45.js';
 
 const PHRASE='Il mare è calmo e la barca naviga vicino al porto. ';
 const input=(n=44)=>({canonicalBookMap:{
- originalFingerprint:'128'.repeat(22),pageCount:n,chapters:[],
+ originalFingerprint:'8'.repeat(64),pageCount:n,chapters:[],
  pages:Array.from({length:n},(_,i)=>({physicalPage:i+1,label:String(i+1),
   text:PHRASE.repeat(24),sourceStatus:'verified',
   widthPt:595,heightPt:842}))
