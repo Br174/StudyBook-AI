@@ -8,6 +8,8 @@ import {sourceRiskReviewV110} from './studySourceRiskV110.js';
 export const EXPLAINED_POLICY_V122='lab122-one-explained-glossary-v1';
 export const EXPLAINED_TARGET_V122=50;
 export const EXPLAINED_PRIVATE_BAND_V122=Object.freeze({min:40,max:60});
+export const EXPLAINED_AUDIT_REVISION_V125='lab125-page-audit-v1';
+const legacyReadAuditV125=new WeakMap();
 const clean=value=>String(value??'').normalize('NFC').trim();
 const normalized=value=>clean(value).replace(/\s+/gu,' ').toLocaleLowerCase('it-IT');
 const plain=value=>String(value||'').replace(/\*\*/g,'');
@@ -222,7 +224,8 @@ export function auditExplainedPageV122(sourcePage,result,{allowShort=true}={}){
  issues.push(...detectTerms(text,result.glossary));
  if(/\[\[|\]\]|\{\{\s*TODO|\.\.\.\s*$/u.test(text))
   issues.push('V122_PLACEHOLDER_OR_TRUNCATION');
- return {ready:issues.length===0,issues:[...new Set(issues)],
+ return {ready:issues.length===0,auditRevision:EXPLAINED_AUDIT_REVISION_V125,
+    issues:[...new Set(issues)],
    advisories:[...new Set(advisories)],reduction,exactReduction,
    shortPage,sourceLineCount,sizeCompliant,sourceLetters,outputLetters,glossaryCount:result.glossary.length,
    lexicalSupportPercent:semantic.coveragePercent,
@@ -235,5 +238,18 @@ export function auditExplainedPageV122(sourcePage,result,{allowShort=true}={}){
    fidelity:{protectedCount:semantic.protectedCount,missingProtected:semantic.missingProtected.length,
      missingHighValue:semantic.missingHighValue.length,
      qualifierMismatches:semantic.qualifierMismatches.length},
-   semanticCertified:false};
+   semanticCertified:false,auditRevision:EXPLAINED_AUDIT_REVISION_V125};
+}
+
+// LAB125 compatibility: never trust LAB124 review.ready (or a global-average
+// publication flag) when the saved checkpoint predates page-level 40-60 gates.
+// Re-audit LOCALLY, no Gemini/Worker calls and no mutation of stored records.
+export function isVerifiedExplainedPageV125(originalPage,record){
+ if(!originalPage||!record||record.id!==originalPage.id)return false;
+ if(record.review?.auditRevision===EXPLAINED_AUDIT_REVISION_V125)
+   return record.review.ready===true&&record.review.sizeCompliant===true;
+ if(legacyReadAuditV125.has(record))return legacyReadAuditV125.get(record);
+ const ready=auditExplainedPageV122(originalPage,record).ready===true;
+ legacyReadAuditV125.set(record,ready);
+ return ready;
 }
