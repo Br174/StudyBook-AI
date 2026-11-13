@@ -2,12 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "LAB128 — Auto-compila APK+ZIP all'apertura Codespaces (senza Actions)",
+      "label": "LAB129 — Auto-compila APK+ZIP all'apertura Codespaces (senza Actions)",
       "type": "process",
       "command": "bash",
       "args": [
         "-c",
-        "set -euo pipefail\nbranch='trial/studybook-lab128-provider-overload-recovery-20261113'\n[[ \"$(git branch --show-current)\" == \"$branch\" ]] || { echo '[LAB128] Apri il ramo LAB128 prima di compilare.' >&2; exit 1; }\ncase \"$(git remote get-url origin)\" in\n  https://github.com/Br174/StudyBook-AI|https://github.com/Br174/StudyBook-AI.git|git@github.com:Br174/StudyBook-AI.git|ssh://git@github.com/Br174/StudyBook-AI.git) ;;\n  *) echo '[LAB128] Repository origin inatteso.' >&2; exit 1 ;;\nesac\nremote_ref=\"refs/remotes/origin/$branch\"\ngit fetch --no-tags origin \"refs/heads/$branch:$remote_ref\"\nscript=\"$(git show \"$remote_ref:scripts/codespaces-lab128-autobuild.sh\")\"\n[[ -n \"$script\" ]]\nexec bash -c \"$script\" scripts/codespaces-lab128-autobuild.sh"
+        "set -euo pipefail\nbranch='trial/studybook-lab129-mobile-reader-tools-layout-20261113'\n[[ \"$(git branch --show-current)\" == \"$branch\" ]] || { echo '[LAB129] Apri il ramo LAB129 prima di compilare.' >&2; exit 1; }\ncase \"$(git remote get-url origin)\" in\n  https://github.com/Br174/StudyBook-AI|https://github.com/Br174/StudyBook-AI.git|git@github.com:Br174/StudyBook-AI.git|ssh://git@github.com/Br174/StudyBook-AI.git) ;;\n  *) echo '[LAB129] Repository origin inatteso.' >&2; exit 1 ;;\nesac\nremote_ref=\"refs/remotes/origin/$branch\"\ngit fetch --no-tags origin \"refs/heads/$branch:$remote_ref\"\nscript=\"$(git show \"$remote_ref:scripts/codespaces-lab129-autobuild.sh\")\"\n[[ -n \"$script\" ]]\nexec bash -c \"$script\" scripts/codespaces-lab129-autobuild.sh"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -31,11 +31,11 @@
       }
     },
     {
-      "label": "LAB128 — Verifica Worker esistente e compila APK+ZIP (manuale)",
+      "label": "LAB129 — Verifica Worker esistente e compila APK+ZIP (manuale)",
       "type": "process",
       "command": "bash",
       "args": [
-        "scripts/codespaces-lab128-backend-and-build.sh"
+        "scripts/codespaces-lab129-backend-and-build.sh"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
