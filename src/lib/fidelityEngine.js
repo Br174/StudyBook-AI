@@ -446,3 +446,30 @@ export function auditCriticalRelationsV125(source, simplified, glossary = []) {
     add('V125_BROKEN_ACCENTS_OR_ENCODING');
   return {issues, semanticCertified:false};
 }
+
+
+// LAB125 grammar: narrow high-confidence checks, with style-only advisories.
+// A passing grammar check is not proof of perfect Italian.
+export function auditItalianGrammarV125(text) {
+  const input=String(text||'').normalize('NFC');
+  const issues=[],advisories=[];
+  const add=(arr,code)=>{if(!arr.includes(code))arr.push(code);};
+  if (/[\uFFFD]|(?:Ã[¨©²¹])/u.test(input))add(issues,'V125_GRAMMAR_BROKEN_ENCODING');
+  const stack=[],pairs={'(':')','«':'»','“':'”'};
+  for(const char of input){
+    if(Object.prototype.hasOwnProperty.call(pairs,char))stack.push(pairs[char]);
+    else if([')', '»','”'].includes(char)){
+      if(!stack.length||stack.pop()!==char){add(issues,'V125_GRAMMAR_UNBALANCED_PUNCTUATION');break;}
+    }
+  }
+  if(stack.length)add(issues,'V125_GRAMMAR_UNBALANCED_PUNCTUATION');
+  if(/[!?]{3,}|[,;:]{2,}/u.test(input))
+    add(issues,'V125_GRAMMAR_INVALID_PUNCTUATION');
+  if(/(?<!\p{L})(?:perche|poiche|benche|nonche|piu)(?!\p{L})/iu.test(input))
+    add(issues,'V125_GRAMMAR_MISSING_ACCENT');
+  if(/(?:^|[\s,;:.!?])(che|non|la|il|gli|una|uno|per|con|del|della)\s+\1(?=\s|[.,;:!?]|$)/iu.test(input))
+    add(advisories,'V125_GRAMMAR_POSSIBLE_REPETITION');
+  if(/\s+[,:;!?](?=\s|$)/u.test(input))
+    add(advisories,'V125_GRAMMAR_SPACING_BEFORE_PUNCTUATION');
+  return {issues,advisories};
+}
