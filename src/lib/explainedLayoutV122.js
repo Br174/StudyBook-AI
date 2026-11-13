@@ -2,6 +2,9 @@
 // Original pages are anchors; overflow is emitted only as bis, tris, quater...
 import {continuationLabel} from './libroSpecchioV35.js';
 import {originalExplainedPagesV122,isVerifiedExplainedPageV125} from './explainedPolicyV122.js';
+import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,
+ auditExplainedPageV126} from './explainedStagesV126.js';
+import {reserveAcceptedV127} from './explainedRepairV127.js';
 const mm=pt=>Number(pt||0)*25.4/72;
 const clean=x=>String(x||'').replace(/\*\*/gu,'').trim();
 export function approximateWrapV122(text,widthMm,font='body'){
@@ -46,11 +49,23 @@ export function composeExplainedSheetsV122(book,{
  const originals=originalExplainedPagesV122(book);
  const snapshot=book?.editionsV36;
  const records=new Map((snapshot?.pages||[]).filter(Boolean).map(p=>[p.id,p]));
+ const isPrintable=(original,record)=>{
+  if(!original||!record)return false;
+  if(snapshot?.version!==EXPLAINED_POLICY_V126)
+   return isVerifiedExplainedPageV125(original,record);
+  if(reserveAcceptedV127(original,record))return true;
+  if(!original.segments.length)return record.review?.ready===true;
+  if(record.review?.auditRevision!==EXPLAINED_AUDIT_V126||
+   record.review?.ready!==true)return false;
+  const map=snapshot.comprehensionV126?.pages?.[original.physicalPage-1];
+  return Boolean(map&&auditExplainedPageV126(original,record,map).ready);
+ };
  const sheets=[],issues=[];
  const margin=15,gap=4,top=25,bottom=22;
  for(const original of originals){
   const record=records.get(original.id);
-  const ready=isVerifiedExplainedPageV125(original,record);
+  const ready=isPrintable(original,record);
+  const reserved=reserveAcceptedV127(original,record);
   // Only conforming pages are readable/studiable; drafts remain in checkpoints.
   const draft=false;
   if(requireComplete&&!ready)
@@ -65,7 +80,7 @@ export function composeExplainedSheetsV122(book,{
     continuationLabel(original.label,continuation),
     sourcePage:original.physicalPage,widthMm,heightMm,
     textWidth,glossaryWidth,margin,gap,top,bottom,
-    ready,draft,rows:[],sourceLetters:original.originalBodyLetters,
+    ready,draft,reserved,rows:[],sourceLetters:original.originalBodyLetters,
     reduction:record?.review?.reduction??null};
    sheets.push(sheet);continuation++;
    return sheet;
@@ -127,5 +142,5 @@ export function composeExplainedSheetsV122(book,{
  }
  return {pages:sheets,issues,sourcePages:originals.length,
   extraPages:sheets.length-originals.length,allReady:originals.every(p=>
-   isVerifiedExplainedPageV125(p,records.get(p.id)))};
+   isPrintable(p,records.get(p.id)))};
 }
