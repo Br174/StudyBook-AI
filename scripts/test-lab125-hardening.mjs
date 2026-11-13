@@ -41,7 +41,7 @@ test(repairPayload.repair.issueCodes.includes('V125_PERMISSION_OBLIGATION_CHANGE
 test(repairPayload.repair.correctionNotes.some(note=>note.includes('possibilità oppure obbligo')),
  'Retry must describe the failed concept, not only an opaque code');
 test(repairPayload.targetBodyLetters===Math.round(
- (retryInput.segments[0].source.match(/\\p{L}/gu)||[]).length*0.5),
+ (retryInput.segments[0].source.match(/\p{L}/gu)||[]).length*0.5),
  'Only the 50-percent letter target may be sent to Gemini');
 test(!JSON.stringify(repairPayload).includes('40–60')&&
  !JSON.stringify(repairPayload).includes('40-60'),
