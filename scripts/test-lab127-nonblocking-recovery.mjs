@@ -8,6 +8,7 @@ import {auditComprehensionV126,lessonPayloadV126,
 import {reservationReportV127} from '../src/lib/explainedRepairV127.js';
 import {composeExplainedSheetsV122} from '../src/lib/explainedLayoutV122.js';
 import {buildExplainedEditionViewV122} from '../src/lib/explainedViewV122.js';
+import {exportExplainedPdfV122} from '../src/lib/exportExplainedPdfV122.js';
 import {planStudyAutoResumeV45} from '../src/lib/studyAutoResumeV45.js';
 
 const PHRASE='Il mare è calmo e la barca naviga vicino al porto. ';
@@ -93,6 +94,12 @@ try{
  const layout=composeExplainedSheetsV122(reservableBook,{requireComplete:true});
  assert.equal(layout.sourcePages,44);
  assert.equal(layout.allReady,true);
+ const pdfResult=await exportExplainedPdfV122(reservableBook,'LAB127_prova.pdf',
+  {download:false});
+ assert.equal(pdfResult.pagesWithReservations,2);
+ assert.ok(pdfResult.reportPages>=1);
+ assert.ok(pdfResult.fileName.includes('CON_RISERVE'));
+ assert.ok(pdfResult.blob);
  assert.ok(layout.pages.find(p=>p.sourcePage===9&&p.reserved),
   'An original-text fallback must print with an explicit reserve flag.');
  assert.equal(calls.some(c=>c.phase==='explain'&&c.ids.includes('p9')),false);
