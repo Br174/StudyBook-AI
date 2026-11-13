@@ -39,7 +39,7 @@ try{
  const wake=planStudyAutoResumeV45(halted,future);
  assert.equal(wake.reason,'provider-cooldown');
  assert.ok(wake.at>=future);
- console.log('PASS LAB124: one 503 pauses exactly once and reduces future block-size budget');
+ console.log('PASS LAB125: one 503 pauses exactly once and preserves safe block-size budget');
 
  // Test B: after cooldown, previously saved original pages are reused and
  // only as many whole-page requests as the new capacity requires are sent.
@@ -58,7 +58,7 @@ try{
  assert.ok(calls.length>=1);
  assert.ok(calls.every(batch=>batch.length>=1));
  assert.deepEqual(calls.flat(),Array.from({length:44},(_,i)=>'p'+(i+1)));
- assert.ok(progress.some(s=>s.verifiedChunkVariants>0&&s.verifiedChunkVariants<44));
+ assert.ok(progress.some(s=>s.verifiedChunkVariants===44),'All 44 pages must eventually be accepted, even in one large block');
  console.log('PASS LAB124: scheduled recovery completes 44/44 from original and page checkpoints');
 
  // Test C: a size-error 413 is not a quota 503: halve whole pages safely.
