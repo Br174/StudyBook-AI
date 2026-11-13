@@ -45,23 +45,14 @@ export function auditComprehensionV126(sourcePage,record){
  if(issues.length)return {ready:false,issues};
  if(JSON.stringify(expected)!==JSON.stringify(record.segments.map(s=>s.id)))
   issues.push('V126_COMPREHENSION_SEGMENT_ORDER');
+ // Fase 1 LAB127: solo controllo tecnico di ricezione e corrispondenza.
+ // Non respingere una pagina per lunghezza, densità concettuale, percentuali
+ // o riferimenti: la verifica didattica appartiene alla riscrittura.
  for(let i=0;i<sourcePage.segments.length;i++){
-  const seg=sourcePage.segments[i],map=record.segments[i],units=studyUnitsV126(seg.source);
-  if(!map||map.id!==seg.id||!Array.isArray(map.concepts)||!map.concepts.length||
-    map.concepts.length>90||map.concepts.some(x=>typeof x!=='string'||cleaned(x).length<12||
-    x.length>2200)){
-    issues.push('V126_COMPREHENSION_CONCEPTS_INVALID');continue;
-  }
-  const mapUnits=studyUnitsV126(map.concepts.join(' '));
-  // Prevent the very failure seen on the LAB125 phone: long source -> one vacuous line.
-  // This is a structural minimum, not a claim of semantic certification.
-  if(units>300&&mapUnits<Math.min(900,Math.floor(units*0.13)))
-   issues.push('V126_COMPREHENSION_TOO_SHALLOW');
-  const originalProtected=extractProtectedItems(seg.source)
-   .filter(x=>['legal-ref','date-number','deadline'].includes(x.kind));
-  const joined=map.concepts.join(' ').toLocaleLowerCase('it-IT');
-  if(originalProtected.some(x=>!joined.includes(String(x.value).toLocaleLowerCase('it-IT'))))
-   issues.push('V126_COMPREHENSION_PROTECTED_REFERENCE_MISSING');
+  const seg=sourcePage.segments[i],map=record.segments[i];
+  if(!map||map.id!==seg.id||!Array.isArray(map.concepts)||
+    !map.concepts.length||map.concepts.some(x=>typeof x!=='string'||!x.trim()))
+   issues.push('V126_COMPREHENSION_CONCEPTS_INVALID');
  }
  return {ready:issues.length===0,issues:[...new Set(issues)],
   conceptualUnits:record.segments.reduce((n,s)=>n+studyUnitsV126((s?.concepts||[]).join(' ')),0),
