@@ -382,7 +382,7 @@ export async function generateExplainedBookV126(book,{
    previousReduction:previousDraft?.review?.reduction??null,
    correctionCycle:Number(state?.corrections||0)+1,
    correctionStrategy:['mirata','guidata','strutturale','concetti','finale'][
-    Math.min(4,Number(state?.corrections||0))]}}};
+    Math.min(4,Number(state?.corrections||0))]}};
  };
  const initial=pendingPages().map(p=>repairs.get(p.id)?.initial
   ?repairInput(p):p);
