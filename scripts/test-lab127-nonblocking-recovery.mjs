@@ -36,6 +36,11 @@ globalThis.fetch=async (_url,options)=>{
  calls.push({phase:q.phase,ids:q.pages.map(p=>p.id),
   cycles:q.pages.map(p=>p.repair?.correctionCycle||0),
   payload:q.pages});
+ if(mode==='stale')return {
+  ok:true,status:200,headers:{get:()=>null},
+  json:async()=>({engine:'ai',version:EXPLAINED_POLICY_V126,
+    phase:q.phase,pages:[]})
+ };
  if(mode==='mixed'&&q.phase==='comprehend'&&q.pages.some(p=>p.id==='p9'))
   return reply(q.phase,[],422);
  if(mode==='quota'&&q.phase==='explain'&&
@@ -125,6 +130,13 @@ try{
  assert.equal(calls.filter(c=>c.phase==='comprehend').length,1,
   'Provider retry must reuse the comprehension checkpoint.');
 
+ mode='stale';calls.length=0;
+ const mismatched=await generateExplainedBookV126(makeBook(1));
+ assert.equal(mismatched.complete,false);
+ assert.equal(mismatched.status,'provider-blocked');
+ assert.equal(mismatched.diagnostics.lastCode,'V127_WORKER_UPDATE_REQUIRED');
+ assert.equal(planStudyAutoResumeV45(mismatched,Date.now(),0),null);
+ assert.equal(calls.length,1,'An old backend must not consume quality corrections.');
  mode='large';calls.length=0;
  const large=await generateExplainedBookV126(makeBook(2000,PHRASE.trim()));
  assert.equal(large.originalPages,2000);
