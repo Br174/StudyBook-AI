@@ -360,6 +360,8 @@ export function auditCriticalRelationsV125(source, simplified, glossary = []) {
       let tail = text.slice(start, start + 130);
       const period = tail.search(/[.;!?]/u);
       if (period >= 0) tail = tail.slice(0, period);
+      const exclusion = tail.search(/\b(?:e non|ma non|invece di)\b/iu);
+      if (exclusion >= 0) tail = tail.slice(0, exclusion);
       for (const peer of peers) {
         const found = new RegExp(peer.source, 'iu').exec(tail);
         if (found) tail = tail.slice(0, found.index);
@@ -405,7 +407,8 @@ export function auditCriticalRelationsV125(source, simplified, glossary = []) {
   }
   // A "may" -> "must" reversal in a substantially unchanged proposition
   // is not a lexical simplification; it changes the legal modality.
-  const may=/\b(?:può|possono)\b/iu, must=/\b(?:deve|devono)\b/iu;
+  const may=/(?<!\p{L})(?:può|possono)(?!\p{L})/iu,
+    must=/(?<!\p{L})(?:deve|devono)(?!\p{L})/iu;
   const words=t=>new Set(t.match(/[\p{L}]{3,}/gu)||[]);
   const sourceWords=words(src),targetWords=words(dst);
   const overlap=[...sourceWords].filter(x=>targetWords.has(x)).length/
