@@ -15,6 +15,7 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
   const [simpleLive,setSimpleLive]=useState(null);
   const [saved,setSaved]=useState(null);
   const lastTap=useRef(0),inflight=useRef(new Map()),currentLabel=useRef('');
+  const scrollRoot=useRef(null);
   const pages=output.pages||[];
   useEffect(()=>{
     const target=book?.chapters?.[chapterIndex]?.pageStart||1;
@@ -58,7 +59,9 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
     });
   },[simpleRequestToken]);
   const navigatePage=next=>{
+    if(next===index||next<0||next>=pages.length)return;
     setIndex(next);
+    scrollRoot.current?.scrollTo?.({top:0,behavior:'auto'});
     onPageChange?.();
   };
   useEffect(()=>{setPicture(null);setPictureUrl('');setPictureError('');},[index]);
@@ -76,15 +79,15 @@ export default function MirrorReaderV35({book,originalFile,chapterIndex=0,varian
     finally{setPictureBusy(false);}
   }
   if(!page)return <p role="status">Struttura del libro ancora da verificare.</p>;
-  return <div className="sb-mirror-reader">
+  return <div className="sb-mirror-reader" ref={scrollRoot}>
     {book?.editionReadiness?.partial && <p role="status" className="sb-mirror-warning">ANTEPRIMA PARZIALE · Solo i paragrafi verificati da Gemini sono leggibili. Il libro definitivo non è ancora pubblicato.</p>}
-    <nav className="sb-mirror-page-nav">
-      <button onClick={()=>navigatePage(Math.max(0,index-1))} disabled={index===0}>←</button>
-      <select value={index} onChange={e=>navigatePage(Number(e.target.value))}>
+    <nav className="sb-mirror-page-nav" aria-label="Navigazione pagine sul telefono">
+      <button type="button" aria-label="Pagina precedente" onClick={()=>navigatePage(Math.max(0,index-1))} disabled={index===0}>‹</button>
+      <select aria-label="Scegli pagina da leggere" value={index} onChange={e=>navigatePage(Number(e.target.value))}>
         {pages.map((p,i)=><option key={i} value={i}>Pagina {p.label}</option>)}
       </select>
-      <button onClick={()=>navigatePage(Math.min(pages.length-1,index+1))}
-        disabled={index>=pages.length-1}>→</button>
+      <button type="button" aria-label="Pagina successiva" onClick={()=>navigatePage(Math.min(pages.length-1,index+1))}
+        disabled={index>=pages.length-1}>›</button>
     </nav>
     {(output.audit?.problems?.length>0 || book.canonicalBookMap?.structuralStatus!=='source-mapped')&&
       <p className="sb-mirror-warning" role="status">
