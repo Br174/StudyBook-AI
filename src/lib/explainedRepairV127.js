@@ -73,6 +73,7 @@ export function reservationReportV127(pages){
   .map(p=>({page:Number(p.sourcePage),label:String(p.label||p.sourcePage),
    issues:Array.isArray(p.review.issues)?p.review.issues:[],
    sourceTextFallback:p.review.sourceTextFallback===true,
+   provisionalOriginal:p.review.provisionalOriginal===true,
    corrections:Number(p.review.correctionAttempts)||0}))
   .sort((a,b)=>a.page-b.page);
 }
