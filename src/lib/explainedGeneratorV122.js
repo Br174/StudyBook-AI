@@ -71,12 +71,25 @@ const withSource=(original,result)=>({
  review:result?.review||{ready:false,issues:['V122_DRAFT_NOT_VERIFIED']},
  sourcePage:original.physicalPage
 });
-// Check actual serialized protected claims and glossaries once per completed
-// block. This is a local heuristic, never an extra request to Gemini.
+// Deterministic EXACT serialization size for each physical page, cached
+// once per page object. modelPayloadV122 maps pages independently: a grouped
+// JSON array equals the sum of individual objects plus (n-1) separators.
+// The token ratio remains a conservative heuristic, NOT an API usage claim.
+const SERIAL_EMPTY_JSON_CHARS_V125=JSON.stringify({pages:[]}).length;
+const SERIAL_PROMPT_CHARS_V125=modelInstructionV122().length;
+const SERIAL_PAGE_CHARS_V125=new WeakMap();
+function serializedPagePayloadCharsV125(page){
+ const cached=SERIAL_PAGE_CHARS_V125.get(page);
+ if(cached!==undefined)return cached;
+ const size=JSON.stringify(modelPayloadV122([page])).length-SERIAL_EMPTY_JSON_CHARS_V125;
+ SERIAL_PAGE_CHARS_V125.set(page,size);
+ return size;
+}
 export function estimateSerializedInputTokensV125(block){
  if(!block.length)return 0;
- const payload=JSON.stringify(modelPayloadV122(block));
- return Math.ceil((payload.length+modelInstructionV122().length)/2.6);
+ const chars=SERIAL_EMPTY_JSON_CHARS_V125+SERIAL_PROMPT_CHARS_V125+
+   block.reduce((n,page)=>n+serializedPagePayloadCharsV125(page),0)+block.length-1;
+ return Math.ceil(chars/2.6);
 }
 export function planExplainedBlocksV122(pages,{
  maxChars=BLOCK_SOURCE_LIMIT,maxPages=BLOCK_PAGE_LIMIT,
