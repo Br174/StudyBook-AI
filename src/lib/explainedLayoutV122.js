@@ -51,7 +51,8 @@ export function composeExplainedSheetsV122(book,{
  for(const original of originals){
   const record=records.get(original.id);
   const ready=record?.review?.ready===true;
-  const draft=!ready&&!requireComplete&&hasReadableExplainedDraftV122(original,record);
+  // Only conforming pages are readable/studiable; drafts remain in checkpoints.
+  const draft=false;
   if(requireComplete&&!ready)
    throw Object.assign(new Error('Pagina '+original.label+' non verificata.'),{code:'V122_PAGE_NOT_READY'});
   const widthMm=Math.max(100,mm(original.widthPt)),heightMm=Math.max(140,mm(original.heightPt));
