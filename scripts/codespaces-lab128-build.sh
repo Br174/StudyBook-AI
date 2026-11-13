@@ -122,7 +122,7 @@ for attempt in 1 2 3 4 5 6 7 8 9; do
   [[ "$attempt" -eq 9 ]] || sleep 4
 done
 rm -f "$WORKER_HEADERS"
-[[ "$BACKEND_READY" == 1 ]] || fail "Worker LAB128 non compatibile dopo 9 controlli HEAD: fase LAB126 e recovery LAB128 richiesti. Ultimo HTTP $BACKEND_HTTP. Nessuna APK incompatibile compilata."
+[[ "$BACKEND_READY" == 1 ]] || fail "Worker LAB128 non compatibile dopo 9 controlli HEAD: fase lab126 e recovery lab127 richiesti. Ultimo HTTP $BACKEND_HTTP. Nessuna APK incompatibile compilata."
 PHASE='preflight'
 say 'Worker LAB127 compatibile confermato; LAB128 modifica solo il client Android.'
 mkdir -p "$TOOLS" "$OUT"
@@ -332,7 +332,7 @@ cp "$SIGNED" "$OUT/$NAME.apk"
   echo "signerSha256=$CERT"
   echo "backendHttp=$HTTP"
   echo 'realGeminiTest=USER_ANDROID_QA_PENDING'
-  echo 'deployment=EXISTING_VERIFIED_WORKER_LAB128_RECOVERY_CONTRACT'
+  echo 'deployment=EXISTING_VERIFIED_WORKER_LAB127_NO_DEPLOY_LAB128'
   echo "backendSourceGuidanceRevision=${GUIDANCE:-UNCONFIRMED}"
   echo 'androidDeviceTest=PENDING'
 } > "$OUT/$NAME-IDENTITY.txt"
