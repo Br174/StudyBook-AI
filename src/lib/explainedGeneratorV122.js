@@ -1,7 +1,7 @@
 // LAB122 one source page -> one explanatory page + aligned glossary, in multi-page requests.
 // Legacy LAB36-121 editions remain untouched. Checkpoints are snapshots persisted by existing Library owner.
 import {apiEndpoint} from './apiEndpoint.js';
-import {originalExplainedPagesV122,auditExplainedPageV122,
+import {originalExplainedPagesV122,auditExplainedPageV122,modelPayloadV122,modelInstructionV122,
  EXPLAINED_PRIVATE_BAND_V122,EXPLAINED_POLICY_V122} from './explainedPolicyV122.js';
 import {percentReduced} from './studyPillarV38.js';
 
@@ -71,6 +71,13 @@ const withSource=(original,result)=>({
  review:result?.review||{ready:false,issues:['V122_DRAFT_NOT_VERIFIED']},
  sourcePage:original.physicalPage
 });
+// Check actual serialized protected claims and glossaries once per completed
+// block. This is a local heuristic, never an extra request to Gemini.
+export function estimateSerializedInputTokensV125(block){
+ if(!block.length)return 0;
+ const payload=JSON.stringify(modelPayloadV122(block));
+ return Math.ceil((payload.length+modelInstructionV122().length)/2.6);
+}
 export function planExplainedBlocksV122(pages,{
  maxChars=BLOCK_SOURCE_LIMIT,maxPages=BLOCK_PAGE_LIMIT,
  maxInputTokens=BLOCK_INPUT_TOKEN_LIMIT,maxOutputTokens=BLOCK_OUTPUT_TOKEN_LIMIT
@@ -100,7 +107,24 @@ export function planExplainedBlocksV122(pages,{
   group.push(page);chars+=charsOfPage;segments+=segmentCount;
  }
  flush();
- return groups;
+ const safe=[];
+ for(const group of groups){
+  let tail=group;
+  while(tail.length){
+   if(tail.length===1||estimateSerializedInputTokensV125(tail)<=inputCap){
+    safe.push(tail);break;
+   }
+   let low=1,high=tail.length-1,best=1;
+   while(low<=high){
+    const middle=Math.floor((low+high)/2);
+    if(estimateSerializedInputTokensV125(tail.slice(0,middle))<=inputCap){
+     best=middle;low=middle+1;
+    }else high=middle-1;
+   }
+   safe.push(tail.slice(0,best));tail=tail.slice(best);
+  }
+ }
+ return safe;
 }
 export function preflightExplainedCallsV124(pages,options={}){
  const blocks=Array.isArray(options.preplannedBlocks)?options.preplannedBlocks:
@@ -111,12 +135,12 @@ export function preflightExplainedCallsV124(pages,options={}){
   const count=block.length;
   return {fromPage:block[0].physicalPage,toPage:block.at(-1).physicalPage,
     pages:count,sourceChars:chars,
-    estimatedInputTokens:Math.ceil(chars*0.62)+count*190+segments*65+1500,
+    estimatedInputTokens:estimateSerializedInputTokensV125(block),
     estimatedOutputTokens:Math.ceil(chars*0.58/1.4)+count*420+segments*115+1800};
  });
  return {plannedRequests:blocks.length,totalPages:pages.length,
   details,oversizedPages:details.filter(d=>d.sourceChars>BLOCK_SOURCE_LIMIT||d.pages>72||
-    d.estimatedOutputTokens>30000).map(d=>d.fromPage),
+    d.estimatedInputTokens>BLOCK_INPUT_TOKEN_LIMIT||d.estimatedOutputTokens>30000).map(d=>d.fromPage),
   estimatedLocally:true,providerCallsForEstimate:0};
 }
 export function explainedSnapshotV122(book,originalPages,records,status='partial',diagnostics={}){
@@ -202,8 +226,12 @@ export async function generateExplainedBookV122(book,{
  // LAB124: the LAB51/58 pattern packages as many whole pages as estimated
  // INPUT and OUTPUT capacity allow. A previous overload reduces the next
  // session's budget rather than firing several requests against a busy model.
- const queue=planExplainedBlocksV122(pending,{maxChars:blockCharBudget});
- const estimate=preflightExplainedCallsV124(pending,{maxChars:blockCharBudget,
+ const planningPages=pending.map(p=>{
+  const repair=records.get(p.id)?.review?.repair;
+  return repair?{...p,repair}:p;
+ });
+ const queue=planExplainedBlocksV122(planningPages,{maxChars:blockCharBudget});
+ const estimate=preflightExplainedCallsV124(planningPages,{maxChars:blockCharBudget,
   preplannedBlocks:queue});
  diagnostics.splits=0;
  diagnostics.plannedRequests=estimate.plannedRequests;
