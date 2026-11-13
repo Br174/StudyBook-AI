@@ -51,9 +51,21 @@ export function reservedExplainedPageV127(original,record,state){
    lastCorrectionCode:state?.lastCode||null,
    semanticCertified:false}};
 }
+export function reserveUnreadPageV127(original){
+ const parts=(original.segments||[]).map(s=>({id:s.id,text:s.source}));
+ return {id:original.id,label:original.label,
+  sourcePage:original.physicalPage,physicalPage:original.physicalPage,
+  segments:parts,glossary:[],
+  review:{ready:false,sizeCompliant:false,
+   issues:['V127_COMPREHENSION_UNAVAILABLE'],
+   acceptedWithReserve:true,sourceTextFallback:true,
+   comprehensionUnavailable:true,correctionAttempts:0,
+   semanticCertified:false}};
+}
 export function reserveAcceptedV127(original,record){
  return Boolean(record?.review?.acceptedWithReserve===true&&
-  record.review?.correctionAttempts===MAX_CORRECTIONS_V127&&
+  (record.review?.correctionAttempts===MAX_CORRECTIONS_V127||
+    record.review?.comprehensionUnavailable===true)&&
   usableExplainedDraftV127(original,record));
 }
 export function reservationReportV127(pages){
