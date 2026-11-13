@@ -14,7 +14,7 @@ const MAX_STAGE_SOURCE=30000;
 const TIMEOUT=EXPLAINED_REQUEST_TIMEOUT_V122;
 const MAX_STAGE_INPUT_TOKENS=30000;
 const MAX_STAGE_OUTPUT_TOKENS=30000;
-const MAX_SPLITS=12;
+const MAX_SPLITS=64; // isolate a failing page without stranding the remaining book
 const isCooldown=(status,code)=>status===429||(status===503&&
  !['AI_NOT_CONFIGURED','AI_MODEL_NOT_ALLOWLISTED'].includes(code))||
  ((status===502||status===504)&&/AI_PROVIDER_(?:NETWORK|TIMEOUT|REJECTED)|V126_NETWORK/iu.test(code||''));
@@ -133,7 +133,7 @@ export async function generateExplainedBookV126(book,{
   originalPages:source.length,stage:'comprehension',
   mode:'lab126-understand-entire-book-first',
   priorProviderErrors:Number(diagnosticBefore.providerErrors||0),
-  preflightProviderCalls:0
+  failedPages:[],preflightProviderCalls:0
  };
  let lastError=null;
  const publish=async(status,meta={})=>{
@@ -143,20 +143,23 @@ export async function generateExplainedBookV126(book,{
   const unitOutput=source.reduce((n,p)=>n+(
     saved.get(p.id)?.review?.outputUnits||0),0);
   const accepted=source.filter(p=>saved.get(p.id)?.review?.ready===true).length;
+  const unread=source.filter(p=>p.segments.length&&
+    maps.get(p.id)?.review?.ready!==true).length;
   const done=accepted===source.length&&comprehensionV126.complete&&
     source.every(p=>saved.get(p.id)?.review?.sizeCompliant===true);
   const draftReduction=saved.size&&unitSource?
     percentReduced(unitSource,unitOutput):null;
   const s={...snapshot,version:EXPLAINED_POLICY_V126,
    comprehensionV126,complete:done,status:done?'complete':status,
-   phase:done?'quality':comprehensionV126.complete?'draft':'comprehension',
+   phase:done?'quality':accepted>0||comprehensionV126.complete?'draft':'comprehension',
    sourceUnits:unitSource,outputUnits:unitOutput,
    achievedReduction:done?percentReduced(unitSource,unitOutput):null,
    draftAchievedReduction:draftReduction,
    verifiedChunkVariants:accepted,verifiedChunks:accepted,blockedCells:source.length-accepted,
    draftUnitsSaved:saved.size,semanticCertified:false,
    diagnostics:{...diagnostics,comprehensionPages:comprehensionV126.verifiedPages,
-     comprehensionTotal:source.length,qualityReview:rejected.size}};
+     comprehensionTotal:source.length,qualityReview:unread+rejected.size,
+     understandingPending:unread,explanationPending:source.length-accepted}};
   await onProgress(s,meta);
   return s;
  };
@@ -203,22 +206,37 @@ export async function generateExplainedBookV126(book,{
        Math.min(172800,Number.isFinite(rawSeconds)&&rawSeconds>0?rawSeconds:90))*1000).toISOString();
       diagnostics.retryReason=code;lastError=code;break;
      }
-     if(isSplitCandidate(reply.status,code)&&group.length>1&&
-       diagnostics.splits<MAX_SPLITS){
+     // HTTP 413/422/invalid-source: isolate the single failing page.
+     // Other pages continue, instead of blocking a 44- or 2000-page book.
+     if((isSplitCandidate(reply.status,code)||
+       (reply.status===400&&code.startsWith('V126_SOURCE_'))) &&
+       group.length>1&&diagnostics.splits<MAX_SPLITS){
       const mid=Math.floor(group.length/2);
       queue.splice(index,1,group.slice(0,mid),group.slice(mid));
       diagnostics.splits++;index--;continue;
      }
-     lastError=code;break;
+     diagnostics.lastCode=code;
+     diagnostics.failedPages.push(...group.map(p=>p.physicalPage));
+     continue;
     }
-    if(response?.engine!=='ai'||response?.version!==EXPLAINED_POLICY_V126||
-       response.phase!==phase||!Array.isArray(response.pages)||
-       response.pages.length!==group.length){
-     lastError='V126_BACKEND_CONTRACT_MISMATCH';break;
+    const validShape=response?.engine==='ai'&&
+      response?.version===EXPLAINED_POLICY_V126&&
+      response.phase===phase&&Array.isArray(response.pages)&&
+      response.pages.length===group.length;
+    const validIds=validShape&&response.pages.every((a,i)=>a?.id===group[i].id);
+    if(!validIds){
+     const code=validShape?'V126_PAGE_ID_MISMATCH':'V126_BACKEND_CONTRACT_MISMATCH';
+     diagnostics.lastCode=code;
+     if(group.length>1&&diagnostics.splits<MAX_SPLITS){
+      const mid=Math.floor(group.length/2);
+      queue.splice(index,1,group.slice(0,mid),group.slice(mid));
+      diagnostics.splits++;index--;continue;
+     }
+     diagnostics.failedPages.push(...group.map(p=>p.physicalPage));
+     continue;
     }
     for(let i=0;i<group.length;i++){
      const p=group[i],ans=response.pages[i];
-     if(ans?.id!==p.id){lastError='V126_PAGE_ID_MISMATCH';break;}
      if(phase==='comprehend'){
       maps.set(p.id,{...ans,review:auditComprehensionV126(p,ans)});
      }else{
@@ -228,7 +246,6 @@ export async function generateExplainedBookV126(book,{
       if(review.ready)rejected.delete(p.id);else rejected.add(p.id);
      }
     }
-    if(lastError)break;
     diagnostics.lastHttpStatus=200;
     diagnostics.lastBlockPages=group.length;
     diagnostics.activePages=[];
@@ -245,30 +262,31 @@ export async function generateExplainedBookV126(book,{
   maps.get(p.id)?.review?.ready!==true);
  if(unread.length)await runStage('comprehend',unread);
  const checked=contextCheckpoint(source,maps);
- if(lastError||!checked.complete){
+ if(lastError){
   diagnostics.stage='comprehension';
-  diagnostics.qualityReview=source.filter(p=>p.segments.length&&
-   maps.get(p.id)?.review?.ready!==true).length;
-  if(!lastError&&diagnostics.qualityReview)
-   diagnostics.nextReviewAt=new Date(Date.now()+45000).toISOString();
   diagnostics.lastCode=lastError;
-  return publish(lastError?(diagnostics.retryAt?'quota-paused':
-   lastError==='V126_INTERRUPTED'?'interrupted':'provider-blocked'):
-   'quality-review');
+  return publish(diagnostics.retryAt?'quota-paused':
+   lastError==='V126_INTERRUPTED'?'interrupted':'provider-blocked');
  }
- // Global gate: no explanation request was sent until EVERY map passed.
- diagnostics.globalComprehensionGate='verified-'+source.length+'-of-'+source.length;
+ // LAB127: comprehension attempts run first, but one invalid/missing page
+ // cannot prevent explanation of the other pages that were actually read.
+ // Each page still needs its OWN valid map before it can be explained.
+ diagnostics.globalComprehensionGate=checked.complete
+  ?'verified-'+source.length+'-of-'+source.length
+  :'partial-'+checked.verifiedPages+'-of-'+source.length;
  const pending=source.filter(p=>p.segments.length&&
+  maps.get(p.id)?.review?.ready===true&&
   saved.get(p.id)?.review?.ready!==true).map(p=>({
   ...p,...(saved.get(p.id)?.review?.repair?{
     repair:saved.get(p.id).review.repair}:{})
  }));
  if(pending.length)await runStage('explain',pending);
- diagnostics.qualityReview=rejected.size;
- diagnostics.lastCode=lastError;
- if(!lastError&&rejected.size)
+ diagnostics.qualityReview=rejected.size+source.filter(p=>p.segments.length&&
+  maps.get(p.id)?.review?.ready!==true).length;
+ diagnostics.lastCode=lastError||diagnostics.lastCode||null;
+ if(!lastError&&diagnostics.qualityReview)
   diagnostics.nextReviewAt=new Date(Date.now()+45000).toISOString();
  return publish(lastError?(diagnostics.retryAt?'quota-paused':
    lastError==='V126_INTERRUPTED'?'interrupted':'provider-blocked'):
-   rejected.size?'quality-review':'partial');
+   diagnostics.qualityReview?'quality-review':'partial');
 }
