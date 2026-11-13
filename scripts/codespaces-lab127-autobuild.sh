@@ -12,7 +12,7 @@ STATE="$HOME/.local/share/studybook-lab127/autobuild"
 mkdir -p "$STATE"
 command -v flock >/dev/null || { echo '[LAB127] flock non disponibile'; exit 1; }
 exec 9>"$STATE/lock"
-flock -n 9 || { echo '[LAB127] Compilazione gia in corso. Nessun lavoro duplicato.'; exit 0; }
+flock -n 9 || { echo '[LAB127] Altra compilazione già attiva: attendere il suo esito, nessun duplicato.' >&2; exit 75; }
 fail(){ echo "[LAB127 BLOCCATO] $*" >&2; exit 1; }
 for tool in git node npm gh; do command -v "$tool" >/dev/null || fail "$tool non disponibile"; done
 [[ "$(git branch --show-current)" == "$BRANCH" ]] || fail 'Selezionare il ramo LAB127: non compilo altri rami'
@@ -32,6 +32,16 @@ ARTIFACT_DIR="$ROOT/APK-LAB127"
 mkdir -p "$ARTIFACT_DIR"
 copy_artifacts(){
   local origin="$1" file
+  [[ -s "$origin/$NAME-IDENTITY.txt" ]] || fail 'Identità dell’APK non disponibile'
+  grep -Fxq "source=$SHA" "$origin/$NAME-IDENTITY.txt" ||
+    fail 'Artefatto non derivato dal commit corrente'
+  grep -Fxq 'signerSha256=D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC' "$origin/$NAME-IDENTITY.txt" ||
+    fail 'Artefatto con firma non verificata'
+  grep -Fxq 'versionCode=2026112701' "$origin/$NAME-IDENTITY.txt" ||
+    fail 'Artefatto con versione Android errata'
+  (cd "$origin" && sha256sum -c "$NAME.sha256" >/dev/null &&
+   unzip -tq "$NAME.zip" >/dev/null) ||
+    fail 'Hash/ZIP non integri: non riuso questo artefatto'
   for file in "$NAME.apk" "$NAME.zip" "$NAME.sha256" "$NAME-IDENTITY.txt"; do
     [[ -s "$origin/$file" ]] || fail "Artefatto compilato assente: $file"
     cp -f "$origin/$file" "$ARTIFACT_DIR/$file"
