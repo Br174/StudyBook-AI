@@ -42,3 +42,12 @@ git fetch origin && git switch --track origin/trial/studybook-lab128-provider-ov
 
 ## Limiti onesti
 Nessun algoritmo può produrre una spiegazione nuova mentre ogni chiamata al provider fallisce. Il backoff riduce il carico, la pianificazione di blocchi piccoli aumenta la probabilità di successo quando il provider torna disponibile, e il PDF provvisorio conserva l'accesso immediato al testo **non riscritto** con etichette esplicite. L'autoresume funziona in primo piano, soggetta alla sospensione Android. Il PDF definitivo resta soggetto a verifiche e/o riserve precedentemente approvate.
+
+## AGGIORNAMENTO APPROVATO — elasticità bidirezionale (13 novembre 2026)
+- Richiesta utente: non mantenere pacchetti piccoli quando Gemini torna a rispondere; **ogni coppia di 503 consecutivi** riduce del 50%; **ogni coppia di blocchi completi con risposta valida HTTP 200** aumenta del 50%, fino al limite originale di 30.000 caratteri. Esempio: 30k→15k→22,5k→30k. Non confondere successo tecnico del blocco con certificazione semantica della pagina.
+- Le chiamate 429 non si contano come 503; ogni 429 rispetta il cooldown del provider e azzera la consecutività dei 503. Qualsiasi errore interrompe la serie di successi; la risposta valida azzera la serie di sovraccarichi. La terza risposta 503, da sola, non causa un secondo dimezzamento (serve la quarta).
+- `src/lib/explainedProviderRecoveryV128.js`: introdotti contatori a coppie, incremento del 50%, limite originale invariato, serializzazione checkpoint invariata.
+- `src/lib/explainedGeneratorV126.js`: dopo due blocchi riusciti e cambio dimensione, **riprogramma esclusivamente i gruppi di pagine non ancora inviati nella stessa fase**, per evitare che l'aumento si applichi soltanto alla riapertura dell'app. Pagine già conformi non richieste nuovamente.
+- `scripts/test-lab128-503-recovery.mjs`: prova incrementata per 1/2/3/4 errori, 1/2/3/4 successi, rispetto limite 30k, interruzione della serie da errore, 429 separato e **verifica reale del maggiore numero di pagine nel terzo gruppo inviato** (simulazione di 120 pagine).
+- **Test dinamico con server Gemini/PDF simulati: PASS** dopo modifica. Non è stato ancora compilato un nuovo APK con questa revisione; l'APK LAB127 resta l'ultima release mobile osservata in precedenza.
+- Rimane il medesimo ramo LAB128, prima della build: usare l'ultimo SHA di ramo quando si compila da Codespaces. Nessun deploy su Cloudflare.
