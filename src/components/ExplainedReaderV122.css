@@ -143,3 +143,21 @@
  .sb-explained-page-total{display:none}
  .sb-explained-sheet{padding:16px 10px}
 }
+
+/* LAB132 page editing preview; no impact on print or In parole semplici */
+.sb-rewrite-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sb-rewrite-head button{padding:9px 13px;min-height:39px;border:1px solid #b7d4ef;
+ border-radius:11px;background:#e8f3ff;color:#135f9c;font-weight:800}
+.sb-rewrite-head button:disabled{opacity:.5}
+.sb-rewrite-panel{display:grid;gap:12px;width:min(100%,790px);padding:15px;
+ border-radius:14px;background:white;border:1px solid #ccddea}
+.sb-rewrite-panel>p[role=alert]{color:#972f37}
+.sb-rewrite-preview{max-height:430px;overflow-y:auto;line-height:1.6;padding:14px;
+ background:#f7faff;border-radius:12px;white-space:pre-wrap}
+.sb-rewrite-preview p{margin:0 0 12px}
+.sb-rewrite-preview small{color:#566d85}
+.sb-rewrite-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sb-rewrite-buttons button{min-height:50px;padding:9px 7px;border:1px solid #bad5eb;
+ border-radius:12px;background:white;color:#135f9c;font-weight:800}
+.sb-rewrite-buttons button:first-child{background:#167be1;color:white}
+.sb-rewrite-buttons button:disabled{opacity:.6}

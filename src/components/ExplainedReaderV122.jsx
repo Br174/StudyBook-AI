@@ -3,6 +3,8 @@ import {composeExplainedSheetsV122} from '../lib/explainedLayoutV122.js';
 import {explainStudyPageOnDemandV49} from '../lib/pageSimpleV49.js';
 import {readSimplePageV50,saveSimplePageV50} from '../lib/simplePagesStoreV50.js';
 import {glossaryForExplainedPageV129} from '../lib/explainedMobileLayoutV129.js';
+import {requestPageReformulationV132,applyApprovedReformulationsV132} from '../lib/pageReformulationV132.js';
+import {readReformulationsV132,acceptReformulationV132} from '../lib/reformulationsStoreV132.js';
 import './ExplainedReaderV122.css';
 
 function RichText({value}){
@@ -11,8 +13,18 @@ function RichText({value}){
    <strong key={i}>{part.slice(2,-2)}</strong>:<React.Fragment key={i}>{part}</React.Fragment>)}</>;
 }
 
-export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapterIndex=0,onClose,onStudy}){
- const output=useMemo(()=>composeExplainedSheetsV122(book),[book]);
+export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapterIndex=0,onClose,onStudy,onReformulated}){
+ const [accepted,setAccepted]=useState(null),[candidate,setCandidate]=useState(null);
+ const [rewriteBusy,setRewriteBusy]=useState(false),[rewriteError,setRewriteError]=useState('');
+ const rewriteRequest=useRef(null);
+ useEffect(()=>{
+  let live=true;setAccepted(null);setCandidate(null);setRewriteError('');
+  if(bookId)void readReformulationsV132(bookId).then(x=>{if(live)setAccepted(x);})
+   .catch(e=>{if(live)setRewriteError(e.message);});
+  return ()=>{live=false;};
+ },[bookId,book?.canonicalBookMap?.originalFingerprint]);
+ const readingBook=useMemo(()=>applyApprovedReformulationsV132(book,accepted),[book,accepted]);
+ const output=useMemo(()=>composeExplainedSheetsV122(readingBook),[readingBook]);
  const pages=output.pages;
  const [index,setIndex]=useState(0);
  const [simple,setSimple]=useState(null);
@@ -36,12 +48,37 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   }).catch(()=>{});
   return ()=>{active=false;};
  },[bookId,page?.label]);
- useEffect(()=>()=>activeRequest.current?.abort(),[]);
+ useEffect(()=>()=>{
+  activeRequest.current?.abort();
+  rewriteRequest.current?.abort();
+ },[]);
+ async function rewritePage(){
+  if(!page?.ready||!bookId||rewriteBusy||busy)return;
+  rewriteRequest.current?.abort();
+  const controller=new AbortController();
+  rewriteRequest.current=controller;setRewriteBusy(true);setRewriteError('');
+  try{
+   const proposal=await requestPageReformulationV132(book,page.sourcePage,{signal:controller.signal});
+   if(!controller.signal.aborted)setCandidate(proposal);
+  }catch(e){if(!controller.signal.aborted)setRewriteError(e.message||'Riformulazione non riuscita.');}
+  finally{if(rewriteRequest.current===controller){rewriteRequest.current=null;setRewriteBusy(false);}}
+ }
+ async function acceptPage(){
+  if(!candidate||rewriteBusy)return;
+  setRewriteBusy(true);setRewriteError('');
+  try{
+   const next=await acceptReformulationV132(bookId,candidate);
+   setAccepted(next);setCandidate(null);onReformulated?.();
+  }catch(e){setRewriteError(e.message||'Salvataggio non riuscito.');}
+  finally{setRewriteBusy(false);}
+ }
  function navigatePage(next){
   const value=Number(next);
   if(!Number.isInteger(value)||value<0||value>=pages.length||value===index)return;
   activeRequest.current?.abort();
   activeRequest.current=null;
+  rewriteRequest.current?.abort();rewriteRequest.current=null;
+  setRewriteBusy(false);setCandidate(null);setRewriteError('');
   setBusy(false);setError('');
   setIndex(value);
   scrollRoot.current?.scrollTo?.({top:0,behavior:'instant'});
@@ -99,7 +136,11 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
    {page.draft?'Bozza di Gemini da verificare. Il testo può contenere omissioni.':
     'Il testo elaborato di questa pagina non è ancora disponibile.'}</p>}
   <article className="sb-explained-sheet" aria-label={'Pagina '+page.label}>
-   <header className="sb-explained-pagehead">Libro spiegato · Pagina {page.label}</header>
+   <header className="sb-explained-pagehead sb-rewrite-head">
+    <span>Libro spiegato · Pagina {page.label}</span>
+    <button type="button" disabled={!page.ready||!bookId||rewriteBusy||busy}
+     onClick={()=>void rewritePage()}>{rewriteBusy?'Riformulo…':'Riformula'}</button>
+   </header>
    <div className={'sb-explained-grid'+(glossary.length?'':' sb-explained-no-glossary')}>
     <div className="sb-explained-body">
      {page.rows.map((r,i)=><div key={page.label+'-'+i} className="sb-explained-paragraph">
@@ -120,6 +161,24 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
     {Number.isFinite(page.reduction)&&' · Riduzione '+page.reduction.toFixed(1)+'%'}
    </footer>
   </article>
+  {(candidate||rewriteBusy||rewriteError)&&<section className="sb-rewrite-panel">
+    <strong>Nuova riformulazione · Pagina {page.label}</strong>
+    {rewriteBusy&&<p role="status">Gemini riformula dal testo originale. La pagina salvata rimane invariata.</p>}
+    {rewriteError&&<p role="alert">{rewriteError}</p>}
+    {candidate&&<>
+     <article className="sb-rewrite-preview">
+      {candidate.segments.map(seg=><p key={seg.id}><RichText value={seg.text}/></p>)}
+      {candidate.glossary?.length>0&&<details><summary>Termini utili</summary>
+       {candidate.glossary.map((g,i)=><p key={i}><b>{g.term}</b>: {g.definition}</p>)}
+      </details>}
+      <small>Riduzione: {Number(candidate.review?.reduction||0).toFixed(1)}%</small>
+     </article>
+     <div className="sb-rewrite-buttons">
+      <button type="button" disabled={rewriteBusy} onClick={()=>void acceptPage()}>Tieni riformulazione</button>
+      <button type="button" disabled={rewriteBusy} onClick={()=>void rewritePage()}>Riformula ancora</button>
+     </div>
+    </>}
+   </section>}
   <div className="sb-explained-extra" ref={explanationRef}>
    {error&&<p role="alert" className="sb-explained-notice">{error}</p>}
    {simple?.text&&<article aria-label={'Ulteriore spiegazione pagina '+page.label}>
