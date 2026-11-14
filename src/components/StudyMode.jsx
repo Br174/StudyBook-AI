@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MirrorReaderV35 from './MirrorReaderV35.jsx';
 import { askStudyAssistant, STUDY_ACTIONS } from '../lib/studyAssistant.js';
-import { buildConceptMap, buildFlashcards, buildOralQuestions, buildQuiz } from '../lib/studyTools.js';
+import {buildStudyToolSourceV130,studyToolCacheKeyV130,savedStudyToolsV130,
+ saveStudyToolsV130,generateStudyToolsV130} from '../lib/studyToolsOnDemandV130.js';
 import { readerCssVariables } from '../lib/accessibility.js';
 import { editorialParagraphText } from '../lib/editorialModel.js';
 import { countLetters } from '../lib/studyQualityGuard.js';
@@ -94,7 +95,12 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
   const [readingVariant, setReadingVariant] = useState('study');
   // LAB49: a monotonically increasing token is one deliberate tap, not a generated book edition.
   const [simpleRequestToken, setSimpleRequestToken] = useState(0);
-  const [studyScope, setStudyScope] = useState('chapter');
+  const [studyScope, setStudyScope] = useState('page');
+  const [studyParagraphIndex,setStudyParagraphIndex] = useState(0);
+  const [toolDeck,setToolDeck] = useState({key:'',items:[],sampled:false});
+  const [toolLoading,setToolLoading] = useState(false);
+  const [toolError,setToolError] = useState('');
+  const toolAbortRef=useRef(null);
   const [toolIndex, setToolIndex] = useState(0);
   const swipeStart = useRef(null);
   const [flashRevealed, setFlashRevealed] = useState(false);
@@ -118,10 +124,60 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
   }), [book]);
   const studySource = studyScope === 'book' ? wholeBookChapter :
     chapter?.precisionChapter?.sourceReady === false ? { title:chapter.title, paragraphs:[] } : (chapter || {});
-  const flashcards = useMemo(() => buildFlashcards(studySource, studyScope === 'book' ? 60 : 36), [studySource, studyScope]);
-  const quiz = useMemo(() => buildQuiz(studySource, studyScope === 'book' ? 30 : 18), [studySource, studyScope]);
-  const oralQuestions = useMemo(() => buildOralQuestions(studySource, studyScope === 'book' ? 36 : 24), [studySource, studyScope]);
-  const conceptMap = useMemo(() => buildConceptMap(studySource, studyScope === 'book' ? 60 : 24), [studySource, studyScope]);
+  const studyToolSource=useMemo(()=>buildStudyToolSourceV130(book,{
+   scope:studyScope,chapterIndex,paragraphIndex:studyParagraphIndex
+  }),[book,studyScope,chapterIndex,studyParagraphIndex]);
+  const studyToolKey=useMemo(()=>studyToolCacheKeyV130(bookId,tool,studyScope,
+   studyToolSource.passages),[bookId,tool,studyScope,studyToolSource]);
+  const activeDeck=toolDeck.key===studyToolKey?toolDeck.items:[];
+  const flashcards=tool==='flashcards'?activeDeck:[];
+  const quiz=tool==='quiz'?activeDeck:[];
+  const oralQuestions=tool==='oral'?activeDeck:[];
+  const conceptMap=tool==='map'?activeDeck:[];
+  useEffect(()=>{
+   if(isReader)return;
+   let active=true;
+   toolAbortRef.current?.abort();
+   setToolLoading(false);setToolError('');
+   setToolDeck({key:'',items:[],sampled:false});
+   savedStudyToolsV130(studyToolKey).then(saved=>{
+    if(active&&saved?.tool===tool){
+     setToolDeck({key:studyToolKey,items:saved.items,sampled:saved.sampled});
+    }
+   }).catch(()=>{});
+   return ()=>{active=false;toolAbortRef.current?.abort();};
+  },[studyToolKey,isReader,tool]);
+  async function generateToolDeck(){
+   if(toolLoading||isReader||!studyToolSource.passages.length)return;
+   const controller=new AbortController();
+   toolAbortRef.current?.abort();toolAbortRef.current=controller;
+   setToolLoading(true);setToolError('');
+   try{
+    const generated=await generateStudyToolsV130({
+     tool,scope:studyScope,chapterTitle:studyToolSource.title,
+     passages:studyToolSource.passages,sampled:studyToolSource.sampled,
+     signal:controller.signal
+    });
+    if(controller.signal.aborted)return;
+    await saveStudyToolsV130(studyToolKey,generated);
+    if(!controller.signal.aborted){
+     setToolDeck({key:studyToolKey,items:generated.items,
+      sampled:generated.sampled});
+     setToolIndex(0);setQuizChoice(null);setQuizScore(0);
+     setFlashRevealed(false);setOralRevealed(false);
+    }
+   }catch(error){
+    if(!controller.signal.aborted){
+     const wait=Number(error?.retryAfterSeconds)||0;
+     setToolError((error?.message||'Gemini non disponibile.')+
+      (wait>0?' Riprova tra almeno '+Math.ceil(wait/60)+' minuti.':''));
+    }
+   }finally{
+    if(toolAbortRef.current===controller){
+     toolAbortRef.current=null;setToolLoading(false);
+    }
+   }
+  }
   const glossary = useMemo(() => chapterGlossary(chapter || {}), [chapter]);
   const numberIt = (value) => Number(value || 0).toLocaleString('it-IT');
   const chapterLetterStats = useMemo(() => {
@@ -159,7 +215,7 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
     if (nextIndex < 0 || nextIndex >= chapterCount || nextIndex === chapterIndex) return;
     onChapterChange(nextIndex);
     // LAB06: quando si sfoglia un nuovo capitolo, le domande seguono quel capitolo.
-    if (!isReader) setStudyScope('chapter');
+    if (!isReader){setStudyScope('page');setStudyParagraphIndex(0);}
   }
   function listenToCurrentContent() {
     if (isReader) { speakChapter(); return; }
@@ -178,7 +234,7 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
     setQuizScore(0);
     setOralRevealed(false);
     setTarget(null);
-  }, [chapterIndex, tool, studyScope]);
+  }, [chapterIndex, tool, studyScope,studyParagraphIndex]);
 
   function openTarget(selection, paragraph, glossaryEntry = null) {
     const value = String(selection || '').trim();
@@ -325,12 +381,46 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
         ))}
       </nav>}
 
-      {!isReader && (
-        <div className="study-scope-switch" aria-label="Ambito strumenti di studio">
-          <button type="button" className={studyScope === 'book' ? 'active' : ''} onClick={() => setStudyScope('book')}>Intero libro</button>
-          <button type="button" className={studyScope === 'chapter' ? 'active' : ''} onClick={() => setStudyScope('chapter')}>Solo capitolo</button>
+      {!isReader && <>
+        <div className="study-scope-switch sb-v130-scopes" aria-label="Origine delle nuove attività di studio">
+          <button type="button" className={studyScope==='page'?'active':''}
+           onClick={()=>setStudyScope('page')}>Paragrafo</button>
+          <button type="button" className={studyScope==='chapter'?'active':''}
+           onClick={()=>setStudyScope('chapter')}>Capitolo</button>
+          <button type="button" className={studyScope==='book'?'active':''}
+           onClick={()=>setStudyScope('book')}>Intero libro</button>
         </div>
-      )}
+        {studyScope==='page'&&(chapter?.paragraphs?.length||0)>1&&
+          <label className="sb-v130-paragraph-picker">Testo da studiare
+            <select value={studyParagraphIndex}
+             onChange={e=>setStudyParagraphIndex(Number(e.target.value))}>
+              {(chapter.paragraphs||[]).map((p,i)=>
+               <option value={i} key={i}>Paragrafo {i+1}
+                {p.sourcePageStart?' · Pagina '+p.sourcePageStart:''}</option>)}
+            </select>
+          </label>}
+        <section className="sb-v130-create" aria-label="Generazione Gemini su richiesta">
+          <div>
+            <strong>{tool==='flashcards'?'Flashcard':tool==='quiz'?'Quiz':
+              tool==='map'?'Mappa concettuale':'Interrogazione'} con Gemini</strong>
+            <small>
+              {studyToolSource.passages.length?
+                (studyToolSource.sampled?'Campione selezionato dal testo originale. ':
+                 'Fonte originale selezionata. ')+
+                (activeDeck.length?activeDeck.length+' attività conservate.':
+                 'Nessuna chiamata Gemini eseguita per questa attività.'):
+                'Nessun paragrafo originale sufficientemente completo.'}
+            </small>
+          </div>
+          <button type="button" disabled={toolLoading||!studyToolSource.passages.length}
+           onClick={()=>void generateToolDeck()}>
+           {toolLoading?'Gemini sta preparando…':
+            activeDeck.length?'Rigenera':'Crea '+(tool==='flashcards'?'flashcard':
+             tool==='quiz'?'quiz':tool==='map'?'mappa':'interrogazione')}
+          </button>
+          {toolError&&<p role="alert">{toolError}</p>}
+        </section>
+      </>}
 
       {isReader && (
         <>
@@ -432,7 +522,7 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
                 <button type="button" onClick={() => { setToolIndex(Math.min(flashcards.length - 1, toolIndex + 1)); setFlashRevealed(false); }} disabled={toolIndex >= flashcards.length - 1}>Scheda successiva →</button>
               </div>
             </section>
-          ) : <EmptyTool>Non ci sono ancora elementi sufficienti per creare flashcard in questo capitolo.</EmptyTool>}
+          ) : <EmptyTool>Premi «Crea flashcard» per prepararle con Gemini dal testo scelto.</EmptyTool>}
         </main>
       )}
 
@@ -463,7 +553,7 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
                 </div>
               )}
             </section>
-          ) : <EmptyTool>Non riesco a costruire un quiz affidabile da questo capitolo.</EmptyTool>}
+          ) : <EmptyTool>Premi «Crea quiz» per generare domande fondate sul testo scelto.</EmptyTool>}
         </main>
       )}
 
@@ -480,7 +570,7 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
                 </article>
               ))}
             </section>
-          ) : <EmptyTool>La mappa comparirà quando il capitolo contiene concetti utili da collegare.</EmptyTool>}
+          ) : <EmptyTool>Premi «Crea mappa» per collegare i concetti del testo scelto.</EmptyTool>}
         </main>
       )}
 
@@ -502,7 +592,7 @@ export default function StudyMode({ book, sourceBook = book, originalFile = null
                 <button type="button" onClick={() => { setToolIndex(Math.min(oralQuestions.length - 1, toolIndex + 1)); setOralRevealed(false); }} disabled={toolIndex >= oralQuestions.length - 1}>Domanda successiva →</button>
               </div>
             </section>
-          ) : <EmptyTool>Non ci sono ancora abbastanza elementi per simulare l’interrogazione.</EmptyTool>}
+          ) : <EmptyTool>Premi «Crea interrogazione» per avere domande originali su richiesta.</EmptyTool>}
         </main>
       )}
 
