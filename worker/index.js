@@ -7,6 +7,7 @@ import pageSimpleV49Handler from '../api/pageSimpleV49.js';
 import editionsBulkV51Handler from '../api/editionsBulkV51.js';
 import explainedV122Handler from '../api/explainedV122.js';
 import explainedV126Handler from '../api/explainedV126.js';
+import studyToolsV130Handler from '../api/studyToolsV130.js';
 
 const API_ROUTES = new Map([
   ['/api/summarize', summarizeHandler],
@@ -18,6 +19,7 @@ const API_ROUTES = new Map([
   ['/api/editions/bulk/v51', editionsBulkV51Handler],
   ['/api/explained/v122', explainedV122Handler],
   ['/api/explained/v126', explainedV126Handler],
+  ['/api/study-tools/v130', studyToolsV130Handler],
 ]);
 
 const NATIVE_ORIGINS = new Set([
