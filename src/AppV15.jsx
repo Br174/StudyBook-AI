@@ -33,6 +33,10 @@ import {buildExplainedEditionViewV122,isExplainedBookV122} from './lib/explained
 import {editableExplainedBookV130} from './lib/explainedEditableExportV130.js';
 import {studyToolBookForExplainedV129} from './lib/explainedStudyToolsV129.js';
 import {exportExplainedPdfV122} from './lib/exportExplainedPdfV122.js';
+import {applyApprovedReformulationsV132} from './lib/pageReformulationV132.js';
+import {readReformulationsV132,storeReworkedPdfV132,readReworkedPdfV132,
+ catalogReformulationsV132,deleteReformulationsV132} from './lib/reformulationsStoreV132.js';
+import {deliverBlob} from './lib/fileDelivery.js';
 import ExplainedReaderV122 from './components/ExplainedReaderV122.jsx';
 import {rebalanceSavedStudyBookV67,canRebalanceBookV67} from './lib/studyRebalanceV67.js';
 import {STUDY_PILLAR_VERSION} from './lib/studyPillarV38.js';
@@ -213,6 +217,7 @@ export default function AppV14() {
   const [archiveBusy, setArchiveBusy] = useState(false);
 
   const [libraryItems, setLibraryItems] = useState([]);
+  const [reworkCatalog,setReworkCatalog]=useState({states:{},pdfs:[]});
   const [libraryBusy, setLibraryBusy] = useState(false);
   const [libraryInitialView, setLibraryInitialView] = useState('all');
   // LAB37: one abortable Gemini runner, one restart request, never two writers.
@@ -467,7 +472,54 @@ export default function AppV14() {
   }, []);
 
   async function refreshLibrary(profileId = activeProfileId) {
-    try { setLibraryItems(await listLibraryBooks({ profileId })); } catch { setLibraryItems([]); }
+    try {
+      const records=await listLibraryBooks({profileId});
+      setLibraryItems(records);
+      setReworkCatalog(await catalogReformulationsV132(records.map(r=>r.id)));
+    } catch(e) {
+      console.warn('LAB132 library catalog unavailable:',e?.message);
+      setLibraryItems(await listLibraryBooks({profileId}).catch(()=>[]));
+      setReworkCatalog({states:{},pdfs:[]});
+    }
+  }
+  async function refreshReworkCatalog(){
+    const ids=libraryItems.map(x=>x.id);
+    if(libraryId&&!ids.includes(libraryId))ids.push(libraryId);
+    setReworkCatalog(await catalogReformulationsV132(ids));
+  }
+  async function createReworkedPdf(id) {
+    if(libraryBusy)return false;
+    setLibraryBusy(true);
+    try{
+      const record=await getLibraryBook(id);
+      if(!record?.studyBook||!isExplainedBookV122(record.studyBook))
+        throw Error('Libro spiegato non disponibile.');
+      if(record.studyBook.editionsV36?.complete!==true)
+        throw Error('Completi prima il Libro spiegato: nessun PDF parziale sarà dichiarato definitivo.');
+      const state=await readReformulationsV132(id);
+      if(!state||!Object.keys(state.accepted||{}).length||
+        state.revision<=state.exportedRevision)
+        throw Error('Non ci sono nuove riformulazioni approvate da esportare.');
+      const revised=applyApprovedReformulationsV132(record.studyBook,state);
+      const stem=String(record.fileName||'StudyBook').replace(/\.[^.]+$/u,'');
+      const filename=stem+'_Rielaborato_'+state.revision;
+      const doc=await exportExplainedPdfV122(revised,filename,{download:false});
+      await storeReworkedPdfV132(id,state.sourceFingerprint,state.revision,{
+        blob:doc.blob,fileName:doc.fileName,sourcePages:doc.sourcePages
+      });
+      await refreshLibrary();
+      setStatus('PDF rielaborato conservato separatamente in Libreria');
+      return true;
+    }catch(e){
+      setError(e.message||'PDF rielaborato non creato. Il libro precedente è intatto.');
+      throw e;
+    }finally{setLibraryBusy(false);}
+  }
+  async function accessReworkedPdf(id,preferOpen){
+    const saved=await readReworkedPdfV132(id);
+    if(!saved?.blob?.size)throw Error('PDF non trovato nell’archivio locale.');
+    return deliverBlob(saved.blob,saved.fileName,
+      preferOpen?'Apri PDF rielaborato':'Esporta PDF rielaborato',{preferOpen});
   }
 
   // Recover LAB36 records too: older metadata did not contain the partial flag.
@@ -905,6 +957,7 @@ export default function AppV14() {
         setFileName('');
         setStudyModeOpen(false);
       }
+      if(!(await getLibraryBook(id)))await deleteReformulationsV132(id);
       await refreshLibrary(activeProfileId);
       if (originalRecord?.id === id && view !== 'processed') { setOriginalRecord(null); setOriginalReading(false); }
       setStatus(view === 'all' ? 'Libro eliminato definitivamente dalla Libreria' : 'Versione eliminata · altre versioni conservate');
@@ -2407,7 +2460,9 @@ export default function AppV14() {
 
       {activeScreen === 'scans' && <ScannerArchive entries={archivedScans} busy={archiveBusy} onBack={goBack} onRestore={restoreScannerArchiveSelection} onDelete={deleteScannerArchiveSelection} onRenameCollection={renameScannerArchiveCollection} onRenamePhoto={renameScannerArchivePhoto} />}
 
-      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onReprocessBook={reprocessLibraryItem} onRecoverOriginal={recoverSourceFromLibrary} processingStatus={status} processingProgress={progress} acquisitionProgress={importAcquisition} onSetCoverFile={chooseLibraryCover} onGenerateCover={findAndApplyLibraryCover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
+      {activeScreen === 'library' && <LibraryScreen items={libraryItems} initialView={libraryInitialView}
+        reworkCatalog={reworkCatalog} onBuildReworkedPdf={createReworkedPdf}
+        onAccessReworkedPdf={accessReworkedPdf} onOpenBook={openFromLibraryCover} onDeleteBook={removeLibraryItem} onRenameBook={renameLibraryBook} onReprocessBook={reprocessLibraryItem} onRecoverOriginal={recoverSourceFromLibrary} processingStatus={status} processingProgress={progress} acquisitionProgress={importAcquisition} onSetCoverFile={chooseLibraryCover} onGenerateCover={findAndApplyLibraryCover} onResetCover={resetLibraryCover} onRefreshScans={refreshArchiveForLibrary}
         scannerProps={{ entries: archivedScans, busy: archiveBusy, onRestore: restoreScannerArchiveSelection, onDelete: deleteScannerArchiveSelection, onRenameCollection: renameScannerArchiveCollection, onRenamePhoto: renameScannerArchivePhoto }} />}
       {activeScreen === 'studio' && (
         <StudioScreen
@@ -2468,6 +2523,7 @@ export default function AppV14() {
           ? <ExplainedReaderV122 book={precisionBook} bookId={libraryId}
               bookTitle={fileName} chapterIndex={selectedChapter}
               onStudy={()=>setStudyEntryMode('study')}
+              onReformulated={()=>void refreshReworkCatalog()}
               onClose={()=>setStudyModeOpen(false)}/>
           : <StudyMode
               book={studyToolBook} sourceBook={studyBook} originalFile={sourceFile}
