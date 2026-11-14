@@ -19,7 +19,8 @@
     "test:lab128": "node scripts/test-lab128-503-recovery.mjs && node scripts/test-lab127-nonblocking-recovery.mjs && node scripts/test-lab127-worker-contract.mjs && node scripts/test-lab128-codespaces-preflight.mjs",
     "test:lab129": "node scripts/test-lab129-mobile-reader.mjs && node scripts/test-lab128-503-recovery.mjs && node scripts/test-lab127-nonblocking-recovery.mjs && node scripts/test-lab127-worker-contract.mjs && node scripts/test-lab129-codespaces-preflight.mjs",
     "test:lab130": "node scripts/test-lab130-study-on-demand.mjs && node scripts/test-lab129-mobile-reader.mjs && node scripts/test-lab128-503-recovery.mjs && node scripts/test-lab127-nonblocking-recovery.mjs && node scripts/test-lab127-worker-contract.mjs && node scripts/test-lab130-codespaces-preflight.mjs",
-    "test:lab131": "node scripts/test-lab131-ui-layout.mjs && node scripts/test-lab131-codespaces-preflight.mjs && node scripts/test-lab130-study-on-demand.mjs && node scripts/test-lab129-mobile-reader.mjs"
+    "test:lab131": "node scripts/test-lab131-ui-layout.mjs && node scripts/test-lab131-codespaces-preflight.mjs && node scripts/test-lab130-study-on-demand.mjs && node scripts/test-lab129-mobile-reader.mjs",
+    "test:lab132": "node scripts/test-lab132-reformulation.mjs && node scripts/test-lab132-codespaces-preflight.mjs && node scripts/test-lab131-ui-layout.mjs && node scripts/test-lab130-study-on-demand.mjs"
   },
   "dependencies": {
     "@posthog/react": "^1.11.3",

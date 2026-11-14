@@ -2,12 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "LAB131 — Auto-compila APK+ZIP all'apertura Codespaces (senza Actions)",
+      "label": "LAB132 — Compilazione automatica APK+ZIP (Codespaces)",
       "type": "process",
       "command": "bash",
       "args": [
         "-c",
-        "set -euo pipefail\nbranch='trial/studybook-lab131-studio-layout-20261114'\n[[ \"$(git branch --show-current)\" == \"$branch\" ]] || { echo '[LAB131] Apri il ramo LAB131 prima di compilare.' >&2; exit 1; }\ncase \"$(git remote get-url origin)\" in\n  https://github.com/Br174/StudyBook-AI|https://github.com/Br174/StudyBook-AI.git|git@github.com:Br174/StudyBook-AI.git|ssh://git@github.com/Br174/StudyBook-AI.git) ;;\n  *) echo '[LAB131] Repository origin inatteso.' >&2; exit 1 ;;\nesac\nremote_ref=\"refs/remotes/origin/$branch\"\ngit fetch --no-tags origin \"refs/heads/$branch:$remote_ref\"\nscript=\"$(git show \"$remote_ref:scripts/codespaces-lab131-autobuild.sh\")\"\n[[ -n \"$script\" ]]\nexec bash -c \"$script\" scripts/codespaces-lab131-autobuild.sh"
+        "set -euo pipefail\nbranch='trial/studybook-lab132-reformulation-library-20261114'\n[[ \"$(git branch --show-current)\" == \"$branch\" ]] || { echo '[LAB132] Apri il ramo LAB132 prima di compilare.' >&2; exit 1; }\ncase \"$(git remote get-url origin)\" in\n  https://github.com/Br174/StudyBook-AI|https://github.com/Br174/StudyBook-AI.git|git@github.com:Br174/StudyBook-AI.git|ssh://git@github.com/Br174/StudyBook-AI.git) ;;\n  *) echo '[LAB132] Repository origin inatteso.' >&2; exit 1 ;;\nesac\nremote_ref=\"refs/remotes/origin/$branch\"\ngit fetch --no-tags origin \"refs/heads/$branch:$remote_ref\"\nscript=\"$(git show \"$remote_ref:scripts/codespaces-lab132-autobuild.sh\")\"\n[[ -n \"$script\" ]]\nexec bash -c \"$script\" scripts/codespaces-lab132-autobuild.sh"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -31,11 +31,11 @@
       }
     },
     {
-      "label": "LAB131 — Compila APK+ZIP da sorgente verificato (manuale, senza deploy Worker)",
+      "label": "LAB132 — Compilazione manuale APK+ZIP (Codespaces)",
       "type": "process",
       "command": "bash",
       "args": [
-        "scripts/codespaces-lab131-autobuild.sh"
+        "scripts/codespaces-lab132-autobuild.sh"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
