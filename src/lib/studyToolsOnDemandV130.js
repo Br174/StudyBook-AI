@@ -10,30 +10,50 @@ export function buildStudyToolSourceV130(book,{scope='page',chapterIndex=0,
  paragraphIndex=0}={}){
  const chapters=Array.isArray(book?.chapters)?book.chapters:[];
  const chapter=chapters[chapterIndex]||{};
- const collect=ch=>Array.isArray(ch?.paragraphs)?ch.paragraphs.map((p,i)=>({
+ const reference=(ch,p,i)=>({
   title:compactV130(p?.sourceSection||ch?.title||'').slice(0,120),
-  text:compactV130(p?.original),
-  page:String(p?.sourcePageStart||ch.pageStart||i+1)
- })).filter(p=>p.text.length>=35):[];
- let all=scope==='book'?chapters.flatMap(collect):collect(chapter);
- if(scope==='page')all=all.slice(Math.max(0,paragraphIndex),Math.max(0,paragraphIndex)+1);
- if(!all.length)return {passages:[],sampled:false,available:0,title:chapter?.title||''};
- const total=all.length;let selected=all;
- // For a whole book distribute the small one-shot budget over the original.
- if(scope==='book'&&all.length>18){
-  const pick=new Set();
-  for(let i=0;i<18;i++)pick.add(Math.floor(i*(all.length-1)/17));
-  selected=[...pick].map(index=>all[index]);
+  page:String(p?.sourcePageStart||ch.pageStart||i+1),
+  text:String(p?.original||'')
+ });
+ let raw=[];
+ if(scope==='page'){
+  const p=chapter?.paragraphs?.[Math.max(0,paragraphIndex)];
+  if(p)raw=[reference(chapter,p,Math.max(0,paragraphIndex))];
+ }else if(scope==='chapter'){
+  raw=(chapter?.paragraphs||[]).map((p,i)=>reference(chapter,p,i));
+ }else{
+  // Sampling 2000 pages must NOT normalize/read every chapter body on a tap.
+  // Keep only tiny references, then inspect the selected original passages.
+  const references=[];
+  for(const ch of chapters){
+   for(const [i,p] of (ch?.paragraphs||[]).entries()){
+    if(typeof p?.original==='string'&&p.original.length>=35)
+     references.push({ch,p,i});
+   }
+  }
+  if(references.length<=18)raw=references.map(({ch,p,i})=>reference(ch,p,i));
+  else{
+   const selected=new Set();
+   for(let k=0;k<18;k++)
+    selected.add(Math.floor(k*(references.length-1)/17));
+   raw=[...selected].map(i=>{
+    const x=references[i];return reference(x.ch,x.p,x.i);
+   });
+  }
+  var allAvailable=references.length;
  }
+ const total=scope==='book'?allAvailable:raw.length;
+ const eligible=raw.filter(p=>p.text.length>=35);
  let budget=MAX_TEXT;const passages=[];
- for(const item of selected){
+ for(const item of eligible){
   if(budget<35)break;
-  const text=item.text.length>budget?item.text.slice(0,budget):item.text;
+  const text=compactV130(item.text.slice(0,budget));
   if(text.length<35)continue;
   passages.push({...item,text});budget-=text.length;
  }
- return {passages,sampled:passages.length<total||
-  passages.some((p,i)=>p.text!==selected[i]?.text),
+ return {passages,
+  sampled:passages.length<total||
+   eligible.some((p,i)=>p.text.length>passages[i]?.text?.length),
   available:total,title:chapter?.title||''};
 }
 function hash(value){
