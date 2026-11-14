@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {generateExplainedBookV126} from '../src/lib/explainedGeneratorV126.js';
 import {EXPLAINED_POLICY_V126} from '../src/lib/explainedStagesV126.js';
 import {buildProvisionalExplainedBookV128} from '../src/lib/explainedProvisionalV128.js';
+import {editableExplainedBookV130,EDITABLE_DRAFT_WARNING_V130} from '../src/lib/explainedEditableExportV130.js';
 import {providerPauseV128,providerSuccessfulBlockV128,
   recoveryProgressV128} from '../src/lib/explainedProviderRecoveryV128.js';
 import {exportExplainedPdfV122} from '../src/lib/exportExplainedPdfV122.js';
@@ -124,6 +125,20 @@ try {
   'Provisional export must not certify, alter or persist original checkpoint.');
  assert.equal(provisional.book.editionsV36.pages.length,44);
  assert.ok(provisional.book.editionsV36.pages.some(p=>p.review.provisionalOriginal));
+ const editable=editableExplainedBookV130({...book,editionsV36:first},{
+  ...book,editionReadiness:{partial:true,complete:false}
+ });
+ assert.equal(editable.provisional,true);
+ assert.equal(editable.unfinished.length,r1.missing);
+ assert.equal(editable.book.editionReadiness.partial,false);
+ assert.equal(editable.book.editionReadiness.complete,false,
+  'Editable export must not certify a partial book.');
+ const editableParagraphs=editable.book.chapters.flatMap(c=>c.paragraphs);
+ assert.equal(editableParagraphs.length,44);
+ assert.equal(editableParagraphs.filter(p=>p.provisionalOriginal).length,r1.missing);
+ assert.ok(editableParagraphs.some(p=>p.summary.includes(EDITABLE_DRAFT_WARNING_V130)));
+ assert.equal(JSON.stringify(first),stored,
+  'Editable draft export must not change the real book checkpoints.');
  const pdf=await exportExplainedPdfV122({...book,editionsV36:first},
   'prova-lab128.pdf',{download:false,provisional:true});
  assert.ok(pdf.fileName.includes('BOZZA_INCOMPLETA'));
