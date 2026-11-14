@@ -426,6 +426,20 @@ function ScannedBookPhoto({ blob }) {
 export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, onRenameBook, isOriginalOnly = false, sourceData = null, onPrepareOriginal, onResumeGemini, onRebalance, generating = false, status='', workPhase='idle', geminiStalled=false, originalRecord = null, originalReading = false, onCloseOriginalReader, onOpenOriginalNative, availableOriginals = [], onChooseOriginal, onImportOriginal, accessibility, scannedPhoto = null, reduction = 10, onReductionChange, reductionMeta = null }) {
   const [exportVariant, setExportVariant] = useState('study');
   const [exportOpen, setExportOpen] = useState(false);
+  const [exportBusy,setExportBusy]=useState('');
+  const [exportMessage,setExportMessage]=useState('');
+  async function performExport(format,variant){
+    if(exportBusy)return;
+    setExportBusy(format);setExportMessage('');
+    // Paint immediate feedback before jsPDF/docx performs CPU-bound work.
+    await new Promise(resolve=>{
+     if(typeof requestAnimationFrame==='function')requestAnimationFrame(resolve);
+     else setTimeout(resolve,0);
+    });
+    try{await onExport?.(format,variant);}
+    catch(error){setExportMessage(error?.message||'Impossibile aprire o esportare il documento.');}
+    finally{setExportBusy('');}
+  }
   const [renameOpen, setRenameOpen] = useState(false);
   const [draftInspectorOpen,setDraftInspectorOpen] = useState(false);
   const [prepareOpen, setPrepareOpen] = useState(false);
@@ -683,7 +697,8 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         )}
         <div className="sb-book-quick-actions">
           <button type="button" onClick={onRead}><span className="sb-action-icon"><StudyIcon name="book" size={25} /></span><strong>{explainedV122&&v36Partial?'Leggi pagine pronte':'Leggi sul telefono'}</strong></button>
-          <button type="button" disabled={v36Partial&&!isOriginalOnly&&!explainedV122} onClick={() => isOriginalOnly ? onExport('pdf', 'original') : onExport('pdf', 'study')}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>{explainedV122&&v36Partial?'PDF provvisorio':'Leggi in PDF'}</strong></button>
+          <button type="button" disabled={v36Partial&&!isOriginalOnly&&!explainedV122} onClick={() => void performExport('pdf-open',isOriginalOnly?'original':'study')}
+           disabled={Boolean(exportBusy)||v36Partial&&!isOriginalOnly&&!explainedV122}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>{exportBusy==='pdf-open'?'Apro PDF…':explainedV122&&v36Partial?'Apri PDF provvisorio':'Leggi in PDF'}</strong></button>
           {isOriginalOnly
             ? <button type="button" onClick={() => setPrepareOpen(true)}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>
             : <button type="button" onClick={onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>}
@@ -774,8 +789,15 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
           </div>
         </article>
       )}
-      {exportOpen && !v36Partial && (
+      {exportOpen && (!v36Partial||explainedV122) && (
         <article className="sb-export-card">
+          {explainedV122&&v36Partial&&<p role="status">
+            Il Libro spiegato è incompleto: il PDF provvisorio è disponibile,
+            mentre Word, EPUB e altri documenti modificabili saranno esportabili
+            quando tutte le pagine saranno complete o accettate con riserva.
+          </p>}
+          {exportBusy&&<p role="status">Preparo {exportBusy==='pdf-open'?'il lettore PDF':exportBusy.toUpperCase()}…</p>}
+          {exportMessage&&<p role="alert">{exportMessage}</p>}
           <div className="sb-export-head">
             <div><small>ESPORTA</small><h2>Scarica libro</h2><p className="sb-export-description">{isOriginalOnly ? 'Scegli il formato: il file importato rimane invariato.' :
               explainedV122 ? 'Scarica o stampa il Libro spiegato con il glossario laterale.' :
@@ -787,15 +809,23 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
               come non rielaborato. Il libro resta in elaborazione: non perdere i checkpoint.</p>}
           <div className="sb-export-formats">
             {isOriginalOnly && <button type="button" onClick={() => onExport('original', 'original')}>Formato originale</button>}
-            <button type="button" onClick={() => onExport('pdf', isOriginalOnly ? 'original' : exportVariant)}>PDF</button>
-            {!explainedV122&&<button type="button" onClick={() => onExport('docx', isOriginalOnly ? 'original' : exportVariant)}>DOCX</button>}
-            {!explainedV122&&<button type="button" onClick={() => onExport('html', isOriginalOnly ? 'original' : exportVariant)}>HTML</button>}
-            {!explainedV122&&<button type="button" onClick={() => onExport('epub', isOriginalOnly ? 'original' : exportVariant)}>EPUB</button>}
-            {!explainedV122 && !isOriginalOnly && <button type="button" onClick={() => onExport('odt', exportVariant)}>ODT</button>}
-            {!explainedV122 && !isOriginalOnly && <button type="button" onClick={() => onExport('rtf', exportVariant)}>RTF</button>}
-            {!explainedV122 && !isOriginalOnly && <button type="button" onClick={() => onExport('md', exportVariant)}>Markdown</button>}
+            <button type="button" disabled={Boolean(exportBusy)}
+             onClick={() => void performExport('pdf',isOriginalOnly?'original':exportVariant)}>Scarica / condividi PDF</button>
+            <button type="button" disabled={explainedV122&&v36Partial||Boolean(exportBusy)}
+              onClick={()=>void performExport('docx',isOriginalOnly?'original':exportVariant)}>Word (DOCX)</button>
+            <button type="button" disabled={explainedV122&&v36Partial||Boolean(exportBusy)}
+              onClick={()=>void performExport('epub',isOriginalOnly?'original':exportVariant)}>eBook (EPUB)</button>
+            <button type="button" disabled={explainedV122&&v36Partial||Boolean(exportBusy)}
+              onClick={()=>void performExport('html',isOriginalOnly?'original':exportVariant)}>HTML</button>
+            {!isOriginalOnly&&<button type="button" disabled={explainedV122&&v36Partial||Boolean(exportBusy)}
+              onClick={()=>void performExport('odt',exportVariant)}>ODT</button>}
+            {!isOriginalOnly&&<button type="button" disabled={explainedV122&&v36Partial||Boolean(exportBusy)}
+              onClick={()=>void performExport('rtf',exportVariant)}>RTF</button>}
+            {!isOriginalOnly&&<button type="button" disabled={explainedV122&&v36Partial||Boolean(exportBusy)}
+              onClick={()=>void performExport('md',exportVariant)}>Markdown</button>}
             {!isOriginalOnly && <button type="button" onClick={() => onExport('print', exportVariant)}>Stampa</button>}
-            {!explainedV122&&<button type="button" onClick={() => onExport('txt', isOriginalOnly ? 'original' : exportVariant)} disabled={!isOriginalOnly && exportVariant === 'both'}>TXT</button>}
+            <button type="button" onClick={() => void performExport('txt',isOriginalOnly?'original':exportVariant)}
+              disabled={explainedV122&&v36Partial||Boolean(exportBusy)||!isOriginalOnly&&exportVariant==='both'}>TXT</button>
             {!explainedV122 && !isOriginalOnly && <button type="button" onClick={() => onExport('json', exportVariant)}>JSON dati</button>}
           </div>
           {!isOriginalOnly && <p>Le spiegazioni «In parole semplici» si esportano dalla nuova sezione della Libreria.</p>}
