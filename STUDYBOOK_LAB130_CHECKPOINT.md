@@ -63,3 +63,14 @@ Le quattro attività non devono mostrare domande finché non si preme Crea/Rigen
 - `src/lib/studyToolsOnDemandV130.js` limita anche un capitolo formato da molti frammenti brevi a **massimo 40 passaggi** per una singola richiesta, coerentemente con il limite Worker; la selezione troncata è segnalata come campionata. Rimangono limite complessivo 13.500 caratteri client e 14.000 lato Worker.
 - La prova aggiunta a `scripts/test-lab130-study-on-demand.mjs` simula 90 paragrafi validi ed esige 40 segmenti esatti più indicatore di campionamento.
 - **PASS**, dopo la correzione, della suite LAB130 in JavaScript isolato con endpoint Gemini simulato. La prova di esportazione modificabile 44 pagine + LAB128 con PDF simulato è **PASS**. Non affermare esecuzione nativa Node o build Android finché non sono osservate nel Codespace.
+
+## Incidente Codespaces 14 novembre, ore 11:08 — gate sintassi Bash
+- Evidenza screenshot utente: `scripts/test-lab130-codespaces-preflight.mjs:13:9`, `AssertionError ERR_ASSERTION`, `actual:2 expected:0`, testo finale `71: fi`; il runner è stato fermato dal gate `spawnSync('bash',['-n',path])` prima di compilare APK.
+- Diagnosi diretta nel branch: `scripts/codespaces-lab130-build.sh` aveva **604 righe** per una duplicazione parziale accidentale del corpo dello script. A riga 132 risultava una chiamata `grep -Eiq` troncata e il testo di fine script duplicato prima che il blocco `if` fosse chiuso.
+- Correzione GitHub commit `62dbf63a3f3c0cf7afd1395c522304b1f27929b4`: ripristinata la condizione `X-StudyBook-Tools-Contract: lab130` completa, rimosse le **229 righe duplicate**. File finale 375 righe; una sola sezione di recupero firmatario e una sola sezione `PHASE='complete'`. Non modifica né Worker né produzione né keystore né app Android.
+- **Verifica di struttura sul file remoto PASS.** Non è stato eseguito `bash -n` nativo in questo contesto: la verifica effettiva sarà effettuata dal prossimo test Codespaces. Non affermare che l'APK LAB130 sia già compilata/pubblicata.
+- Il terminale Codespaces dell'utente è già sul ramo `trial/studybook-lab130-on-demand-study-formats-20261114`, con prompt `$`. Occorre solo eseguire una volta:
+```bash
+git pull --ff-only && bash scripts/codespaces-lab130-backend-and-build.sh
+```
+- Non fare `git reset --hard`, `git clean` o reinstallazioni: package-lock.json e cartelle APK-LAB125/126/127/129 rimangono locali. Se ancora falliscono altri gate, recuperare il loro primo errore senza forzare APK o Worker.
