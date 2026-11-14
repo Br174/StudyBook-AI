@@ -37,7 +37,7 @@ copy_artifacts(){
     fail 'Artefatto non derivato dal commit corrente'
   grep -Fxq 'signerSha256=D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC' "$origin/$NAME-IDENTITY.txt" ||
     fail 'Artefatto con firma non verificata'
-  grep -Fxq 'versionCode=2026113202' "$origin/$NAME-IDENTITY.txt" ||
+  grep -Fxq 'versionCode=2026113203' "$origin/$NAME-IDENTITY.txt" ||
     fail 'Artefatto con versione Android errata'
   (cd "$origin" && sha256sum -c "$NAME.sha256" >/dev/null &&
    unzip -tq "$NAME.zip" >/dev/null) ||

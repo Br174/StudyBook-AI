@@ -175,7 +175,7 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   </article>
   {(candidate||rewriteBusy||rewriteError)&&<section className="sb-rewrite-panel">
     <strong>Nuova riformulazione · Pagina {page.label}{String(page.label)!==String(page.sourcePage)?' (originale '+page.sourcePage+')':''}</strong>
-    {rewriteBusy&&<p role="status">Gemini riformula dal testo originale. Tentativo {rewriteAttempt||1} di 3. La pagina salvata rimane invariata.</p>}
+    {rewriteBusy&&<p role="status">Gemini riformula la pagina originale. Tentativo {rewriteAttempt||1}. Controllo soltanto la lunghezza. Il testo salvato resta invariato.</p>}
     {rewriteError&&<p role="alert">{rewriteError}</p>}
     {candidate&&<>
      <article className="sb-rewrite-preview">

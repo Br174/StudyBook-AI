@@ -5,6 +5,7 @@ import {originalExplainedPagesV122,isVerifiedExplainedPageV125} from './explaine
 import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,
  auditExplainedPageV126} from './explainedStagesV126.js';
 import {reserveAcceptedV127} from './explainedRepairV127.js';
+import {RIFORMULA_LENGTH_AUDIT_V132,auditRiformulaLengthV132} from './pageReformulationV132.js';
 const mm=pt=>Number(pt||0)*25.4/72;
 const clean=x=>String(x||'').replace(/\*\*/gu,'').trim();
 export function approximateWrapV122(text,widthMm,font='body'){
@@ -51,6 +52,9 @@ export function composeExplainedSheetsV122(book,{
  const records=new Map((snapshot?.pages||[]).filter(Boolean).map(p=>[p.id,p]));
  const isPrintable=(original,record)=>{
   if(!original||!record)return false;
+  // Bypass the old semantic validator ONLY for an accepted Riformula edit.
+  if(record.review?.auditRevision===RIFORMULA_LENGTH_AUDIT_V132)
+   return auditRiformulaLengthV132(original,record).ready;
   if(snapshot?.version!==EXPLAINED_POLICY_V126)
    return isVerifiedExplainedPageV125(original,record);
   if(reserveAcceptedV127(original,record))return true;
