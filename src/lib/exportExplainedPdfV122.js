@@ -43,7 +43,7 @@ function measuredWrap(pdf,value,width,font){
  return lines.length?lines:[''];
 }
 export async function exportExplainedPdfV122(book,fileName,{
- download=true,provisional=false
+ download=true,provisional=false,preferOpen=false
 }={}){
  const temporary=provisional&&book?.editionsV36?.complete!==true?
    buildProvisionalExplainedBookV128(book):null;
@@ -169,7 +169,9 @@ export async function exportExplainedPdfV122(book,fileName,{
  const outputName=safe(fileName)+(temporary?
   '_Libro_spiegato_BOZZA_INCOMPLETA.pdf':reservations.length?
    '_Libro_spiegato_CON_RISERVE.pdf':'_Libro_spiegato.pdf');
- if(download)await deliverBlob(blob,outputName,'Esporta Libro spiegato');
+ if(download)await deliverBlob(blob,outputName,
+  preferOpen?'Apri Libro spiegato in PDF':'Esporta Libro spiegato',
+  {preferOpen});
  return {blob,fileName:outputName,sourcePages:layout.sourcePages,
   outputPages:layout.pages.length,additionalPages:layout.extraPages,
   pagesWithReservations:reservations.length,
