@@ -10,6 +10,8 @@ export function checkedOriginalPageV132(book,pageNumber) {
  const edition=book?.editionsV36;
  if(edition?.version!==EXPLAINED_POLICY_V126)
   throw Error('Questa versione non supporta ancora la riformulazione della pagina.');
+ if(edition.sourceFingerprint!==book?.canonicalBookMap?.originalFingerprint)
+  throw Error('La versione elaborata non corrisponde più alla fonte originale: nessuna riformulazione avviata.');
  const map=edition.comprehensionV126?.pages?.[source.physicalPage-1];
  if(!map||!auditComprehensionV126(source,map).ready)
   throw Error('La comprensione originale di questa pagina non è verificata.');
