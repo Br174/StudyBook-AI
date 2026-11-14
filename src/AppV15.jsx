@@ -2171,17 +2171,23 @@ export default function AppV14() {
 
   function exportCurrentBook(format, variant = 'study') {
     if (!precisionBook) return;
-    if(isExplainedBookV122(studyBook)&&(format==='pdf'||format==='print')){
+    const explained=isExplainedBookV122(studyBook);
+    if(explained&&['pdf','pdf-open','print'].includes(format)){
       return exportExplainedPdfV122(precisionBook,fileName,{
-        provisional:studyBook?.editionsV36?.complete!==true
+        provisional:studyBook?.editionsV36?.complete!==true,
+        preferOpen:format==='pdf-open'
       }).catch(error=>setError(error?.message||'PDF Libro spiegato non disponibile'));
     }
-    if(reduction!==0 && precisionBook.editionReadiness?.partial){
-      setError('Questa è un’anteprima LAB36: esportazione disponibile dopo la verifica completa delle sei edizioni.');
+    if(precisionBook.editionReadiness?.partial&&
+      (explained||reduction!==0)){
+      setError(explained?
+       'Per Word, EPUB e TXT occorre il Libro spiegato completo. Usa il PDF provvisorio per le pagine ancora in elaborazione.':
+       'Anteprima parziale: esportazione disponibile dopo la verifica delle edizioni.');
       return;
     }
-    const options = { dsaMode, variant, accessibility, originalFile: sourceFile };
-    if (format === 'pdf') return exportPdf(precisionBook, fileName, options);
+    const options = { dsaMode, variant, accessibility, originalFile: sourceFile,
+      preferOpen:format==='pdf-open' };
+    if (format === 'pdf'||format==='pdf-open')return exportPdf(precisionBook,fileName,options);
     if (format === 'docx') return exportDocx(precisionBook, fileName, options);
     if (format === 'html') return exportHtml(precisionBook, fileName, options);
     if (format === 'epub') return exportEpub(precisionBook, fileName, options);
