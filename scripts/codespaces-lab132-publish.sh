@@ -5,7 +5,7 @@ umask 077
 REPO='Br174/StudyBook-AI'
 BRANCH='trial/studybook-lab132-reformulation-library-20261114'
 NAME='StudyBook-AI-TRIAL-132'
-BASE='17924797be0999d3d54af370ee83eb33cf430342'
+BASE='70e6a6f61c098d4a97c5eb3d52990effb2fc2360'
 cd "$(dirname "$0")/.."
 fail(){ printf '[LAB132 PUBBLICAZIONE BLOCCATA] %s\n' "$*" >&2; exit 1; }
 [[ "$(git branch --show-current)" == "$BRANCH" ]] || fail 'Ramo LAB132 non attivo'
@@ -71,7 +71,7 @@ else
     "$OUT/$NAME.apk" "$OUT/$NAME.zip" "$OUT/$NAME.sha256" "$OUT/$NAME-IDENTITY.txt" "$OUT/$NAME-SORGENTI.zip" \
     --repo "$REPO" --target "$SHA" \
     --title 'StudyBook AI TRIAL132 — Libreria e riformulazione pagina — Codespaces' \
-    --notes 'Prova LAB132: flashcard, quiz, mappa e interrogazione generate con Gemini SOLO al clic, con prova nel testo originale e cache persistente; apertura PDF con selettore nativo Android; export Word DOCX, EPUB, TXT e altri formati; interfaccia immediata. Include LAB129 lettura e LAB128 recupero 503. Firma originale obbligatoria, QA Scudo360 e verifica read-only del Worker LAB127 esistente, senza nuovo deploy. Il controllo HEAD non certifica la qualita della risposta Gemini o il collaudo Android, ancora da eseguire sul telefono. Nessuna GitHub Action usata.' \
+    --notes 'LAB132: sei cartelle in Libreria, riformulazione pagina esclusivamente su richiesta e dal PDF originale, proposta approvabile o da rigenerare, nuova raccolta PDF rielaborati senza sovrascrivere il libro spiegato iniziale. In parole semplici e menu di copertina conservati. Include LAB131/LAB130; Worker Gemini di prova gia esistente; firma Android originale e verifiche Scudo360 obbligatorie. Nessun test reale Gemini o collaudo Android ancora dichiarato.' \
     --prerelease || fail 'Pubblicazione GitHub non riuscita'
 fi
 URL="https://github.com/$REPO/releases/tag/$TAG"

@@ -4,7 +4,7 @@ set -Eeuo pipefail
 umask 077
 REPO='Br174/StudyBook-AI'
 BRANCH='trial/studybook-lab132-reformulation-library-20261114'
-BASE='17924797be0999d3d54af370ee83eb33cf430342'
+BASE='70e6a6f61c098d4a97c5eb3d52990effb2fc2360'
 NAME='StudyBook-AI-TRIAL-132'
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
