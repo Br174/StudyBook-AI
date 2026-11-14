@@ -30,6 +30,7 @@ import {EXPLAINED_POLICY_V122} from './lib/explainedPolicyV122.js';
 import {EXPLAINED_POLICY_V126} from './lib/explainedStagesV126.js';
 import {generateExplainedBookV126} from './lib/explainedGeneratorV126.js';
 import {buildExplainedEditionViewV122,isExplainedBookV122} from './lib/explainedViewV122.js';
+import {editableExplainedBookV130} from './lib/explainedEditableExportV130.js';
 import {studyToolBookForExplainedV129} from './lib/explainedStudyToolsV129.js';
 import {exportExplainedPdfV122} from './lib/exportExplainedPdfV122.js';
 import ExplainedReaderV122 from './components/ExplainedReaderV122.jsx';
@@ -2178,27 +2179,32 @@ export default function AppV14() {
         preferOpen:format==='pdf-open'
       }).catch(error=>setError(error?.message||'PDF Libro spiegato non disponibile'));
     }
-    if(precisionBook.editionReadiness?.partial&&
-      (explained||reduction!==0)){
-      setError(explained?
-       'Per Word, EPUB e TXT occorre il Libro spiegato completo. Usa il PDF provvisorio per le pagine ancora in elaborazione.':
-       'Anteprima parziale: esportazione disponibile dopo la verifica delle edizioni.');
+    if(!explained&&reduction!==0&&precisionBook.editionReadiness?.partial){
+      setError('Anteprima parziale: esportazione disponibile dopo la verifica delle edizioni.');
       return;
     }
+    // LAB130: never certify incomplete source as a completed explained book.
+    // Create a separate, non-persisted editable draft with every unfinished
+    // page labelled as original text; the stored checkpoint is unchanged.
+    const editable=explained&&precisionBook.editionReadiness?.partial?
+      editableExplainedBookV130(studyBook,precisionBook):
+      {book:precisionBook,provisional:false};
+    const outputBook=editable.book;
+    const outputName=editable.provisional?
+      String(fileName||'StudyBook').replace(/\.[^.]+$/u,'')+'_BOZZA_INCOMPLETA':
+      fileName;
     const options = { dsaMode, variant, accessibility, originalFile: sourceFile,
       preferOpen:format==='pdf-open' };
-    if (format === 'pdf'||format==='pdf-open')return exportPdf(precisionBook,fileName,options);
-    if (format === 'docx') return exportDocx(precisionBook, fileName, options);
-    if (format === 'html') return exportHtml(precisionBook, fileName, options);
-    if (format === 'epub') return exportEpub(precisionBook, fileName, options);
-    if (format === 'odt') return exportOdt(precisionBook, fileName, options);
-    if (format === 'rtf') return exportRtf(precisionBook, fileName, options);
-    if (format === 'md') return exportMarkdown(precisionBook, fileName, options);
-    if (format === 'print') return printStudyBook(precisionBook, fileName, options);
-    if (format === 'json') return exportJson(precisionBook, fileName);
-    if (format === 'txt') {
-      return exportTxt(precisionBook, fileName, dsaMode);
-    }
+    if(format==='pdf'||format==='pdf-open')return exportPdf(outputBook,outputName,options);
+    if(format==='docx')return exportDocx(outputBook,outputName,options);
+    if(format==='html')return exportHtml(outputBook,outputName,options);
+    if(format==='epub')return exportEpub(outputBook,outputName,options);
+    if(format==='odt')return exportOdt(outputBook,outputName,options);
+    if(format==='rtf')return exportRtf(outputBook,outputName,options);
+    if(format==='md')return exportMarkdown(outputBook,outputName,options);
+    if(format==='print')return printStudyBook(outputBook,outputName,options);
+    if(format==='json')return exportJson(outputBook,outputName);
+    if(format==='txt')return exportTxt(outputBook,outputName,dsaMode);
     return undefined;
   }
 
