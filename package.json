@@ -34,7 +34,8 @@
     "@capacitor/filesystem": "8.1.4",
     "@capacitor/share": "8.0.2",
     "@capacitor/file-viewer": "2.0.4",
-    "@capacitor-community/text-to-speech": "8.0.2"
+    "@capacitor-community/text-to-speech": "8.0.2",
+    "@capacitor-community/file-opener": "8.0.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.4",
