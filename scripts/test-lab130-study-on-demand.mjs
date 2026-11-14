@@ -58,6 +58,14 @@ assert.equal(source.passages[0].page,'3');
 assert.equal(buildStudyToolSourceV130(book,{scope:'chapter'}).passages.length,2);
 const large={chapters:Array.from({length:100},(_,i)=>({title:'Capitolo '+i,
  paragraphs:Array.from({length:20},(_,j)=>({original:paragraph,sourcePageStart:i*20+j+1}))}))};
+const manyShort={chapters:[{title:'Capitolo con tanti passaggi',
+ paragraphs:Array.from({length:90},(_,i)=>({
+  original:'La norma disciplina i comportamenti e i rapporti tra cittadini.',
+  sourcePageStart:i+1}))}]};
+const bounded=buildStudyToolSourceV130(manyShort,{scope:'chapter'});
+assert.equal(bounded.passages.length,40,
+ 'Even a chapter of many short passages must honor the Worker 40-passage cap.');
+assert.equal(bounded.sampled,true);
 const veryLong={chapters:[{title:'Long page',paragraphs:[
  {original:paragraph.repeat(100),sourcePageStart:1}]}]};
 assert.ok(buildStudyToolSourceV130(veryLong,{scope:'page'})
