@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { FileViewer } from '@capacitor/file-viewer';
+import { FileOpener } from '@capacitor-community/file-opener';
 
 function safeFileName(value = 'StudyBook') {
   return String(value || 'StudyBook').replace(/[\\/:*?"<>|]+/g, '_');
@@ -43,13 +44,24 @@ export async function deliverBlob(blob, fileName, title = 'Esporta da StudyBook 
     recursive: true,
   });
   if (preferOpen) {
-    const candidates = [written.uri, String(written.uri || '').replace(/^file:\/\//, '')].filter(Boolean);
-    for (const path of [...new Set(candidates)]) {
-      try {
-        await FileViewer.openDocumentFromLocalPath({ path });
-        return { native: true, fileName: name, uri: written.uri, opened: true };
-      } catch {
-        // Prova la forma alternativa del percorso; poi fallback al pannello Android.
+    // Native ACTION_VIEW file chooser: only apps registered for PDF appear.
+    // The Share Sheet is a different Android UI and must not be the primary path.
+    try {
+      await FileOpener.open({
+        filePath:written.uri,contentType:name.toLowerCase().endsWith('.pdf')?
+          'application/pdf':'application/octet-stream',
+        openWithDefault:false
+      });
+      return {native:true,fileName:name,uri:written.uri,opened:true,chooser:true};
+    }catch{
+      // Preserve existing Capacitor FileViewer for older or unsupported devices.
+      const candidates=[written.uri,
+       String(written.uri||'').replace(/^file:\/\//,'')].filter(Boolean);
+      for(const path of [...new Set(candidates)]){
+       try{
+        await FileViewer.openDocumentFromLocalPath({path});
+        return {native:true,fileName:name,uri:written.uri,opened:true,chooser:false};
+       }catch{/* Try next absolute path, then Android share fallback. */}
       }
     }
   }
