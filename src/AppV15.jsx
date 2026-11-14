@@ -2426,7 +2426,7 @@ export default function AppV14() {
           onStudy={() => { setStudyEntryMode('study'); setStudyModeOpen(true); }}
           onExport={(format, variant) => {
             if (!studyBook && originalRecord?.id === libraryId) {
-              if (format === 'pdf' && variant === 'original') return openOriginalPdfFromBook();
+              if (format === 'pdf-open' && variant === 'original') return openOriginalPdfFromBook();
               return exportOriginal(format);
             }
             return exportCurrentBook(format, variant);
