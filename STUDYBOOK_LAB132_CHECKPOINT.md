@@ -47,3 +47,11 @@ Stato: sorgenti LAB132 aggiornati su ramo isolato; compilazione Android e test d
 - Il medesimo criterio deve valere su approvazione, rilettura e PDF, solo per le pagine Riformula con auditRevision lab132-single-page-length-only-v1. Vecchie pagine/revisioni conservano il vecchio audit. Riformula ancora => nuova richiesta dall'originale.
 - Nessuna modifica alla pipeline di elaborazione del libro, ai livelli, ai dati originali, al Worker, al glossario generale o ad altre funzioni.
 - Build Android preparata in Codespace esistente: versionCode 2026113203, versione 0.3.132-prova.3, package/firma invariati. Test Gemini reali e dispositivo ancora in sospeso.
+
+## Direttiva conclusiva — Riformula solo MANUALE (14/11/2026)
+- La modifica di LAB132.3 che prevedeva fino a otto tentativi automatici è stata ANNULLATA prima della compilazione. Una pressione su Riformula => esattamente UNA richiesta Gemini sulla pagina originale completa.
+- Mostra sempre la proposta tecnicamente valida con percentuale effettiva anche se 30%, 65% o 70%. Obiettivo indicativo 50%, intervallo interno 40–60% solo a fini di indicazione visiva; non respingere il risultato per la sola lunghezza.
+- SOLO l'utente può premere «Riformula ancora» per una seconda richiesta; ogni richiesta riparte da originale e istruzioni.
+- Mantieni controllo tecnico formato e identità pagina, ma non richiedere verifiche di fedeltà, semantica, glossario; nessun automatismo, nessun cambio al processo del libro.
+- La proposta resta separata e non sostituisce la pagina precedente prima della pressione «Tieni riformulazione».
+- VersionCode preparato 2026113203 (non ancora pubblicato). Test/mock offline effettuati, test su Android e Gemini reale ANCORA da eseguire.

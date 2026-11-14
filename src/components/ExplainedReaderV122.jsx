@@ -16,7 +16,6 @@ function RichText({value}){
 export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapterIndex=0,onClose,onStudy,onReformulated}){
  const [accepted,setAccepted]=useState(null),[candidate,setCandidate]=useState(null);
  const [rewriteBusy,setRewriteBusy]=useState(false),[rewriteError,setRewriteError]=useState('');
- const [rewriteAttempt,setRewriteAttempt]=useState(0);
  const rewriteRequest=useRef(null);
  useEffect(()=>{
   let live=true;setAccepted(null);setCandidate(null);setRewriteError('');
@@ -61,12 +60,9 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   rewriteRequest.current?.abort();
   const controller=new AbortController();
   rewriteRequest.current=controller;setRewriteBusy(true);setRewriteError('');
-  setRewriteAttempt(0);setCandidate(null);
+  setCandidate(null);
   try{
-   const proposal=await requestPageReformulationV132(book,page.sourcePage,{
-    signal:controller.signal,
-    onAttempt:attempt=>{if(!controller.signal.aborted)setRewriteAttempt(attempt);}
-   });
+   const proposal=await requestPageReformulationV132(book,page.sourcePage,{signal:controller.signal});
    if(!controller.signal.aborted)setCandidate(proposal);
   }catch(e){if(!controller.signal.aborted)setRewriteError(e.message||'Riformulazione non riuscita.');}
   finally{if(rewriteRequest.current===controller){rewriteRequest.current=null;setRewriteBusy(false);}}
@@ -90,7 +86,7 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   activeRequest.current?.abort();
   activeRequest.current=null;
   rewriteRequest.current?.abort();rewriteRequest.current=null;
-  setRewriteBusy(false);setRewriteAttempt(0);setCandidate(null);setRewriteError('');
+  setRewriteBusy(false);setCandidate(null);setRewriteError('');
   setBusy(false);setError('');
   setIndex(value);
   scrollRoot.current?.scrollTo?.({top:0,behavior:'instant'});
@@ -175,7 +171,7 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   </article>
   {(candidate||rewriteBusy||rewriteError)&&<section className="sb-rewrite-panel">
     <strong>Nuova riformulazione · Pagina {page.label}{String(page.label)!==String(page.sourcePage)?' (originale '+page.sourcePage+')':''}</strong>
-    {rewriteBusy&&<p role="status">Gemini riformula la pagina originale. Tentativo {rewriteAttempt||1}. Controllo soltanto la lunghezza. Il testo salvato resta invariato.</p>}
+    {rewriteBusy&&<p role="status">Gemini riformula la pagina originale. Una richiesta per ogni pressione; il testo salvato resta invariato.</p>}
     {rewriteError&&<p role="alert">{rewriteError}</p>}
     {candidate&&<>
      <article className="sb-rewrite-preview">
@@ -183,7 +179,8 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
       {candidate.glossary?.length>0&&<details><summary>Termini utili</summary>
        {candidate.glossary.map((g,i)=><p key={i}><b>{g.term}</b>: {g.definition}</p>)}
       </details>}
-      <small>Riduzione: {Number(candidate.review?.reduction||0).toFixed(1)}%</small>
+      <small>Riduzione effettiva: {Number(candidate.review?.reduction||0).toFixed(1)}% · Obiettivo circa 50%</small>
+      {!candidate.review?.sizeCompliant&&<p role="status">La riduzione è distante dal 50%. Può premere «Riformula ancora» se preferisce una nuova proposta.</p>}
      </article>
      <div className="sb-rewrite-buttons">
       <button type="button" disabled={rewriteBusy} onClick={()=>void acceptPage()}>Tieni riformulazione</button>
