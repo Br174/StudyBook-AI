@@ -241,7 +241,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
    {id:'original',title:'Originali',subtitle:'Libri importati dal telefono',
     count:items.filter(x=>x.metadata?.hasOriginal).length,icon:'▤'},
    {id:'scans',title:'Scannerizzati',subtitle:'Pagine acquisite con lo scanner',
-    count:scannerProps.entries?.length||0,icon:'▦'},
+    count:new Set((scannerProps.entries||[]).map(p=>p.collection||p.id)).size,icon:'▦'},
    {id:'processed',title:'Riassunto al 50%',subtitle:'Libri elaborati',
     count:items.filter(x=>x.metadata?.hasProcessed).length,icon:'▣'},
    {id:'simple',title:'In parole semplici',subtitle:'Pagine semplificate salvate',
@@ -266,7 +266,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
          <span className="sb-library-folder-icon" aria-hidden="true">{category.icon}</span>
          <strong>{category.title}</strong>
          <small>{category.subtitle}</small>
-         <span className="sb-library-folder-count">{category.count} {category.id==='scans'?'pagine':category.count===1?'libro':'libri'}</span>
+         <span className="sb-library-folder-count">{category.count} {category.count===1?'libro':'libri'}</span>
         </button>)}
       </div>:<>
       <button type="button" className="sb-library-folder-back" onClick={()=>setView('all')}>← Torna alle categorie</button>
