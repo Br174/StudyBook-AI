@@ -50,3 +50,11 @@ cd /workspaces/StudyBook-AI && git diff --quiet && git diff --cached --quiet && 
 
 ## Criteri di riuscita
 Le quattro attività non devono mostrare domande finché non si preme Crea/Rigenera; solo Gemini può produrle. Rifiutare domande evidentemente scorrette invece di salvare schede inutili. PDF apre un lettore compatibile, condividere è azione separata; esportazioni Word/EPUB/TXT disponibili per libro completo. Apertura lettura e pulsanti devono mostrare subito una risposta visibile. Zero extra costi intenzionali, nessuna produzione modificata.
+
+## Aggiornamento — esportazione modificabile provvisoria autorizzata (14 novembre 2026)
+- L'utente ha un libro parziale; lasciare Word ed EPUB nascosti fino a 44/44 spiegate non soddisfa il recupero dei formati. Ora `src/lib/explainedEditableExportV130.js` costruisce **in memoria**, dalla LAB128, un documento editabile con le pagine spiegate e, nelle altre, l'originale accompagnato da `BOZZA INCOMPLETA — TESTO ORIGINALE NON ANCORA RIELABORATO CON GEMINI`. Il titolo del file esportato contiene `_BOZZA_INCOMPLETA`. Non modifica mai `editionsV36` o il flag `complete` salvato.
+- `src/AppV15.jsx`: per libri spiegati parziali invia questa copia separata agli exporter DOCX, EPUB, ODT, RTF, HTML, Markdown e TXT (il PDF ha ancora il proprio percorso layout-controllato), senza modificare le altre edizioni.
+- `src/components/AppScreens.jsx`: formati disponibili anche su libri parziali, con avviso leggibile e nessuna etichetta di libro definitivo.
+- `scripts/test-lab128-503-recovery.mjs` (su **questo ramo LAB130 soltanto**): nuovi assert reali su 44 pagine simulano documento editabile completo da 44 pagine, verificano tutte le pagine, marcatori di originale e nessuna mutazione del checkpoint. **PASS** nell'ambiente JS isolato con PDF mock, insieme ai test regressivi LAB128 HTTP503 e PDF.
+- `scripts/test-lab130-study-on-demand.mjs` è stato riprovato con mock dopo l'audit rinforzato sulle risposte (riferimenti presenti e sovrapposizione concettuale minimale) e limite di 12k caratteri per passaggio. **PASS**.
+- Stato di rilascio invariato: **non ancora distribuito né compilato** il Worker trial LAB130 o l'APK LAB130; `npm run test:lab130`, Vite, Wrangler, Gradle, firma e verifica app Android restano gate operativi del Codespace.
