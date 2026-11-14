@@ -528,3 +528,53 @@
  .study-mode .study-flashcard{min-height:240px;padding:25px 15px}
  .study-mode .study-quiz-card,.study-mode .study-oral-card{padding:18px 15px}
 }
+
+/* LAB130 — only explicit user tap creates new Gemini study material. */
+.study-mode .sb-v130-scopes{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:6px;padding:7px 10px;flex:0 0 auto;
+}
+.study-mode .sb-v130-scopes button{
+ min-width:0;min-height:42px;white-space:normal;
+ padding:8px 5px;font-size:clamp(11px,2.7vw,14px);
+ line-height:1.2;border-radius:11px;touch-action:manipulation;
+}
+.study-mode .sb-v130-paragraph-picker{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:9px;padding:6px 15px;color:#365571;
+ font-size:13px;font-weight:700;flex:0 0 auto;
+}
+.study-mode .sb-v130-paragraph-picker select{
+ min-height:42px;min-width:0;max-width:62%;
+ padding:7px 9px;border:1px solid #d7e2ef;
+ border-radius:10px;background:#fff;color:#193e65;
+}
+.study-mode .sb-v130-create{
+ display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+ gap:11px;flex:0 0 auto;
+ padding:12px 14px;margin:6px 10px 4px;
+ background:#edf6ff;border:1px solid #c7dff5;
+ border-radius:14px;color:#254a70;
+}
+.study-mode .sb-v130-create>div{flex:1 1 170px;min-width:0}
+.study-mode .sb-v130-create strong{display:block;font-size:14px}
+.study-mode .sb-v130-create small{display:block;margin-top:3px;
+ color:#456782;font-size:11px;line-height:1.45}
+.study-mode .sb-v130-create>button{
+ min-height:44px;max-width:100%;padding:8px 14px;
+ background:#1679d6;color:#fff;border:0;border-radius:10px;
+ font-size:13px;font-weight:800;touch-action:manipulation;
+}
+.study-mode .sb-v130-create>button:disabled{
+ opacity:.65;cursor:default
+}
+.study-mode .sb-v130-create p[role=alert]{
+ flex:1 0 100%;margin:3px 0 0;
+ color:#9d273a;font-size:12px;line-height:1.4
+}
+@media(max-width:480px){
+ .study-mode .sb-v130-scopes{gap:4px;padding:6px}
+ .study-mode .sb-v130-create{margin:4px 7px;
+ padding:10px 11px;gap:7px}
+ .study-mode .sb-v130-create>button{width:100%}
+}
