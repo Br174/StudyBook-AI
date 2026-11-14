@@ -27,7 +27,7 @@ export function studyToolPayloadV130(value){
 }
 function contentTerms(value){
  return new Set((compactV130(value).toLocaleLowerCase('it-IT')
-  .match(/[\\p{L}]{5,}/gu)||[]).filter(w=>
+  .match(/[\p{L}]{5,}/gu)||[]).filter(w=>
   !new Set(['questa','questo','quella','quello','anche','della',
    'delle','degli','sulla','nelle','quando','quindi','secondo',
    'essere','senza','parte','dunque','perché','invece']).has(w)));
