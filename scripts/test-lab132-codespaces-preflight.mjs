@@ -36,7 +36,7 @@ assert.ok(build.includes('test-lab127-nonblocking-recovery')&&
 
 assert.ok(build.includes('scudo360-gate.mjs')&&build.includes('prepare-android.mjs'));
 assert.ok(build.includes('STUDYBOOK_ORIGINAL_KEYSTORE'));
-assert.ok(build.includes('2026113201')&&publish.includes('2026113201'));
+assert.ok(build.includes('2026113202')&&publish.includes('2026113202'));
 assert.ok(build.includes('it.studybook.ai.lab.trial111')&&
  publish.includes('it.studybook.ai.lab.trial111'));
 assert.ok(build.includes('D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC'));

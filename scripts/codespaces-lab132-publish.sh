@@ -57,7 +57,7 @@ done
 grep -Fxq "source=$SHA" "$OUT/$NAME-IDENTITY.txt" || fail 'Identita APK differente dal commit'
 grep -Fxq 'signerSha256=D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC' "$OUT/$NAME-IDENTITY.txt" || fail 'Firma originale non confermata'
 grep -Fxq 'appId=it.studybook.ai.lab.trial111' "$OUT/$NAME-IDENTITY.txt" || fail 'Application ID errato'
-grep -Fxq 'versionCode=2026113201' "$OUT/$NAME-IDENTITY.txt" || fail 'VersionCode errato'
+grep -Fxq 'versionCode=2026113202' "$OUT/$NAME-IDENTITY.txt" || fail 'VersionCode errato'
 (cd "$OUT" && sha256sum -c "$NAME.sha256" >/dev/null) || fail 'Hash APK errato'
 (cd "$OUT" && unzip -tq "$NAME.zip" >/dev/null && unzip -tq "$NAME-SORGENTI.zip" >/dev/null) || fail 'ZIP non integri'
 if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then

@@ -22,7 +22,7 @@ Stato: sorgenti LAB132 aggiornati su ramo isolato; compilazione Android e test d
 - Test offline aggiunto: scripts/test-lab132-reformulation.mjs.
 - Preflight Codespaces: scripts/test-lab132-codespaces-preflight.mjs.
 - Scudo360 e test LAB131/LAB130 ereditati dal build script.
-- Build Codespaces: scripts/codespaces-lab132-autobuild.sh, task .vscode/tasks.json, con appId invariato it.studybook.ai.lab.trial111, signer originale SHA256 D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC, versionCode 2026113201, versione 0.3.132-prova.1.
+- Build Codespaces: scripts/codespaces-lab132-autobuild.sh, task .vscode/tasks.json, con appId invariato it.studybook.ai.lab.trial111, signer originale SHA256 D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC, versionCode 2026113202, versione 0.3.132-prova.2.
 - Compilazione, verifica firma e pubblicazione non ancora eseguite: l'applicazione di questo commit non dimostra la validità runtime o dei modelli Gemini. Prima di dichiarare APK pronta ottenere esito test e build Codespace e verificare la Release.
 - Non avviare GitHub Actions o nuovi CodeSpaces. Riusare il Codespace esistente.
 
@@ -34,3 +34,8 @@ Stato: sorgenti LAB132 aggiornati su ramo isolato; compilazione Android e test d
 - Nessuna modifica a Worker, PDF esistenti, originali, firma, package o libreria.
 - Nuovi test: scripts/test-lab132-recovery.mjs (integrati con test-lab132-reformulation.mjs), rete completamente simulata.
 - STATO: modifiche sorgente su GitHub; test Android reale/Gemini live, compilazione APK+ZIP e prova su dispositivo ancora da verificare separatamente. Non dichiarare la correzione risolta prima di verifica reale.
+
+## Release update-in-place LAB132 fix
+- Correzione della riformulazione: versionCode aumentato da 2026113201 a **2026113202**, versionName 0.3.132-prova.2. Identità appId e certificato Android invariati, per aggiornamento sul telefono senza disinstallare.
+- Rilascio precedente a46a7ff ancora valido come LAST_GOOD; nuovo APK deve derivare da HEAD successivo a ddeaed6016eb0514e24c46af6874cfbebf98e11b.
+- Il Codespace esistente è l'unico ambiente di firma ammesso; GitHub Actions e nuovi Codespaces non avviati. Collaudo Android e compilazione ancora da verificare.
