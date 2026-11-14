@@ -137,7 +137,7 @@ export function HomeScreen({
         </div>
         <div className="sb-source-grid">
           <button type="button" onClick={onScanner} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="scanner" size={25} /></span><strong>Scanner</strong></button>
-          <button type="button" onClick={onImport} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="book" size={25} /></span><strong>PDF / eBook</strong></button>
+          <button type="button" onClick={onImport} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="book" size={25} /></span><strong>PDF / Word / eBook</strong></button>
           <button type="button" onClick={onScannerArchive} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="photo" size={25} /></span><strong>Scannerizzati</strong></button>
           <button type="button" onClick={onOpenOriginals} disabled={importing || generating}><span className="sb-source-icon"><StudyIcon name="document" size={25} /></span><strong>Versione originale</strong></button>
         </div>
@@ -469,7 +469,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
               <StudyIcon name="book" size={22} /><span>{stripExtension(item.original?.name || item.fileName)}</span><strong>Apri →</strong>
             </button>
           ))}
-          <button type="button" className="sb-original-picker-import" onClick={onImportOriginal}>Importa PDF / eBook</button>
+          <button type="button" className="sb-original-picker-import" onClick={onImportOriginal}>Importa PDF / Word / eBook</button>
         </article>
       </section>
     );
