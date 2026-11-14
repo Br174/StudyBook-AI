@@ -3,7 +3,7 @@ export const STUDY_TOOLS_CONTRACT_V130='lab130-gemini-on-demand-v1';
 export const STUDY_TOOLS_V130=['flashcards','quiz','map','oral'];
 const MAX_SOURCE=14000;
 const SPACE=/\s+/gu;
-const STOP=/[«“](?:perché|che|come|quale|essa|questo|questa|campania|norma)[»”]\s*(?:o\s*[»”])?/iu;
+const STOP=/[«“](?:perché|che|come|quale|essa|questo|questa)[»”]\s*(?:o\s*[»”])?/iu;
 export const compactV130=value=>String(value||'').replace(SPACE,' ').trim();
 export function studyToolPayloadV130(value){
  const x=value&&typeof value==='object'?value:{};
