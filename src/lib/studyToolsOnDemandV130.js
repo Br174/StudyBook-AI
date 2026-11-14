@@ -47,7 +47,7 @@ export function buildStudyToolSourceV130(book,{scope='page',chapterIndex=0,
  let budget=MAX_TEXT;const passages=[];
  for(const item of eligible){
   if(budget<35)break;
-  const text=compactV130(item.text.slice(0,budget));
+  const text=compactV130(item.text.slice(0,Math.min(budget,12000)));
   if(text.length<35)continue;
   passages.push({...item,text});budget-=text.length;
  }
