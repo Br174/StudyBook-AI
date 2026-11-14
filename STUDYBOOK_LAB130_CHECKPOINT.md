@@ -58,3 +58,8 @@ Le quattro attività non devono mostrare domande finché non si preme Crea/Rigen
 - `scripts/test-lab128-503-recovery.mjs` (su **questo ramo LAB130 soltanto**): nuovi assert reali su 44 pagine simulano documento editabile completo da 44 pagine, verificano tutte le pagine, marcatori di originale e nessuna mutazione del checkpoint. **PASS** nell'ambiente JS isolato con PDF mock, insieme ai test regressivi LAB128 HTTP503 e PDF.
 - `scripts/test-lab130-study-on-demand.mjs` è stato riprovato con mock dopo l'audit rinforzato sulle risposte (riferimenti presenti e sovrapposizione concettuale minimale) e limite di 12k caratteri per passaggio. **PASS**.
 - Stato di rilascio invariato: **non ancora distribuito né compilato** il Worker trial LAB130 o l'APK LAB130; `npm run test:lab130`, Vite, Wrangler, Gradle, firma e verifica app Android restano gate operativi del Codespace.
+
+## Controllo finale dei blocchi di studio
+- `src/lib/studyToolsOnDemandV130.js` limita anche un capitolo formato da molti frammenti brevi a **massimo 40 passaggi** per una singola richiesta, coerentemente con il limite Worker; la selezione troncata è segnalata come campionata. Rimangono limite complessivo 13.500 caratteri client e 14.000 lato Worker.
+- La prova aggiunta a `scripts/test-lab130-study-on-demand.mjs` simula 90 paragrafi validi ed esige 40 segmenti esatti più indicatore di campionamento.
+- **PASS**, dopo la correzione, della suite LAB130 in JavaScript isolato con endpoint Gemini simulato. La prova di esportazione modificabile 44 pagine + LAB128 con PDF simulato è **PASS**. Non affermare esecuzione nativa Node o build Android finché non sono osservate nel Codespace.
