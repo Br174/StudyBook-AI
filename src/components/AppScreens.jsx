@@ -481,51 +481,8 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
   const editionState=studyBook?.editionsV36;
   const explainedV122=Boolean(studyBook?.explainedV122);
-  const reservedPagesV127=explainedV122?(editionState?.reservedPagesV127||[]):[];
-  const activeCorrectionCycle=Number(editionState?.diagnostics?.correctionCycle||0);
   const readyExplainedV125=Number.isInteger(studyBook?.editionReadiness?.readyPages)
     ?studyBook.editionReadiness.readyPages:(editionState?.verifiedChunkVariants||0);
-  const explainedReviewRows=explainedV122?(editionState?.pages||[]).flatMap((entry,index)=>{
-    if(!entry?.review)return [];
-    const hard=entry.review.issues||[],soft=entry.review.advisories||[];
-    return hard.length||soft.length?[{
-      page:Number(entry.sourcePage||index+1),
-      hard,soft,reduction:entry.review.reduction
-    }]:[];
-  }):[];
-  const reviewLabel=issue=>{
-    const key=String(issue||'').split(':')[0];
-    const names={
-      V125_PAGE_REDUCTION_OUT_OF_RANGE:'Riduzione fuori fascia: rigenerazione mirata',
-       V126_PAGE_REDUCTION_OUT_OF_RANGE:'LAB126: testo fuori dall’obiettivo del 50%',
-       V126_TRIVIAL_OR_ONE_LINE_BODY:'Testo troppo breve: spiegazione incompleta',
-       V126_COMPREHENSION_UNVERIFIED:'Comprensione dei contenuti non verificata',
-       V126_MAP_CONTENT_COVERAGE_LOW:'Concetti della lettura preliminare non presenti nella spiegazione',
-       V126_SHORT_SOURCE_NOT_SIMPLIFIED:'Breve testo da spiegare con parole più semplici',
-      V125_SHORT_PAGE_NOT_SIMPLIFIED:'Pagina corta da spiegare con parole più semplici',
-      V125_PRIMARY_SECONDARY_RELATION_REVERSED:'Ruolo delle norme primarie e secondarie da correggere',
-      V125_PRIMARY_SANCTION_RELATION_REVERSED:'Rapporto tra norma sanzionatoria e precettiva da correggere',
-      V125_VALIDITY_EFFICACY_REVERSED:'Rapporto tra validità ed efficacia da correggere',
-      V125_AUTHOR_THEORY_REVERSED:'Attribuzione autore/teoria da correggere',
-      V125_PERMISSION_OBLIGATION_CHANGED:'Possibilità e obbligo confusi',
-      V125_PLURAL_LEGAL_REFERENCE_CHANGED:'Riferimento ad articoli di legge da correggere',
-      V125_GLOSSARY_FOUNDATIONAL_NORM_CONTRADICTION:'Definizione di glossario contraddittoria',
-      V125_GLOSSARY_UNSUPPORTED_REFERENCE:'Riferimento non supportato nel glossario',
-      V125_GRAMMAR_BROKEN_ENCODING:'Accenti o caratteri non leggibili',
-      V125_GRAMMAR_UNBALANCED_PUNCTUATION:'Parentesi o virgolette da sistemare',
-      V125_GRAMMAR_MISSING_ACCENT:'Accento mancante',
-      V125_GRAMMAR_INVALID_PUNCTUATION:'Punteggiatura da correggere',
-      V125_DUAL_ASPECT_REDUCED_TO_SINGLE_ASPECT:'Una distinzione essenziale è stata eliminata',
-      V122_ESSENTIAL_CONCEPT_REVIEW:'Verificare che tutti i concetti siano espressi chiaramente',
-      V122_SOURCE_MEANING_REVIEW_REQUIRED:'Rilettura consigliata per forte riformulazione',
-      V122_PROTECTED_MEANING_MISSING:'Negazione, limite o condizione da ripristinare',
-      V122_LEGAL_GLOSSARY_REQUIRED:'Spiegazione del termine tecnico da aggiungere',
-      V127_NO_USABLE_EXPLANATION:'Impossibile ottenere una spiegazione valida; riportato il testo originale',
-      V127_REWRITE_NOT_VERIFIED:'Riscrittura non conforme dopo cinque correzioni',
-      V127_COMPREHENSION_UNAVAILABLE:'Lettura preliminare non acquisita; riportato il testo originale'
-    };
-    return names[key]||'Controllo '+key+' da esaminare';
-  };
   // LAB79: LAB78 numeric failure means "complete:false", yet all raw
   // drafts are saved. That is exactly when the correction control is needed.
   const auditedNeedsRepair=Boolean(editionState?.draftComplete&&
@@ -546,6 +503,14 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   const improvementLeft=outsideTarget.length>0;
   const sourceChapters = sourceData?.chapters || [];
   const canPrepare = sourceChapters.some(chapter => chapter.paragraphs?.length);
+  // LAB131: read-only display counts from the canonical source and current edition.
+  const totalBookPages = Math.max(0,Number(
+    sourceData?.structure?.pageCount || studyBook?.canonicalBookMap?.pageCount ||
+    editionState?.totalChunkVariants || sourceData?.pages?.length || 0
+  ) || 0);
+  const completedBookPages = Math.min(totalBookPages,Math.max(0,Number(
+    studyBook?.editionReadiness?.readyPages ?? editionState?.verifiedChunkVariants ?? 0
+  ) || 0));
   return (
     <section className="sb-screen sb-studio-screen">
       <header className="sb-screen-head compact">
@@ -587,112 +552,6 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
                 explainedV122?'↻ Correggi e riprova con Gemini':
                 '↻ Riprendi elaborazione dal checkpoint'}
             </button>}
-          </div>
-        )}
-        {!isOriginalOnly && explainedV122 && (
-          <div className="sb-edition-switcher-v68" role="status" aria-label="Unica versione spiegata">
-            <div className="sb-edition-switcher-heading-v68">
-              <strong>Versione di studio</strong><span>Libro spiegato</span>
-            </div>
-            <p>Unica spiegazione completa in parole semplici, con termini tecnici e glossario laterale.
-              Pagine originali conservate e fogli bis, ter dove necessari.</p>
-            <p><strong>Riduzione effettiva:</strong> {Number.isFinite(reductionMeta?.achievedLettersPercent)
-              ?reductionMeta.achievedLettersPercent.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'
-              :'In elaborazione'} · obiettivo Gemini 50%.</p>
-            <p><strong>Pagine pronte sul telefono:</strong> {readyExplainedV125}/
-              {editionState?.totalChunkVariants||0}. Le altre restano in elaborazione.</p>
-            {activeCorrectionCycle>0&&!editionState?.complete&&
-              <p role="status"><strong>Correzione automatica:</strong> ciclo {activeCorrectionCycle}/5
-                {' · '}pagine {Array.isArray(editionState?.diagnostics?.activePages)?
-                  editionState.diagnostics.activePages.join(', '):'in verifica'}.
-                Alla quinta correzione fallita la pagina sarà inclusa con riserva.</p>}
-            {!editionState?.complete&&Number.isFinite(editionState?.draftAchievedReduction)&&
-              <p><strong>Riduzione provvisoria del testo ricevuto:</strong>{' '}
-                {editionState.draftAchievedReduction.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'}
-                {' '}· dato informativo, non sostituisce il controllo di ogni pagina.</p>
-            }
-          </div>
-        )}
-        {!isOriginalOnly&&explainedV122&&reservedPagesV127.length>0&&
-          <section className="sb-studio-inline-progress" role="status"
-            aria-label="Pagine accettate con riserva">
-            <strong>Libro con {reservedPagesV127.length} pagine da rivedere</strong>
-            <p>Il libro può essere scaricato. Le pagine seguenti non hanno superato i controlli;
-              il PDF includerà un rapporto finale con i problemi riscontrati.</p>
-            <ol style={{maxHeight:260,overflowY:'auto',paddingLeft:22}}>
-              {reservedPagesV127.map(item=><li key={item.page}>
-                <strong>Pagina {item.label}</strong> · {item.sourceTextFallback?
-                  'Testo originale, non riscritto':'Spiegazione accettata con riserva'}
-                {' · '}{item.corrections>0?item.corrections+' tentativi di correzione':
-                  'Lettura tecnica non riuscita'}
-                {(item.issues||[]).map((code,i)=><p key={i}
-                  style={{margin:'2px 0 8px',fontSize:12}}>{reviewLabel(code)}</p>)}
-              </li>)}
-            </ol>
-          </section>}
-        {!isOriginalOnly&&explainedV122&&explainedReviewRows.length>0&&
-          <details className="sb-studio-inline-progress" style={{marginTop:10}}>
-            <summary>Controllo per pagina · {explainedReviewRows.length} pagine con note</summary>
-            <ol style={{maxHeight:260,overflowY:'auto',paddingLeft:22}}>
-              {explainedReviewRows.map(row=><li key={row.page} style={{paddingBottom:8}}>
-                <strong>Pagina {row.page}</strong>
-                {Number.isFinite(row.reduction)&&' · Riduzione '+row.reduction.toLocaleString('it-IT',{maximumFractionDigits:2})+'%'}
-                <ul>
-                  {row.hard.map((code,i)=><li key={'error-'+i}>{reviewLabel(code)}</li>)}
-                  {row.soft.map((code,i)=><li key={'note-'+i}>Nota: {reviewLabel(code)}</li>)}
-                </ul>
-              </li>)}
-            </ol>
-          </details>
-        }
-        {!isOriginalOnly && studyBook && !explainedV122 && (
-          <div className="sb-edition-switcher-v68" role="group"
-            aria-label="Scegli la riduzione del libro">
-            <div className="sb-edition-switcher-heading-v68">
-              <strong>Versione di studio</strong>
-              <span>{reduction==='summary'?'Riassunto':
-                reduction===0?'Originale':reduction+'%'}</span>
-            </div>
-            <div className="sb-edition-switcher-options-v68">
-              {[
-                {value:'summary',label:'Riassunto'},
-                {value:50,label:'50%'},{value:40,label:'40%'},
-                {value:30,label:'30%'},{value:20,label:'20%'},
-                {value:10,label:'10%'},{value:0,label:'Originale'}
-              ].map(option=>
-                <button key={String(option.value)} type="button"
-                  className={reduction===option.value?'selected':''}
-                  aria-pressed={reduction===option.value}
-                  onClick={()=>onReductionChange?.(option.value)}>
-                  {option.label}
-                </button>)}
-            </div>
-            <div className="sb-edition-switcher-result-v68" aria-live="polite">
-              {reduction===0 ? <span>Testo originale senza riduzione.</span> :
-                <><span>Riduzione realmente ottenuta:</span>
-                  <strong>{Number.isFinite(reductionMeta?.achievedLettersPercent)
-                    ?reductionMeta.achievedLettersPercent.toLocaleString('it-IT',{
-                      minimumFractionDigits:1,maximumFractionDigits:1})+'%'
-                    :Number.isFinite(qualityLevels[String(reduction)]?.actualReduction)
-                      ?qualityLevels[String(reduction)].actualReduction.toLocaleString('it-IT',{
-                       minimumFractionDigits:1,maximumFractionDigits:1})+'% · da correggere'
-                      :'In elaborazione'}</strong>
-                  <small>{reduction==='summary'?'Obiettivo del Riassunto: circa 60%':
-                    'Obiettivo: '+reduction+'%'}</small>
-                  {(Number.isFinite(reductionMeta?.achievedLettersPercent)||
-                     Number.isFinite(qualityLevels[String(reduction)]?.actualReduction))&&
-                    reductionMeta?.targetBand&&
-                    <small role="status" className={
-                      reductionMeta?.reductionCompliant?
-                      'sb-reduction-within-v69':'sb-reduction-outside-v69'}>
-                      {reductionMeta?.reductionCompliant
-                        ?'✓ Riduzione nel margine previsto'
-                        :'⚠ Fuori obiettivo: testo da ricalibrare'}
-                      {' · Margine '+reductionMeta.targetBand.min+
-                        '–'+reductionMeta.targetBand.max+'%'}
-                    </small>}
-                </>}
-            </div>
           </div>
         )}
         <div className="sb-book-quick-actions">
@@ -842,10 +701,71 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       ) : <article className="sb-quality-card">
         <h2>Controllo del libro</h2>
         <div><span>Capitoli</span><strong>{studyBook.chapters?.length || 0}</strong><StudyIcon name="book" size={19} /></div>
-        <div><span>Unità concettuali (testo base)</span><strong>{fidelity?.conceptUnits || '—'}</strong><StudyIcon name="units" size={19} /></div>
+        <div><span>Pagine del libro</span><strong>{totalBookPages || '—'}</strong><StudyIcon name="document" size={19} /></div>
+        <div><span>Pagine elaborate</span><strong>{totalBookPages ? `${completedBookPages}/${totalBookPages}` : '—'}</strong><StudyIcon name="document" size={19} /></div>
+        <div><span>Concetti individuati</span><strong>{fidelity?.conceptUnits || '—'}</strong><StudyIcon name="units" size={19} /></div>
+        <div><span>Riduzione effettiva del libro</span><strong>{Number.isFinite(reductionMeta?.achievedLettersPercent) ? reductionMeta.achievedLettersPercent + '%' : '—'}</strong><StudyIcon name="compression" size={19} /></div>
         <div><span>Copertura media (testo base)</span><strong>{Number.isFinite(fidelity?.averageCoveragePercent) ? `${fidelity.averageCoveragePercent}%` : '—'}</strong><StudyIcon name="coverage" size={19} /></div>
-        <div><span>Riduzione effettiva in lettere {reductionMeta?.level === 'summary' ? '(Riassunto)' : `(obiettivo ${reductionMeta?.level ?? 0}%)`}</span><strong>{Number.isFinite(reductionMeta?.achievedLettersPercent) ? reductionMeta.achievedLettersPercent + '%' : '—'}</strong><StudyIcon name="compression" size={19} /></div>
       </article>}
+      {!isOriginalOnly && studyBook && !explainedV122 && (
+          <div className="sb-edition-switcher-v68" role="group"
+            aria-label="Scegli la riduzione del libro">
+            <div className="sb-edition-switcher-heading-v68">
+              <strong>Versione di studio</strong>
+              <span>{reduction==='summary'?'Riassunto':
+                reduction===0?'Originale':reduction+'%'}</span>
+            </div>
+            <div className="sb-edition-switcher-options-v68">
+              {[
+                {value:'summary',label:'Riassunto'},
+                {value:50,label:'50%'},{value:40,label:'40%'},
+                {value:30,label:'30%'},{value:20,label:'20%'},
+                {value:10,label:'10%'},{value:0,label:'Originale'}
+              ].map(option=>
+                <button key={String(option.value)} type="button"
+                  className={reduction===option.value?'selected':''}
+                  aria-pressed={reduction===option.value}
+                  onClick={()=>onReductionChange?.(option.value)}>
+                  {option.label}
+                </button>)}
+            </div>
+            <div className="sb-edition-switcher-result-v68" aria-live="polite">
+              {reduction===0 ? <span>Testo originale senza riduzione.</span> :
+                <><span>Riduzione realmente ottenuta:</span>
+                  <strong>{Number.isFinite(reductionMeta?.achievedLettersPercent)
+                    ?reductionMeta.achievedLettersPercent.toLocaleString('it-IT',{
+                      minimumFractionDigits:1,maximumFractionDigits:1})+'%'
+                    :Number.isFinite(qualityLevels[String(reduction)]?.actualReduction)
+                      ?qualityLevels[String(reduction)].actualReduction.toLocaleString('it-IT',{
+                       minimumFractionDigits:1,maximumFractionDigits:1})+'% · da correggere'
+                      :'In elaborazione'}</strong>
+                  <small>{reduction==='summary'?'Obiettivo del Riassunto: circa 60%':
+                    'Obiettivo: '+reduction+'%'}</small>
+                  {(Number.isFinite(reductionMeta?.achievedLettersPercent)||
+                     Number.isFinite(qualityLevels[String(reduction)]?.actualReduction))&&
+                    reductionMeta?.targetBand&&
+                    <small role="status" className={
+                      reductionMeta?.reductionCompliant?
+                      'sb-reduction-within-v69':'sb-reduction-outside-v69'}>
+                      {reductionMeta?.reductionCompliant
+                        ?'✓ Riduzione nel margine previsto'
+                        :'⚠ Fuori obiettivo: testo da ricalibrare'}
+                      {' · Margine '+reductionMeta.targetBand.min+
+                        '–'+reductionMeta.targetBand.max+'%'}
+                    </small>}
+                </>}
+            </div>
+          </div>
+        )}
+      {!isOriginalOnly && explainedV122 && (
+        <div className="sb-edition-switcher-v68 sb-study-description-bottom" role="note" aria-label="Versione di studio">
+          <div className="sb-edition-switcher-heading-v68">
+            <strong>Versione di studio</strong><span>Libro spiegato</span>
+          </div>
+          <p>Unica spiegazione completa in parole semplici, con termini tecnici e glossario laterale.
+            Pagine originali conservate e fogli bis, ter dove necessari.</p>
+        </div>
+      )}
     </section>
   );
 }

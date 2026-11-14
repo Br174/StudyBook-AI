@@ -559,8 +559,8 @@
   font-size:clamp(.78rem,3.45vw,1.02rem);
 }
 .sb-home-v16 .sb-home-source-actions button:first-child {
-  background:linear-gradient(130deg,#e7f3ff,#f6fbff);
-  border-color:#c4e0ff;
+  background:#fff;
+  border-color:rgba(22,119,234,.10);
 }
 .sb-home-v16 .sb-home-source-actions svg,
 .sb-home-v16 .sb-home-library-actions svg { flex-shrink:0; color:var(--sb-blue); }
@@ -589,6 +589,11 @@
   text-align:center;
 }
 .sb-home-v16 .sb-home-library-actions button:first-child {
+  background:#fff;
+  border-color:rgba(22,119,234,.08);
+}
+.sb-home-v16 .sb-home-source-actions button:active:not(:disabled),
+.sb-home-v16 .sb-home-library-actions button:active:not(:disabled) {
   background:#eaf5ff;
   border-color:#c4e0ff;
 }
@@ -1206,4 +1211,16 @@
   .sb-studio-screen .sb-open-book-overview{grid-template-columns:minmax(92px,34%) minmax(0,1fr);gap:10px}
   .sb-edition-switcher-v68{padding:10px}
   .sb-edition-switcher-options-v68 button{font-size:.77rem;min-height:40px}
+}
+
+/* LAB131: description after the six book metrics, same visual system as LAB130. */
+.sb-studio-screen .sb-study-description-bottom {
+  margin:14px 0 0;
+  padding:14px;
+}
+.sb-studio-screen .sb-study-description-bottom p {
+  margin:0;
+  color:var(--sb-text);
+  line-height:1.45;
+  overflow-wrap:anywhere;
 }
