@@ -6,6 +6,8 @@ import {buildProvisionalExplainedBookV128} from './explainedProvisionalV128.js';
 const clean=x=>String(x||'').replace(/\*\*/gu,'');
 const safe=x=>String(x||'StudyBook').replace(/\.[^.]+$/u,'').replace(/[^a-zA-Z0-9_-]+/gu,'_');
 const FONT={heading:13,body:10.5,glossary:9.2};
+// Same verified edition -> reuse PDF bytes; no unnecessary jsPDF regeneration.
+const pdfCacheV130=new WeakMap();
 function textRuns(line){
  return String(line||'').split(/(\*\*\([^)\n]+\)\*\*)/gu).filter(Boolean)
   .map(part=>({text:clean(part),bold:/^\*\*\([^)\n]+\)\*\*$/u.test(part)}));
@@ -45,6 +47,19 @@ function measuredWrap(pdf,value,width,font){
 export async function exportExplainedPdfV122(book,fileName,{
  download=true,provisional=false,preferOpen=false
 }={}){
+ const edition=book?.editionsV36;
+ const eligible=edition&&typeof edition==='object';
+ const signature=eligible?[
+  String(fileName),edition.sourceFingerprint,edition.status,
+  edition.complete,edition.verifiedChunkVariants,edition.reservedPagesV127?.length,
+  edition.pages?.length,provisional
+ ].join('|'):'';
+ const cached=eligible?pdfCacheV130.get(edition):null;
+ if(cached?.signature===signature){
+  if(download)await deliverBlob(cached.result.blob,cached.result.fileName,
+   preferOpen?'Apri Libro spiegato in PDF':'Esporta Libro spiegato',{preferOpen});
+  return cached.result;
+ }
  const temporary=provisional&&book?.editionsV36?.complete!==true?
    buildProvisionalExplainedBookV128(book):null;
  const printable=temporary?.book||book;
@@ -172,11 +187,13 @@ export async function exportExplainedPdfV122(book,fileName,{
  if(download)await deliverBlob(blob,outputName,
   preferOpen?'Apri Libro spiegato in PDF':'Esporta Libro spiegato',
   {preferOpen});
- return {blob,fileName:outputName,sourcePages:layout.sourcePages,
+ const result={blob,fileName:outputName,sourcePages:layout.sourcePages,
   outputPages:layout.pages.length,additionalPages:layout.extraPages,
   pagesWithReservations:reservations.length,
   provisionalOriginalPages:waitingPages.length,
   provisional:temporary!==null,
   reportPages:pdf.getNumberOfPages()-layout.pages.length,
   policy:'lab122-one-explained-glossary-v1'};
+ if(eligible)pdfCacheV130.set(edition,{signature,result});
+ return result;
 }
