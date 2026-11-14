@@ -4,6 +4,7 @@ import { StudyIcon } from './StudyUiIcons.jsx';
 import RenameTitleDialog from './RenameTitleDialog.jsx';
 import ScannerArchive from './ScannerArchive.jsx';
 import SimplePagesLibraryV50 from './SimplePagesLibraryV50.jsx';
+import {listSimplePagesV50} from '../lib/simplePagesStoreV50.js';
 import {progressDiagnostic} from '../lib/geminiRecoveryV39.js';
 import {bookAcquisitionProgressV46} from '../lib/bookAcquisitionV46.js';
 import StudyPhaseProgressV59 from './StudyPhaseProgressV59.jsx';
@@ -42,7 +43,7 @@ function BookCover({ item, view = 'processed', onOpen, onDeleteRequest, onRename
       if (onBookActions) onBookActions(item, view);
       else setDeleteArmed(true);
       try { navigator.vibrate?.(35); } catch { /* best effort */ }
-    }, 520);
+    }, 2000);
   }
 
   function openBook() {
@@ -187,9 +188,20 @@ function ScanPhotoPreview({ blob, title }) {
   return url ? <img src={url} alt={title} loading="lazy" decoding="async" /> : <StudyIcon name="photo" size={21}/>;
 }
 
-export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onReprocessBook, onRecoverOriginal, processingStatus = '', processingProgress = {done:0,total:0}, acquisitionProgress=null, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
+export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, onReprocessBook, onRecoverOriginal,
+  reworkCatalog={states:{},pdfs:[]},onBuildReworkedPdf,onAccessReworkedPdf,processingStatus = '', processingProgress = {done:0,total:0}, acquisitionProgress=null, onSetCoverFile, onGenerateCover, onResetCover, initialView = 'all', scannerProps = {}, onRefreshScans }) {
   const [area, setArea] = useState('subjects');
   const [view, setView] = useState(initialView);
+  const [simpleBooks,setSimpleBooks]=useState(0);
+  const [reworkBusy,setReworkBusy]=useState('');
+  const [reworkMessage,setReworkMessage]=useState('');
+  useEffect(()=>setView(initialView),[initialView]);
+  useEffect(()=>{
+   let live=true;
+   void Promise.all(items.map(item=>listSimplePagesV50(item.id).then(p=>p.length).catch(()=>0)))
+    .then(counts=>{if(live)setSimpleBooks(counts.filter(n=>n>0).length);});
+   return ()=>{live=false;};
+  },[items]);
   const [subject, setSubject] = useState('Tutte');
   const [sort, setSort] = useState('recent');
   const [deleteCandidate, setDeleteCandidate] = useState(null);
@@ -219,6 +231,26 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
     return output;
   }, [items, area, subject, sort, view]);
 
+  const pendingBooks=items.filter(item=>{
+   const state=reworkCatalog.states?.[item.id];
+   return item.metadata?.hasProcessed&&state?.acceptedCount>0&&
+    state.revision>state.exportedRevision;
+  });
+  const createdPdfs=reworkCatalog.pdfs||[];
+  const categories=[
+   {id:'original',title:'Originali',subtitle:'Libri importati dal telefono',
+    count:items.filter(x=>x.metadata?.hasOriginal).length,icon:'▤'},
+   {id:'scans',title:'Scannerizzati',subtitle:'Pagine acquisite con lo scanner',
+    count:scannerProps.entries?.length||0,icon:'▦'},
+   {id:'processed',title:'Riassunto al 50%',subtitle:'Libri elaborati',
+    count:items.filter(x=>x.metadata?.hasProcessed).length,icon:'▣'},
+   {id:'simple',title:'In parole semplici',subtitle:'Pagine semplificate salvate',
+    count:simpleBooks,icon:'✧'},
+   {id:'pending',title:'Da rielaborare',subtitle:'Nuovi PDF da creare',
+    count:pendingBooks.length,icon:'↻'},
+   {id:'rewritten',title:'Rielaborati',subtitle:'PDF già creati',
+    count:createdPdfs.length,icon:'✓'}
+  ];
   return (
     <section className="sb-screen sb-library-screen">
       <header className="sb-library-head">
@@ -226,17 +258,59 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
         <div className="sb-library-tools"><button type="button" aria-label="Cerca">⌕</button></div>
       </header>
 
-      <div className="sb-segmented sb-library-categories" aria-label="Categorie della Libreria">
-        {[
-          ['scans', 'Scannerizzati'], ['processed', 'Modificati'], ['original', 'Originali'], ['all', 'Tutti'], ['simple','In parole semplici'],
-        ].map(([key, label]) => (
-          <button key={key} type="button" className={view === key ? 'active' : ''}
-            aria-pressed={view === key} onClick={() => { setView(key); if (key === 'scans') void onRefreshScans?.(); }}>
-            {label}
-          </button>
-        ))}
-      </div>
-      {view === 'simple' ? <SimplePagesLibraryV50 items={items} /> : view === 'scans' ? <ScannerArchive {...scannerProps} onBack={() => setView('all')} backLabel="← Torna alla Libreria" /> : <>
+      {view==='all'?<div className="sb-library-folder-grid" aria-label="Cartelle della Libreria">
+        {categories.map(category=><button type="button" key={category.id}
+         className={'sb-library-folder sb-folder-'+category.id}
+         onClick={()=>{setView(category.id);setReworkMessage('');
+          if(category.id==='scans')void onRefreshScans?.();}}>
+         <span className="sb-library-folder-icon" aria-hidden="true">{category.icon}</span>
+         <strong>{category.title}</strong>
+         <small>{category.subtitle}</small>
+         <span className="sb-library-folder-count">{category.count} {category.id==='scans'?'pagine':category.count===1?'libro':'libri'}</span>
+        </button>)}
+      </div>:<>
+      <button type="button" className="sb-library-folder-back" onClick={()=>setView('all')}>← Torna alle categorie</button>
+      <h2 className="sb-library-folder-heading">{categories.find(x=>x.id===view)?.title||'Libri'}</h2>
+      {reworkMessage&&<p role="status" className="sb-library-folder-status">{reworkMessage}</p>}
+      {view === 'simple' ? <SimplePagesLibraryV50 items={items} /> :
+       view === 'scans' ? <ScannerArchive {...scannerProps} onBack={() => setView('all')} backLabel="← Torna alla Libreria" /> :
+       view === 'pending'?<div className="sb-rework-book-list">
+        {pendingBooks.length?pendingBooks.map(item=>{
+         const state=reworkCatalog.states[item.id];
+         return <article key={item.id} className="sb-rework-book-card">
+          <strong>{stripExtension(item.fileName)}</strong>
+          <p>{state.acceptedCount} pagine riformulate e approvate · {item.metadata?.pages||0} pagine del libro</p>
+          <button type="button" disabled={!!reworkBusy} onClick={async()=>{
+           setReworkBusy(item.id);setReworkMessage('');
+           try{const result=await onBuildReworkedPdf?.(item.id);
+            setReworkMessage(result?'Nuovo PDF creato e salvato in Rielaborati.':'PDF non creato.');
+           }catch(e){setReworkMessage(e.message||'PDF non creato.');}
+           finally{setReworkBusy('');}
+          }}>{reworkBusy===item.id?'Creo il PDF…':'Crea nuovo libro PDF'}</button>
+         </article>;
+        }):<p>Nessuna riformulazione approvata in attesa di un nuovo PDF.</p>}
+       </div>:
+       view === 'rewritten'?<div className="sb-rework-book-list">
+        {createdPdfs.length?createdPdfs.map(pdf=><article key={pdf.id} className="sb-rework-book-card">
+         <strong>{stripExtension(pdf.fileName)}</strong>
+         <p>{pdf.pages||0} pagine · {pdf.acceptedCount} riformulazioni applicate</p>
+         <small>Creato il {new Date(pdf.createdAt).toLocaleString('it-IT')}</small>
+         <div className="sb-rework-pdf-actions">
+          <button type="button" disabled={!!reworkBusy} onClick={async()=>{
+           setReworkBusy(pdf.id);setReworkMessage('');
+           try{await onAccessReworkedPdf?.(pdf.id,true);}
+           catch(e){setReworkMessage(e.message||'Impossibile aprire il PDF.');}
+           finally{setReworkBusy('');}
+          }}>Leggi PDF</button>
+          <button type="button" disabled={!!reworkBusy} onClick={async()=>{
+           setReworkBusy(pdf.id);setReworkMessage('');
+           try{await onAccessReworkedPdf?.(pdf.id,false);}
+           catch(e){setReworkMessage(e.message||'Impossibile scaricare il PDF.');}
+           finally{setReworkBusy('');}
+          }}>Scarica PDF</button>
+         </div>
+        </article>):<p>Nessun libro rielaborato creato.</p>}
+       </div> : <>
       <div className="sb-library-modes">
         {[
           ['all','Tutti'],['subjects','Materie'],['collections','Raccolte'],['favorites','Preferiti'],['recent','Recenti'],
@@ -285,6 +359,7 @@ export function LibraryScreen({ items, onOpenBook, onDeleteBook, onRenameBook, o
           <button type="button" onClick={() => { setView('scans'); void onRefreshScans?.(); }}>Apri archivio Scannerizzati</button>
         </section>
       )}
+      </>}
       </>}
 
       {coverNotice && <div className="sb-library-cover-notice" role="status">{coverNotice}<button type="button" aria-label="Chiudi avviso copertina" onClick={()=>setCoverNotice('')}>×</button></div>}

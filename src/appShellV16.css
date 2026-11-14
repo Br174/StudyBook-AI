@@ -1224,3 +1224,35 @@
   line-height:1.45;
   overflow-wrap:anywhere;
 }
+
+/* LAB132 six folders, 3 per row; existing book covers remain inside categories. */
+.sb-library-folder-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0 18px}
+.sb-library-folder{display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+ gap:7px;min-width:0;min-height:149px;padding:12px 6px 11px;background:#fff;
+ color:var(--sb-text);border:1px solid #d3e3f3;border-radius:18px;
+ box-shadow:0 5px 18px #183d6710;text-align:center}
+.sb-library-folder-icon{display:grid;place-items:center;width:45px;height:45px;
+ color:#1878d8;background:#edf6ff;border-radius:13px;font-size:29px;font-weight:800}
+.sb-library-folder strong{font-size:clamp(.68rem,2.7vw,.92rem);line-height:1.19;overflow-wrap:anywhere}
+.sb-library-folder small{font-size:clamp(.55rem,2.05vw,.71rem);line-height:1.25;color:#60748a;overflow-wrap:anywhere}
+.sb-library-folder-count{padding:5px 7px;min-width:68px;border-radius:25px;
+ background:#eaf3ff;color:#146db7;font-size:.73rem;font-weight:800}
+.sb-folder-pending .sb-library-folder-icon{background:#eeeaff;color:#6954bd}
+.sb-folder-rewritten .sb-library-folder-icon{background:#e8f8ed;color:#188454}
+.sb-folder-simple .sb-library-folder-icon{background:#fff2e3;color:#bd790f}
+.sb-library-folder-back{margin:6px 0 10px;border:1px solid #cbddec;
+ background:#fff;color:#1769a8;border-radius:12px;padding:9px 13px;font-weight:800}
+.sb-library-folder-heading{margin:0 0 12px;font-size:1.2rem}
+.sb-library-folder-status{padding:9px 11px;background:#eef7ff;border-radius:10px;color:#235273}
+.sb-rework-book-list{display:grid;gap:12px;margin:10px 0 24px}
+.sb-rework-book-card{display:grid;gap:9px;background:#fff;border:1px solid #d6e2ee;
+ border-radius:16px;padding:15px}
+.sb-rework-book-card p{margin:0;color:#577187;font-size:.85rem}
+.sb-rework-book-card button{min-height:45px;background:#1679de;color:white;border:0;
+ border-radius:12px;font-weight:800;padding:10px 12px}
+.sb-rework-book-card button:disabled{opacity:.6}
+.sb-rework-pdf-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sb-rework-pdf-actions button:first-child{background:#eef6ff;color:#1767a7;border:1px solid #bed7f0}
+@media(max-width:370px){.sb-library-folder-grid{gap:6px}
+.sb-library-folder{min-height:145px;padding:9px 3px}
+.sb-library-folder-count{min-width:54px;font-size:.65rem}}
