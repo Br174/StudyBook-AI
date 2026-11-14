@@ -30,6 +30,7 @@ function normalizeOptions(value = false) {
     dsaMode: Boolean(value?.dsaMode),
     variant: ['study', 'simple', 'both'].includes(value?.variant) ? value.variant : 'study',
     accessibility: value?.accessibility || null,
+    preferOpen:value?.preferOpen===true,
   };
 }
 
@@ -422,7 +423,9 @@ export async function exportPdf(book, fileName, rawOptions = false) {
   const suffix = options.variant === 'simple' ? '_semplice' : options.variant === 'both' ? '_completo' : '_studio';
   if (Capacitor.isNativePlatform?.()) {
     const blob = pdf.output('blob');
-    await deliverBlob(blob, `${safeName(fileName)}${suffix}.pdf`, 'Apri PDF StudyBook', { preferOpen: true });
+    await deliverBlob(blob, `${safeName(fileName)}${suffix}.pdf`,
+      options.preferOpen?'Apri PDF StudyBook':'Esporta PDF StudyBook',
+      {preferOpen:options.preferOpen});
   } else {
     pdf.save(`${safeName(fileName)}${suffix}.pdf`);
   }
