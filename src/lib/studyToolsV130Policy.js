@@ -25,6 +25,19 @@ export function studyToolPayloadV130(value){
  return {ok:true,tool,scope,chapterTitle:title,passages:normalized,
   sourceChars:used,sampled:x.sampled===true};
 }
+function contentTerms(value){
+ return new Set((compactV130(value).toLocaleLowerCase('it-IT')
+  .match(/[\\p{L}]{5,}/gu)||[]).filter(w=>
+  !new Set(['questa','questo','quella','quello','anche','della',
+   'delle','degli','sulla','nelle','quando','quindi','secondo',
+   'essere','senza','parte','dunque','perché','invece']).has(w)));
+}
+function groundedMeaning(textValue,evidence){
+ const words=contentTerms(evidence),answer=contentTerms(textValue);
+ // A short answer may paraphrase, but must share at least one substantive term
+ // with the literal source quotation. This is NOT semantic certification.
+ return [...answer].some(w=>words.has(w));
+}
 function validQuestion(q){
  return q.length>=24&&q.length<=230&&!STOP.test(q)&&
   !/[«“][^»”]*\s+o\s*[»”]/u.test(q)&&
@@ -54,7 +67,8 @@ export function auditStudyToolItemsV130(tool,items,passages){
     .filter(x=>x.length>=12&&x.length<=220).slice(0,4):[];
    const keywords=Array.isArray(item.keywords)?item.keywords.map(compactV130)
     .filter(x=>x.length>=4&&x.length<=65).slice(0,6):[];
-   if(title.length<5||title.length>110||!points.length){
+   if(title.length<5||title.length>110||!points.length||
+      !points.some(point=>groundedMeaning(point,evidence))){
     rejected.push('V130_MAP_INVALID');continue;
    }
    accepted.push({title,points,keywords,evidence});
@@ -66,12 +80,14 @@ export function auditStudyToolItemsV130(tool,items,passages){
       options.some(x=>x.length<5||x.length>190)||
       new Set(options.map(x=>x.toLocaleLowerCase('it-IT'))).size!==3||
       !Number.isInteger(correctIndex)||correctIndex<0||correctIndex>2||
-      explanation.length<20||explanation.length>400){
+      explanation.length<20||explanation.length>400||
+      !groundedMeaning(options[correctIndex]+' '+explanation,evidence)){
     rejected.push('V130_QUIZ_INVALID');continue;
    }
    accepted.push({question,options,correctIndex,explanation,evidence});
   }else{
-   if(!validQuestion(question)||answer.length<18||answer.length>600){
+   if(!validQuestion(question)||answer.length<18||answer.length>600||
+      !groundedMeaning(answer,evidence)){
     rejected.push('V130_QUESTION_INVALID');continue;
    }
    if(tool==='flashcards')accepted.push({front:question,back:answer,evidence});
