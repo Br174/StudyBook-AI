@@ -25,3 +25,12 @@ Stato: sorgenti LAB132 aggiornati su ramo isolato; compilazione Android e test d
 - Build Codespaces: scripts/codespaces-lab132-autobuild.sh, task .vscode/tasks.json, con appId invariato it.studybook.ai.lab.trial111, signer originale SHA256 D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC, versionCode 2026113201, versione 0.3.132-prova.1.
 - Compilazione, verifica firma e pubblicazione non ancora eseguite: l'applicazione di questo commit non dimostra la validità runtime o dei modelli Gemini. Prima di dichiarare APK pronta ottenere esito test e build Codespace e verificare la Release.
 - Non avviare GitHub Actions o nuovi CodeSpaces. Riusare il Codespace esistente.
+
+## Correzione recupero riformulazione LAB132 (approvata 14/11/2026)
+- Intervento sulla stessa famiglia/ramo LAB132; non promuovere a produzione.
+- Gestore unico src/lib/pageReformulationV132.js: se la proposta fallisce audit locale o Worker, massimo TRE richieste totali, con indicazioni mirate da errori V126/V125/V122; ripartenza sempre dal testo originale, non dalla proposta respinta.
+- 429/503/HTTP/network/abort/protocol mismatch NON vengono ritentati in loop. Soglie di tolleranza private non vengono trasmesse al modello; obiettivo Gemini invariato 50%.
+- Pagina 33 bis: richiede/aggiorna pagina fisica 33, UI indica la fonte e dopo approvazione ritorna alla prima pagina della fonte per gestire il reflow.
+- Nessuna modifica a Worker, PDF esistenti, originali, firma, package o libreria.
+- Nuovi test: scripts/test-lab132-recovery.mjs (integrati con test-lab132-reformulation.mjs), rete completamente simulata.
+- STATO: modifiche sorgente su GitHub; test Android reale/Gemini live, compilazione APK+ZIP e prova su dispositivo ancora da verificare separatamente. Non dichiarare la correzione risolta prima di verifica reale.

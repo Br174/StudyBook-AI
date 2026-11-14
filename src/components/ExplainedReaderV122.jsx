@@ -16,6 +16,7 @@ function RichText({value}){
 export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapterIndex=0,onClose,onStudy,onReformulated}){
  const [accepted,setAccepted]=useState(null),[candidate,setCandidate]=useState(null);
  const [rewriteBusy,setRewriteBusy]=useState(false),[rewriteError,setRewriteError]=useState('');
+ const [rewriteAttempt,setRewriteAttempt]=useState(0);
  const rewriteRequest=useRef(null);
  useEffect(()=>{
   let live=true;setAccepted(null);setCandidate(null);setRewriteError('');
@@ -60,8 +61,12 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   rewriteRequest.current?.abort();
   const controller=new AbortController();
   rewriteRequest.current=controller;setRewriteBusy(true);setRewriteError('');
+  setRewriteAttempt(0);setCandidate(null);
   try{
-   const proposal=await requestPageReformulationV132(book,page.sourcePage,{signal:controller.signal});
+   const proposal=await requestPageReformulationV132(book,page.sourcePage,{
+    signal:controller.signal,
+    onAttempt:attempt=>{if(!controller.signal.aborted)setRewriteAttempt(attempt);}
+   });
    if(!controller.signal.aborted)setCandidate(proposal);
   }catch(e){if(!controller.signal.aborted)setRewriteError(e.message||'Riformulazione non riuscita.');}
   finally{if(rewriteRequest.current===controller){rewriteRequest.current=null;setRewriteBusy(false);}}
@@ -71,7 +76,11 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   setRewriteBusy(true);setRewriteError('');
   try{
    const next=await acceptReformulationV132(bookId,candidate);
-   setAccepted(next);setCandidate(null);onReformulated?.();
+   setAccepted(next);setCandidate(null);
+   // A bis/tris continuation can disappear after reflow: return to the source page.
+   const first=pages.findIndex(p=>p.sourcePage===candidate.sourcePage);
+   if(first>=0)setIndex(first);
+   onReformulated?.();
   }catch(e){setRewriteError(e.message||'Salvataggio non riuscito.');}
   finally{setRewriteBusy(false);}
  }
@@ -81,7 +90,7 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   activeRequest.current?.abort();
   activeRequest.current=null;
   rewriteRequest.current?.abort();rewriteRequest.current=null;
-  setRewriteBusy(false);setCandidate(null);setRewriteError('');
+  setRewriteBusy(false);setRewriteAttempt(0);setCandidate(null);setRewriteError('');
   setBusy(false);setError('');
   setIndex(value);
   scrollRoot.current?.scrollTo?.({top:0,behavior:'instant'});
@@ -165,8 +174,8 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
    </footer>
   </article>
   {(candidate||rewriteBusy||rewriteError)&&<section className="sb-rewrite-panel">
-    <strong>Nuova riformulazione · Pagina {page.label}</strong>
-    {rewriteBusy&&<p role="status">Gemini riformula dal testo originale. La pagina salvata rimane invariata.</p>}
+    <strong>Nuova riformulazione · Pagina {page.label}{String(page.label)!==String(page.sourcePage)?' (originale '+page.sourcePage+')':''}</strong>
+    {rewriteBusy&&<p role="status">Gemini riformula dal testo originale. Tentativo {rewriteAttempt||1} di 3. La pagina salvata rimane invariata.</p>}
     {rewriteError&&<p role="alert">{rewriteError}</p>}
     {candidate&&<>
      <article className="sb-rewrite-preview">

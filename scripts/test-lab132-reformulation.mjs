@@ -61,3 +61,6 @@ await deleteReformulationsV132(id);
 assert.equal(await readReformulationsV132(id),null);
 assert.equal((await catalogReformulationsV132([id])).pdfs.length,0);
 console.log('LAB132 PASS: six folders, original source, 2s menu, accepted edits and immutable PDFs.');
+
+// Recovery tests run on the real V126 audit, with mocked network and no provider use.
+await import('./test-lab132-recovery.mjs');
