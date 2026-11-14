@@ -36,7 +36,6 @@ import {exportExplainedPdfV122} from './lib/exportExplainedPdfV122.js';
 import {applyApprovedReformulationsV132} from './lib/pageReformulationV132.js';
 import {readReformulationsV132,storeReworkedPdfV132,readReworkedPdfV132,
  catalogReformulationsV132,deleteReformulationsV132} from './lib/reformulationsStoreV132.js';
-import {deliverBlob} from './lib/fileDelivery.js';
 import ExplainedReaderV122 from './components/ExplainedReaderV122.jsx';
 import {rebalanceSavedStudyBookV67,canRebalanceBookV67} from './lib/studyRebalanceV67.js';
 import {STUDY_PILLAR_VERSION} from './lib/studyPillarV38.js';
@@ -902,7 +901,9 @@ export default function AppV14() {
         setFileName(record.fileName);
         setDocumentData(record.sourceData || null);
         setSourceFile(record.originalFile);
-        setStudyBook(record.studyBook || null);
+        // LAB132: the Originali folder always opens the preserved original
+        // even when a separate processed studyBook exists in this same record.
+        setStudyBook(null);
         setLevel(record.studyBook?.level || 'studio');
         setDsaMode(record.dsaMode !== false);
         setSelectedChapter(0);

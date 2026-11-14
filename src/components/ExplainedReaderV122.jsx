@@ -23,7 +23,10 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
    .catch(e=>{if(live)setRewriteError(e.message);});
   return ()=>{live=false;};
  },[bookId,book?.canonicalBookMap?.originalFingerprint]);
- const readingBook=useMemo(()=>applyApprovedReformulationsV132(book,accepted),[book,accepted]);
+ const readingBook=useMemo(()=>{
+  try{return applyApprovedReformulationsV132(book,accepted);}
+  catch{return book;} // source changed: preserve the verified original reader
+ },[book,accepted]);
  const output=useMemo(()=>composeExplainedSheetsV122(readingBook),[readingBook]);
  const pages=output.pages;
  const [index,setIndex]=useState(0);
