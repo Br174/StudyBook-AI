@@ -697,7 +697,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         )}
         <div className="sb-book-quick-actions">
           <button type="button" onClick={onRead}><span className="sb-action-icon"><StudyIcon name="book" size={25} /></span><strong>{explainedV122&&v36Partial?'Leggi pagine pronte':'Leggi sul telefono'}</strong></button>
-          <button type="button" disabled={v36Partial&&!isOriginalOnly&&!explainedV122} onClick={() => void performExport('pdf-open',isOriginalOnly?'original':'study')}
+          <button type="button" onClick={() => void performExport('pdf-open',isOriginalOnly?'original':'study')}
            disabled={Boolean(exportBusy)||v36Partial&&!isOriginalOnly&&!explainedV122}><span className="sb-action-icon"><StudyIcon name="pdf" size={25} /></span><strong>{exportBusy==='pdf-open'?'Apro PDF…':explainedV122&&v36Partial?'Apri PDF provvisorio':'Leggi in PDF'}</strong></button>
           {isOriginalOnly
             ? <button type="button" onClick={() => setPrepareOpen(true)}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>
