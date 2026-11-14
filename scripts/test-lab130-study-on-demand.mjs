@@ -38,6 +38,11 @@ const quiz=[{question:'Quale problema studia la filosofia del diritto?',
 assert.equal(auditStudyToolItemsV130('quiz',quiz,passages).items.length,1);
 const badQuiz=[{...quiz[0],options:['A','A','C']}];
 assert.equal(auditStudyToolItemsV130('quiz',badQuiz,passages).items.length,0);
+const unrelated=[{question:'Quale questione analizza la filosofia del diritto?',
+ answer:'Marte è un pianeta gassoso in una galassia lontana.',
+ evidence:'La filosofia del diritto studia il problema deontico e il rapporto tra diritto e giustizia.'}];
+assert.equal(auditStudyToolItemsV130('flashcards',unrelated,passages).items.length,0,
+ 'An unrelated answer is not grounded merely by quoting a real sentence.');
 const map=[{title:'Diritto e giustizia',
  points:['La filosofia del diritto studia il problema deontico.',
  'Si occupa del rapporto tra diritto e giustizia.'],
@@ -53,6 +58,11 @@ assert.equal(source.passages[0].page,'3');
 assert.equal(buildStudyToolSourceV130(book,{scope:'chapter'}).passages.length,2);
 const large={chapters:Array.from({length:100},(_,i)=>({title:'Capitolo '+i,
  paragraphs:Array.from({length:20},(_,j)=>({original:paragraph,sourcePageStart:i*20+j+1}))}))};
+const veryLong={chapters:[{title:'Long page',paragraphs:[
+ {original:paragraph.repeat(100),sourcePageStart:1}]}]};
+assert.ok(buildStudyToolSourceV130(veryLong,{scope:'page'})
+ .passages[0].text.length<=12000,
+ 'A large page must honor the Worker per-passage limit.');
 const sampled=buildStudyToolSourceV130(large,{scope:'book'});
 assert.ok(sampled.sampled&&sampled.passages.length<=18);
 assert.ok(sampled.passages.map(p=>p.text.length).reduce((a,b)=>a+b,0)<=13500);
