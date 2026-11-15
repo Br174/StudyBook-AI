@@ -25,7 +25,9 @@ assert.ok(reader.includes('Tieni riformulazione'));
 assert.ok(reader.includes('Riformula ancora'));
 assert.ok(reader.includes('In parole semplici'));
 assert.ok(reader.includes('explainStudyPageOnDemandV49'));
-assert.ok(source.includes("phase:'explain'"));
+assert.ok(source.includes("'/api/reformulate/v132'"));
+assert.ok(reader.includes('Tieni versione corrente'));
+assert.ok(reader.includes('keepCurrentPage'));
 assert.ok(source.includes('originalExplainedPagesV122'));
 assert.ok(!source.includes('previousDraft:'));
 assert.equal((app.match(/from '\.\/lib\/fileDelivery\.js';/g)||[]).length,1);
@@ -64,3 +66,4 @@ console.log('LAB132 PASS: six folders, original source, 2s menu, accepted edits 
 
 // Recovery tests run on the real V126 audit, with mocked network and no provider use.
 await import('./test-lab132-recovery.mjs');
+await import('./test-lab132-manual-worker.mjs');
