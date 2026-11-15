@@ -137,13 +137,11 @@ export function lessonInstructionOnePassV135(){
  ].join('\n');
 }
 export function lessonPayloadOnePassV135(pages,context=[]){
- const base=modelPayloadV122(pages);
- return {pages:base.pages.map((p,i)=>{
-  const units=studyUnitsV126(sourceBody(pages[i]));
-  const {targetBodyLetters,...rest}=p;
-  return {...rest,originalBodyUnits:units,targetBodyUnits:Math.round(units/2),
-   shortSource:units<=SHORT_SOURCE_UNITS_V126};
- }),bookContext:(Array.isArray(context)?context:[]).slice(0,100)};
+ // Reuse ALL legacy source protection AND the existing V126 targeted repair
+ // guidance, but omit the separate comprehension map to avoid two AI passes.
+ const full=lessonPayloadV126(pages,pages.map(()=>null),context);
+ return {pages:full.pages.map(({comprehension,...rest})=>rest),
+  bookContext:full.bookContext};
 }
 export function auditExplainedPageV126(source,result,comprehension,{onePassV135=false}={}){
  const old=auditExplainedPageV122(source,result);
