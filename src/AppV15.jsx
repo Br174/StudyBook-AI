@@ -1613,6 +1613,7 @@ export default function AppV14() {
         const snapshot=await runExplainedWithSafeRestart(current,{
           retryReviewed:true,
           onProgress:async (update,meta)=>{
+            if(meta?.persist===false)return;
             latest={...current,editionsV36:update,
               engine:update.complete?'ai':'misto'};
             setStudyBook(latest);
@@ -1625,11 +1626,7 @@ export default function AppV14() {
                 (update.comprehensionV126?.totalPages||0)+' pagine'
               :'Libro spiegato · '+(update.verifiedChunkVariants||0)+'/'+
                 (update.totalChunkVariants||0)+' pagine verificate');
-            if(meta?.persist!==false){
-              await saveLibraryBook({id:targetId,fileName:targetName,sourceData:targetSource,
-                studyBook:latest,dsaMode:true,profileId:activeProfileId,
-                originalFile:record?.originalFile||sourceFile});
-            }
+            await saveExplainedCheckpoint(targetId,latest);
           }
         });
         latest={...current,editionsV36:snapshot,engine:snapshot.complete?'ai':'misto'};
