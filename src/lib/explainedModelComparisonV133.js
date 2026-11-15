@@ -5,7 +5,7 @@ export const FREE_STUDY_MODELS_V133=Object.freeze([
 export const MODEL_COMPARISON_POLICY_V133='lab133-free-model-comparison-v1';
 const number=(v)=>Number.isFinite(Number(v))?Math.max(0,Number(v)):0;
 const empty=()=>({attempts:0,success:0,http503:0,http429:0,
- sourceChars:0,elapsedMs:0,readyPages:0,receivedPages:0});
+ sourceChars:0,elapsedMs:0,readyPages:0,receivedPages:0,otherErrors:0});
 export function modelComparisonStateV133(value){
  const x=value&&typeof value==='object'?value:{};
  return {version:MODEL_COMPARISON_POLICY_V133,
@@ -46,6 +46,7 @@ export function recordFreeStudyModelV133(value,{
   item.receivedPages+=number(receivedPages);
  }else if(status===503)item.http503++;
  else if(status===429)item.http429++;
+ else item.otherErrors++;
  return state;
 }
 export function modelComparisonReportV133(value){
@@ -53,7 +54,7 @@ export function modelComparisonReportV133(value){
  return FREE_STUDY_MODELS_V133.map(model=>{
   const x=stats[model];
   return {model,attempts:x.attempts,success:x.success,
-   http503:x.http503,http429:x.http429,
+   http503:x.http503,http429:x.http429,otherErrors:x.otherErrors,
    milliseconds:x.elapsedMs,sourceChars:x.sourceChars,
    readyPages:x.readyPages,receivedPages:x.receivedPages,
    charsPerSecond:x.elapsedMs?Math.round(x.sourceChars*1000/x.elapsedMs):null,

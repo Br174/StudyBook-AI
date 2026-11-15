@@ -258,7 +258,7 @@ export async function generateExplainedBookV126(book,{
    try{
     const {reply,response}=await requestPhaseV126(phase,pages,context,signal,
     correction,modelCandidate);
-   if(modelCandidate&&(reply.status===200||reply.status===503||reply.status===429)){
+   if(modelCandidate&&Number.isFinite(reply.status)){
     const reportedModel=response?.model||modelCandidate;
     const received=Array.isArray(response?.pages)?response.pages.length:0;
     const verified=Array.isArray(response?.pages)?

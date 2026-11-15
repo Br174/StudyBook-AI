@@ -25,6 +25,8 @@ assert.ok(pkg.scripts['test:lab130']?.includes('test-lab130-study-on-demand'));
 assert.ok(pkg.scripts['test:lab131']?.includes('test-lab131-ui-layout'));
 assert.ok(pkg.scripts['test:lab132']?.includes('test-lab132-reformulation'));
 assert.ok(build.includes('X-StudyBook-Recovery-Contract:[[:space:]]*lab127'));
+assert.ok(build.includes('X-StudyBook-Model-Compare-Contract:[[:space:]]*lab133-free-models-v1'));
+assert.ok(pkg.scripts['test:lab132'].includes('test-lab133-free-models'));
 assert.ok(build.includes('X-StudyBook-Phase-Contract:[[:space:]]*lab126'));
 assert.ok(build.includes('test-lab127-nonblocking-recovery')&&
  build.includes('test-lab127-worker-contract')&&
@@ -36,7 +38,7 @@ assert.ok(build.includes('test-lab127-nonblocking-recovery')&&
 
 assert.ok(build.includes('scudo360-gate.mjs')&&build.includes('prepare-android.mjs'));
 assert.ok(build.includes('STUDYBOOK_ORIGINAL_KEYSTORE'));
-assert.ok(build.includes('2026113204')&&publish.includes('2026113204'));
+assert.ok(build.includes('2026113205')&&publish.includes('2026113205'));
 assert.ok(build.includes('it.studybook.ai.lab.trial111')&&
  publish.includes('it.studybook.ai.lab.trial111'));
 assert.ok(build.includes('D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC'));

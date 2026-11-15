@@ -63,3 +63,13 @@ Stato: sorgenti LAB132 aggiornati su ramo isolato; compilazione Android e test d
 - «Tieni versione corrente» chiude/scarta soltanto la proposta senza salvare: testo iniziale ed eventuale approvato restano identici.
 - Il deploy del Worker SOLO nel trial124 richiede credenziali Cloudflare già disponibili nel Codespace; test e dry-run prima del deploy, HEAD contract verificato due volte prima dell'APK. Non creare servizi nuovi, non deploy produzione.
 - L'APK di prova 0.3.132-prova.4 (versionCode 2026113204) conserva applicationId, signer e dati. Tests sul dispositivo e Gemini live restano da confermare.
+
+## LAB132.5 / motore LAB133 — 15 novembre 2026, velocità e modelli Gemini gratuiti
+- Scopo SOLO elaborazione automatica dell'unica versione di studio al 50%. NON toccare il pulsante manuale Riformula, libreria, PDF originali o firme.
+- V126 source cap 40.000 caratteri (Worker 42.000), input estimate 35.000 token e output 30.000; il pianificatore V122 conserva pagine intere, stima JSON/context/token e può scegliere più di tre blocchi quando serve. Il profilo del PDF 44 pagine indicava 3 blocchi candidati, non ancora validati con Gemini live.
+- V128: un 503 = overload, NON riduzione automatica del budget. Rispettare Retry-After quando presente e riusare i checkpoint. Restore a 40k solo i budget storici dimezzati da 503. 413/422 verificati continuano a dividere il SOLO blocco coinvolto.
+- Confronto gratuito V133: un blocco di spiegazione su Gemini 3.1 Flash-Lite e uno su Gemini 3.5 Flash-Lite, poi preferenza per modello che completa più testo verificato/tempo con meno errori. NO duplicazione di chiamate: il modello si seleziona nelle richieste di elaborazione già necessarie. Statistiche solo durata, caratteri, pagine validate, HTTP 503/429/altri; nessun testo, chiave o prompt.
+- Gemini 2.5 Flash-Lite NON attivato: Google limita l'accesso API ai progetti con uso precedente; verificarlo solo se AI Studio mostra accesso gratuito nel progetto dell'utente. Mai attivare tier a pagamento.
+- Il Worker V126 trial124 accetta solo modelli FREE allowlisted 3.1/3.5 per la fase explain e conserva fase comprehend e il percorso Riformula. Richiede nuovo HEAD contract lab133-free-models-v1; test e deploy nel Worker trial124 esistente (NUNCA nuovo worker). Convalida doppia prima della firma.
+- App Android prova 0.3.132-prova.5 (versionCode 2026113205) con lo stesso applicationId e firma. Test offline in test:lab132 e suite V128; compilazione, deploy, Gemini reale, tempi su 44 pagine e QA Android ANCORA PENDING.
+- Migrazione di libri: le mappe di comprensione già verificate 44/44 e le pagine spiegate già conformi 3/44 restano nei checkpoint; niente rigenerazione delle parti salvate.
