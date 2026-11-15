@@ -1,7 +1,8 @@
 // LAB127 strict compatibility handshake: deploy worker before distributing the LAB127 APK.
 import {
  EXPLAINED_POLICY_V126,comprehensionInstructionV126,comprehensionPayloadV126,
- auditComprehensionV126,lessonInstructionV126,lessonPayloadV126,auditExplainedPageV126
+ auditComprehensionV126,lessonInstructionV126,lessonPayloadV126,auditExplainedPageV126,
+ lessonInstructionOnePassV135,lessonPayloadOnePassV135
 } from '../src/lib/explainedStagesV126.js';
 import {normalizeExplainedAnchorsV122} from '../src/lib/explainedPolicyV122.js';
 import {invoke503FailoverV114} from '../src/lib/study503FailoverV114.js';
@@ -42,6 +43,7 @@ export default async function handler(req,res){
  res.setHeader('X-StudyBook-Recovery-Contract','lab127');
  res.setHeader('X-StudyBook-Model-Compare-Contract','lab133-free-models-v1');
  res.setHeader('X-StudyBook-Fixed-Model-Contract',STUDY_MODEL_POLICY_V134);
+ res.setHeader('X-StudyBook-One-Pass-Contract','lab135-explain-first-v1');
  if(req.method!=='POST'){res.setHeader('Allow','POST');
   return fail(res,405,'METHOD_NOT_ALLOWED','Usare POST.');}
  const env=req.env||{},key=env.AI_API_KEY||env.GEMINI_API_KEY;
@@ -53,6 +55,9 @@ export default async function handler(req,res){
  const model=STUDY_PRIMARY_MODEL_V134;
  if(!ALLOWED.has(model))return fail(res,503,'AI_MODEL_NOT_ALLOWLISTED','Modello non consentito.');
  const {policy,phase,pages,bookContext}=req.body||{};
+ const onePassV135=phase==='explain'&&req.body?.onePassV135===true;
+ if(req.body?.onePassV135===true&&phase!=='explain')
+  return fail(res,400,'V135_ONE_PASS_PHASE_INVALID','Fase unica valida solo per la riscrittura.');
  if(policy!==EXPLAINED_POLICY_V126||!['comprehend','explain'].includes(phase)||
     !Array.isArray(pages)||pages.length<1||pages.length>72)
   return fail(res,400,'V126_REQUEST_INVALID','Protocollo LAB126 non valido.');
@@ -71,7 +76,7 @@ export default async function handler(req,res){
     return fail(res,400,'V126_SOURCE_SEGMENT_INVALID','Fonte segmento non valida.');
    seenSegments.add(segment.id);sourceLength+=segment.source.length;
   }
-  if(phase==='explain'&&!auditComprehensionV126(page,page.comprehension).ready)
+  if(phase==='explain'&&!onePassV135&&!auditComprehensionV126(page,page.comprehension).ready)
    return fail(res,422,'V126_COMPREHENSION_REQUIRED','Comprensione della pagina non verificata.');
  }
  if(sourceLength>MAX_SOURCE_CHARS)
@@ -81,9 +86,11 @@ export default async function handler(req,res){
   return fail(res,422,'V126_CONTEXT_INVALID','Raccordi libro non verificabili.');
  const input=phase==='comprehend'
   ?comprehensionPayloadV126(pages)
+  :onePassV135?lessonPayloadOnePassV135(pages,bookContext)
   :lessonPayloadV126(pages,pages.map(p=>p.comprehension),bookContext);
  const messages=[{role:'system',content:phase==='comprehend'
-   ?comprehensionInstructionV126():lessonInstructionV126()},
+   ?comprehensionInstructionV126():
+    onePassV135?lessonInstructionOnePassV135():lessonInstructionV126()},
   {role:'user',content:JSON.stringify(input)}];
  const outputTokens=Math.min(36000,Math.max(4000,
   Math.ceil(sourceLength*(phase==='comprehend'?0.8:0.82))+
@@ -144,11 +151,13 @@ export default async function handler(req,res){
    if(phase==='comprehend')
     return {...p,review:auditComprehensionV126(pages[i],p)};
    const normalized=normalizeExplainedAnchorsV122(p);
-   return {...normalized,review:auditExplainedPageV126(pages[i],normalized,pages[i].comprehension)};
+   return {...normalized,review:auditExplainedPageV126(pages[i],normalized,
+     pages[i].comprehension,{onePassV135})};
   });
   return res.status(200).json({engine:'ai',repairContractV127:'lab127-automatic-recovery-v1',
    version:EXPLAINED_POLICY_V126,
    phase,pages:audited,model:outcome.model,providerRequests:outcome.attempts,
+   onePassV135,
    modelPolicy:STUDY_MODEL_POLICY_V134,
    validated:audited.filter(p=>p.review.ready).length,
    semanticCertified:false,privateBandDisclosedToGemini:false});
