@@ -1,6 +1,8 @@
 import {deleteSimplePagesForBookV50} from './simplePagesStoreV50.js';
 const DB_NAME = 'studybook-ai';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
+const SUMMARIES_STORE = 'bookSummaries';
+const CHECKPOINTS_STORE = 'bookStudyCheckpoints';
 const BOOKS_STORE = 'books';
 const PROFILES_STORE = 'profiles';
 
@@ -20,6 +22,19 @@ function openDb() {
       if (!books.indexNames.contains('updatedAt')) books.createIndex('updatedAt', 'updatedAt');
       if (!books.indexNames.contains('profileId')) books.createIndex('profileId', 'profileId');
       if (!books.indexNames.contains('subject')) books.createIndex('subject', 'subject');
+      // Index old books once; full PDF/source stay entirely in BOOKS_STORE.
+      if (!db.objectStoreNames.contains(SUMMARIES_STORE)) {
+        const summaries=db.createObjectStore(SUMMARIES_STORE,{keyPath:'id'});
+        const cursorRequest=books.openCursor();
+        cursorRequest.onsuccess=()=>{
+          const cursor=cursorRequest.result;
+          if(!cursor)return;
+          summaries.put(libraryBookSummary(cursor.value));
+          cursor.continue();
+        };
+      }
+      if (!db.objectStoreNames.contains(CHECKPOINTS_STORE))
+        db.createObjectStore(CHECKPOINTS_STORE,{keyPath:'id'});
       if (!db.objectStoreNames.contains(PROFILES_STORE)) {
         const profiles = db.createObjectStore(PROFILES_STORE, { keyPath: 'id' });
         profiles.createIndex('updatedAt', 'updatedAt');
@@ -41,10 +56,11 @@ async function withStore(storeName, mode, action) {
   const db = await openDb();
   try {
     return await new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, mode);
-      const store = tx.objectStore(storeName);
+      const names=Array.isArray(storeName)?storeName:[storeName];
+      const tx=db.transaction(names,mode);
+      const store=tx.objectStore(names[0]);
       let request;
-      try { request = action(store); } catch (error) { reject(error); return; }
+      try { request=action(store,tx); } catch(error){reject(error);return;}
       tx.oncomplete = () => resolve(request?.result ?? request);
       tx.onerror = () => reject(tx.error || new Error('Errore nella Libreria.'));
       tx.onabort = () => reject(tx.error || new Error('Operazione Libreria annullata.'));
@@ -81,6 +97,22 @@ export function inferSubject(fileName = '', sourceData = null) {
   return rules.find(([, pattern]) => pattern.test(text))?.[0] || 'Altro';
 }
 
+// Lightweight navigation index: never clone the original PDF, parsed source
+// or generated 2,000-page edition just to display a title and thumbnail.
+export function libraryBookSummary(record={}){
+  const {sourceData,studyBook,originalFile,...summary}=record;
+  return {...summary,
+    profileId:summary.profileId||'default',
+    subject:summary.subject||inferSubject(summary.fileName),
+    collections:summary.collections||[],
+    favorite:Boolean(summary.favorite),
+    original:{...(summary.original||{name:summary.fileName}),
+      available:Boolean(originalFile)},
+    metadata:{...(summary.metadata||{}),
+      hasOriginal:Boolean(originalFile),
+      hasProcessed:Boolean(studyBook||summary.metadata?.hasProcessed)}
+  };
+}
 export function createLibraryId() {
   return globalThis.crypto?.randomUUID?.() || `book-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
@@ -175,7 +207,13 @@ export async function saveLibraryBook({
       geminiEditionTotal: Number(studyBook?.editionsV36?.totalChunkVariants || 0),
     },
   };
-  await withStore(BOOKS_STORE, 'readwrite', (store) => store.put(record));
+  await withStore([BOOKS_STORE,SUMMARIES_STORE,CHECKPOINTS_STORE],
+    'readwrite',(store,tx)=>{
+      tx.objectStore(SUMMARIES_STORE).put(libraryBookSummary(record));
+      // A full Book save is the authoritative final checkpoint.
+      tx.objectStore(CHECKPOINTS_STORE).delete(record.id);
+      return store.put(record);
+    });
   return record;
 }
 
@@ -188,42 +226,65 @@ export async function updateLibraryMetadata(id, patch = {}) {
     collections: Array.isArray(patch.collections) ? patch.collections : record.collections,
     updatedAt: new Date().toISOString(),
   };
-  await withStore(BOOKS_STORE, 'readwrite', (store) => store.put(next));
+  await withStore([BOOKS_STORE,SUMMARIES_STORE], 'readwrite',(store,tx)=>{
+    tx.objectStore(SUMMARIES_STORE).put(libraryBookSummary(next));
+    return store.put(next);
+  });
   return next;
 }
 
-export async function listLibraryBooks({ profileId = null } = {}) {
-  const db = await openDb();
-  try {
-    const records = await requestResult(db.transaction(BOOKS_STORE, 'readonly').objectStore(BOOKS_STORE).getAll());
-    return records
-      .filter((item) => !profileId || (item.profileId || 'default') === profileId)
-      .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
-      .map(({ sourceData, studyBook, originalFile, ...summary }) => ({
-        ...summary,
-        profileId: summary.profileId || 'default',
-        subject: summary.subject || inferSubject(summary.fileName),
-        collections: summary.collections || [],
-        favorite: Boolean(summary.favorite),
-        original: { ...(summary.original || { name: summary.fileName }), available: Boolean(originalFile) },
-        metadata: { ...(summary.metadata || {}), hasOriginal: Boolean(originalFile), hasProcessed: Boolean(studyBook || summary.metadata?.hasProcessed) },
-      }));
-  } finally {
-    db.close();
-  }
+export async function listLibraryBooks({profileId=null}={}){
+  const db=await openDb();
+  try{
+    const summaries=await requestResult(db.transaction(SUMMARIES_STORE,'readonly')
+      .objectStore(SUMMARIES_STORE).getAll());
+    return summaries.filter(x=>!profileId||(x.profileId||'default')===profileId)
+      .sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  }finally{db.close()}
 }
 
-export async function getLibraryBook(id) {
-  const db = await openDb();
-  try {
-    return await requestResult(db.transaction(BOOKS_STORE, 'readonly').objectStore(BOOKS_STORE).get(id));
-  } finally {
-    db.close();
-  }
+export async function getLibraryBook(id){
+  const db=await openDb();
+  try{
+    const tx=db.transaction([BOOKS_STORE,CHECKPOINTS_STORE],'readonly');
+    const original=tx.objectStore(BOOKS_STORE).get(id);
+    const checkpoint=tx.objectStore(CHECKPOINTS_STORE).get(id);
+    const [book,latest]=await Promise.all([requestResult(original),requestResult(checkpoint)]);
+    if(!book)return null;
+    return latest?.studyBook?{...book,studyBook:latest.studyBook,
+      updatedAt:latest.updatedAt||book.updatedAt}:book;
+  }finally{db.close()}
+}
+// LAB135: save only the generated study edition, NEVER copy the original PDF
+// and parsed source at every successful Gemini block. Single atomic writer.
+export async function saveExplainedCheckpoint(id,studyBook){
+  if(!id||!studyBook?.editionsV36)throw Error('Checkpoint libro non valido.');
+  const now=new Date().toISOString();
+  await withStore([CHECKPOINTS_STORE,SUMMARIES_STORE],'readwrite',(store,tx)=>{
+    const summaryStore=tx.objectStore(SUMMARIES_STORE);
+    const lookup=summaryStore.get(id);
+    lookup.onsuccess=()=>{
+      const prior=lookup.result;
+      if(!prior)return;
+      const snapshot=studyBook.editionsV36;
+      summaryStore.put({...prior,updatedAt:now,
+        metadata:{...(prior.metadata||{}),hasProcessed:true,
+          geminiEditionIncomplete:snapshot.complete!==true,
+          geminiEditionVerified:Number(snapshot.verifiedChunkVariants||0),
+          geminiEditionTotal:Number(snapshot.totalChunkVariants||0)}});
+    };
+    return store.put({id,studyBook,updatedAt:now});
+  });
+  return true;
 }
 
 export async function deleteLibraryBook(id) {
-  await withStore(BOOKS_STORE, 'readwrite', (store) => store.delete(id));
+  await withStore([BOOKS_STORE,SUMMARIES_STORE,CHECKPOINTS_STORE],
+    'readwrite',(store,tx)=>{
+      tx.objectStore(SUMMARIES_STORE).delete(id);
+      tx.objectStore(CHECKPOINTS_STORE).delete(id);
+      return store.delete(id);
+    });
   await deleteSimplePagesForBookV50(id).catch(()=>null);
 }
 
@@ -250,7 +311,12 @@ export async function deleteLibraryVersion(id, version) {
   if (!next.metadata.hasOriginal && !next.metadata.hasProcessed) {
     await deleteLibraryBook(id);
   } else {
-    await withStore(BOOKS_STORE, 'readwrite', store => store.put(next));
+    await withStore([BOOKS_STORE,SUMMARIES_STORE,CHECKPOINTS_STORE],
+      'readwrite',(store,tx)=>{
+        tx.objectStore(SUMMARIES_STORE).put(libraryBookSummary(next));
+        tx.objectStore(CHECKPOINTS_STORE).delete(id);
+        return store.put(next);
+      });
   }
   return true;
 }
