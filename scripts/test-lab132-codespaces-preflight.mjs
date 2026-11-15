@@ -36,14 +36,16 @@ assert.ok(build.includes('test-lab127-nonblocking-recovery')&&
 
 assert.ok(build.includes('scudo360-gate.mjs')&&build.includes('prepare-android.mjs'));
 assert.ok(build.includes('STUDYBOOK_ORIGINAL_KEYSTORE'));
-assert.ok(build.includes('2026113203')&&publish.includes('2026113203'));
+assert.ok(build.includes('2026113204')&&publish.includes('2026113204'));
 assert.ok(build.includes('it.studybook.ai.lab.trial111')&&
  publish.includes('it.studybook.ai.lab.trial111'));
 assert.ok(build.includes('D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC'));
 assert.ok(publish.includes('D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC'));
+assert.ok(build.includes('X-StudyBook-Riformula-Contract:[[:space:]]*lab132-manual-riformula-v2'));
 assert.ok(build.includes('X-StudyBook-Tools-Contract:[[:space:]]*lab130')); // preserved LAB130 service endpoint
 assert.equal(pkg.dependencies['@capacitor-community/file-opener'],'8.0.1');
 assert.ok(build.includes('FileOpener')||build.includes('file-opener@8.0.1'));
+assert.ok(autobuild.includes('codespaces-lab132-riformula-worker.sh'));
 assert.ok(autobuild.includes('flock -n 9'),'Build lock must prevent duplicates');
 assert.ok(!autobuild.includes('gh workflow run'),'No GitHub Actions request permitted');
 assert.ok(Array.isArray(tasks.tasks)&&tasks.tasks.length===2);

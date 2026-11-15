@@ -55,3 +55,11 @@ Stato: sorgenti LAB132 aggiornati su ramo isolato; compilazione Android e test d
 - Mantieni controllo tecnico formato e identità pagina, ma non richiedere verifiche di fedeltà, semantica, glossario; nessun automatismo, nessun cambio al processo del libro.
 - La proposta resta separata e non sostituisce la pagina precedente prima della pressione «Tieni riformulazione».
 - VersionCode preparato 2026113203 (non ancora pubblicato). Test/mock offline effettuati, test su Android e Gemini reale ANCORA da eseguire.
+
+## LAB132.4 — Riformula AI dedicato e «Tieni versione corrente» — 15/11/2026
+- SOLO il pulsante Riformula usa il nuovo servizio `/api/reformulate/v132` nel Worker di prova studybook-ai-trial124. Non modifica le riduzioni del libro e gli altri endpoint.
+- Ogni clic invia la pagina originale intera a Gemini con istruzioni autonome di vera semplificazione e riduzione-obiettivo 50%, con temperatura 0.6; no bozza precedente, no loop automatico.
+- Gemini produce una proposta; StudyBook ne mostra la riduzione reale (anche fuori 50%). «Riformula ancora» è manuale.
+- «Tieni versione corrente» chiude/scarta soltanto la proposta senza salvare: testo iniziale ed eventuale approvato restano identici.
+- Il deploy del Worker SOLO nel trial124 richiede credenziali Cloudflare già disponibili nel Codespace; test e dry-run prima del deploy, HEAD contract verificato due volte prima dell'APK. Non creare servizi nuovi, non deploy produzione.
+- L'APK di prova 0.3.132-prova.4 (versionCode 2026113204) conserva applicationId, signer e dati. Tests sul dispositivo e Gemini live restano da confermare.

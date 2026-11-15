@@ -27,6 +27,9 @@ REF="refs/remotes/origin/$BRANCH"
 git merge-base --is-ancestor "$BASE" "$REF" || fail 'Checkpoint didattico LAB132 non verificato'
 SHA="$(git rev-parse "$REF")"
 SHORT="$(printf '%.12s' "$SHA")"
+# Dedicated Riformula backend must be deployed and verified FIRST.
+bash scripts/codespaces-lab132-riformula-worker.sh ||
+ fail 'Il Worker Riformula non è compatibile: APK precedente conservata'
 TAG="studybook-trial132-codespaces-$SHORT"
 ARTIFACT_DIR="$ROOT/APK-LAB132"
 mkdir -p "$ARTIFACT_DIR"
@@ -37,7 +40,7 @@ copy_artifacts(){
     fail 'Artefatto non derivato dal commit corrente'
   grep -Fxq 'signerSha256=D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC' "$origin/$NAME-IDENTITY.txt" ||
     fail 'Artefatto con firma non verificata'
-  grep -Fxq 'versionCode=2026113203' "$origin/$NAME-IDENTITY.txt" ||
+  grep -Fxq 'versionCode=2026113204' "$origin/$NAME-IDENTITY.txt" ||
     fail 'Artefatto con versione Android errata'
   (cd "$origin" && sha256sum -c "$NAME.sha256" >/dev/null &&
    unzip -tq "$NAME.zip" >/dev/null) ||
