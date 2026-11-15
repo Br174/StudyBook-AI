@@ -55,7 +55,7 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
         <small style={{display:'block'}}>Modello principale: Gemini 3.1 Flash-Lite.
           Nessuna alternanza automatica con Gemini 3.5.</small>}
       {observedModels.length>0&&
-        <small style={{display:'block'}}>Confronto modelli gratuito (preliminare, blocchi diversi):
+        <small style={{display:'block'}}>Statistiche Gemini (nuovo modello fisso e storico precedente):
           {' '}{observedModels.map(x=>x.model.replace('gemini-','')+
            ' · '+x.success+'/'+x.attempts+' risposte, '+x.http503+' errori 503'+
            (x.charsPerSecond!=null?', '+x.charsPerSecond+' caratteri/s':'')).join(' | ')}.

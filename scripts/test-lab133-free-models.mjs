@@ -5,18 +5,19 @@ import {readFileSync} from 'node:fs';
 import {V128_DEFAULT_BLOCK_CHARS,providerRecoveryStateV128,providerPauseV128,
  providerSuccessfulBlockV128,V133_BLOCK_POLICY} from '../src/lib/explainedProviderRecoveryV128.js';
 import {FREE_STUDY_MODELS_V133,modelComparisonStateV133,selectFreeStudyModelV133,
- recordFreeStudyModelV133,modelComparisonReportV133} from '../src/lib/explainedModelComparisonV133.js';
+ recordFreeStudyModelV133,modelComparisonReportV133,
+ STUDY_PRIMARY_MODEL_V134,STUDY_MODEL_POLICY_V134} from '../src/lib/explainedModelComparisonV133.js';
 assert.deepEqual(FREE_STUDY_MODELS_V133,
  ['gemini-3.1-flash-lite','gemini-3.5-flash-lite']);
 let benchmark=modelComparisonStateV133();
 assert.equal(selectFreeStudyModelV133(benchmark),'gemini-3.1-flash-lite');
 benchmark=recordFreeStudyModelV133(benchmark,{
  model:'gemini-3.1-flash-lite',status:503});
-assert.equal(selectFreeStudyModelV133(benchmark),'gemini-3.5-flash-lite');
+assert.equal(selectFreeStudyModelV133(benchmark),'gemini-3.1-flash-lite','Fixed 3.1 regardless of historic benchmark');
 benchmark=recordFreeStudyModelV133(benchmark,{
  model:'gemini-3.5-flash-lite',status:200,
  sourceChars:12000,elapsedMs:16000,readyPages:5,receivedPages:5});
-assert.equal(selectFreeStudyModelV133(benchmark),'gemini-3.5-flash-lite');
+assert.equal(selectFreeStudyModelV133(benchmark),'gemini-3.1-flash-lite','Fixed 3.1 regardless of historic benchmark');
 benchmark=recordFreeStudyModelV133(benchmark,{
  model:'gemini-3.1-flash-lite',status:200,
  sourceChars:15000,elapsedMs:7000,readyPages:6,receivedPages:6});
@@ -27,6 +28,8 @@ assert.equal(results[1].success,1);
 assert.ok(results[0].charsPerSecond>results[1].charsPerSecond);
 assert.equal(results[0].acceptancePct,100);
 assert.ok(!JSON.stringify(benchmark).includes('sourceText'));
+assert.equal(STUDY_PRIMARY_MODEL_V134,'gemini-3.1-flash-lite');
+assert.equal(STUDY_MODEL_POLICY_V134,'lab134-fixed-gemini-3.1-flash-lite-v1');
 const json=JSON.stringify(benchmark);
 assert.equal(JSON.stringify(modelComparisonStateV133(JSON.parse(json))),json);
 const original=modelComparisonStateV133(benchmark);
@@ -51,7 +54,10 @@ const worker=readFileSync('api/explainedV126.js','utf8');
 const generator=readFileSync('src/lib/explainedGeneratorV126.js','utf8');
 assert.ok(worker.includes('V133_MODEL_INVALID'));
 assert.ok(worker.includes('X-StudyBook-Model-Compare-Contract'));
+assert.ok(worker.includes('X-StudyBook-Fixed-Model-Contract'));
+assert.ok(worker.includes('const model=STUDY_PRIMARY_MODEL_V134'));
+assert.ok(worker.includes('enabled:false'));
 assert.ok(generator.includes('selectFreeStudyModelV133'));
 assert.ok(generator.includes("MAX_STAGE_SOURCE=40000"));
 assert.ok(generator.includes("modelComparisonV133:modelComparisonReportV133"));
-console.log('LAB133 PASS: free model A/B, 40k blocks, 503 stable, safe quota and checkpoints.');
+console.log('LAB134 PASS: fixed free Gemini 3.1, 40k blocks, 503 stable, no alternation.');
