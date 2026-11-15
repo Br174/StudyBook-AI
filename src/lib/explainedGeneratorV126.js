@@ -14,10 +14,12 @@ import {MAX_CORRECTIONS_V127,repairAttemptV127,correctionRemainingV127,
  reservationReportV127,reserveUnreadPageV127} from './explainedRepairV127.js';
 import {V128_DEFAULT_BLOCK_CHARS,providerRecoveryStateV128,providerPauseV128,
  providerSuccessfulBlockV128} from './explainedProviderRecoveryV128.js';
+import {modelComparisonStateV133,selectFreeStudyModelV133,
+ recordFreeStudyModelV133,modelComparisonReportV133} from './explainedModelComparisonV133.js';
 
-const MAX_STAGE_SOURCE=30000;
+const MAX_STAGE_SOURCE=40000;
 const TIMEOUT=EXPLAINED_REQUEST_TIMEOUT_V122;
-const MAX_STAGE_INPUT_TOKENS=30000;
+const MAX_STAGE_INPUT_TOKENS=35000;
 const MAX_STAGE_OUTPUT_TOKENS=30000;
 const MAX_SPLITS=64; // isolate a failing page without stranding the remaining book
 const MAX_COMPREHENSION_TECH_ATTEMPTS=3; // initial + two targeted rereads
@@ -36,7 +38,7 @@ const pageWithSource=(original,answer)=>({
 const totalSourceUnits=pages=>pages.reduce((n,p)=>n+studyUnitsV126(
  p.segments.map(s=>s.source).join('\n')),0);
 
-async function requestPhaseV126(phase,pages,bookContext,signal,correction=false){
+async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,modelCandidate=null){
  const controller=new AbortController(),cancel=()=>controller.abort();
  signal?.addEventListener('abort',cancel,{once:true});
  if(signal?.aborted)cancel();
@@ -46,7 +48,8 @@ async function requestPhaseV126(phase,pages,bookContext,signal,correction=false)
   const reply=await fetch(apiEndpoint('/api/explained/v126'),{
    method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},
    body:JSON.stringify({policy:EXPLAINED_POLICY_V126,phase,pages,
-     ...(phase==='explain'?{bookContext}:{}),timeoutMs:correction?90000:150000})
+     ...(phase==='explain'?{bookContext,...(modelCandidate?{modelCandidate}:{})}:{}),
+    timeoutMs:correction?90000:150000})
   });
   const response=await reply.json().catch(()=>null);
   if(controller.signal.aborted)throw Object.assign(new Error('Interrotto'),{
@@ -128,6 +131,7 @@ export async function generateExplainedBookV126(book,{
  const repairs=new Map(Object.entries(previous?.repairStateV127||{}));
  const readAttempts=new Map(Object.entries(previous?.comprehensionAttemptsV127||{}));
  let providerRecoveryV128=providerRecoveryStateV128(previous?.providerRecoveryV128);
+ let modelComparisonV133=modelComparisonStateV133(previous?.modelComparisonV133);
  const markUnread=(p,code='')=>{
   const tries=Number(readAttempts.get(p.id)?.tries||0)+1;
   readAttempts.set(p.id,{tries,lastCode:String(code||'').slice(0,150)});
@@ -193,7 +197,7 @@ export async function generateExplainedBookV126(book,{
    completeWithReservations:done&&reserved>0,
    reservedPagesV127:anomalies,repairStateV127:Object.fromEntries(repairs),
    comprehensionAttemptsV127:Object.fromEntries(readAttempts),
-   providerRecoveryV128,
+   providerRecoveryV128,modelComparisonV133,
    phase:done?'quality':accepted+reserved>0||comprehensionV126.complete?'draft':'comprehension',
    sourceUnits:unitSource,outputUnits:unitOutput,
    achievedReduction:done&&!reserved?percentReduced(unitSource,unitOutput):null,
@@ -206,7 +210,8 @@ export async function generateExplainedBookV126(book,{
      understandingPending:unread,explanationPending:source.length-accepted-reserved,
      correctionPending:rejected.size,reservedPages:reserved,
      providerOverloadStrikes:providerRecoveryV128.overloadStrikes,
-     providerMaxBlockChars:providerRecoveryV128.maxBlockChars}};
+     providerMaxBlockChars:providerRecoveryV128.maxBlockChars,
+     modelComparisonV133:modelComparisonReportV133(modelComparisonV133)}};
   await onProgress(s,meta);
   return s;
  };
@@ -236,6 +241,10 @@ export async function generateExplainedBookV126(book,{
     return phase==='comprehend'&&Array.isArray(reviewIssues)&&reviewIssues.length
      ?{...envelope,comprehensionRepair:reviewIssues}:envelope;
    });
+   const modelCandidate=phase==='explain'?selectFreeStudyModelV133(modelComparisonV133):null;
+   const modelStartedAt=Date.now();
+   const modelSourceChars=pages.reduce((n,p)=>n+p.segments.reduce((v,s)=>v+s.source.length,0),0);
+   diagnostics.activeModel=modelCandidate;
    diagnostics.activePages=group.map(p=>p.physicalPage);
    diagnostics.correctionCycle=correction?Math.max(1,...group.map(p=>
     Number(repairs.get(p.id)?.corrections||0)+1)):0;
@@ -247,7 +256,17 @@ export async function generateExplainedBookV126(book,{
      Math.max(1,...group.map(p=>Number(repairs.get(p.id)?.corrections||0)+1)):0,
     correctionMax:MAX_CORRECTIONS_V127});
    try{
-    const {reply,response}=await requestPhaseV126(phase,pages,context,signal,correction);
+    const {reply,response}=await requestPhaseV126(phase,pages,context,signal,
+    correction,modelCandidate);
+   if(modelCandidate&&(reply.status===200||reply.status===503||reply.status===429)){
+    const reportedModel=response?.model||modelCandidate;
+    const received=Array.isArray(response?.pages)?response.pages.length:0;
+    const verified=Array.isArray(response?.pages)?
+     response.pages.filter(p=>p?.review?.ready===true).length:0;
+    modelComparisonV133=recordFreeStudyModelV133(modelComparisonV133,{
+     model:reportedModel,status:reply.status,elapsedMs:Date.now()-modelStartedAt,
+     sourceChars:modelSourceChars,receivedPages:received,readyPages:verified});
+   }
     consecutiveTransportErrors=0;
     diagnostics.requestsSent++;
     if(reply.ok&&response?.repairContractV127!=='lab127-automatic-recovery-v1'){

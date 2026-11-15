@@ -38,11 +38,15 @@ function parseContent(value){
 export default async function handler(req,res){
  res.setHeader('X-StudyBook-Phase-Contract','lab126');
  res.setHeader('X-StudyBook-Recovery-Contract','lab127');
+ res.setHeader('X-StudyBook-Model-Compare-Contract','lab133-free-models-v1');
  if(req.method!=='POST'){res.setHeader('Allow','POST');
   return fail(res,405,'METHOD_NOT_ALLOWED','Usare POST.');}
  const env=req.env||{},key=env.AI_API_KEY||env.GEMINI_API_KEY;
  if(!key)return fail(res,503,'AI_NOT_CONFIGURED','Gemini gratuito non configurato.');
- const model=env.AI_MODEL||'gemini-3.5-flash-lite';
+ const hint=req.body?.modelCandidate;
+ if(hint!==undefined&&(!ALLOWED.has(hint)||req.body?.phase!=='explain'))
+  return fail(res,400,'V133_MODEL_INVALID','Confronto modello non consentito.');
+ const model=hint||env.AI_MODEL||'gemini-3.5-flash-lite';
  if(!ALLOWED.has(model))return fail(res,503,'AI_MODEL_NOT_ALLOWLISTED','Modello non consentito.');
  const {policy,phase,pages,bookContext}=req.body||{};
  if(policy!==EXPLAINED_POLICY_V126||!['comprehend','explain'].includes(phase)||
