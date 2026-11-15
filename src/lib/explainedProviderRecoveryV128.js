@@ -1,7 +1,8 @@
 // LAB128. Recovery policy is local, deterministic and checkpoint-friendly.
 // HTTP 503 is provider overload, NOT an invalid page or quality rejection.
 // Five content-correction attempts never count provider 503/429 responses.
-export const V128_DEFAULT_BLOCK_CHARS=30000;
+export const V128_DEFAULT_BLOCK_CHARS=40000;
+export const V133_BLOCK_POLICY='lab133-503-neutral-40k-v1';
 export const V128_MIN_BLOCK_CHARS=2500;
 export const V128_MAX_COOLDOWN_SECONDS=172800;
 const safeInteger=(x,defaultValue=0)=>Number.isFinite(Number(x))?
@@ -12,8 +13,13 @@ export function providerRecoveryStateV128(value){
  return {
   overloadStrikes:safeInteger(x.overloadStrikes),
   quotaStrikes:safeInteger(x.quotaStrikes),
-  maxBlockChars:Math.max(V128_MIN_BLOCK_CHARS,
-   Math.min(V128_DEFAULT_BLOCK_CHARS,safeInteger(x.maxBlockChars,V128_DEFAULT_BLOCK_CHARS))),
+  // Historical 503 checkpoints could halve a safe block without any size error.
+  maxBlockChars:x.lastStatus===503&&x.blockPolicy!==V133_BLOCK_POLICY&&
+    safeInteger(x.maxBlockChars,V128_DEFAULT_BLOCK_CHARS)<V128_DEFAULT_BLOCK_CHARS
+   ?V128_DEFAULT_BLOCK_CHARS
+   :Math.max(V128_MIN_BLOCK_CHARS,
+     Math.min(V128_DEFAULT_BLOCK_CHARS,safeInteger(x.maxBlockChars,V128_DEFAULT_BLOCK_CHARS))),
+  blockPolicy:V133_BLOCK_POLICY,
   successfulBlocks:safeInteger(x.successfulBlocks),
   lastStatus:safeInteger(x.lastStatus),
   lastCode:String(x.lastCode||'').slice(0,100)
@@ -26,10 +32,8 @@ export function providerPauseV128(previous,{httpStatus=503,code='',
  const quota=httpStatus===429;
  const overloadStrikes=overload?old.overloadStrikes+1:0;
  const quotaStrikes=quota?old.quotaStrikes+1:0;
- // Two consecutive 503s trigger ONE downshift; the third does not.
- const nextSize=overload&&overloadStrikes%2===0?
-  Math.max(V128_MIN_BLOCK_CHARS,Math.floor(old.maxBlockChars/2)):
-  old.maxBlockChars;
+ // A provider 503 is not evidence of oversized input. Keep the block budget.
+ const nextSize=old.maxBlockChars;
  const strikes=overload?overloadStrikes:quota?quotaStrikes:1;
  const minimum=overload||quota?90:120;
  const exponential=Math.min(1800,minimum*Math.pow(2,Math.min(5,strikes-1)));
@@ -46,8 +50,8 @@ export function providerPauseV128(previous,{httpStatus=503,code='',
 }
 export function providerSuccessfulBlockV128(previous){
  const old=providerRecoveryStateV128(previous);
- // Two consecutive validated HTTP-200 blocks trigger a gentle 50% increase;
- // never exceed the original 30k limit. A 503 resets the success streak.
+ // Two validated HTTP-200 blocks can restore a smaller legacy packet budget;
+ // never exceed the calibrated 40k cap. A 503 resets the success streak.
  const success=old.successfulBlocks+1;
  const shouldGrow=success>=2&&old.maxBlockChars<V128_DEFAULT_BLOCK_CHARS;
  const nextSize=shouldGrow?
