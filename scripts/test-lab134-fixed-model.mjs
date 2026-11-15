@@ -27,8 +27,9 @@ function req(phase,changes={}){
 function ok(phase){return {ok:true,status:200,headers:{get:()=>null},
  json:async()=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify({
  pages:phase==='comprehend'?[understanding]:[explanation]})}}]})}}
-function fail(status,retryAfter=null){return {ok:false,status,
- headers:{get:key=>key==='Retry-After'?retryAfter:null},json:async()=>({})}}
+function fail(status,retryAfter=null,details=null){return {ok:false,status,
+ headers:{get:key=>key.toLowerCase()==='retry-after'?retryAfter:null},
+ json:async()=>details?{error:{details}}:{}}}
 let seen=[],answer;
 try{
  globalThis.fetch=async (_url,options)=>{
@@ -57,6 +58,11 @@ try{
  assert.equal(wait.statusCode,503);
  assert.equal(seen.length,1,'Do not retry before provider Retry-After');
  assert.equal(wait.headers['Retry-After'],'42');
+ seen=[];answer=()=>fail(503,null,[{retryDelay:'45s'}]);
+ const explicitInfo=res();await handler(req('comprehend'),explicitInfo);
+ assert.equal(explicitInfo.statusCode,503);
+ assert.equal(seen.length,1,'RetryInfo in body must suppress fast retry');
+ assert.ok(explicitInfo.data.retryAfterSeconds>=45);
  seen=[];answer=()=>seen.length===1?fail(503):ok('comprehend');
  const recovered=res();await handler(req('comprehend'),recovered);
  assert.equal(recovered.statusCode,200);

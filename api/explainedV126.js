@@ -5,6 +5,7 @@ import {
 } from '../src/lib/explainedStagesV126.js';
 import {normalizeExplainedAnchorsV122} from '../src/lib/explainedPolicyV122.js';
 import {invoke503FailoverV114} from '../src/lib/study503FailoverV114.js';
+import {diagnoseGeminiQuota} from './geminiQuotaV36.js';
 import {STUDY_PRIMARY_MODEL_V134,STUDY_MODEL_POLICY_V134} from '../src/lib/explainedModelComparisonV133.js';
 
 const ENDPOINT='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
@@ -106,8 +107,11 @@ export default async function handler(req,res){
   });
   // One bounded retry for a transient provider overload without Retry-After.
   // Preserve the checkpoint and Android's scheduled backoff if it still fails.
-  const initialRetryAfter=outcome.response?.headers?.get?.('Retry-After');
-  if(outcome.response?.status===503&&!initialRetryAfter&&
+  const initialRetryAfter=outcome.response?.headers?.get?.('Retry-After')||
+   outcome.response?.headers?.get?.('retry-after');
+  const initialQuota=outcome.response?.status===503?
+   diagnoseGeminiQuota({status:503,body:outcome.payload,headers:outcome.response?.headers,model}):null;
+  if(outcome.response?.status===503&&!initialRetryAfter&&initialQuota?.estimated===true&&
      !controller.signal.aborted&&Date.now()-first<Math.min(45000,timeout-15000)){
    await new Promise(resolve=>setTimeout(resolve,4500));
    if(controller.signal.aborted)
@@ -118,12 +122,16 @@ export default async function handler(req,res){
   }
   const upstream=outcome.response,result=outcome.payload;
   if(upstream.status===429||upstream.status===503){
-   const after=upstream.headers?.get?.('Retry-After')||null;
+   const after=upstream.headers?.get?.('Retry-After')||
+    upstream.headers?.get?.('retry-after')||null;
+   const quota=diagnoseGeminiQuota({status:upstream.status,
+    body:result,headers:upstream.headers,model});
    if(after&&/^\d{1,5}$/u.test(after))res.setHeader('Retry-After',after);
+   const seconds=after&&/^\d+$/u.test(after)?Number(after):
+    (!quota.estimated?quota.retryAfterSeconds:null);
    return fail(res,upstream.status,upstream.status===429?'AI_QUOTA_LIMIT':'AI_TEMPORARY_OVERLOAD',
     'Gemini temporaneamente non disponibile. Checkpoint conservati.',{
-      retryAfterSeconds:after&&/^\d+$/u.test(after)?Number(after):null,
-      providerRequests:outcome.attempts});
+      retryAfterSeconds:seconds,providerRequests:outcome.attempts});
   }
   if(!upstream.ok)return fail(res,502,'AI_PROVIDER_REJECTED','Risposta Gemini non accettata.');
   if(result?.choices?.[0]?.finish_reason==='length')
