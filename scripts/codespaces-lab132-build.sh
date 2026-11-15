@@ -7,8 +7,8 @@ BASE_SHA='70e6a6f61c098d4a97c5eb3d52990effb2fc2360'
 REPO='Br174/StudyBook-AI'
 CERT='D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC'
 APP_ID='it.studybook.ai.lab.trial111'
-VERSION_CODE='2026113205'
-VERSION_NAME='0.3.132-prova.5'
+VERSION_CODE='2026113206'
+VERSION_NAME='0.3.132-prova.6'
 NAME='StudyBook-AI-TRIAL-132'
 WORKER_URL='https://studybook-ai-trial124.brunoverlezza.workers.dev'
 TOOLS="$HOME/.local/share/studybook-lab125" # Riuso SDK/Java/Node originali LAB125
@@ -124,13 +124,14 @@ done
 rm -f "$WORKER_HEADERS"
 [[ "$BACKEND_READY" == 1 ]] || fail "Worker LAB132 non compatibile dopo 9 controlli HEAD: fase lab126 e recovery lab127 richiesti. Ultimo HTTP $BACKEND_HTTP. Nessuna APK incompatibile compilata."
 PHASE='free-model-worker-preflight'
-say 'Verifico il confronto gratuito Gemini 3.1 e 3.5 sul Worker di prova, senza generare testo.'
+say 'Verifico che Gemini 3.1 sia il modello fisso del Worker di prova, senza generare testo.'
 MODEL_STABLE=0
 for attempt in 1 2 3 4 5 6; do
   MODEL_HEADERS="$(mktemp)"
   MODEL_HTTP="$(curl -sS --head --max-time 18 -D "$MODEL_HEADERS" -o /dev/null -w '%{http_code}' "$WORKER_URL/api/explained/v126" || true)"
   if [[ "$MODEL_HTTP" == '405' ]] &&
-     grep -Eiq '^X-StudyBook-Model-Compare-Contract:[[:space:]]*lab133-free-models-v1[[:space:]]*$' "$MODEL_HEADERS"; then
+     grep -Eiq '^X-StudyBook-Model-Compare-Contract:[[:space:]]*lab133-free-models-v1[[:space:]]*$' "$MODEL_HEADERS" &&
+     grep -Eiq '^X-StudyBook-Fixed-Model-Contract:[[:space:]]*lab134-fixed-gemini-3.1-flash-lite-v1[[:space:]]*$' "$MODEL_HEADERS"; then
     MODEL_STABLE=$((MODEL_STABLE+1))
   else
     MODEL_STABLE=0
@@ -336,7 +337,7 @@ for testname in \
   test-lab122-single-explained test-lab124-large-call-parity \
   test-lab123-503-recovery test-lab122-recovery test-lab122-pdf-render \
   test-lab125-hardening test-lab125-didactic-matrix \
-  test-lab127-nonblocking-recovery test-lab127-worker-contract test-lab128-503-recovery test-lab129-mobile-reader test-lab130-study-on-demand test-lab132-codespaces-preflight test-lab131-ui-layout test-lab132-reformulation; do
+  test-lab127-nonblocking-recovery test-lab127-worker-contract test-lab128-503-recovery test-lab129-mobile-reader test-lab130-study-on-demand test-lab132-codespaces-preflight test-lab131-ui-layout test-lab132-reformulation test-lab133-free-models test-lab134-fixed-model; do
   say "Test: $testname"
   node "scripts/$testname.mjs" || fail "Test fallito: $testname"
 done

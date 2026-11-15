@@ -73,3 +73,12 @@ Stato: sorgenti LAB132 aggiornati su ramo isolato; compilazione Android e test d
 - Il Worker V126 trial124 accetta solo modelli FREE allowlisted 3.1/3.5 per la fase explain e conserva fase comprehend e il percorso Riformula. Richiede nuovo HEAD contract lab133-free-models-v1; test e deploy nel Worker trial124 esistente (NUNCA nuovo worker). Convalida doppia prima della firma.
 - App Android prova 0.3.132-prova.5 (versionCode 2026113205) con lo stesso applicationId e firma. Test offline in test:lab132 e suite V128; compilazione, deploy, Gemini reale, tempi su 44 pagine e QA Android ANCORA PENDING.
 - Migrazione di libri: le mappe di comprensione già verificate 44/44 e le pagine spiegate già conformi 3/44 restano nei checkpoint; niente rigenerazione delle parti salvate.
+
+## LAB134 — Scelta definitiva per la generazione automatica: Gemini 3.1 Flash-Lite (15/11/2026)
+- DIRETTIVA UTENTE: usa esclusivamente Gemini 3.1 Flash-Lite per comprensione e riscrittura automatica dell'unica versione al 50%. L'algoritmo LAB133 che alternava 3.1/3.5 è disattivato; le eventuali vecchie statistiche restano informative, mai decisionali.
+- api/explainedV126 forza 3.1 per entrambe le fasi anche se Cloudflare ha ancora AI_MODEL=3.5. Un hint 3.5 viene rifiutato; niente failover verso altri modelli. api/manualRiformulaV132 resta INVARIATO.
+- Risposta 503 Gemini priva di Retry-After: massimo un secondo tentativo sullo stesso 3.1 dopo 4,5 secondi, solamente entro tempo disponibile. Se 503 persiste, la ripresa Android con checkpoint e backoff V128 resta attiva. Un 429 o Retry-After vietano il secondo tentativo immediato. Non garantisce zero 503 esterni.
+- Il blocco massimo di 40.000 caratteri resta sottoposto a limiti di token e pagine del pianificatore; non si rilegge la comprensione 44/44 né si rigenerano le pagine già conformi.
+- Contratto Worker aggiuntivo: X-StudyBook-Fixed-Model-Contract: lab134-fixed-gemini-3.1-flash-lite-v1. Verificare il Worker SOLO nella distribuzione trial124 già esistente prima di compilare APK. Nessun nuovo servizio e nessun costo aggiuntivo.
+- Test aggiunto scripts/test-lab134-fixed-model.mjs, richiesto anche in Scudo/worker preflight, quota 429, Retry-After e un solo retry 503.
+- Identità Android inalterata (appId, SHA256 signer), versionCode 2026113206 / versionName 0.3.132-prova.6. Prima di dichiarare test riusciti: eseguire i test Node/Bash e build nel Codespace esistente, pubblicare APK e ZIP verificati e collaudare Gemini reale sul telefono.

@@ -27,20 +27,21 @@ probe(){
  if [[ "$status" == '405' ]] &&
   grep -Eiq '^X-StudyBook-Phase-Contract:[[:space:]]*lab126[[:space:]]*$' "$headers" &&
   grep -Eiq '^X-StudyBook-Recovery-Contract:[[:space:]]*lab127[[:space:]]*$' "$headers" &&
-  grep -Eiq '^X-StudyBook-Model-Compare-Contract:[[:space:]]*lab133-free-models-v1[[:space:]]*$' "$headers"; then
+  grep -Eiq '^X-StudyBook-Model-Compare-Contract:[[:space:]]*lab133-free-models-v1[[:space:]]*$' "$headers" &&
+  grep -Eiq '^X-StudyBook-Fixed-Model-Contract:[[:space:]]*lab134-fixed-gemini-3.1-flash-lite-v1[[:space:]]*$' "$headers"; then
   rm -f "$headers";return 0
  fi
  rm -f "$headers";return 1
 }
 if probe; then
- echo '[LAB133] Worker Riformula e confronto Gemini già aggiornati: nessun nuovo deploy.'
+ echo '[LAB134] Worker Riformula e Gemini 3.1 fisso già aggiornati: nessun deploy.'
  exit 0
 fi
 command -v npx >/dev/null || fail 'npx assente'
 if ! npx --no-install wrangler whoami >/dev/null 2>&1; then
  fail 'Cloudflare non autenticato nel Codespace. Non creo un account né un Worker nuovo.'
 fi
-echo '[LAB133] Aggiorno SOLO il Worker trial124 esistente: confronto Gemini + Riformula.'
+echo '[LAB134] Aggiorno SOLO il Worker trial124 esistente: Gemini 3.1 fisso e Riformula.'
 export VITE_NATIVE_API_BASE='https://studybook-ai-trial124.brunoverlezza.workers.dev'
 export VITE_STUDYBOOK_TRIAL_111=1 VITE_STUDYBOOK_TRIAL_113=1 VITE_STUDYBOOK_TRIAL_114=1
 export VITE_STUDYBOOK_TRIAL_121=1 VITE_STUDYBOOK_TRIAL_122=1 VITE_STUDYBOOK_TRIAL_123=1
@@ -50,13 +51,15 @@ export VITE_STUDYBOOK_TRIAL_130=1 VITE_STUDYBOOK_GEOMETRY_V78=1 WRANGLER_SEND_ME
 npm run build || fail 'Build frontend prova non riuscita'
 node scripts/test-lab132-manual-worker.mjs ||
  fail 'Test Riformula dedicato non superato'
+node scripts/test-lab134-fixed-model.mjs ||
+ fail 'Test Gemini 3.1 dedicato non superato'
 npx --no-install wrangler deploy --dry-run --config wrangler.trial124.jsonc >/dev/null ||
  fail 'Verifica Worker dry-run non superata'
 npx --no-install wrangler deploy --config wrangler.trial124.jsonc >/dev/null ||
  fail 'Aggiornamento Worker trial124 non riuscito'
 for attempt in 1 2 3 4 5 6; do
  if probe; then
-  echo '[LAB133] Worker Riformula e confronto gratuito aggiornati e verificati.'
+  echo '[LAB134] Worker Riformula e Gemini 3.1 fisso aggiornati e verificati.'
   exit 0
  fi
  [[ "$attempt" == 6 ]] || sleep 4
