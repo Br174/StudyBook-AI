@@ -12,6 +12,7 @@ import {
   listLibraryBooks,
   listProfiles,
   saveLibraryBook,
+  saveExplainedCheckpoint,
   saveProfile,
   updateLibraryMetadata,
 } from './lib/library.js';
@@ -1359,6 +1360,7 @@ export default function AppV14() {
         const savedId=firstSaved.id;
         const finalSnapshot=await runExplainedWithSafeRestart(explained,{
           onProgress:async (snapshot,meta)=>{
+            if(meta?.persist===false)return; // Avoid cloning/rendering 2,000 pages on each network tick.
             explained={...result,editionsV36:snapshot,
               engine:snapshot.complete?'ai':'misto'};
             generatedDraft=explained;
@@ -1372,13 +1374,7 @@ export default function AppV14() {
                 (snapshot.comprehensionV126?.totalPages||0)+' pagine comprese · nessuna compressione avviata'
               :'Libro spiegato · '+(snapshot.verifiedChunkVariants||0)+'/'+
                 (snapshot.totalChunkVariants||0)+' pagine verificate · glossario incluso');
-            if(meta?.persist!==false){
-              await saveLibraryBook({
-                id:savedId,fileName:sourceName,sourceData,
-                studyBook:explained,dsaMode:true,profileId:activeProfileId,
-                originalFile:sourceFile
-              });
-            }
+            await saveExplainedCheckpoint(savedId,explained);
           }
         });
         explained={...result,editionsV36:finalSnapshot,

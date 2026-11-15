@@ -24,6 +24,20 @@ export function originalExplainedPagesV122(book){
   throw Object.assign(new Error('Mappa pagine originali non verificata.'),{code:'V122_SOURCE_MAP_MISSING'});
  if(!/^[a-f0-9]{64}$/iu.test(String(map.originalFingerprint||'')))
   throw Object.assign(new Error('Impronta del documento originale non verificata.'),{code:'V122_FINGERPRINT_UNVERIFIED'});
+ // Index heading locations once. The old implementation scanned every
+ // chapter and section for EVERY page (quadratic on large textbooks).
+ const headingsByPage=new Map();
+ const addHeading=(number,kind,title)=>{
+  if(!clean(title))return;
+  const list=headingsByPage.get(number)||[];
+  list.push({kind,text:clean(title)});
+  headingsByPage.set(number,list);
+ };
+ for(const chapter of map.chapters||[]){
+  addHeading(chapter.pageStart,'chapter-title',chapter.title);
+  for(const section of chapter.sections||[])
+   addHeading(section.pageStart,'section-title',section.title);
+ }
  return map.pages.map((page,i)=>{
   const number=i+1;
   if(page.physicalPage!==number||page.sourceStatus!=='verified')
@@ -31,14 +45,7 @@ export function originalExplainedPagesV122(book){
   const source=String(page.text||'').normalize('NFC');
   if(source.length>MAX_EXPLAINED_PAGE_SOURCE_CHARS_V122)
    throw Object.assign(new Error('Pagina originale troppo grande.'),{code:'V122_PAGE_TOO_LARGE'});
-  const headings=[];
-  for(const chapter of map.chapters||[]){
-   if(chapter.pageStart===number&&clean(chapter.title))
-    headings.push({kind:'chapter-title',text:clean(chapter.title)});
-   for(const section of chapter.sections||[])
-    if(section.pageStart===number&&clean(section.title))
-     headings.push({kind:'section-title',text:clean(section.title)});
-  }
+  const headings=headingsByPage.get(number)||[];
   const lines=source.split(/\r?\n/u),segments=[];
   let current=[];
   const flush=()=>{

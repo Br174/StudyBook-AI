@@ -197,6 +197,19 @@ export async function generateExplainedBookV126(book,{
   const anomalies=reservationReportV127([...saved.values()]);
   const draftReduction=saved.size&&unitSource?
     percentReduced(unitSource,unitOutput):null;
+  // Local diagnostics: show where requests are spent without uploading book
+  // content, source text, names, identifiers or API secrets.
+  const issueCounts=new Map();
+  for(const entry of saved.values()){
+   if(entry?.review?.ready===true)continue;
+   for(const issue of entry?.review?.issues||[]){
+    const code=String(issue||'').split(':')[0].slice(0,65);
+    if(code)issueCounts.set(code,(issueCounts.get(code)||0)+1);
+   }
+  }
+  const topIssues=[...issueCounts.entries()]
+   .sort((a,b)=>b[1]-a[1]).slice(0,5)
+   .map(([code,pages])=>({code,pages}));
   const s={...snapshot,version:EXPLAINED_POLICY_V126,
    onePassV135,
    localReadV135:onePassV135?{pages:source.length,total:source.length,
@@ -220,6 +233,7 @@ export async function generateExplainedBookV126(book,{
      correctionPending:rejected.size,reservedPages:reserved,
      providerOverloadStrikes:providerRecoveryV128.overloadStrikes,
      providerMaxBlockChars:providerRecoveryV128.maxBlockChars,
+     draftedPages:saved.size,topIssues,
      modelComparisonV133:modelComparisonReportV133(modelComparisonV133)}};
   await onProgress(s,meta);
   return s;

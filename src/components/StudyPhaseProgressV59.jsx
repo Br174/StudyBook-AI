@@ -66,6 +66,12 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
            ' · '+x.success+'/'+x.attempts+' risposte, '+x.http503+' errori 503'+
            (x.charsPerSecond!=null?', '+x.charsPerSecond+' caratteri/s':'')).join(' | ')}.
         </small>}
+      {Number(editionState?.diagnostics?.draftedPages)>verified&&
+        <small style={{display:'block'}}>Bozze AI ricevute: {editionState.diagnostics.draftedPages}/{total}.
+          Le bozze non conformi rimangono salvate, ma non sono dichiarate complete.</small>}
+      {editionState?.diagnostics?.topIssues?.length>0&&
+        <small style={{display:'block'}}>Motivi principali delle verifiche non superate:
+         {' '}{editionState.diagnostics.topIssues.map(x=>x.code+' ('+x.pages+')').join(', ')}.</small>}
       {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
         editionState.diagnostics.plannedRequests>0&&
         <small style={{display:'block'}}>Richieste previste: {editionState.diagnostics.plannedRequests}</small>}
