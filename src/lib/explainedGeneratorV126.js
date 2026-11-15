@@ -39,7 +39,7 @@ const pageWithSource=(original,answer)=>({
 const totalSourceUnits=pages=>pages.reduce((n,p)=>n+studyUnitsV126(
  p.segments.map(s=>s.source).join('\n')),0);
 
-async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,modelCandidate=null){
+async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,modelCandidate=null,onePassV135=false){
  const controller=new AbortController(),cancel=()=>controller.abort();
  signal?.addEventListener('abort',cancel,{once:true});
  if(signal?.aborted)cancel();
@@ -51,6 +51,7 @@ async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,
    body:JSON.stringify({policy:EXPLAINED_POLICY_V126,phase,pages,
      ...(phase==='explain'?{bookContext}:{}),
     modelCandidate:modelCandidate||STUDY_PRIMARY_MODEL_V134,
+    ...(phase==='explain'&&onePassV135?{onePassV135:true}:{}),
     timeoutMs:correction?90000:150000})
   });
   const response=await reply.json().catch(()=>null);
@@ -128,6 +129,9 @@ export async function generateExplainedBookV126(book,{
  const previous=book?.editionsV36?.version===EXPLAINED_POLICY_V126&&
   book.editionsV36.sourceFingerprint===book.canonicalBookMap.originalFingerprint
    ?book.editionsV36:null;
+ // New source books explicitly opt into one Gemini read+rewrite request per block.
+ // Previous V126 checkpoints continue their exact two-stage path unless opted in.
+ const onePassV135=previous?.onePassV135===true;
  const maps=new Map(),saved=new Map(),rejected=new Set();
  // Persistent per-page correction state survives Android restarts.
  const repairs=new Map(Object.entries(previous?.repairStateV127||{}));
@@ -157,9 +161,9 @@ export async function generateExplainedBookV126(book,{
   const oldPage=previous?.pages?.[i];
   if(oldPage?.id===p.id&&reserveAcceptedV127(p,oldPage)){
    saved.set(p.id,pageWithSource(p,oldPage));
-  }else if(oldPage?.id===p.id&&maps.get(p.id)?.review?.ready===true){
+  }else if(oldPage?.id===p.id&&(onePassV135||maps.get(p.id)?.review?.ready===true)){
    {
-    const check=auditExplainedPageV126(p,oldPage,maps.get(p.id));
+    const check=auditExplainedPageV126(p,oldPage,maps.get(p.id),{onePassV135});
     saved.set(p.id,pageWithSource(p,{...oldPage,review:check}));
     if(!check.ready){
      rejected.add(p.id);
@@ -172,7 +176,7 @@ export async function generateExplainedBookV126(book,{
  const diagnostics={
   requestsSent:0,providerErrors:0,qualityReview:rejected.size,
   originalPages:source.length,stage:'comprehension',
-  mode:'lab128-overload-backoff-and-provisional-pdf',
+  mode:onePassV135?'lab135-one-gemini-pass':'lab128-overload-backoff-and-provisional-pdf',
   priorProviderErrors:Number(diagnosticBefore.providerErrors||0),
   failedPages:[],preflightProviderCalls:0
  };
@@ -194,13 +198,16 @@ export async function generateExplainedBookV126(book,{
   const draftReduction=saved.size&&unitSource?
     percentReduced(unitSource,unitOutput):null;
   const s={...snapshot,version:EXPLAINED_POLICY_V126,
+   onePassV135,
+   localReadV135:onePassV135?{pages:source.length,total:source.length,
+    method:'verified-local-source',semanticCertified:false}:null,
    comprehensionV126,complete:done,
    status:done?(reserved?'complete-with-reservations':'complete'):status,
    completeWithReservations:done&&reserved>0,
    reservedPagesV127:anomalies,repairStateV127:Object.fromEntries(repairs),
    comprehensionAttemptsV127:Object.fromEntries(readAttempts),
    providerRecoveryV128,modelComparisonV133,
-   phase:done?'quality':accepted+reserved>0||comprehensionV126.complete?'draft':'comprehension',
+   phase:done?'quality':onePassV135||accepted+reserved>0||comprehensionV126.complete?'draft':'comprehension',
    sourceUnits:unitSource,outputUnits:unitOutput,
    achievedReduction:done&&!reserved?percentReduced(unitSource,unitOutput):null,
    draftAchievedReduction:draftReduction,
@@ -259,7 +266,7 @@ export async function generateExplainedBookV126(book,{
     correctionMax:MAX_CORRECTIONS_V127});
    try{
     const {reply,response}=await requestPhaseV126(phase,pages,context,signal,
-    correction,modelCandidate);
+    correction,modelCandidate,onePassV135);
    if(modelCandidate&&Number.isFinite(reply.status)){
     const reportedModel=response?.model||modelCandidate;
     const received=Array.isArray(response?.pages)?response.pages.length:0;
@@ -339,7 +346,7 @@ export async function generateExplainedBookV126(book,{
       if(!map.review.ready)markUnread(p,map.review.issues?.[0]);
       else readAttempts.delete(p.id);
      }else{
-      const review=auditExplainedPageV126(p,ans,maps.get(p.id));
+      const review=auditExplainedPageV126(p,ans,maps.get(p.id),{onePassV135});
       if(saved.get(p.id)?.review?.ready===true&&!review.ready)continue;
       const candidate=pageWithSource(p,{...ans,review});
       const best=betterExplainedDraftV127(p,saved.get(p.id),candidate);
@@ -407,9 +414,9 @@ export async function generateExplainedBookV126(book,{
  const missingUnderstanding=()=>source.filter(p=>p.segments.length&&
   maps.get(p.id)?.review?.ready!==true&&
   !reserveAcceptedV127(p,saved.get(p.id)));
- const unread=missingUnderstanding();
+ const unread=onePassV135?[]:missingUnderstanding();
  if(unread.length)await runStage('comprehend',unread);
- for(let cycle=1;cycle<MAX_COMPREHENSION_TECH_ATTEMPTS&&!lastError;cycle++){
+ for(let cycle=1;!onePassV135&&cycle<MAX_COMPREHENSION_TECH_ATTEMPTS&&!lastError;cycle++){
   const missing=missingUnderstanding();
   if(!missing.length)break;
   await runStage('comprehend',missing);
@@ -424,11 +431,12 @@ export async function generateExplainedBookV126(book,{
  // LAB127: comprehension attempts run first, but one invalid/missing page
  // cannot prevent explanation of the other pages that were actually read.
  // Each page still needs its OWN valid map before it can be explained.
- diagnostics.globalComprehensionGate=checked.complete
-  ?'verified-'+source.length+'-of-'+source.length
-  :'partial-'+checked.verifiedPages+'-of-'+source.length;
+ diagnostics.globalComprehensionGate=onePassV135?
+  'local-source-'+source.length+'-of-'+source.length:
+  checked.complete?'verified-'+source.length+'-of-'+source.length:
+  'partial-'+checked.verifiedPages+'-of-'+source.length;
  const pendingPages=()=>source.filter(p=>p.segments.length&&
-  maps.get(p.id)?.review?.ready===true&&
+  (onePassV135||maps.get(p.id)?.review?.ready===true)&&
   saved.get(p.id)?.review?.ready!==true&&
   !reserveAcceptedV127(p,saved.get(p.id)));
  const repairInput=p=>{
