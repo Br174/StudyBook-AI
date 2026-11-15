@@ -10,7 +10,8 @@ import {modelComparisonReportV133} from '../lib/explainedModelComparisonV133.js'
 export default function StudyPhaseProgressV59({book=null,acquisition=null,generating=false,activeStatus=''}) {
  const editionState=book?.editionsV36;
  if([EXPLAINED_POLICY_V122,EXPLAINED_POLICY_V126].includes(editionState?.version)){
-   const understanding=editionState?.version===EXPLAINED_POLICY_V126&&
+   const onePassV135=editionState?.onePassV135===true;
+   const understanding=!onePassV135&&editionState?.version===EXPLAINED_POLICY_V126&&
      editionState?.phase==='comprehension'&&
      editionState?.comprehensionV126?.complete!==true;
    const metrics=recoveryProgressV128(editionState);
@@ -38,10 +39,15 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
         ?'Gemini sta leggendo il libro. Le pagine già comprese sono conservate; eventuali pagine mancanti non impediranno di riscrivere le altre.'
         :verified+' pagine conformi, '+metrics.reserved+' con riserva, '+
          metrics.missing+' ancora da spiegare su '+total+'.'}</small>
-      {editionState?.version===EXPLAINED_POLICY_V126&&
-       <small style={{display:'block'}}>Comprensione: {metrics.understood}/{total} pagine.
+      {onePassV135?
+        <small style={{display:'block'}}>Lettura del testo originale: {editionState.localReadV135?.pages||total}/{total} pagine, eseguita sul dispositivo senza richieste Gemini.
+         Comprensione e riscrittura AI avvengono nella stessa richiesta.
+         Spiegazione verificata: {verified}/{total}. Incomplete: {metrics.missing}.</small>
+       :editionState?.version===EXPLAINED_POLICY_V126?
+        <small style={{display:'block'}}>Comprensione Gemini già conservata: {metrics.understood}/{total} pagine.
          Spiegazione verificata: {verified}/{total}. Pagine incomplete: {metrics.missing}.
-         Nessuna pagina originale in attesa viene certificata come spiegata.</small>}
+         Nessuna pagina originale in attesa viene certificata come spiegata.</small>
+       :null}
       {Number(editionState?.providerRecoveryV128?.overloadStrikes)>0&&
         <small style={{display:'block'}}>Gemini ha restituito errori 503:
           {editionState.providerRecoveryV128.overloadStrikes} consecutivi.

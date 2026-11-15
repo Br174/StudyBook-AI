@@ -1336,16 +1336,20 @@ export default function AppV14() {
           version:EXPLAINED_POLICY_V126,
           sourceFingerprint:result.canonicalBookMap.originalFingerprint,
           pages:[],originalPages:result.canonicalBookMap.pageCount,
-          complete:false,status:'comprehension',phase:'comprehension',
+          complete:false,status:'partial',phase:'draft',
+          onePassV135:true,
+          localReadV135:{pages:result.canonicalBookMap.pageCount,
+            total:result.canonicalBookMap.pageCount,method:'verified-local-source',
+            semanticCertified:false},
           verifiedChunkVariants:0,totalChunkVariants:result.canonicalBookMap.pageCount,
           verifiedChunks:0,draftUnitsSaved:0,checkpointPersistent:true,
-          semanticCertified:false,diagnostics:{requestsSent:0,mode:'lab126-understand-entire-book-first'}
+          semanticCertified:false,diagnostics:{requestsSent:0,mode:'lab135-one-gemini-pass'}
         };
         let explained={...result,editionsV36:initialSnapshot,engine:'misto'};
         generatedDraft=explained;
         setStudyBook(explained);setWorkPhase('gemini');
         setProgress({done:0,total:initialSnapshot.totalChunkVariants});
-        setStatus('Libro spiegato · fase 1: comprensione di tutto il libro');
+        setStatus('Lettura originale completata localmente · avvio riscrittura al 50% con una sola chiamata Gemini per blocco');
         navigateTo('studio');
         const firstSaved=await persistBook(explained,sourceData,sourceName,libraryId);
         if(!firstSaved){

@@ -23,8 +23,10 @@ export function buildExplainedEditionViewV122(book){
     record.review.ready!==true||record.review.sizeCompliant!==true)return false;
   if(readAuditV126.has(record))return readAuditV126.get(record);
   const map=s.comprehensionV126?.pages?.[original.physicalPage-1];
-  // A verified page is readable even when another source page still needs repair.
-  const valid=Boolean(map&&auditExplainedPageV126(original,record,map).ready===true);
+  // A verified page is readable while other pages remain unfinished.
+  const valid=s.onePassV135===true?
+   auditExplainedPageV126(original,record,null,{onePassV135:true}).ready===true:
+   Boolean(map&&auditExplainedPageV126(original,record,map).ready===true);
   readAuditV126.set(record,valid);
   return valid;
  };

@@ -61,6 +61,8 @@ export function composeExplainedSheetsV122(book,{
   if(!original.segments.length)return record.review?.ready===true;
   if(record.review?.auditRevision!==EXPLAINED_AUDIT_V126||
    record.review?.ready!==true)return false;
+  if(snapshot?.onePassV135===true)
+   return auditExplainedPageV126(original,record,null,{onePassV135:true}).ready;
   const map=snapshot.comprehensionV126?.pages?.[original.physicalPage-1];
   return Boolean(map&&auditExplainedPageV126(original,record,map).ready);
  };
