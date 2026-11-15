@@ -3,6 +3,7 @@ import {EXPLAINED_POLICY_V126} from '../lib/explainedStagesV126.js';
 import {explainedProgressMessageV122} from '../lib/explainedGeneratorV122.js';
 import {studyPhaseProgressV59} from '../lib/studyPhaseProgressV59.js';
 import {recoveryProgressV128} from '../lib/explainedProviderRecoveryV128.js';
+import {modelComparisonReportV133} from '../lib/explainedModelComparisonV133.js';
 
 // LAB59: exactly ONE progress graphic, selected by current work phase.
 // The six rows are physical-page counts, never Gemini paragraphs or 714 jobs.
@@ -18,6 +19,8 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
    const received=understanding?metrics.understood:
      Math.min(total,metrics.verified+metrics.reserved);
    const message=generating?activeStatus:explainedProgressMessageV122(editionState);
+   const observedModels=editionState?.modelComparisonV133?
+    modelComparisonReportV133(editionState.modelComparisonV133).filter(x=>x.attempts>0):[];
    return (
     <div className="sb-v122-page-progress" role="group" aria-label="Libro spiegato · avanzamento"
       style={{padding:'10px 12px',border:'1px solid #dce6f1',borderRadius:12}}>
@@ -45,6 +48,15 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
           Al prossimo tentativo il blocco massimo sarà di circa
           {' '}{editionState.providerRecoveryV128.maxBlockChars} caratteri.
           I checkpoint sono conservati.</small>}
+      {generating&&editionState?.diagnostics?.activeModel&&
+        <small style={{display:'block'}}>Modello Gemini in uso:
+          {' '}{editionState.diagnostics.activeModel}.</small>}
+      {observedModels.length>0&&
+        <small style={{display:'block'}}>Confronto modelli gratuito (preliminare, blocchi diversi):
+          {' '}{observedModels.map(x=>x.model.replace('gemini-','')+
+           ' · '+x.success+'/'+x.attempts+' risposte, '+x.http503+' errori 503'+
+           (x.charsPerSecond!=null?', '+x.charsPerSecond+' caratteri/s':'')).join(' | ')}.
+        </small>}
       {Number.isInteger(editionState?.diagnostics?.plannedRequests)&&
         editionState.diagnostics.plannedRequests>0&&
         <small style={{display:'block'}}>Richieste previste: {editionState.diagnostics.plannedRequests}</small>}
