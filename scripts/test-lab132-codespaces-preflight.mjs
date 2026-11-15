@@ -6,7 +6,7 @@ import {spawnSync} from 'node:child_process';
 
 const branch='trial/studybook-lab132-reformulation-library-20261114';
 const root='scripts/codespaces-lab132-';
-const files=['autobuild','build','publish'].map(n=>root+n+'.sh');
+const files=['autobuild','build','publish','riformula-worker'].map(n=>root+n+'.sh');
 for(const path of files){
  assert.ok(existsSync(path),'Missing Codespaces script: '+path);
  const test=spawnSync('bash',['-n',path],{encoding:'utf8',timeout:10_000});

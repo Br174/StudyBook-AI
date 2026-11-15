@@ -26,6 +26,9 @@ git fetch --quiet --no-tags origin "refs/heads/$BRANCH:refs/remotes/origin/$BRAN
 REF="refs/remotes/origin/$BRANCH"
 git merge-base --is-ancestor "$BASE" "$REF" || fail 'Checkpoint didattico LAB132 non verificato'
 SHA="$(git rev-parse "$REF")"
+# Validate BOTH build scripts before any Worker change or signer access.
+bash -n scripts/codespaces-lab132-build.sh || fail 'Sintassi script build LAB132 non valida'
+bash -n scripts/codespaces-lab132-riformula-worker.sh || fail 'Sintassi script Worker Riformula non valida'
 SHORT="$(printf '%.12s' "$SHA")"
 # Dedicated Riformula backend must be deployed and verified FIRST.
 bash scripts/codespaces-lab132-riformula-worker.sh ||
