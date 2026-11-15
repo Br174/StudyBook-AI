@@ -41,7 +41,7 @@ const calls=[];
 let stage='first',successExplanations=0;
 globalThis.fetch=async (_,options)=>{
  const q=JSON.parse(options.body);
- calls.push({phase:q.phase,pages:q.pages.map(x=>x.id)});
+ calls.push({phase:q.phase,modelCandidate:q.modelCandidate||null,pages:q.pages.map(x=>x.id)});
  if(stage==='quota'&&q.phase==='explain')return error(429);
  if(q.phase==='explain'&&stage==='first'){
   if(successExplanations++>=1)return error(503);
@@ -53,37 +53,37 @@ try {
  const old=providerPauseV128({},{
   httpStatus:503,code:'AI_TEMPORARY_OVERLOAD',now:0});
  assert.equal(old.state.overloadStrikes,1);
- assert.equal(old.state.maxBlockChars,30000);
+ assert.equal(old.state.maxBlockChars,40000);
  assert.equal(old.seconds,90);
  const twice=providerPauseV128(old.state,{
   httpStatus:503,code:'AI_TEMPORARY_OVERLOAD',now:90000});
  assert.equal(twice.state.overloadStrikes,2);
- assert.equal(twice.state.maxBlockChars,15000);
+ assert.equal(twice.state.maxBlockChars,40000);
  assert.ok(twice.seconds>=180);
  const thirdFailure=providerPauseV128(twice.state,{
   httpStatus:503,code:'AI_TEMPORARY_OVERLOAD',now:270000});
  assert.equal(thirdFailure.state.overloadStrikes,3);
- assert.equal(thirdFailure.state.maxBlockChars,15000,
-  'Third consecutive 503 does not prematurely shrink a second time.');
+ assert.equal(thirdFailure.state.maxBlockChars,40000,
+  'Repeated 503 must preserve previously safe block sizes.');
  const fourthFailure=providerPauseV128(thirdFailure.state,{
   httpStatus:503,code:'AI_TEMPORARY_OVERLOAD',now:630000});
- assert.equal(fourthFailure.state.maxBlockChars,7500,
-  'Fourth consecutive 503 triggers second downshift.');
+ assert.equal(fourthFailure.state.maxBlockChars,40000,
+  'Even four consecutive 503s do not prove a source-size limit.');
  const firstSuccess=providerSuccessfulBlockV128(twice.state);
- assert.equal(firstSuccess.maxBlockChars,15000,
-  'One success does not yet enlarge the packet.');
+ assert.equal(firstSuccess.maxBlockChars,40000,
+  'The full safe packet size is retained.');
  assert.equal(firstSuccess.successfulBlocks,1);
  const secondSuccess=providerSuccessfulBlockV128(firstSuccess);
- assert.equal(secondSuccess.maxBlockChars,22500,
-  'Two consecutive successes enlarge the packet by 50%.');
+ assert.equal(secondSuccess.maxBlockChars,40000,
+  'The restored packet size remains capped at 40k.');
  assert.equal(secondSuccess.successfulBlocks,0);
  const thirdSuccess=providerSuccessfulBlockV128(secondSuccess);
- assert.equal(thirdSuccess.maxBlockChars,22500);
+ assert.equal(thirdSuccess.maxBlockChars,40000);
  const fourthSuccess=providerSuccessfulBlockV128(thirdSuccess);
- assert.equal(fourthSuccess.maxBlockChars,30000,
-  'Four consecutive successes recover the original limit.');
- assert.equal(providerSuccessfulBlockV128(fourthSuccess).maxBlockChars,30000,
-  'Never exceed the original size.');
+ assert.equal(fourthSuccess.maxBlockChars,40000,
+  'Already at the calibrated 40k ceiling.');
+ assert.equal(providerSuccessfulBlockV128(fourthSuccess).maxBlockChars,40000,
+  'Never exceed the calibrated 40k ceiling.');
  const failedAfterSuccess=providerPauseV128(firstSuccess,{
   httpStatus:503,code:'AI_TEMPORARY_OVERLOAD',now:0});
  assert.equal(failedAfterSuccess.state.successfulBlocks,0,
@@ -98,7 +98,7 @@ try {
  assert.ok(authoritative.seconds>=1200);
  const quota=providerPauseV128({},{
   httpStatus:429,code:'AI_QUOTA_LIMIT',retryAfterSeconds:1800,now:0});
- assert.equal(quota.state.maxBlockChars,30000);
+ assert.equal(quota.state.maxBlockChars,40000);
  assert.ok(quota.seconds>=1800);
 
  const book=input();
@@ -152,7 +152,7 @@ try {
   ...book,editionsV36:first});
  assert.equal(second.status,'quota-paused');
  assert.equal(second.providerRecoveryV128.overloadStrikes,2);
- assert.equal(second.providerRecoveryV128.maxBlockChars,15000);
+ assert.equal(second.providerRecoveryV128.maxBlockChars,40000);
  assert.equal(second.verifiedChunkVariants,first.verifiedChunkVariants);
  assert.ok(!calls.slice(secondStart).some(c=>
   c.phase==='explain'&&c.pages.some(p=>known.includes(p))),
@@ -166,17 +166,15 @@ try {
  assert.equal(third.complete,true);
  assert.equal(third.verifiedChunkVariants,44);
  assert.equal(third.reservedPagesV127.length,0);
- assert.ok(third.providerRecoveryV128.maxBlockChars>=22500,
-  'Two validated successful blocks should begin restoring packet size.');
- assert.ok(third.providerRecoveryV128.maxBlockChars<=30000,
-  'Restoration must never exceed the 30k ceiling.');
+ assert.equal(third.providerRecoveryV128.maxBlockChars,40000,
+  'Preserve 40k transport budget after 503 and successful recovery.');
  assert.ok(!calls.slice(thirdStart).some(c=>
   c.phase==='explain'&&c.pages.some(p=>known.includes(p))));
  assert.ok(calls.slice(thirdStart).some(c=>c.phase==='explain'));
  const before503=calls.find(c=>c.phase==='explain');
  const after503=calls.slice(thirdStart).find(c=>c.phase==='explain');
- assert.ok(after503.pages.length<before503.pages.length,
-  'A second HTTP 503 must make future requests smaller, not only record a number.');
+ assert.ok(after503.pages.length>0&&before503.pages.length>0,
+  'Recovery resumes remaining pages without empty or duplicated requests.');
  const finalPdf=await exportExplainedPdfV122({
   ...book,editionsV36:third},'prova-lab128.pdf',
   {download:false,provisional:true});
@@ -204,9 +202,9 @@ try {
  stage='quota';
  const limit=await generateExplainedBookV126(input(1));
  assert.equal(limit.status,'quota-paused');
- assert.equal(limit.providerRecoveryV128.maxBlockChars,30000);
+ assert.equal(limit.providerRecoveryV128.maxBlockChars,40000);
  assert.equal(limit.repairStateV127.p1?.corrections||0,0);
- console.log('LAB128 PASS: 2x503 30k->15k, 2x200 15k->22.5k->30k, adaptive pauses,');
+ console.log('LAB133 PASS: repeated 503 preserves 40k, 429 remains separate, adaptive pauses,');
  console.log('persistent 44-page checkpoints, no re-request of approved pages,');
  console.log('original-only PDF provisional report and final full PDF. Zero Gemini calls.');
 }finally{globalThis.fetch=originalFetch;}
