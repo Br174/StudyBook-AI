@@ -15,7 +15,8 @@ import {MAX_CORRECTIONS_V127,repairAttemptV127,correctionRemainingV127,
 import {V128_DEFAULT_BLOCK_CHARS,providerRecoveryStateV128,providerPauseV128,
  providerSuccessfulBlockV128} from './explainedProviderRecoveryV128.js';
 import {modelComparisonStateV133,selectFreeStudyModelV133,
- recordFreeStudyModelV133,modelComparisonReportV133} from './explainedModelComparisonV133.js';
+ recordFreeStudyModelV133,modelComparisonReportV133,
+ STUDY_PRIMARY_MODEL_V134} from './explainedModelComparisonV133.js';
 
 const MAX_STAGE_SOURCE=40000;
 const TIMEOUT=EXPLAINED_REQUEST_TIMEOUT_V122;
@@ -48,7 +49,8 @@ async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,
   const reply=await fetch(apiEndpoint('/api/explained/v126'),{
    method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},
    body:JSON.stringify({policy:EXPLAINED_POLICY_V126,phase,pages,
-     ...(phase==='explain'?{bookContext,...(modelCandidate?{modelCandidate}:{})}:{}),
+     ...(phase==='explain'?{bookContext}:{}),
+    modelCandidate:modelCandidate||STUDY_PRIMARY_MODEL_V134,
     timeoutMs:correction?90000:150000})
   });
   const response=await reply.json().catch(()=>null);
@@ -241,7 +243,7 @@ export async function generateExplainedBookV126(book,{
     return phase==='comprehend'&&Array.isArray(reviewIssues)&&reviewIssues.length
      ?{...envelope,comprehensionRepair:reviewIssues}:envelope;
    });
-   const modelCandidate=phase==='explain'?selectFreeStudyModelV133(modelComparisonV133):null;
+   const modelCandidate=selectFreeStudyModelV133(modelComparisonV133);
    const modelStartedAt=Date.now();
    const modelSourceChars=pages.reduce((n,p)=>n+p.segments.reduce((v,s)=>v+s.source.length,0),0);
    diagnostics.activeModel=modelCandidate;

@@ -15,22 +15,10 @@ export function modelComparisonStateV133(value){
    return [model,item];
   }))};
 }
-export function selectFreeStudyModelV133(value){
- const stats=modelComparisonStateV133(value).stats;
- const [a,b]=FREE_STUDY_MODELS_V133;
- // Test 3.1 first because historical user reports favour it, 3.5 next.
- if(stats[a].attempts===0)return a;
- if(stats[b].attempts===0)return b;
- const score=m=>{
-  const x=stats[m];
-  const quality=x.receivedPages?x.readyPages/x.receivedPages:0;
-  const work=x.elapsedMs?x.sourceChars/x.elapsedMs:0;
-  return (x.success/Math.max(1,x.attempts))*quality*work;
- };
- if(stats[a].success>0&&stats[b].success===0)return a;
- if(stats[b].success>0&&stats[a].success===0)return b;
- return score(a)>=score(b)?a:b;
-}
+// User-selected LAB134 model; keep old benchmark metrics for reference only.
+export const STUDY_PRIMARY_MODEL_V134='gemini-3.1-flash-lite';
+export const STUDY_MODEL_POLICY_V134='lab134-fixed-gemini-3.1-flash-lite-v1';
+export function selectFreeStudyModelV133(){return STUDY_PRIMARY_MODEL_V134;}
 export function recordFreeStudyModelV133(value,{
  model,status,elapsedMs=0,sourceChars=0,readyPages=0,receivedPages=0
 }={}){

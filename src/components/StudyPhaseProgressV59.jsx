@@ -51,6 +51,9 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
       {generating&&editionState?.diagnostics?.activeModel&&
         <small style={{display:'block'}}>Modello Gemini in uso:
           {' '}{editionState.diagnostics.activeModel}.</small>}
+      {editionState?.version===EXPLAINED_POLICY_V126&&
+        <small style={{display:'block'}}>Modello principale: Gemini 3.1 Flash-Lite.
+          Nessuna alternanza automatica con Gemini 3.5.</small>}
       {observedModels.length>0&&
         <small style={{display:'block'}}>Confronto modelli gratuito (preliminare, blocchi diversi):
           {' '}{observedModels.map(x=>x.model.replace('gemini-','')+

@@ -5,9 +5,10 @@ import {
 } from '../src/lib/explainedStagesV126.js';
 import {normalizeExplainedAnchorsV122} from '../src/lib/explainedPolicyV122.js';
 import {invoke503FailoverV114} from '../src/lib/study503FailoverV114.js';
+import {STUDY_PRIMARY_MODEL_V134,STUDY_MODEL_POLICY_V134} from '../src/lib/explainedModelComparisonV133.js';
 
 const ENDPOINT='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-const ALLOWED=new Set(['gemini-3.5-flash-lite','gemini-3.1-flash-lite']);
+const ALLOWED=new Set([STUDY_PRIMARY_MODEL_V134]);
 const MAX_SOURCE_CHARS=42000;
 const fail=(res,status,code,error,extra={})=>res.status(status).json({code,error,...extra});
 const string={type:'string'};
@@ -39,14 +40,16 @@ export default async function handler(req,res){
  res.setHeader('X-StudyBook-Phase-Contract','lab126');
  res.setHeader('X-StudyBook-Recovery-Contract','lab127');
  res.setHeader('X-StudyBook-Model-Compare-Contract','lab133-free-models-v1');
+ res.setHeader('X-StudyBook-Fixed-Model-Contract',STUDY_MODEL_POLICY_V134);
  if(req.method!=='POST'){res.setHeader('Allow','POST');
   return fail(res,405,'METHOD_NOT_ALLOWED','Usare POST.');}
  const env=req.env||{},key=env.AI_API_KEY||env.GEMINI_API_KEY;
  if(!key)return fail(res,503,'AI_NOT_CONFIGURED','Gemini gratuito non configurato.');
  const hint=req.body?.modelCandidate;
- if(hint!==undefined&&(!ALLOWED.has(hint)||req.body?.phase!=='explain'))
-  return fail(res,400,'V133_MODEL_INVALID','Confronto modello non consentito.');
- const model=hint||env.AI_MODEL||'gemini-3.5-flash-lite';
+ if(hint!==undefined&&!ALLOWED.has(hint))
+  return fail(res,400,'V133_MODEL_INVALID','Modello diverso dal 3.1 selezionato: richiesta bloccata.');
+ // Use 3.1 for BOTH comprehension and explanation, ignoring old AI_MODEL=3.5.
+ const model=STUDY_PRIMARY_MODEL_V134;
  if(!ALLOWED.has(model))return fail(res,503,'AI_MODEL_NOT_ALLOWLISTED','Modello non consentito.');
  const {policy,phase,pages,bookContext}=req.body||{};
  if(policy!==EXPLAINED_POLICY_V126||!['comprehend','explain'].includes(phase)||
@@ -97,10 +100,22 @@ export default async function handler(req,res){
    return {response,payload:await response.json().catch(()=>null)};
   };
   const first=Date.now();
-  const outcome=await invoke503FailoverV114({
-   enabled:env.STUDYBOOK_LAB123_503_FAILOVER==='1',
+  let outcome=await invoke503FailoverV114({
+   enabled:false, // Never switch to 3.5 on an HTTP 503.
    primaryModel:model,invoke,signal:controller.signal,deadlineMs:first+timeout
   });
+  // One bounded retry for a transient provider overload without Retry-After.
+  // Preserve the checkpoint and Android's scheduled backoff if it still fails.
+  const initialRetryAfter=outcome.response?.headers?.get?.('Retry-After');
+  if(outcome.response?.status===503&&!initialRetryAfter&&
+     !controller.signal.aborted&&Date.now()-first<Math.min(45000,timeout-15000)){
+   await new Promise(resolve=>setTimeout(resolve,4500));
+   if(controller.signal.aborted)
+    throw Object.assign(new Error('Interrotto'),{name:'AbortError'});
+   const retry=await invoke(model);
+   outcome={response:retry.response,payload:retry.payload,model,attempts:2,
+    failoverRecovered:false,recoveredFrom503:retry.response?.ok===true};
+  }
   const upstream=outcome.response,result=outcome.payload;
   if(upstream.status===429||upstream.status===503){
    const after=upstream.headers?.get?.('Retry-After')||null;
@@ -126,6 +141,7 @@ export default async function handler(req,res){
   return res.status(200).json({engine:'ai',repairContractV127:'lab127-automatic-recovery-v1',
    version:EXPLAINED_POLICY_V126,
    phase,pages:audited,model:outcome.model,providerRequests:outcome.attempts,
+   modelPolicy:STUDY_MODEL_POLICY_V134,
    validated:audited.filter(p=>p.review.ready).length,
    semanticCertified:false,privateBandDisclosedToGemini:false});
  }catch{
