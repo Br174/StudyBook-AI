@@ -160,4 +160,5 @@
 .sb-rewrite-buttons button{min-height:50px;padding:9px 7px;border:1px solid #bad5eb;
  border-radius:12px;background:white;color:#135f9c;font-weight:800}
 .sb-rewrite-buttons button:first-child{background:#167be1;color:white}
+.sb-rewrite-buttons button:last-child{grid-column:1/-1;background:#f4f8fc;color:#19517a}
 .sb-rewrite-buttons button:disabled{opacity:.6}

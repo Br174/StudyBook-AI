@@ -17,6 +17,7 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
  const [accepted,setAccepted]=useState(null),[candidate,setCandidate]=useState(null);
  const [rewriteBusy,setRewriteBusy]=useState(false),[rewriteError,setRewriteError]=useState('');
  const rewriteRequest=useRef(null);
+ const rewriteVariant=useRef(0);
  useEffect(()=>{
   let live=true;setAccepted(null);setCandidate(null);setRewriteError('');
   if(bookId)void readReformulationsV132(bookId).then(x=>{if(live)setAccepted(x);})
@@ -62,10 +63,15 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   rewriteRequest.current=controller;setRewriteBusy(true);setRewriteError('');
   setCandidate(null);
   try{
-   const proposal=await requestPageReformulationV132(book,page.sourcePage,{signal:controller.signal});
+   const proposal=await requestPageReformulationV132(book,page.sourcePage,{
+    signal:controller.signal,variant:++rewriteVariant.current});
    if(!controller.signal.aborted)setCandidate(proposal);
   }catch(e){if(!controller.signal.aborted)setRewriteError(e.message||'Riformulazione non riuscita.');}
   finally{if(rewriteRequest.current===controller){rewriteRequest.current=null;setRewriteBusy(false);}}
+ }
+ function keepCurrentPage(){
+  // Discard only the proposal. No change to book, accepted revisions or IndexedDB.
+  setCandidate(null);setRewriteError('');
  }
  async function acceptPage(){
   if(!candidate||rewriteBusy)return;
@@ -87,7 +93,7 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   activeRequest.current=null;
   rewriteRequest.current?.abort();rewriteRequest.current=null;
   setRewriteBusy(false);setCandidate(null);setRewriteError('');
-  setBusy(false);setError('');
+  setBusy(false);setError('');rewriteVariant.current=0;
   setIndex(value);
   scrollRoot.current?.scrollTo?.({top:0,behavior:'instant'});
  }
@@ -184,6 +190,7 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
      </article>
      <div className="sb-rewrite-buttons">
       <button type="button" disabled={rewriteBusy} onClick={()=>void acceptPage()}>Tieni riformulazione</button>
+      <button type="button" disabled={rewriteBusy} onClick={keepCurrentPage}>Tieni versione corrente</button>
       <button type="button" disabled={rewriteBusy} onClick={()=>void rewritePage()}>Riformula ancora</button>
      </div>
     </>}

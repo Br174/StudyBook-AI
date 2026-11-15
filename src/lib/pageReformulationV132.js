@@ -47,37 +47,33 @@ export function auditRiformulaLengthV132(source,answer){
   semanticCertified:false};
 }
 
-export async function requestPageReformulationV132(book,pageNumber,{signal,onAttempt}={}){
- const {source,map}=checkedOriginalPageV132(book,pageNumber);
+export async function requestPageReformulationV132(book,pageNumber,{signal,variant=1}={}){
+ const {source}=checkedOriginalPageV132(book,pageNumber);
  if(source.segments.reduce((n,s)=>n+s.source.length,0)>42000)
   throw Error('Pagina originale troppo lunga per una richiesta sicura.');
- const page={id:source.id,sourceLineCount:source.sourceLineCount,
-  segments:source.segments.map(s=>({id:s.id,source:s.source})),comprehension:map};
  if(signal?.aborted)throw Object.assign(new Error('Riformulazione annullata.'),{name:'AbortError'});
- onAttempt?.(1,1);
- // Exactly ONE Gemini request for each user's button press.
- // Always read the whole original physical page, even when viewing 33 bis.
- const response=await fetch(apiEndpoint('/api/explained/v126'),{
+ // Exactly one dedicated Gemini call; original only, never previous drafts.
+ const response=await fetch(apiEndpoint('/api/reformulate/v132'),{
   method:'POST',signal,headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({policy:EXPLAINED_POLICY_V126,phase:'explain',
-   timeoutMs:150000,bookContext:[],pages:[page]})
+  body:JSON.stringify({mode:'lab132-manual-riformula-v2',variant,
+   page:{id:source.id,segments:source.segments.map(s=>({id:s.id,source:s.source}))}})
  });
  const data=await response.json().catch(()=>null);
  if(!response.ok){
-  const message=data?.error||data?.message||('Richiesta non riuscita (HTTP '+response.status+').');
-  throw Object.assign(new Error(message),{code:data?.code||'HTTP_'+response.status,
+  const msg=data?.error||data?.message||
+   (response.status===404?'Il nuovo servizio Riformula non è ancora pubblicato sul Worker di prova.':
+    'Riformulazione non riuscita (HTTP '+response.status+').');
+  throw Object.assign(new Error(msg),{code:data?.code||'HTTP_'+response.status,
    retryAfterSeconds:data?.retryAfterSeconds||null,httpStatus:response.status});
  }
- if(data?.version!==EXPLAINED_POLICY_V126||data?.phase!=='explain'||
-    !Array.isArray(data.pages)||data.pages.length!==1||data.pages[0]?.id!==source.id)
-  throw Object.assign(new Error('Risposta Gemini non coerente con la pagina originale.'),
-   {code:'V132_RESPONSE_MISMATCH'});
- const answer=data.pages[0];
- // The old semantic audit and Worker ready flag do NOT reject a Riformula draft.
+ if(data?.mode!=='lab132-manual-riformula-v2'||data?.engine!=='gemini-live'||
+   data?.sourcePage!==source.physicalPage||!data?.page)
+  throw Object.assign(new Error('Worker Riformula non aggiornato: la versione corrente resta invariata.'),
+   {code:'V132_BACKEND_REVISION_MISMATCH'});
+ const answer=data.page;
  const review=auditRiformulaLengthV132(source,answer);
- if(!review.ready)
-  throw Object.assign(new Error('Risposta Gemini incompleta: la pagina precedente resta invariata.'),
-   {code:'V132_INVALID_RESPONSE_STRUCTURE'});
+ if(!review.ready)throw Object.assign(new Error('Gemini ha restituito una pagina incompleta.'),
+  {code:'V132_INVALID_RESPONSE_STRUCTURE'});
  const glossary=answer.glossary.filter(g=>g&&typeof g.term==='string'&&
   typeof g.definition==='string').map(g=>({term:g.term,definition:g.definition}));
  return {id:source.id,label:source.label,sourcePage:source.physicalPage,
