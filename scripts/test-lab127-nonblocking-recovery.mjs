@@ -81,6 +81,8 @@ try{
  assert.equal(fortyFour.status,'complete-with-reservations');
  assert.deepEqual(fortyFour.reservedPagesV127.map(p=>p.page),[5,9]);
  assert.equal(fortyFour.repairStateV127.p5.corrections,5);
+ assert.equal(fortyFour.repairStateV127.p5.stagnantV136,2,
+  'LAB136 must persist no-improvement streak through repairAttemptV127');
  assert.equal(fortyFour.repairStateV127.p6.corrections,2);
  assert.equal(fortyFour.reservedPagesV127.find(p=>p.page===9).sourceTextFallback,true);
  assert.equal(fortyFour.reservedPagesV127.find(p=>p.page===5).corrections,5);
