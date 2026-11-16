@@ -283,6 +283,7 @@ export function auditExplainedPageV139(source,result){
   sizeCompliant:withinBand,sourceUnits,outputUnits,
   exactReduction,reduction:Math.round(exactReduction*10)/10,
   originalBodyLetters:studyLetters(sourceText),
+  sourceLetters:studyLetters(sourceText),
   outputLetters:studyLetters(rendered),glossaryCount:Array.isArray(result?.glossary)?
    result.glossary.length:0,auditRevision:EXPLAINED_LENGTH_AUDIT_V139,
   repair:{issueCodes:[...new Set(problems)]}
