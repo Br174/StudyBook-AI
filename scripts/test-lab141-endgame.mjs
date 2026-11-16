@@ -160,6 +160,30 @@ try{
  assert.ok(completed.pages.every(p=>p.review.ready===true));
  assert.equal(completed.diagnostics.qualityReview,0);
 
+ // The same final attempt can still miss 50%: finish honestly with THREE
+ // reservations rather than stalling forever at 41/44 or adding calls.
+ const stillBad=makeBook(oneTry);
+ stillBad.editionsV36.pages[42].review.acceptedWithReserve=false;
+ stillBad.editionsV36.pages[42].review.correctionAttempts=1;
+ let finalCalls=0;
+ globalThis.fetch=async(url,options)=>{
+  finalCalls++;
+  const payload=JSON.parse(options.body);
+  return {ok:true,status:200,headers:{get:()=>null},
+   json:async()=>({engine:'ai',version:EXPLAINED_POLICY_V126,
+    phase:'explain',repairContractV127:'lab127-automatic-recovery-v1',
+    pages:payload.pages.map(p=>({id:p.id,glossary:[],
+     segments:p.segments.map(seg=>({id:seg.id,text:badText}))}))})};
+ };
+ const honest=await generateExplainedBookV126(stillBad,{
+  fastLengthV139:true,glossaryPrecisionV140:true,tailReliableV141:true});
+ assert.equal(finalCalls,1);
+ assert.equal(honest.status,'complete-with-reservations');
+ assert.equal(honest.verifiedChunkVariants,41);
+ assert.equal(honest.acceptedWithReserveV127,3);
+ assert.equal(honest.diagnostics.qualityReview,0);
+ assert.equal(planStudyAutoResumeV45(honest,Date.now(),0),null);
+
  // Actual isolated Worker route: previous body of 420, desired 300, model
  // sees ONLY the numerical target and no private acceptance band.
  let providerCalls=0;
