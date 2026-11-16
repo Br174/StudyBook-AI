@@ -42,3 +42,12 @@ Bruno ha approvato il piano per risolvere lentezza e fermate: preservare origina
 - Per lanciare in Codespace già esistente, soltanto quando il terminale autenticato è nuovamente accessibile: passare senza perdita di modifiche al ramo LAB136, `git pull --ff-only`, quindi `bash scripts/codespaces-lab136-autobuild.sh`.
 - Non dichiarare completato finché non sono verdi i test, il contratto Worker è stato effettivamente dispiegato/verificato, la APK firmata e lo ZIP controllato.
 - Prossima chat: ricaricare questo checkpoint e lo HEAD LIVE, non ripartire dal vecchio registro LAB23.
+
+
+## Diagnosi e correzione compilazione Codespaces — 16/11/2026, 14:33 Italia
+- Screenshot del terminale del Codespace esistente: build LAB136 interrotta in fase `test`, file `scripts/test-lab127-nonblocking-recovery.mjs:107`; risultato effettivo cicli correzione per p5 `[0,1,2,3,4,5]` anziché `[0,1,2]`; nessuna APK LAB136 risultante da questo tentativo.
+- Root cause verificata sul codice: `repairAttemptV127` crea uno stato nuovo limitato a `initial`, `corrections`, `lastCode`, quindi la precedente implementazione `markAttempt` cancellava `stagnantV136` PRIMA di leggerne il valore: ogni retry ripartiva da 1 e non si raggiungeva la soglia 2.
+- Fix `src/lib/explainedGeneratorV126.js`: memorizza `priorRepair` prima di `markAttempt`, recupera la streak precedente e preserva `stagnantV136` nel checkpoint. Non modifica il numero massimo generale di 5 correzioni, i criteri di fedeltà né il comportamento 503.
+- Aggiornati `scripts/test-lab127-nonblocking-recovery.mjs` e `scripts/test-lab136-reliability.mjs` per richiedere esattamente una generazione e due correzioni su bozza identica, e persistenza contatore 2.
+- Modifiche su GitHub, test da rieseguire nel Codespace; nessuna esecuzione di Node/Scudo/Gradle dichiarata da ChatGPT. Comando nel terminale GIÀ aperto sul ramo LAB136: `git pull --ff-only && bash scripts/codespaces-lab136-autobuild.sh`.
+- Consegnare APK/ZIP esclusivamente dopo tutti i controlli e firma verificata; non riusare i file parziali della build fallita.
