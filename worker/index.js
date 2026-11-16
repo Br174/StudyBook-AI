@@ -11,6 +11,7 @@ import explainedV138Handler from '../api/explainedV138.js';
 import explainedV139Handler from '../api/explainedV139.js';
 import explainedV140Handler from '../api/explainedV140.js';
 import glossaryV140Handler from '../api/glossaryV140.js';
+import explainedV141Handler from '../api/explainedV141.js';
 import studyToolsV130Handler from '../api/studyToolsV130.js';
 import manualRiformulaV132Handler from '../api/manualRiformulaV132.js';
 
@@ -28,6 +29,7 @@ const API_ROUTES = new Map([
   ['/api/explained/v139', explainedV139Handler],
   ['/api/explained/v140', explainedV140Handler],
   ['/api/glossary/v140', glossaryV140Handler],
+  ['/api/explained/v141', explainedV141Handler],
   ['/api/reformulate/v132', manualRiformulaV132Handler],
   ['/api/study-tools/v130', studyToolsV130Handler],
 ]);
