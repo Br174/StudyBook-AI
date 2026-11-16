@@ -170,7 +170,8 @@ export async function generateExplainedBookV126(book,{
   const updated=repairAttemptV127(repairs.get(p.id),code);
   repairs.set(p.id,updated);
   if(updated.corrections>=correctionLimit){
-   const fallback=reservedExplainedPageV127(p,saved.get(p.id),updated);
+   const fallback=reservedExplainedPageV127(p,saved.get(p.id),updated,
+    {terminalCorrectionLimit:correctionLimit});
    saved.set(p.id,fallback);rejected.delete(p.id);
   }
   return updated;
@@ -208,6 +209,21 @@ export async function generateExplainedBookV126(book,{
     }
    }
   }
+  // LAB141: repairState may already be exhausted from a LAB139/140 APK,
+  // but its reservation was never recognized because the old gate wanted
+  // five attempts. Migrate the EXACT saved draft locally, no Gemini call.
+  const entry=saved.get(p.id),oldRepair=repairs.get(p.id);
+  const exhausted=Number(oldRepair?.corrections||0)>=correctionLimit||
+   (entry?.review?.acceptedWithReserve===true&&
+    Number(entry.review.correctionAttempts||0)>=correctionLimit);
+  if(quickV139&&entry&&!entry.review?.ready&&
+     !reserveAcceptedV127(p,entry)&&exhausted){
+   const state={...oldRepair,initial:true,corrections:correctionLimit,
+    lastCode:oldRepair?.lastCode||'V141_PREVIOUS_LIMIT_REACHED'};
+   repairs.set(p.id,state);
+   saved.set(p.id,reservedExplainedPageV127(p,entry,state,
+    {terminalCorrectionLimit:correctionLimit}));
+  }
  });
  const diagnosticBefore=previous?.diagnostics||{};
  const diagnostics={
@@ -239,7 +255,10 @@ export async function generateExplainedBookV126(book,{
    nearTargetPages:measuredReductions.filter(v=>Math.abs(v-50)<=5).length
   }:null;
   const reserved=source.filter(p=>reserveAcceptedV127(p,saved.get(p.id))).length;
-  const unread=source.filter(p=>p.segments.length&&
+  const incomplete=source.filter(p=>p.segments.length&&
+    saved.get(p.id)?.review?.ready!==true&&
+    !reserveAcceptedV127(p,saved.get(p.id))).length;
+  const unread=onePassV135?0:source.filter(p=>p.segments.length&&
     maps.get(p.id)?.review?.ready!==true&&
     !reserveAcceptedV127(p,saved.get(p.id))).length;
   const done=accepted+reserved===source.length;
@@ -279,8 +298,8 @@ export async function generateExplainedBookV126(book,{
    draftUnitsSaved:saved.size,acceptedWithReserveV127:reserved,
    semanticCertified:false,
    diagnostics:{...diagnostics,comprehensionPages:comprehensionV126.verifiedPages,
-     comprehensionTotal:source.length,qualityReview:unread+rejected.size,
-     understandingPending:unread,explanationPending:source.length-accepted-reserved,
+     comprehensionTotal:source.length,qualityReview:incomplete,
+     understandingPending:unread,explanationPending:incomplete,
      correctionPending:rejected.size,reservedPages:reserved,
      providerOverloadStrikes:providerRecoveryV128.overloadStrikes,
      providerMaxBlockChars:providerRecoveryV128.maxBlockChars,
@@ -438,10 +457,11 @@ export async function generateExplainedBookV126(book,{
        // Two failed attempts with NO better draft should not make three more
        // identical paid requests. Preserve best text explicitly WITH RESERVE.
        if(consecutive>=2&&!reserveAcceptedV127(p,saved.get(p.id))){
-        const state={...repairs.get(p.id),corrections:MAX_CORRECTIONS_V127,
-          lastCode:'V136_NO_QUALITY_IMPROVEMENT'};
+        const state={...repairs.get(p.id),corrections:correctionLimit,
+          lastCode:'V141_NO_LENGTH_IMPROVEMENT'};
         repairs.set(p.id,state);
-        saved.set(p.id,reservedExplainedPageV127(p,best,state));
+        saved.set(p.id,reservedExplainedPageV127(p,best,state,
+         {terminalCorrectionLimit:correctionLimit}));
         rejected.delete(p.id);
        }
       }
@@ -584,8 +604,11 @@ export async function generateExplainedBookV126(book,{
   if(!retry.length)break;
   await runStage('explain',retry.map(repairInput),{correction:true});
  }
- diagnostics.qualityReview=rejected.size+source.filter(p=>p.segments.length&&
-  maps.get(p.id)?.review?.ready!==true&&
+ // Count only ACTUALLY unfinished pages. The old one-pass code counted
+ // already-verified pages as missing because they have no comprehension map,
+ // and then attempted pointless quality resumes at 41/44.
+ diagnostics.qualityReview=source.filter(p=>p.segments.length&&
+  saved.get(p.id)?.review?.ready!==true&&
   !reserveAcceptedV127(p,saved.get(p.id))).length;
  diagnostics.lastCode=lastError||diagnostics.lastCode||null;
  if(!lastError&&diagnostics.qualityReview)
