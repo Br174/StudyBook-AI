@@ -21,6 +21,7 @@ Bruno ha approvato il piano per risolvere lentezza e fermate: preservare origina
 4. `src/lib/explainedStagesV126.js`: migliorata istruzione one-pass V135 per spiegazioni più sviluppate per segmento, con target 50% visibile al modello ma tolleranza 40–60 NON rivelata. Non modifica il pulsante Riformula.
 5. `api/explainedV126.js`: contratto HEAD `X-StudyBook-Quality-Contract: lab136-balanced-page-v1`, oltre agli header precedenti. Nessuna modifica alla scelta fissa Gemini 3.1.
 6. Test `scripts/test-lab136-reliability.mjs` e compatibilità `test-lab127-nonblocking-recovery.mjs`; `npm run test:lab136` registrato in package.json.
+7. `src/lib/explainedRepairV127.js`: se una bozza strutturalmente corretta è in realtà uno slogan/una riga con meno del minimo di lettere utili (nelle pagine non brevi), la pagina CON RISERVA ripiega sul testo originale, non sul testo AI inadeguato. Nuova asserzione negativa nello script test LAB136.
 
 ## QA da eseguire — non dichiarati superati
 - `npm run test:lab136`, test LAB132/131/130/135, Node syntax, `npm run build`, Scudo360: NON ESEGUITI; solo lettura/confronto statico GitHub.
