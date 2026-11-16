@@ -1,0 +1,38 @@
+# StudyBook AI — MotorLab LAB141: finale 41/44 e precisione del 50%
+Data: 2026-11-16. Stato: codice su LAB isolato; runtime QA, Worker, APK, ZIP e collaudo Android NON ancora eseguiti da questa chat.
+
+## Evidenza utente
+LAB140 ha migliorato la velocità, ma si ferma vicino alla fine del libro: 41 delle 44 pagine risultano completate, tre non arrivano alla certificazione della lunghezza. L'utente richiede una correzione SENZA rallentare importazione, spiegazione e ripresa, e con riduzione per pagina attorno al 50%. Non c'è screenshot delle nuove statistiche o codice di errore del telefono: i difetti nel codice sono stati verificati, ma resta da misurare l'esatta causa del singolo episodio sul device.
+
+## Baseline sicura
+- Repository: `Br174/StudyBook-AI`, branch isolato: `trial/studybook-lab141-final-tail-50pct-20261116`.
+- Base LAST_GOOD LAB140: `3248e0ae61c3e9b4d446f32829970f43f26c0dd8`, release `studybook-trial140-codespaces-3248e0ae61c3` esistente, firmata e pubblicata. Non modificata.
+- MotorLab CORE e satellite r40 verificati; StudyBook native engine resta responsabile del contenuto.
+- Identità Android: `it.studybook.ai.lab.trial111`, certificato SHA256 `D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC`, nuova proposta `versionCode=2026114101`, `versionName=0.3.141-prova.1`. Richiesta verifica reale dello script su APK firmata.
+- Backend: Worker gratuito già esistente `studybook-ai-trial124`, modello fisso Gemini 3.1 Flash-Lite; zero euro aggiuntivi, nessun GitHub Actions, nuovo Codespace, servizio, credenziale o nuova firma.
+
+## Root cause confermata nel sorgente V140
+1. `src/lib/explainedGeneratorV126.js`: quickV139 impone `correctionLimit=2`; `markAttempt` dopo due correzioni produceva `acceptedWithReserve=true` e `correctionAttempts=2`. Però `reserveAcceptedV127` in `src/lib/explainedRepairV127.js` considerava terminale **soltanto 5 tentativi**, così la pagina era esclusa dal nuovo retry (limite2) ma non conteggiata come completata. Risultato possibile: 41/44 e quality-review senza ulteriori pagine eleggibili.
+2. Diagnostica finale `qualityReview`: nelle versioni onePass contava anche pagine verificate perché verificava la presenza della mappa comprehension separata che nella onePass non esiste. False pagine mancanti, possibili risvegli inutili e arresti dopo tentativi.
+3. Correzioni 50%: prompt V140 includeva `targetBodyUnits`, ma le correzioni V139 non presentavano al modello una misura esplicita `previousBodyUnits` né lo scostamento numerico dal target; i codici issue V139 erano filtrati dal vecchio protocollo, quindi il modello poteva ripetere lo stesso testo o restare fuori fascia.
+
+## Patch LAB141
+- `src/lib/explainedRepairV127.js`: le pagine marcate `fastTerminalV141:true` e `terminalCorrectionLimitV141:2` sono considerate terminali dopo esattamente due correzioni, MA SEMPRE `review.ready=false`, `acceptedWithReserve=true`; output non rientrato 40–60 non è falsamente certificato. Se fallback originale, il testo deve corrispondere ESATTAMENTE a ciascun segmento originale. Il limite legacy di cinque rimane immutato.
+- `src/lib/explainedGeneratorV126.js`: al caricamento dei checkpoint V139/V140, migra IN LOCALE e senza Gemini i draft già esauriti a una riserva con stato esplicito; preserva tutte le pagine valide. Conta in `diagnostics.qualityReview` soltanto pagine realmente mancanti, non quelle già accettate senza comprehension map. Tiene `correctionLimit=2`, lo stesso planner 40k, medesimo backoff e una sola richiesta per gruppo. `tailReliableV141:true` seleziona la nuova route per gli unici retry necessari.
+- `src/lib/explainedTailV141.js`: prompt del testo al 50% con, durante l'ordinaria correzione delle sole pagine pendenti, `previousBodyUnits`, `targetBodyUnits`, `lengthDirection` e `lengthAdjustmentUnits`; Gemini produce una sola versione, nessun secondo passaggio. Soglie private di accettazione non rivelate.
+- `api/explainedV141.js`, `api/explainedV126.js` e `worker/index.js`: route opt-in `/api/explained/v141`, header `X-StudyBook-Tail-Contract: lab141-endgame-two-repairs-one-pass-v1`. Endpoint precedenti V126/V138/V139/V140, manual glossary V140 e Riformula preservati.
+- `src/AppV15.jsx`: opt-in solo nuova APK, nessuna nuova fase, no duplicazioni, recupero dati e glossario intatti.
+- `scripts/test-lab141-endgame.mjs`, `npm run test:lab141`: tre simulazioni offline deterministiche con 44 pagine: (a) 41 già conformi, 3 esaurite => chiusura 44 con 3 riserve, **0** chiamate; (b) 41 conformi e 3 eleggibili => Gemini 1 chiamata alle sole p42–44, testo 50%, **44 conformi**; (c) ultima correzione torna ancora fuori fascia => **41 conformi+3 riserve**, 1 chiamata e niente loop. Verificano compatibilità vecchio gate 5, fallback originale esatto, glossario non mutato, assenza banda privata nel prompt, sistema ripresa non crea timer per un'edizione completa.
+- `scripts/codespaces-lab141-worker.sh`, `-build.sh`, `-autobuild.sh`, `-publish.sh`: nuovi script isolati per il Codespace GitHub esistente `super eureka`, stesso signer, Scudo360 e SHA, release senza Actions. Worker deploy solo al trial124, verifica v126/v138/v139/v140/glossario/Riformula prima di aggiungere v141. Contract HEAD verificato due volte. Nessun pagamento.
+
+## Stato QA e rischi (non inventare successi)
+- Codice e script scritti su GitHub, verifiche statiche in corso.
+- Test `npm run test:lab141`, build Vite, bash -n, Scudo360, Worker dry-run e deploy, firma APK+ZIP, test Android 44/2000 pagine: **DA ESEGUIRE** nel Codespace autorizzato; non dichiarare successo prima di risultanze reali.
+- Se Gemini restituisce una correzione entro il range, 44/44 possono essere conformi. Se due correzioni falliscono, 3 pagine devono essere rese disponibili CON RISERVA senza loop; **non dichiarare 44/44 al 50%** se non lo sono.
+- Un 503 esterno può ancora imporre backoff ufficiale; non alterare limiti provider. Dati originali, firma e cache non devono essere cancellati.
+
+## Compilazione sicura nel Codespace già esistente
+```bash
+git fetch --no-tags origin "refs/heads/trial/studybook-lab141-final-tail-50pct-20261116:refs/remotes/origin/trial/studybook-lab141-final-tail-50pct-20261116" && (git switch trial/studybook-lab141-final-tail-50pct-20261116 || git switch --track origin/trial/studybook-lab141-final-tail-50pct-20261116) && git pull --ff-only origin trial/studybook-lab141-final-tail-50pct-20261116 && bash scripts/codespaces-lab141-autobuild.sh
+```
+STOP se branch errato, modifiche locali conflittuali, Worker contratto non verificato, test falliti, signer diverso. Non usare reset --hard. Non fornire link APK LAB141 prima di effettiva GitHub Release. Non chiedere cancellazione memoria telefono; installare sopra LAB140.
