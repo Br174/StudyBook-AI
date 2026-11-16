@@ -17,6 +17,7 @@ import {glossaryCacheKeyV140,readLegacyGlossaryV140,
  saveLegacyGlossaryV140,requestLegacyGlossaryV140}
  from '../src/lib/legacyGlossaryV140.js';
 import {readFileSync} from 'node:fs';
+import {generateExplainedBookV126} from '../src/lib/explainedGeneratorV126.js';
 
 assert.equal(glossaryTermMentionedV140(
  'La norma giuridica stabilisce obblighi.','norma giuridica'),true);
@@ -165,6 +166,48 @@ try{
  assert.ok(component.includes('requestLegacyGlossaryV140({'));
  assert.ok(!component.includes('useEffect(()=>void defineLegacyTerms()'),
   'No automatic Gemini glossary calls while importing or reading');
+
+ // The model tends to oversimplify? Learn from the first successful packet,
+ // then adjust the TARGET of the NEXT packet without repeating ANY page.
+ const paragraph='La norma giuridica stabilisce obblighi e tutela i diritti. ';
+ const sourcePage=Array.from({length:6},()=>paragraph.repeat(6)).join('\n');
+ const sourceMap={originalFingerprint:'b'.repeat(64),pageCount:44,chapters:[],
+  pages:Array.from({length:44},(_,i)=>({
+   physicalPage:i+1,label:String(i+1),text:sourcePage,
+   sourceStatus:'verified',widthPt:595,heightPt:842
+  }))};
+ const book44={canonicalBookMap:sourceMap,chapters:[],
+  editionsV36:{version:EXPLAINED_POLICY_V126,
+   sourceFingerprint:sourceMap.originalFingerprint,onePassV135:true,
+   originalPages:44,pages:[],complete:false,status:'partial'}};
+ const batchCalls=[];
+ globalThis.fetch=async(url,options)=>{
+  assert.ok(String(url).endsWith('/api/explained/v140'));
+  const req=JSON.parse(options.body);
+  batchCalls.push(req);
+  return {ok:true,status:200,headers:{get:()=>null},
+   json:async()=>({engine:'ai',
+    repairContractV127:'lab127-automatic-recovery-v1',
+    version:EXPLAINED_POLICY_V126,phase:'explain',
+    model:'gemini-3.1-flash-lite',
+    pages:req.pages.map(p=>({id:p.id,glossary:[glossary[0]],
+     segments:p.segments.map(seg=>({
+      id:seg.id,text:paragraph.repeat(15)
+     }))}))})};
+ };
+ const complete44=await generateExplainedBookV126(book44,{
+  fastLengthV139:true,glossaryPrecisionV140:true});
+ assert.ok(batchCalls.length>=2,'The 44-page test must exercise multiple batches');
+ assert.ok(batchCalls[1].targetScaleV140>batchCalls[0].targetScaleV140,
+  'After 58% compression, request a slightly longer body in next batch');
+ assert.equal(complete44.verifiedChunkVariants,44);
+ assert.equal(complete44.lengthOnlyV139,true);
+ assert.equal(complete44.glossaryPrecisionV140,true);
+ assert.ok(complete44.lengthTargetScaleV140>1);
+ assert.ok(complete44.precisionV140.pagesMeasured>=44);
+ assert.ok(complete44.pages.every(p=>p.glossary?.length===1));
+ assert.ok(batchCalls.reduce((n,r)=>n+r.pages.length,0)===44,
+  'Every page must be sent once; no glossary retry or duplicate summary call');
  console.log('LAB140 PASS: fast sidebar definitions, one Gemini call, adaptive targets,');
  console.log('legacy v139 isolation and PDF-visible glossary.');
 }finally{globalThis.fetch=oldFetch;}
