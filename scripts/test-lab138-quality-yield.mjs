@@ -106,15 +106,20 @@ try{
  
  // A 200 returning ONLY slogans in a large batch must reduce the next
  // correction budget, including when the bad batch was the final batch.
+ const verifiedPage={id:'p1',sourcePage:1,physicalPage:1,
+  segments:[{id:'p1-s0',text:phrase.repeat(12)}],glossary:[],
+  review:{ready:true,sizeCompliant:true,issues:[]}};
  const fortyFour={canonicalBookMap:{originalFingerprint:fp,pageCount:44,
   pages:Array.from({length:44},(_,i)=>({physicalPage:i+1,label:String(i+1),
   text,sourceStatus:'verified',widthPt:595,heightPt:842}))},
-  chapters:[],editionsV36:{...saved,verifiedChunkVariants:0,
-   draftUnitsSaved:0,pages:[],quota:null,status:'partial'}};
+  chapters:[],editionsV36:{...saved,verifiedChunkVariants:1,
+   draftUnitsSaved:1,pages:[verifiedPage],quota:null,status:'partial'}};
  let call=0;
  globalThis.fetch=async(url,options)=>{
   assert.ok(String(url).includes('/api/explained/v138'));
   const request=JSON.parse(options.body);
+  assert.ok(!request.pages.some(p=>p.id==='p1'),
+   'LAB138 must never resend a verified page on resume');
   call++;
   if(call>=2)return {ok:false,status:503,headers:{get:()=>null},
    json:async()=>({code:'AI_TEMPORARY_OVERLOAD'})};
@@ -127,12 +132,14 @@ try{
  const partial=await generateExplainedBookV126(fortyFour);
  assert.equal(partial.status,'quota-paused');
  assert.ok(partial.draftUnitsSaved>0);
- assert.equal(partial.verifiedChunkVariants,0);
+ assert.equal(partial.verifiedChunkVariants,1,
+  'The one previously verified page must survive 503 and new audit rules');
+ assert.equal(partial.pages[0].review.ready,true);
  assert.ok(partial.qualityBlockCharsV136<40000,
   'Backpressure must be persisted even with an exhausted request queue');
  assert.equal(partial.providerRecoveryV128.maxBlockChars,40000,
   'A 503 must never be misdiagnosed as oversize');
- assert.ok(!partial.pages.some(p=>p?.review?.ready===true));
+ assert.equal(partial.pages.filter(p=>p?.review?.ready===true).length,1);
  console.log('LAB138 PASS: immutable 136/137 endpoint, V138 one-pass targets,');
  console.log('no immediate retry on 503, exact-fingerprint recovery, adaptive quality.');
 }finally{globalThis.fetch=originalFetch;}
