@@ -43,7 +43,7 @@ import {STUDY_PILLAR_VERSION} from './lib/studyPillarV38.js';
 import {studyHomeAction,sameStoredDocument} from './lib/studyHomeFlowV38.js';
 import {progressDiagnostic} from './lib/geminiRecoveryV39.js';
 import { readGeminiPause, quotaDisplayV36 } from './lib/geminiQuotaControllerV36.js';
-import { planStudyAutoResumeV45,autoResumeWakeDecisionV54,autoResumeNextWakeMsV54 } from './lib/studyAutoResumeV45.js';
+import { planStudyAutoResumeV45,autoResumeWakeDecisionV54,autoResumeNextWakeMsV54,autoResumeRecheckDelayV137 } from './lib/studyAutoResumeV45.js';
 import {requiresRecalibrationV79,hasFinishedLocalAuditV79} from './lib/studyQualityRecoveryV79.js';
 import { auditBookSourceCoverage } from './lib/studyQualityGuard.js';
 import { reprocessStoredBook } from './lib/libraryReprocess.js';
@@ -293,10 +293,11 @@ export default function AppV14() {
     // 1ms early must re-arm instead of consuming the only retry. Android sleep,
     // screen-off and activity re-entry all recompute the SAME saved cooldown.
     let fired=false,cancelled=false,timer=null;
-    const schedule=()=>{
+    const schedule=(delayOverride=null)=>{
       if(cancelled||fired)return;
       if(timer!==null)clearTimeout(timer);
-      const delay=autoResumeNextWakeMsV54(plan,Date.now());
+      const delay=Number.isFinite(delayOverride)&&delayOverride>=0?
+        delayOverride:autoResumeNextWakeMsV54(plan,Date.now());
       if(delay!==null)timer=setTimeout(tryResume,delay);
     };
     const tryResume=()=>{
@@ -305,28 +306,49 @@ export default function AppV14() {
       const decision=autoResumeWakeDecisionV54(plan,{
         now:Date.now(),visible,inFlight:resumeExecutionRef.current
       });
-      if(resumeBusy||generating){schedule();return;}
-      if(decision==='too-early'||decision==='in-flight'){schedule();return;}
-      if(decision==='foreground-required')return; // Resume on visibility/focus/pageshow.
+      // Android can freeze timers or omit a visibility/focus event. Re-arm
+      // THIS SAME timer with a slow fallback while hidden or another writer
+      // is active. Never send Gemini work until the page is foreground-visible.
+      if(resumeBusy||generating){
+        schedule(2500);return;
+      }
+      const recheck=autoResumeRecheckDelayV137(decision,plan,Date.now());
+      if(recheck!==null){schedule(recheck);return;}
       if(decision!=='ready')return;
-      fired=true; // One writer, no duplicate request on concurrent wake events.
+      const hasStoredSource=Boolean(libraryId||resumeCandidate?.id);
+      if(!hasStoredSource){setStatus('Ripresa sospesa: identifica prima il libro originale nella Libreria.');return;}
+      fired=true; // Existing single writer, no duplicate concurrent wake.
       if(plan.reason!=='provider-cooldown')state.stalledAttempts++;
-      if(activeEdition&&documentData)void resumeGeminiEditions();
-      else void resumeFromHome({auto:true});
+      setStatus('Pausa Gemini terminata · ripresa automatica dalle pagine salvate.');
+      // Prefer loaded source when available. Otherwise rehydrate the last
+      // authoritative IndexedDB checkpoint before attempting the provider.
+      const job=activeEdition&&documentData&&libraryId?
+        resumeGeminiEditions():resumeFromHome({auto:true});
+      void Promise.resolve(job).catch(error=>{
+        setError(error?.message||'Ripresa automatica da verificare. Il checkpoint è conservato.');
+      });
     };
     schedule();
-    if(typeof document!=='undefined')document.addEventListener('visibilitychange',tryResume);
+    if(typeof document!=='undefined'){
+      document.addEventListener('visibilitychange',tryResume);
+      document.addEventListener('resume',tryResume); // supported WebView lifecycle, when fired
+    }
     if(typeof window!=='undefined'){
       window.addEventListener('focus',tryResume);
       window.addEventListener('pageshow',tryResume);
+      window.addEventListener('online',tryResume);
     }
     return ()=>{
       cancelled=true;
       if(timer!==null)clearTimeout(timer);
-      if(typeof document!=='undefined')document.removeEventListener('visibilitychange',tryResume);
+      if(typeof document!=='undefined'){
+        document.removeEventListener('visibilitychange',tryResume);
+        document.removeEventListener('resume',tryResume);
+      }
       if(typeof window!=='undefined'){
         window.removeEventListener('focus',tryResume);
         window.removeEventListener('pageshow',tryResume);
+        window.removeEventListener('online',tryResume);
       }
     };
   },[generating,resumeBusy,libraryId,documentData,studyBook?.editionsV36?.updatedAt,
