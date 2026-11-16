@@ -33,7 +33,13 @@ export function betterExplainedDraftV127(original,oldPage,newPage){
  };
  return score(newPage)<score(oldPage)?newPage:oldPage;
 }
-export function reservedExplainedPageV127(original,record,state){
+export function reservedExplainedPageV127(original,record,state,{
+ terminalCorrectionLimit=MAX_CORRECTIONS_V127
+}={}){
+ // The fast 50% edition intentionally caps repairs at TWO, whereas the
+ // legacy contract caps at FIVE. The terminal limit is recorded explicitly
+ // so a completed page cannot be stranded by a hidden 5-attempt check.
+ const limit=terminalCorrectionLimit===2?2:MAX_CORRECTIONS_V127;
  // A structurally valid but one-line/trivial answer must NEVER replace
  // a long original page in the reserved edition. Keep the original text
  // available and mark sourceTextFallback instead of endorsing a slogan.
@@ -59,6 +65,7 @@ export function reservedExplainedPageV127(original,record,state){
    correctionAttempts:Math.min(MAX_CORRECTIONS_V127,
     Math.max(0,Number(state?.corrections??MAX_CORRECTIONS_V127))),
    lastCorrectionCode:state?.lastCode||null,
+   ...(limit===2?{terminalCorrectionLimitV141:2,fastTerminalV141:true}:{}),
    semanticCertified:false}};
 }
 export function reserveUnreadPageV127(original){
@@ -83,10 +90,21 @@ export function reserveAcceptedV127(original,record){
    source.every((item,i)=>segments[i]?.id===item.id&&
     segments[i]?.text===item.source));
  }
- return Boolean(record?.review?.acceptedWithReserve===true&&
-  (record.review?.correctionAttempts===MAX_CORRECTIONS_V127||
-    record.review?.comprehensionUnavailable===true)&&
-  usableExplainedDraftV127(original,record));
+ const review=record?.review;
+ if(review?.acceptedWithReserve!==true)return false;
+ const fastTerminal=review.fastTerminalV141===true&&
+  review.terminalCorrectionLimitV141===2&&review.correctionAttempts===2;
+ const legacyTerminal=review.correctionAttempts===MAX_CORRECTIONS_V127||
+  review.comprehensionUnavailable===true;
+ if(!fastTerminal&&!legacyTerminal)return false;
+ // Fallback originals must match the trusted source exactly; this grants
+ // readable WITH-RESERVE completion, never length/semantic conformity.
+ if(review.sourceTextFallback===true){
+  const expected=original?.segments||[],actual=record?.segments||[];
+  return actual.length===expected.length&&expected.every((item,i)=>
+   actual[i]?.id===item.id&&actual[i]?.text===item.source);
+ }
+ return usableExplainedDraftV127(original,record);
 }
 export function reservationReportV127(pages){
  return (pages||[]).filter(p=>p?.review?.acceptedWithReserve===true)
