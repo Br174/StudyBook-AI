@@ -88,6 +88,16 @@ try{
  assert.ok(providerBodies[0].messages[0].content.includes('targetSegmentUnits'));
  assert.ok(JSON.parse(providerBodies[0].messages[1].content).pages[0]
    .segments[0].targetSegmentUnits>0);
+ const legacyGood=response();
+ await explainedV126Handler(req,legacyGood);
+ assert.equal(legacyGood.statusCode,200);
+ assert.equal(legacyGood.data.qualityStrategyV138,false,
+  'Old APKs must keep the old prompt contract');
+ assert.equal(providerBodies.length,2);
+ assert.ok(!providerBodies[1].messages[0].content.includes('targetSegmentUnits'));
+ assert.ok(!('targetSegmentUnits' in
+  JSON.parse(providerBodies[1].messages[1].content).pages[0].segments[0]),
+  'Legacy request payload must be byte-compatible');
 
  const saved={version:EXPLAINED_POLICY_V126,sourceFingerprint:fp,
   complete:false,status:'quota-paused',onePassV135:true,originalPages:44,
