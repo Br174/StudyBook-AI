@@ -115,6 +115,10 @@ try{
  assert.equal(response.pages[0].segments[0].text,source.canonicalBookMap.pages[0].text.trim());
  assert.equal(response.repairStateV127.p1.corrections,5);
  assert.ok(calls.length<60,'Do not spin on five unchanged repairs per page');
+ assert.equal(calls.filter(c=>c.ids.includes('p1')).length,3,
+  'A never-improving page must receive exactly one initial call and two corrections');
+ assert.equal(response.repairStateV127.p1.stagnantV136,2,
+  'Persistent stagnation count must survive the second repair attempt');
  assert.ok(calls.every(c=>c.pages>=1));
  // A Gemini 503 must preserve the last safe batch size, remain retryable
  // and never trigger content backpressure.
