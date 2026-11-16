@@ -2,12 +2,11 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "LAB132 — Compilazione automatica APK+ZIP (Codespaces)",
+      "label": "LAB141 — Compilazione APK+ZIP (Codespaces, manuale)",
       "type": "process",
       "command": "bash",
       "args": [
-        "-c",
-        "set -euo pipefail\nbranch='trial/studybook-lab132-reformulation-library-20261114'\n[[ \"$(git branch --show-current)\" == \"$branch\" ]] || { echo '[LAB132] Apri il ramo LAB132 prima di compilare.' >&2; exit 1; }\ncase \"$(git remote get-url origin)\" in\n  https://github.com/Br174/StudyBook-AI|https://github.com/Br174/StudyBook-AI.git|git@github.com:Br174/StudyBook-AI.git|ssh://git@github.com/Br174/StudyBook-AI.git) ;;\n  *) echo '[LAB132] Repository origin inatteso.' >&2; exit 1 ;;\nesac\nremote_ref=\"refs/remotes/origin/$branch\"\ngit fetch --no-tags origin \"refs/heads/$branch:$remote_ref\"\nscript=\"$(git show \"$remote_ref:scripts/codespaces-lab132-autobuild.sh\")\"\n[[ -n \"$script\" ]]\nexec bash -c \"$script\" scripts/codespaces-lab132-autobuild.sh"
+        "scripts/codespaces-lab141-autobuild.sh"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -20,31 +19,32 @@
       "presentation": {
         "reveal": "always",
         "panel": "dedicated",
-        "focus": false,
+        "focus": true,
         "clear": true,
         "showReuseMessage": false
       },
       "runOptions": {
-        "runOn": "folderOpen",
         "instanceLimit": 1,
         "instancePolicy": "silent"
       }
     },
     {
-      "label": "LAB132 — Compilazione manuale APK+ZIP (Codespaces)",
+      "label": "LAB141 — Test del completamento 41/44 (nessun deploy)",
       "type": "process",
-      "command": "bash",
+      "command": "npm",
       "args": [
-        "scripts/codespaces-lab132-autobuild.sh"
+        "run",
+        "test:lab141"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": [],
+      "group": "test",
       "presentation": {
         "reveal": "always",
         "panel": "dedicated",
-        "focus": false,
+        "focus": true,
         "clear": true
       },
       "runOptions": {
