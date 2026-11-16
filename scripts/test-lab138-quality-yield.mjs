@@ -39,6 +39,15 @@ try{
  const sixLines={...page,sourceLineCount:6};
  assert.equal(lessonPayloadOnePassV138([fiveLines]).pages[0].shortSource,true);
  assert.equal(lessonPayloadOnePassV138([sixLines]).pages[0].shortSource,false);
+ // modelPayloadV122 strips sourceLineCount; V138 must use the ORIGINAL
+ // envelope, not the model-ready payload. Also test absent metadata.
+ const withoutCount={...page,segments:[{id:'p1-s0',
+  source:Array.from({length:6},()=>phrase).join('\n')}]};
+ assert.equal(lessonPayloadOnePassV138([withoutCount]).pages[0].shortSource,false,
+  'Without sourceLineCount, count actual original nonempty lines');
+ const fiveUnmarked={...withoutCount,segments:[{id:'p1-s0',
+  source:Array.from({length:5},()=>phrase).join('\n')}]};
+ assert.equal(lessonPayloadOnePassV138([fiveUnmarked]).pages[0].shortSource,true);
  const exampleAnswer={id:'p1',segments:[{id:'p1-s0',
   text:phrase.repeat(12)}],glossary:[]};
  assert.equal(auditExplainedPageV126(fiveLines,exampleAnswer,null,
