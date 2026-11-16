@@ -46,3 +46,11 @@ STOP se branch errato, modifiche locali conflittuali, Worker contratto non verif
 - `scripts/test-lab141-endgame.mjs` include ora anche un terzo scenario in cui l'ultima correzione torna fuori fascia: una richiesta per le sole p42–44, chiusura 41 conformi+3 con riserva, niente risvegli in loop.
 - GitHub Releases verificato: **nessuna release LAB141 ancora pubblicata**; la più recente rimane LAB140. Impedito l'accesso diretto al repository privato dal container (DNS/network unavailable), perciò nessun test Node/Gradle reale viene dichiarato superato.
 - Prossima prova nel Codespace esistente: `npm run test:lab141` tramite `bash scripts/codespaces-lab141-autobuild.sh`. Se un test fallisce, arrestare deploy e APK e correggere **solo il test/bug reale** nel ramo isolato. Non distribuire la LAB141 prima che tutti i check passino.
+
+
+## Diagnosi Codespaces 22:18 — task LAB132 obsoleta (2026-11-16)
+- Screenshot del terminale `super eureka`: processo VS Code `Attività: bash -c` carica `scripts/codespaces-lab132-autobuild.sh` ed esce con codice 1; barra inferiore Codespaces ancora sul ramo LAB140. NON è un test né una compilazione LAB141.
+- Causa confermata nel file `.vscode/tasks.json` presente nel ramo LAB140/141: il task predefinito era ancora `LAB132 — Compilazione automatica APK+ZIP`, `runOn: folderOpen`, che si avviava all'apertura di VS Code e si fermava correttamente se non sul ramo LAB132.
+- Correzione sul ramo LAB141: `.vscode/tasks.json` ora contiene `LAB141 — Compilazione APK+ZIP (Codespaces, manuale)` come task build predefinito e `LAB141 — Test del completamento 41/44 (nessun deploy)`; `runOn: folderOpen` RIMOSSO. Nessuna build all'apertura. Nessun cambiamento a vecchie release o task sul ramo LAB140.
+- Azione necessaria sul dispositivo: nel Codespace già aperto selezionare un nuovo terminale `+` (non la scheda Attività terminata), incollare il comando di switch al ramo LAB141 + `bash scripts/codespaces-lab141-autobuild.sh`; senza reset hard e senza cancellare `package-lock.json` untracked o altre modifiche.
+- HEAD verifica: GitHub non mostra ancora release LAB141, ultimo tag LAB140. MotorLab CORE e satellite r40 coincidono. Test integrazione e APK LAB141 ancora non eseguiti dalla chat.
