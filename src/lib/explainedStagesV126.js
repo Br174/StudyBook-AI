@@ -158,13 +158,20 @@ export function lessonInstructionOnePassV138(){
 }
 export function lessonPayloadOnePassV138(pages,context=[]){
  const prior=lessonPayloadOnePassV135(pages,context);
- return {...prior,pages:prior.pages.map(page=>({...page,
-  // The didactic pillar exempts at most five ORIGINAL lines, not a guessed
-  // number of characters. This new rule is opt-in to LAB138 only.
-  shortSource:Number.isInteger(Number(page.sourceLineCount))?
-    Number(page.sourceLineCount)<=5:page.shortSource,
-  segments:page.segments.map(segment=>({...segment,
-   targetSegmentUnits:Math.max(1,Math.round(studyUnitsV126(segment.source)/2))}))}))};
+ // LAB138: modelPayloadV122 deliberately omits sourceLineCount. Read it
+ // from the ORIGINAL trusted page array, never the stripped model payload.
+ return {...prior,pages:prior.pages.map((page,i)=>{
+  const original=pages[i]||{};
+  const originalLines=Number.isInteger(original.sourceLineCount)&&
+    original.sourceLineCount>=0?original.sourceLineCount:
+    (original.segments||[]).map(s=>String(s?.source||''))
+     .join('\n').split(/\r?\n/u).filter(line=>line.trim()).length;
+  return {...page,
+   // Private acceptance bands still never enter the Gemini payload.
+   shortSource:originalLines<=5,
+   segments:page.segments.map(segment=>({...segment,
+    targetSegmentUnits:Math.max(1,Math.round(studyUnitsV126(segment.source)/2))}))};
+ })};
 }
 export function auditExplainedPageV126(source,result,comprehension,{
  onePassV135=false,strictSourceLinesV138=false
