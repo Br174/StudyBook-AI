@@ -34,7 +34,16 @@ export function betterExplainedDraftV127(original,oldPage,newPage){
  return score(newPage)<score(oldPage)?newPage:oldPage;
 }
 export function reservedExplainedPageV127(original,record,state){
- const usable=usableExplainedDraftV127(original,record);
+ // A structurally valid but one-line/trivial answer must NEVER replace
+ // a long original page in the reserved edition. Keep the original text
+ // available and mark sourceTextFallback instead of endorsing a slogan.
+ const structurallyUsable=usableExplainedDraftV127(original,record);
+ const originalLetters=(original?.segments||[]).map(s=>String(s.source||''))
+   .join('\n').match(/\p{L}/gu)?.length||0;
+ const draftLetters=(record?.segments||[]).map(s=>String(s.text||''))
+   .join('\n').match(/\p{L}/gu)?.length||0;
+ const usable=structurallyUsable&&(originalLetters<=250||
+   draftLetters>=Math.max(80,Math.ceil(originalLetters*0.35)));
  const segments=usable?record.segments:
   (original.segments||[]).map(s=>({id:s.id,text:s.source}));
  const review=record?.review||{};
