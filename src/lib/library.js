@@ -251,6 +251,12 @@ export async function getLibraryBook(id){
     const checkpoint=tx.objectStore(CHECKPOINTS_STORE).get(id);
     const [book,latest]=await Promise.all([requestResult(original),requestResult(checkpoint)]);
     if(!book)return null;
+    // LAB136: new checkpoints contain only the changing AI edition. Retain
+    // compatibility with legacy checkpoints that contained an entire book.
+    if(latest?.editionV36)return {...book,
+      studyBook:{...(book.studyBook||{}),editionsV36:latest.editionV36,
+        engine:latest.editionV36.complete?'ai':'misto'},
+      updatedAt:latest.updatedAt||book.updatedAt};
     return latest?.studyBook?{...book,studyBook:latest.studyBook,
       updatedAt:latest.updatedAt||book.updatedAt}:book;
   }finally{db.close()}
@@ -273,7 +279,9 @@ export async function saveExplainedCheckpoint(id,studyBook){
           geminiEditionVerified:Number(snapshot.verifiedChunkVariants||0),
           geminiEditionTotal:Number(snapshot.totalChunkVariants||0)}});
     };
-    return store.put({id,studyBook,updatedAt:now});
+    // Never store parsed 2,000-page source or book metadata on every AI block.
+    // The authoritative original lives unchanged in BOOKS_STORE.
+    return store.put({id,editionV36:studyBook.editionsV36,updatedAt:now});
   });
   return true;
 }
