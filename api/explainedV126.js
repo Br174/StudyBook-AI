@@ -3,7 +3,8 @@ import {
  EXPLAINED_POLICY_V126,comprehensionInstructionV126,comprehensionPayloadV126,
  auditComprehensionV126,lessonInstructionV126,lessonPayloadV126,auditExplainedPageV126,
  lessonInstructionOnePassV135,lessonPayloadOnePassV135,
- lessonInstructionOnePassV138,lessonPayloadOnePassV138
+ lessonInstructionOnePassV138,lessonPayloadOnePassV138,
+ lessonInstructionOnePassV139,lessonPayloadOnePassV139,auditExplainedPageV139
 } from '../src/lib/explainedStagesV126.js';
 import {normalizeExplainedAnchorsV122} from '../src/lib/explainedPolicyV122.js';
 import {invoke503FailoverV114} from '../src/lib/study503FailoverV114.js';
@@ -61,6 +62,7 @@ export default async function handler(req,res){
  // LAB138 uses this SAME trusted executor through a separate opt-in route.
  // All installed v126 clients retain identical instructions and 503 behavior.
  const qualityStrategyV138=req.qualityStrategyV138===true&&onePassV135;
+ const fastLengthV139=req.fastLengthV139===true&&onePassV135;
  if(req.body?.onePassV135===true&&phase!=='explain')
   return fail(res,400,'V135_ONE_PASS_PHASE_INVALID','Fase unica valida solo per la riscrittura.');
  if(policy!==EXPLAINED_POLICY_V126||!['comprehend','explain'].includes(phase)||
@@ -91,11 +93,13 @@ export default async function handler(req,res){
   return fail(res,422,'V126_CONTEXT_INVALID','Raccordi libro non verificabili.');
  const input=phase==='comprehend'
   ?comprehensionPayloadV126(pages)
+  :fastLengthV139?lessonPayloadOnePassV139(pages,bookContext)
   :qualityStrategyV138?lessonPayloadOnePassV138(pages,bookContext)
   :onePassV135?lessonPayloadOnePassV135(pages,bookContext)
   :lessonPayloadV126(pages,pages.map(p=>p.comprehension),bookContext);
  const messages=[{role:'system',content:phase==='comprehend'
    ?comprehensionInstructionV126():
+    fastLengthV139?lessonInstructionOnePassV139():
     qualityStrategyV138?lessonInstructionOnePassV138():
     onePassV135?lessonInstructionOnePassV135():lessonInstructionV126()},
   {role:'user',content:JSON.stringify(input)}];
@@ -125,7 +129,7 @@ export default async function handler(req,res){
    outcome.response?.headers?.get?.('retry-after');
   const initialQuota=outcome.response?.status===503?
    diagnoseGeminiQuota({status:503,body:outcome.payload,headers:outcome.response?.headers,model}):null;
-  if(!qualityStrategyV138&&outcome.response?.status===503&&
+  if(!qualityStrategyV138&&!fastLengthV139&&outcome.response?.status===503&&
      !initialRetryAfter&&initialQuota?.estimated===true&&
      !controller.signal.aborted&&Date.now()-first<Math.min(45000,timeout-15000)){
    await new Promise(resolve=>setTimeout(resolve,4500));
@@ -159,13 +163,15 @@ export default async function handler(req,res){
    if(phase==='comprehend')
     return {...p,review:auditComprehensionV126(pages[i],p)};
    const normalized=normalizeExplainedAnchorsV122(p);
-   return {...normalized,review:auditExplainedPageV126(pages[i],normalized,
-     pages[i].comprehension,{onePassV135,strictSourceLinesV138:qualityStrategyV138})};
+   return {...normalized,review:fastLengthV139?
+     auditExplainedPageV139(pages[i],normalized):
+     auditExplainedPageV126(pages[i],normalized,pages[i].comprehension,
+      {onePassV135,strictSourceLinesV138:qualityStrategyV138})};
   });
   return res.status(200).json({engine:'ai',repairContractV127:'lab127-automatic-recovery-v1',
    version:EXPLAINED_POLICY_V126,
    phase,pages:audited,model:outcome.model,providerRequests:outcome.attempts,
-   onePassV135,qualityStrategyV138,
+   onePassV135,qualityStrategyV138,fastLengthV139,
    modelPolicy:STUDY_MODEL_POLICY_V134,
    validated:audited.filter(p=>p.review.ready).length,
    semanticCertified:false,privateBandDisclosedToGemini:false});
