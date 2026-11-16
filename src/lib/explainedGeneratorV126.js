@@ -47,7 +47,11 @@ async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,
  const timeout=correction?100000:TIMEOUT;
  const timer=setTimeout(cancel,timeout);
  try{
-  const reply=await fetch(apiEndpoint('/api/explained/v126'),{
+  // V138 is a separate Worker contract. All older v126 / comprehension
+  // callers stay on the existing immutable route.
+  const route=phase==='explain'&&onePassV135?
+    '/api/explained/v138':'/api/explained/v126';
+  const reply=await fetch(apiEndpoint(route),{
    method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},
    body:JSON.stringify({policy:EXPLAINED_POLICY_V126,phase,pages,
      ...(phase==='explain'?{bookContext}:{}),
@@ -400,18 +404,29 @@ export async function generateExplainedBookV126(book,{
     }
     // An HTTP-200 batch with too few conforming pages is a content-yield
     // problem. Reduce ONLY remaining blocks, never repeat already-sent pages.
-    if(phase==='explain'&&group.length>=2&&index+1<queue.length){
+    // The first/last batch can itself have near-zero usable output.
+    // Persist a smaller cap for the very NEXT correction/resume even when
+    // this was the only remaining block. This is an HTTP200 content-yield
+    // adaptation, NEVER a reaction to 503 or a fabricated token limit.
+    if(phase==='explain'&&group.length>=2){
      const acceptedInBlock=group.filter(p=>saved.get(p.id)?.review?.ready===true).length;
      if(acceptedInBlock*4<group.length&&
          qualityBlockCharsV136>V136_MIN_QUALITY_BLOCK_CHARS){
+      const previousCap=qualityBlockCharsV136;
       qualityBlockCharsV136=Math.max(V136_MIN_QUALITY_BLOCK_CHARS,
-        Math.floor(qualityBlockCharsV136*0.6));
-      const remaining=queue.slice(index+1).flat();
-      const replan=planStageBlocksV126(remaining,{stage:phase,maps,context,
-       maxSourceChars:Math.min(providerRecoveryV128.maxBlockChars,qualityBlockCharsV136)});
-      queue.splice(index+1,queue.length-index-1,...replan);
-      diagnostics.plannedRequests=queue.length;
+        Math.floor(qualityBlockCharsV136*0.5));
       diagnostics.qualityBackpressureV136=true;
+      diagnostics.lowYieldBlocksV138=(diagnostics.lowYieldBlocksV138||0)+1;
+      diagnostics.qualityBlockReducedFromV138=previousCap;
+      // Replan only unsent pages. Never regenerate accepted pages or repeat
+      // already-sent calls merely because quality was poor.
+      if(index+1<queue.length){
+       const remaining=queue.slice(index+1).flat();
+       const replan=planStageBlocksV126(remaining,{stage:phase,maps,context,
+        maxSourceChars:Math.min(providerRecoveryV128.maxBlockChars,qualityBlockCharsV136)});
+       queue.splice(index+1,queue.length-index-1,...replan);
+       diagnostics.plannedRequests=queue.length;
+      }
      }
     }
     const blockLimitBefore=providerRecoveryV128.maxBlockChars;
