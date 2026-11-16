@@ -378,9 +378,13 @@ export async function generateExplainedBookV126(book,{
        rejected.delete(p.id);
       }else{
        rejected.add(p.id);
-       const updated=markAttempt(p,review.issues?.[0]||'V127_REWRITE_NOT_VERIFIED');
+       // Save the previous no-improvement streak BEFORE markAttempt:
+       // repairAttemptV127 returns a fresh object and intentionally drops
+       // fields beyond initial/corrections/lastCode.
+       const priorRepair=repairs.get(p.id);
        const stagnated=earlier?.review?.ready===false&&best===earlier;
-       const consecutive=stagnated?Number(repairs.get(p.id)?.stagnantV136||0)+1:0;
+       const updated=markAttempt(p,review.issues?.[0]||'V127_REWRITE_NOT_VERIFIED');
+       const consecutive=stagnated?Number(priorRepair?.stagnantV136||0)+1:0;
        repairs.set(p.id,{...updated,stagnantV136:consecutive});
        // Two failed attempts with NO better draft should not make three more
        // identical paid requests. Preserve best text explicitly WITH RESERVE.
