@@ -24,7 +24,8 @@
     "test:lab136": "node scripts/test-lab136-reliability.mjs && node scripts/test-lab127-nonblocking-recovery.mjs && node scripts/test-lab135-speed.mjs && node scripts/test-lab135-worker.mjs && node scripts/test-lab128-503-recovery.mjs",
     "test:lab137": "node scripts/test-lab137-android-resume.mjs && npm run test:lab136",
     "test:lab138": "node scripts/test-lab138-quality-yield.mjs && npm run test:lab137",
-    "test:lab139": "node scripts/test-lab139-fast-length.mjs && npm run test:lab138"
+    "test:lab139": "node scripts/test-lab139-fast-length.mjs && npm run test:lab138",
+    "test:lab140": "node scripts/test-lab140-glossary-precision.mjs && npm run test:lab139"
   },
   "dependencies": {
     "@posthog/react": "^1.11.3",
