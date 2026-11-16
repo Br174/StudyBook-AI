@@ -1,6 +1,7 @@
 // LAB127: technically verified reading, then nonblocking explanatory rewriting.
 // No line count, A4 geometry or page display format is a compression metric.
 import {studyLetters} from './studyPillarV38.js';
+import {applyTargetScaleV140} from './explainedQualityV140.js';
 import {modelInstructionV122,modelPayloadV122,auditExplainedPageV122} from './explainedPolicyV122.js';
 import {buildConceptInventory,extractProtectedItems} from './fidelityEngine.js';
 
@@ -288,4 +289,22 @@ export function auditExplainedPageV139(source,result){
    result.glossary.length:0,auditRevision:EXPLAINED_LENGTH_AUDIT_V139,
   repair:{issueCodes:[...new Set(problems)]}
  };
+}
+
+// LAB140: identical one-pass provider request with short contextual glossary.
+// Definitions are returned WITH the page, never in a second Gemini call.
+export const EXPLAINED_GLOSSARY_PRECISION_V140='lab140-glossary-single-pass-50-target-v1';
+export function lessonInstructionOnePassV140(){
+ return lessonInstructionOnePassV139().replace(
+  'Lascia glossary vuoto: nessuna elaborazione aggiuntiva.',
+  'Compila glossary NELLA STESSA RISPOSTA: scegli fino a 4 termini tecnici effettivamente presenti nel testo spiegato e nella fonte; per ogni term scrivi una definition breve, corretta e contestuale (una frase di 8-18 parole). Se non ci sono termini utili usa []. Nessuna chiamata o fase separata.'
+ )+'\n'+[
+  'PRIORITÀ NUMERICA: per ogni pagina tratta targetBodyUnits come misura del SOLO corpo spiegato, senza titoli, marcatori e definizioni laterali. Il risultato complessivo deve essere MOLTO VICINO a quel numero: scrivi circa metà delle lettere e punteggiatura della fonte, non un riassunto troppo corto o troppo lungo.',
+  'Usa targetSegmentUnits per distribuire la lunghezza fra i segmenti; preserva le informazioni essenziali senza frasi riempitive. Se necessario regola le frasi mentre componi la pagina: non aggiungere una seconda fase di output.',
+  'Ogni term del glossary deve essere una parola o locuzione identica a una presente nel corpo spiegato e avere una definizione riferita SOLO alla pagina originale. Non scegliere vocaboli generici, non inventare significati. Inserisci il glossario nel JSON della stessa pagina.',
+  'Le definizioni NON contano nella lunghezza del corpo: non copiarle nei segmenti per aumentare artificialmente la misura.'
+ ].join('\n');
+}
+export function lessonPayloadOnePassV140(pages,context=[],scale=1){
+ return applyTargetScaleV140(lessonPayloadOnePassV139(pages,context),scale);
 }
