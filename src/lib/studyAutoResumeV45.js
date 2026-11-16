@@ -109,6 +109,16 @@ export function autoResumeNextWakeMsV54(plan,now=Date.now()){
 }
 
 
+// LAB137: a single existing foreground wake owner may need to re-check after
+// Android/WebView freezes timers or briefly reports the document as hidden.
+// No second scheduler, no provider request while hidden and no tight polling.
+export function autoResumeRecheckDelayV137(decision,plan,now=Date.now()){
+ if(decision==='foreground-required')return 15000;
+ if(decision==='in-flight')return 2500;
+ if(decision==='too-early')return autoResumeNextWakeMsV54(plan,now);
+ return null; // "ready" invokes the one recovery owner, "no-plan" stops
+}
+
 // LAB55: one read-only presentation of the SAME cooldown state used by LAB45.
 // No new scheduler, no new storage, and no action that bypasses the provider.
 export function geminiResumeDisplayV55(snapshot,now=Date.now()){
