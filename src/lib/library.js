@@ -203,6 +203,9 @@ export async function saveLibraryBook({
       fidelityPassed: Boolean(studyBook?.quality?.fidelityGate?.passed),
       compressionPercent: Number(studyBook?.quality?.fidelityGate?.compressionPercent || 0),
       geminiEditionIncomplete: Boolean(studyBook?.editionsV36 && studyBook.editionsV36.complete !== true),
+      sourceFingerprint:String(studyBook?.canonicalBookMap?.originalFingerprint||
+        previous?.metadata?.sourceFingerprint||''),
+      geminiEditionDrafted: Number(studyBook?.editionsV36?.draftUnitsSaved || 0),
       geminiEditionVerified: Number(studyBook?.editionsV36?.verifiedChunkVariants || 0),
       geminiEditionTotal: Number(studyBook?.editionsV36?.totalChunkVariants || 0),
     },
@@ -243,6 +246,47 @@ export async function listLibraryBooks({profileId=null}={}){
   }finally{db.close()}
 }
 
+// LAB138: a reimport of the exact same book must not silently start at zero
+// when a richer immutable checkpoint is still in the user's Library. Search
+// the tiny summary index first, then read at most eight likely matches. The
+// source fingerprint MUST be equal; titles or page counts alone never suffice.
+export async function findBestExplainedCheckpointV138({
+  sourceFingerprint,pageCount,fileName='',profileId='default',excludeId=null
+}={}){
+ const fingerprint=String(sourceFingerprint||'');
+ if(fingerprint.length<16||!Number.isInteger(pageCount)||pageCount<1)return null;
+ const expectedName=String(fileName||'').trim().toLocaleLowerCase('it-IT');
+ const listing=await listLibraryBooks({profileId});
+ const eligible=listing.filter(item=>{
+  if(item.id===excludeId)return false;
+  const meta=item.metadata||{};
+  if(Number(meta.pages||0)!==pageCount)return false;
+  if(!meta.geminiEditionIncomplete&&!meta.geminiEditionVerified&&!meta.geminiEditionDrafted)
+   return false;
+  const metaFingerprint=String(meta.sourceFingerprint||'');
+  return metaFingerprint?metaFingerprint===fingerprint:
+   String(item.fileName||'').trim().toLocaleLowerCase('it-IT')===expectedName;
+ }).sort((a,b)=>Number(b.metadata?.geminiEditionVerified||0)-
+   Number(a.metadata?.geminiEditionVerified||0));
+ let best=null,score=-1;
+ for(const item of eligible.slice(0,8)){
+  const record=await getLibraryBook(item.id).catch(()=>null);
+  const edition=record?.studyBook?.editionsV36;
+  if(record?.studyBook?.canonicalBookMap?.originalFingerprint!==fingerprint||
+     edition?.sourceFingerprint!==fingerprint||
+     edition?.version!=='lab126-whole-book-comprehension-v1'||
+     Number(edition.originalPages||0)!==pageCount)continue;
+  const verified=Math.max(0,Number(edition.verifiedChunkVariants||0));
+  const drafts=Math.max(0,Number(edition.draftUnitsSaved||0));
+  const importance=verified*(pageCount+1)+drafts;
+  if(importance>score&&(verified>0||drafts>0)){
+   best={edition,sourceId:item.id,verifiedPages:verified,draftedPages:drafts};
+   score=importance;
+  }
+ }
+ return best;
+}
+
 export async function getLibraryBook(id){
   const db=await openDb();
   try{
@@ -276,6 +320,9 @@ export async function saveExplainedCheckpoint(id,studyBook){
       summaryStore.put({...prior,updatedAt:now,
         metadata:{...(prior.metadata||{}),hasProcessed:true,
           geminiEditionIncomplete:snapshot.complete!==true,
+          sourceFingerprint:String(studyBook?.canonicalBookMap?.originalFingerprint||
+            prior.metadata?.sourceFingerprint||''),
+          geminiEditionDrafted:Number(snapshot.draftUnitsSaved||0),
           geminiEditionVerified:Number(snapshot.verifiedChunkVariants||0),
           geminiEditionTotal:Number(snapshot.totalChunkVariants||0)}});
     };
