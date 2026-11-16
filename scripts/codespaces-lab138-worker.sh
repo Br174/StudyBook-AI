@@ -44,8 +44,8 @@ if check_v138; then
  echo '[LAB138] Route nuova già disponibile: nessun nuovo deploy.'
  exit 0
 fi
-node scripts/test-lab138-quality-yield.mjs ||
- fail 'Test qualità/503/checkpoint fallito: niente deploy'
+npm run test:lab138 ||
+ fail 'Test LAB138/LAB137/LAB136 falliti: niente deploy'
 node scripts/test-lab135-worker.mjs ||
  fail 'Vecchio contratto v126 modificato: niente deploy'
 node scripts/test-lab132-manual-worker.mjs ||
