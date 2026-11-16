@@ -8,6 +8,8 @@ import {
  lessonInstructionOnePassV140,lessonPayloadOnePassV140
 } from '../src/lib/explainedStagesV126.js';
 import {normalizeExplainedAnchorsV122} from '../src/lib/explainedPolicyV122.js';
+import {lessonInstructionOnePassV141,lessonPayloadOnePassV141}
+ from '../src/lib/explainedTailV141.js';
 import {invoke503FailoverV114} from '../src/lib/study503FailoverV114.js';
 import {diagnoseGeminiQuota} from './geminiQuotaV36.js';
 import {STUDY_PRIMARY_MODEL_V134,STUDY_MODEL_POLICY_V134} from '../src/lib/explainedModelComparisonV133.js';
@@ -65,6 +67,7 @@ export default async function handler(req,res){
  const qualityStrategyV138=req.qualityStrategyV138===true&&onePassV135;
  const fastLengthV139=req.fastLengthV139===true&&onePassV135;
  const focusedGlossaryV140=req.focusedGlossaryV140===true&&fastLengthV139;
+ const tailReliableV141=req.tailReliableV141===true&&focusedGlossaryV140;
  if(req.body?.onePassV135===true&&phase!=='explain')
   return fail(res,400,'V135_ONE_PASS_PHASE_INVALID','Fase unica valida solo per la riscrittura.');
  if(policy!==EXPLAINED_POLICY_V126||!['comprehend','explain'].includes(phase)||
@@ -95,6 +98,7 @@ export default async function handler(req,res){
   return fail(res,422,'V126_CONTEXT_INVALID','Raccordi libro non verificabili.');
  const input=phase==='comprehend'
   ?comprehensionPayloadV126(pages)
+  :tailReliableV141?lessonPayloadOnePassV141(pages,bookContext,req.body?.targetScaleV140)
   :focusedGlossaryV140?lessonPayloadOnePassV140(pages,bookContext,req.body?.targetScaleV140)
   :fastLengthV139?lessonPayloadOnePassV139(pages,bookContext)
   :qualityStrategyV138?lessonPayloadOnePassV138(pages,bookContext)
@@ -102,6 +106,7 @@ export default async function handler(req,res){
   :lessonPayloadV126(pages,pages.map(p=>p.comprehension),bookContext);
  const messages=[{role:'system',content:phase==='comprehend'
    ?comprehensionInstructionV126():
+    tailReliableV141?lessonInstructionOnePassV141():
     focusedGlossaryV140?lessonInstructionOnePassV140():
     fastLengthV139?lessonInstructionOnePassV139():
     qualityStrategyV138?lessonInstructionOnePassV138():
@@ -175,7 +180,7 @@ export default async function handler(req,res){
   return res.status(200).json({engine:'ai',repairContractV127:'lab127-automatic-recovery-v1',
    version:EXPLAINED_POLICY_V126,
    phase,pages:audited,model:outcome.model,providerRequests:outcome.attempts,
-   onePassV135,qualityStrategyV138,fastLengthV139,focusedGlossaryV140,
+   onePassV135,qualityStrategyV138,fastLengthV139,focusedGlossaryV140,tailReliableV141,
    modelPolicy:STUDY_MODEL_POLICY_V134,
    validated:audited.filter(p=>p.review.ready).length,
    semanticCertified:false,privateBandDisclosedToGemini:false});
