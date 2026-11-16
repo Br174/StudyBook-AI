@@ -44,6 +44,7 @@ assert.ok(scaled.targetBodyUnits>p1.targetBodyUnits);
 assert.ok(scaled.segments[0].targetSegmentUnits>p1.segments[0].targetSegmentUnits);
 assert.equal(targetScaleV140(999),1.12);
 assert.equal(targetScaleV140(-100),0.88);
+assert.equal(targetScaleV140(null),1,'Missing scale must remain the exact neutral target');
 assert.equal(nextLengthTargetScaleV140(1,[{
  ready:true,shortPage:false,sourceUnits:1000,outputUnits:400
  }])>1,true,'Model too short: request slightly more next time');
@@ -146,6 +147,15 @@ try{
  assert.equal(manualRes.statusCode,200);
  assert.equal(manualRes.data.glossary.length,2);
  assert.equal(manualCalls,1);
+ // A 503 in the optional glossary route must not spin or change the book.
+ let failedCalls=0;
+ globalThis.fetch=async()=>{failedCalls++;
+  return {ok:false,status:503,headers:{get:()=>null}};};
+ const unavailable=fakeRes();
+ await glossaryV140Handler({method:'POST',env:{AI_API_KEY:'OFFLINE_TEST_ONLY'},
+  body:{originalText:text,explainedText:explanation}},unavailable);
+ assert.equal(unavailable.statusCode,503);
+ assert.equal(failedCalls,1,'No automatic follow-up after an optional 503');
  const key=glossaryCacheKeyV140('book-140','a'.repeat(64),1,explanation);
  await saveLegacyGlossaryV140(key,manualRes.data.glossary);
  assert.equal((await readLegacyGlossaryV140(key)).glossary.length,2);
@@ -164,6 +174,9 @@ try{
  assert.ok(component.includes('onClick={()=>void defineLegacyTerms()}'));
  assert.ok(component.includes('readLegacyGlossaryV140(glossaryKey)'));
  assert.ok(component.includes('requestLegacyGlossaryV140({'));
+ const app=readFileSync('src/AppV15.jsx','utf8');
+ assert.ok(app.includes('glossaryPrecisionV140:true'),
+  'New Android app must select the V140 contract');
  assert.ok(!component.includes('useEffect(()=>void defineLegacyTerms()'),
   'No automatic Gemini glossary calls while importing or reading');
 
