@@ -52,6 +52,14 @@ export default function StudyPhaseProgressV59({book=null,acquisition=null,genera
       {lengthOnlyV139&&<small style={{display:'block'}}>
        Modalità rapida: controllo per pagina solo di lunghezza e integrità tecnica.
        Significato non certificato automaticamente. Obiettivo 50%.</small>}
+      {editionState?.glossaryPrecisionV140===true&&
+        Number(editionState?.precisionV140?.pagesMeasured)>0&&
+        <small style={{display:'block'}}>
+         Precisione effettiva: scostamento medio dal 50% di
+         {' '}{editionState.precisionV140.meanDeviation} punti percentuali,
+         calcolato su {editionState.precisionV140.pagesMeasured} pagine lunghe conformi.
+         Definizioni nello stesso passaggio Gemini, senza richieste supplementari.
+        </small>}
       {Number(editionState?.providerRecoveryV128?.overloadStrikes)>0&&
         <small style={{display:'block'}}>Gemini ha restituito errori 503:
           {editionState.providerRecoveryV128.overloadStrikes} consecutivi.
