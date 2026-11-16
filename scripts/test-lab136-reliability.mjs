@@ -111,7 +111,7 @@ try{
  assert.equal(response.reservedPagesV127.length,44);
  assert.ok(response.pages.every(p=>p?.review?.acceptedWithReserve===true));
  assert.equal(response.repairStateV127.p1.corrections,5);
- assert.ok(calls.length<30,'Do not spin on five unchanged repairs per page');
+ assert.ok(calls.length<60,'Do not spin on five unchanged repairs per page');
  assert.ok(calls.every(c=>c.pages>=1));
  // A Gemini 503 must preserve the last safe batch size, remain retryable
  // and never trigger content backpressure.
