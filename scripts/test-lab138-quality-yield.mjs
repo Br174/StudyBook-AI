@@ -6,7 +6,7 @@ import 'fake-indexeddb/auto';
 import explainedV138Handler from '../api/explainedV138.js';
 import explainedV126Handler from '../api/explainedV126.js';
 import {EXPLAINED_POLICY_V126,lessonInstructionOnePassV138,
- lessonPayloadOnePassV138} from '../src/lib/explainedStagesV126.js';
+ lessonPayloadOnePassV138,auditExplainedPageV126} from '../src/lib/explainedStagesV126.js';
 import {generateExplainedBookV126} from '../src/lib/explainedGeneratorV126.js';
 import {saveLibraryBook,saveExplainedCheckpoint,getLibraryBook,
  findBestExplainedCheckpointV138} from '../src/lib/library.js';
@@ -32,6 +32,18 @@ try{
    hint.targetBodyUnits)<=1);
  assert.ok(!lessonInstructionOnePassV138().includes('40–60'));
  assert.ok(!JSON.stringify(hint).includes('acceptanceMinimum'));
+ // Only original pages of 1-5 nonempty lines are exempt from the mandatory
+ // percentage constraint; character count alone cannot grant an exemption.
+ const fiveLines={...page,sourceLineCount:5};
+ const sixLines={...page,sourceLineCount:6};
+ assert.equal(lessonPayloadOnePassV138([fiveLines]).pages[0].shortSource,true);
+ assert.equal(lessonPayloadOnePassV138([sixLines]).pages[0].shortSource,false);
+ const exampleAnswer={id:'p1',segments:[{id:'p1-s0',
+  text:phrase.repeat(12)}],glossary:[]};
+ assert.equal(auditExplainedPageV126(fiveLines,exampleAnswer,null,
+  {onePassV135:true,strictSourceLinesV138:true}).shortPage,true);
+ assert.equal(auditExplainedPageV126(sixLines,exampleAnswer,null,
+  {onePassV135:true,strictSourceLinesV138:true}).shortPage,false);
 
  const v138head=response();
  await explainedV138Handler({method:'HEAD',env,body:{}},v138head);
