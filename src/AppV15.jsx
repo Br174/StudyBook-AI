@@ -2366,6 +2366,31 @@ export default function AppV14() {
       } else setError('PDF originale non presente: importare nuovamente il documento.');
       return;
     }
+    // LAB138: opening Originali intentionally hides the processed view, NOT
+    // the persisted edition. Reopen it in O(1) without rebuilding, deleting
+    // its checkpoint or calling Gemini for already verified pages.
+    if(libraryId){
+      const prior=await getLibraryBook(libraryId).catch(()=>null);
+      const priorEdition=prior?.studyBook?.editionsV36;
+      const sourceFingerprint=String(documentData?.canonicalBookMap?.originalFingerprint||'');
+      if(sourceFingerprint.length>=16&&
+         prior?.studyBook?.canonicalBookMap?.originalFingerprint===sourceFingerprint&&
+         priorEdition?.sourceFingerprint===sourceFingerprint&&
+         priorEdition.version===EXPLAINED_POLICY_V126){
+        setStudyBook(prior.studyBook);
+        setFileName(prior.fileName);
+        setDocumentData(prior.sourceData||documentData);
+        setSourceFile(prior.originalFile||sourceFile);
+        setProgress({done:priorEdition.verifiedChunkVariants||0,
+          total:priorEdition.totalChunkVariants||1});
+        setStatus('Edizione già presente: recuperate '+(priorEdition.verifiedChunkVariants||0)+
+          ' pagine conformi; originale e checkpoint non rigenerati.');
+        if(priorEdition.complete!==true)
+          void resumeGeminiEditions(prior).catch(error=>
+            setError(error?.message||'Ripresa dal checkpoint non riuscita.'));
+        return;
+      }
+    }
     // L'elaborazione è consentita solo dopo il secondo clic esplicito di conferma.
     await createStudyBook(documentData, fileName);
   }
