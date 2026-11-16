@@ -44,6 +44,7 @@ export default async function handler(req,res){
  res.setHeader('X-StudyBook-Model-Compare-Contract','lab133-free-models-v1');
  res.setHeader('X-StudyBook-Fixed-Model-Contract',STUDY_MODEL_POLICY_V134);
  res.setHeader('X-StudyBook-One-Pass-Contract','lab135-explain-first-v1');
+ res.setHeader('X-StudyBook-Quality-Contract','lab136-balanced-page-v1');
  if(req.method!=='POST'){res.setHeader('Allow','POST');
   return fail(res,405,'METHOD_NOT_ALLOWED','Usare POST.');}
  const env=req.env||{},key=env.AI_API_KEY||env.GEMINI_API_KEY;
