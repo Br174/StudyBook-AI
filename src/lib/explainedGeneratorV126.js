@@ -42,7 +42,7 @@ const pageWithSource=(original,answer)=>({
 const totalSourceUnits=pages=>pages.reduce((n,p)=>n+studyUnitsV126(
  p.segments.map(s=>s.source).join('\n')),0);
 
-async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,modelCandidate=null,onePassV135=false,quickV139=false,focusedV140=false,targetScale=1){
+async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,modelCandidate=null,onePassV135=false,quickV139=false,focusedV140=false,targetScale=1,tailV141=false){
  const controller=new AbortController(),cancel=()=>controller.abort();
  signal?.addEventListener('abort',cancel,{once:true});
  if(signal?.aborted)cancel();
@@ -51,7 +51,8 @@ async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,
  try{
   // V138 is a separate Worker contract. All older v126 / comprehension
   // callers stay on the existing immutable route.
-  const route=phase==='explain'&&focusedV140?'/api/explained/v140':
+  const route=phase==='explain'&&tailV141?'/api/explained/v141':
+   phase==='explain'&&focusedV140?'/api/explained/v140':
    phase==='explain'&&quickV139?'/api/explained/v139':
    phase==='explain'&&onePassV135?'/api/explained/v138':'/api/explained/v126';
   const reply=await fetch(apiEndpoint(route),{
@@ -133,7 +134,7 @@ function contextCheckpoint(originalPages,records){
 
 export async function generateExplainedBookV126(book,{
  onProgress=async()=>{},onActivity=()=>{},signal=null,retryReviewed=false,
- fastLengthV139=false,glossaryPrecisionV140=false
+ fastLengthV139=false,glossaryPrecisionV140=false,tailReliableV141=false
 }={}){
  const source=originalExplainedPagesV122(book);
  const previous=book?.editionsV36?.version===EXPLAINED_POLICY_V126&&
@@ -144,6 +145,7 @@ export async function generateExplainedBookV126(book,{
  const onePassV135=previous?.onePassV135===true;
  const quickV139=Boolean(onePassV135&&fastLengthV139);
  const focusedV140=quickV139&&glossaryPrecisionV140===true;
+ const tailV141=Boolean(focusedV140&&tailReliableV141);
  let lengthTargetScaleV140=targetScaleV140(previous?.lengthTargetScaleV140);
  const correctionLimit=quickV139?2:MAX_CORRECTIONS_V127;
  const maps=new Map(),saved=new Map(),rejected=new Set();
@@ -281,7 +283,8 @@ export async function generateExplainedBookV126(book,{
    .map(([code,pages])=>({code,pages}));
   const s={...snapshot,version:EXPLAINED_POLICY_V126,
    onePassV135,qualityBlockCharsV136,lengthOnlyV139:quickV139,
-   glossaryPrecisionV140:focusedV140,lengthTargetScaleV140,precisionV140,
+   glossaryPrecisionV140:focusedV140,tailReliableV141:tailV141,
+   lengthTargetScaleV140,precisionV140,
    verificationScope:quickV139?'length-and-structure-only':'legacy-didactic-audit',
    localReadV135:onePassV135?{pages:source.length,total:source.length,
     method:'verified-local-source',semanticCertified:false}:null,
@@ -351,7 +354,7 @@ export async function generateExplainedBookV126(book,{
     correctionMax:correctionLimit});
    try{
     const {reply,response}=await requestPhaseV126(phase,pages,context,signal,
-    correction,modelCandidate,onePassV135,quickV139,focusedV140,lengthTargetScaleV140);
+    correction,modelCandidate,onePassV135,quickV139,focusedV140,lengthTargetScaleV140,tailV141);
    if(modelCandidate&&Number.isFinite(reply.status)){
     const reportedModel=response?.model||modelCandidate;
     const received=Array.isArray(response?.pages)?response.pages.length:0;
