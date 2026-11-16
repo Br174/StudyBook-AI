@@ -1288,6 +1288,7 @@ export default function AppV14() {
           ?generateExplainedBookV126:generateExplainedBookV122)(working,{
           retryReviewed,signal:controller.signal,onProgress,
           fastLengthV139:working?.editionsV36?.version===EXPLAINED_POLICY_V126,
+          glossaryPrecisionV140:true,
           onActivity:info=>{
             geminiLastActivityRef.current=Date.now();
             setGeminiStalled(false);
