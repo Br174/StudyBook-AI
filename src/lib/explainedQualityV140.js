@@ -35,6 +35,7 @@ export function nextLengthTargetScaleV140(current,observations=[]){
  return Math.round(next*1000)/1000;
 }
 export function targetScaleV140(value){
+ if(value==null||value==='')return 1;
  const number=Number(value);
  return Number.isFinite(number)?clamp(number,0.88,1.12):1;
 }
