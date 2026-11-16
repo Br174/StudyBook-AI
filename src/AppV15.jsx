@@ -1289,6 +1289,7 @@ export default function AppV14() {
           retryReviewed,signal:controller.signal,onProgress,
           fastLengthV139:working?.editionsV36?.version===EXPLAINED_POLICY_V126,
           glossaryPrecisionV140:true,
+          tailReliableV141:true,
           onActivity:info=>{
             geminiLastActivityRef.current=Date.now();
             setGeminiStalled(false);
