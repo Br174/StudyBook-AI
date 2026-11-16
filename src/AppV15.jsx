@@ -9,6 +9,7 @@ import {
   deleteLibraryVersion,
   ensureDefaultProfile,
   getLibraryBook,
+  findBestExplainedCheckpointV138,
   listLibraryBooks,
   listProfiles,
   saveLibraryBook,
@@ -1355,7 +1356,17 @@ export default function AppV14() {
       // LAB122 NEW BOOKS: exactly one explained edition per original page.
       // No legacy six-pass provider requests; old saved books keep their runner.
       if(result.canonicalBookMap?.pages?.length){
-        const initialSnapshot={
+        // LAB138: an exact duplicate PDF may already have a 9/44, 24/44, or
+        // richer unfinished checkpoint. Reuse it BEFORE the new-book 0/N
+        // snapshot can overwrite progress. Never match by title alone.
+        const pageCount=result.canonicalBookMap.pageCount;
+        const priorMatch=await findBestExplainedCheckpointV138({
+          sourceFingerprint:result.canonicalBookMap.originalFingerprint,
+          pageCount,fileName:sourceName,profileId:activeProfileId,
+          excludeId:libraryId
+        }).catch(()=>null);
+        const priorEdition=priorMatch?.edition||null;
+        const initialSnapshot=priorEdition||{
           version:EXPLAINED_POLICY_V126,
           sourceFingerprint:result.canonicalBookMap.originalFingerprint,
           pages:[],originalPages:result.canonicalBookMap.pageCount,
@@ -1372,7 +1383,10 @@ export default function AppV14() {
         generatedDraft=explained;
         setStudyBook(explained);setWorkPhase('gemini');
         setProgress({done:0,total:initialSnapshot.totalChunkVariants});
-        setStatus('Lettura originale completata localmente · avvio riscrittura al 50% con una sola chiamata Gemini per blocco');
+        setStatus(priorEdition
+          ?'Libro identico già elaborato · recuperate '+(priorMatch.verifiedPages||0)+
+           ' pagine conformi e '+(priorMatch.draftedPages||0)+' bozze; nessuna ricompressione da zero'
+          :'Lettura originale completata localmente · avvio riscrittura al 50% con una sola chiamata Gemini per blocco');
         navigateTo('studio');
         const firstSaved=await persistBook(explained,sourceData,sourceName,libraryId);
         if(!firstSaved){
@@ -1380,6 +1394,19 @@ export default function AppV14() {
           return explained;
         }
         const savedId=firstSaved.id;
+        // A user who reimports a book during an active provider cooldown must
+        // not cause an immediate new Gemini request. Keep the checkpoint and
+        // let LAB45/LAB137 single foreground scheduler resume at retryAt.
+        const nextAllowedAt=Date.parse(String(initialSnapshot.quota?.retryAt||''));
+        if(initialSnapshot.complete===true||
+           (Number.isFinite(nextAllowedAt)&&nextAllowedAt>Date.now())){
+          setStatus(initialSnapshot.complete
+           ?'Libro precedente identico già completo · nessuna nuova richiesta Gemini'
+           :'Progressi precedenti conservati · attesa Gemini fino alle '+
+             new Date(nextAllowedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+
+             ' · ripresa automatica nel rispetto del servizio');
+          return explained;
+        }
         const finalSnapshot=await runExplainedWithSafeRestart(explained,{
           onProgress:async (snapshot,meta)=>{
             if(meta?.persist===false)return; // Avoid cloning/rendering 2,000 pages on each network tick.
