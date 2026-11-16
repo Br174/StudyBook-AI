@@ -37,3 +37,11 @@ git fetch --no-tags origin "refs/heads/trial/studybook-lab139-length-fast-503-20
 ```
 - STOP se il codice locale contiene modifiche incompatibili: non usare `git reset --hard`, non perdere file/certificati/dati precedenti.
 - Non creare link APK/ZIP LAB139 prima che GitHub Releases abbia pubblicato gli artefatti firmati. Non suggerire reinstallazione pulita o cancellazione della memoria Android.
+
+
+## Addendum — velocità, ri-controlli nascosti e correzioni successive
+- La modalità rapida NON eredita più il tetto ridotto a 8.000 caratteri dalle vecchie riparazioni basate sulla qualità del testo. Riutilizza il preflight già esistente da max 40.000 caratteri, con limiti token e pagine originali; soltanto veri 413/422/troncamenti possono suddividere i gruppi. Una risposta HTTP200 con semantica non certificata non dimezza più artificialmente i blocchi V139.
+- Bug aggiuntivo verificato nel codice e corretto: `src/lib/explainedLayoutV122.js` e `src/lib/explainedViewV122.js` rieseguivano `auditExplainedPageV126` anche su `record.review.ready=true`, respingendo i risultati LAB139. Ora, se `snapshot.lengthOnlyV139===true`, usano esclusivamente `auditExplainedPageV139`, senza riattivare verifiche semantiche.
+- `src/lib/explainedRepairV127.js`: `correctionAttempts` riflette i tentativi reali (2 nella nuova modalità; 5 nelle vecchie); messaggi UI su pagina e stato finale esplicitano solo controllo di lunghezza/struttura.
+- `scripts/test-lab139-fast-length.mjs`: verifica anche che tetto V138 precedentemente ridotto a 8.000 venga ripristinato a 40.000 e che il primo blocco non sia inutilmente frammentato; lettore mostra 14+1 pagine e PDF finale resta bloccato se mancano ancora pagine.
+- Ancora **nessun test runtime eseguito** dalla chat: la prossima operazione deve essere Codespace esistente (Node, test, Worker trial124, Scudo360, signer, APK, ZIP). Non dichiarare l'APK LAB139 già pubblicata e non inventare link.
