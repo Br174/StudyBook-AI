@@ -11,6 +11,8 @@ import {providerPauseV128,providerPauseV139}
 import explainedV139Handler from '../api/explainedV139.js';
 import explainedV138Handler from '../api/explainedV138.js';
 import {generateExplainedBookV126} from '../src/lib/explainedGeneratorV126.js';
+import {composeExplainedSheetsV122} from '../src/lib/explainedLayoutV122.js';
+import {buildExplainedEditionViewV122} from '../src/lib/explainedViewV122.js';
 
 const makeSource=(originalText,n=6)=>({id:'p1',physicalPage:1,
  sourceLineCount:n,segments:[{id:'p1-s0',source:originalText}]});
@@ -140,6 +142,14 @@ try{
   'One estimated HTTP503 should not force 90s waiting');
  assert.equal(paused.providerRecoveryV128.maxBlockChars,40000);
  assert.ok(paused.pages.slice(0,15).every(p=>p.review.ready===true));
+ const readerBook={...original,editionsV36:paused,chapters:[]};
+ const laidOut=composeExplainedSheetsV122(readerBook);
+ assert.ok(laidOut.pages.filter(p=>p.sourcePage<=15&&p.ready).length>=15,
+  'The study reader must NOT reapply the old semantic audit');
+ assert.equal(buildExplainedEditionViewV122(readerBook).editionReadiness.verifiedPages,15,
+  'Study view must expose exactly the pages passed by length');
+ assert.throws(()=>composeExplainedSheetsV122(readerBook,{requireComplete:true}),
+  /non verificata/u,'No full PDF until every source page is available');
  const app=readFileSync('src/AppV15.jsx','utf8');
  assert.ok(app.includes('fastLengthV139:working?.editionsV36?.version===EXPLAINED_POLICY_V126'));
  console.log('LAB139 PASS: 40/50/60% boundary, technical integrity, no semantic gate,');
