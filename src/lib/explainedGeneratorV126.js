@@ -223,6 +223,7 @@ export async function generateExplainedBookV126(book,{
    repairs.set(p.id,state);
    saved.set(p.id,reservedExplainedPageV127(p,entry,state,
     {terminalCorrectionLimit:correctionLimit}));
+   rejected.delete(p.id);
   }
  });
  const diagnosticBefore=previous?.diagnostics||{};
