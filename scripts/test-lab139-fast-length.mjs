@@ -122,6 +122,7 @@ try{
    sourceFingerprint:fp,onePassV135:true,complete:false,status:'partial',
    originalPages:44,pages:savedPages,verifiedChunkVariants:14,
    draftUnitsSaved:15,totalChunkVariants:44,
+   qualityBlockCharsV136:8000,
    repairStateV127:{p15:{initial:true,corrections:0}}}};
  let requested=[];
  globalThis.fetch=async(url,options)=>{
@@ -141,6 +142,10 @@ try{
  assert.ok(Date.parse(paused.quota.retryAt)-Date.now()<15000,
   'One estimated HTTP503 should not force 90s waiting');
  assert.equal(paused.providerRecoveryV128.maxBlockChars,40000);
+ assert.equal(paused.qualityBlockCharsV136,40000,
+  'LAB139 must retire stale 8k quality-driven fragmentation from LAB138');
+ assert.ok(requested[0].pages.length>=5,
+  'Length-only mode should use the calibrated large preflight instead of tiny blocks');
  assert.ok(paused.pages.slice(0,15).every(p=>p.review.ready===true));
  const readerBook={...original,editionsV36:paused,chapters:[]};
  const laidOut=composeExplainedSheetsV122(readerBook);
