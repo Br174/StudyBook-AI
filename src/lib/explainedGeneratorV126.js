@@ -7,13 +7,13 @@ import {planExplainedBlocksV122,explainedSnapshotV122,EXPLAINED_REQUEST_TIMEOUT_
  from './explainedGeneratorV122.js';
 import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,COMPREHENSION_REVISION_V126,
  auditComprehensionV126,auditExplainedPageV126,lessonPayloadV126,lessonInstructionV126,
- studyUnitsV126} from './explainedStagesV126.js';
+ studyUnitsV126,auditExplainedPageV139} from './explainedStagesV126.js';
 import {percentReduced} from './studyPillarV38.js';
 import {MAX_CORRECTIONS_V127,repairAttemptV127,correctionRemainingV127,
  betterExplainedDraftV127,reservedExplainedPageV127,reserveAcceptedV127,
  usableExplainedDraftV127,
  reservationReportV127,reserveUnreadPageV127} from './explainedRepairV127.js';
-import {V128_DEFAULT_BLOCK_CHARS,providerRecoveryStateV128,providerPauseV128,
+import {V128_DEFAULT_BLOCK_CHARS,providerRecoveryStateV128,providerPauseV128,providerPauseV139,
  providerSuccessfulBlockV128} from './explainedProviderRecoveryV128.js';
 import {modelComparisonStateV133,selectFreeStudyModelV133,
  recordFreeStudyModelV133,modelComparisonReportV133,
@@ -41,7 +41,7 @@ const pageWithSource=(original,answer)=>({
 const totalSourceUnits=pages=>pages.reduce((n,p)=>n+studyUnitsV126(
  p.segments.map(s=>s.source).join('\n')),0);
 
-async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,modelCandidate=null,onePassV135=false){
+async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,modelCandidate=null,onePassV135=false,quickV139=false){
  const controller=new AbortController(),cancel=()=>controller.abort();
  signal?.addEventListener('abort',cancel,{once:true});
  if(signal?.aborted)cancel();
@@ -50,8 +50,8 @@ async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,
  try{
   // V138 is a separate Worker contract. All older v126 / comprehension
   // callers stay on the existing immutable route.
-  const route=phase==='explain'&&onePassV135?
-    '/api/explained/v138':'/api/explained/v126';
+  const route=phase==='explain'&&quickV139?'/api/explained/v139':
+   phase==='explain'&&onePassV135?'/api/explained/v138':'/api/explained/v126';
   const reply=await fetch(apiEndpoint(route),{
    method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},
    body:JSON.stringify({policy:EXPLAINED_POLICY_V126,phase,pages,
@@ -129,7 +129,8 @@ function contextCheckpoint(originalPages,records){
 }
 
 export async function generateExplainedBookV126(book,{
- onProgress=async()=>{},onActivity=()=>{},signal=null,retryReviewed=false
+ onProgress=async()=>{},onActivity=()=>{},signal=null,retryReviewed=false,
+ fastLengthV139=false
 }={}){
  const source=originalExplainedPagesV122(book);
  const previous=book?.editionsV36?.version===EXPLAINED_POLICY_V126&&
@@ -138,6 +139,8 @@ export async function generateExplainedBookV126(book,{
  // New source books explicitly opt into one Gemini read+rewrite request per block.
  // Previous V126 checkpoints continue their exact two-stage path unless opted in.
  const onePassV135=previous?.onePassV135===true;
+ const quickV139=Boolean(onePassV135&&fastLengthV139);
+ const correctionLimit=quickV139?2:MAX_CORRECTIONS_V127;
  const maps=new Map(),saved=new Map(),rejected=new Set();
  // Persistent per-page correction state survives Android restarts.
  const repairs=new Map(Object.entries(previous?.repairStateV127||{}));
@@ -157,7 +160,7 @@ export async function generateExplainedBookV126(book,{
  const markAttempt=(p,code='')=>{
   const updated=repairAttemptV127(repairs.get(p.id),code);
   repairs.set(p.id,updated);
-  if(updated.corrections>=MAX_CORRECTIONS_V127){
+  if(updated.corrections>=correctionLimit){
    const fallback=reservedExplainedPageV127(p,saved.get(p.id),updated);
    saved.set(p.id,fallback);rejected.delete(p.id);
   }
@@ -177,11 +180,18 @@ export async function generateExplainedBookV126(book,{
      usableExplainedDraftV127(p,oldPage)){
    saved.set(p.id,pageWithSource(p,oldPage));
   }else if(oldPage?.id===p.id&&reserveAcceptedV127(p,oldPage)){
-   saved.set(p.id,pageWithSource(p,oldPage));
+   // A previous semantic-only reservation may already meet the new 50%
+   // LENGTH contract. Promote locally without asking Gemini again.
+   const localReview=quickV139&&!oldPage.review?.sourceTextFallback?
+    auditExplainedPageV139(p,oldPage):null;
+   saved.set(p.id,localReview?.ready?
+    pageWithSource(p,{...oldPage,review:localReview}):
+    pageWithSource(p,oldPage));
   }else if(oldPage?.id===p.id&&(onePassV135||maps.get(p.id)?.review?.ready===true)){
    {
-    const check=auditExplainedPageV126(p,oldPage,maps.get(p.id),
-     {onePassV135,strictSourceLinesV138:onePassV135});
+    const check=quickV139?auditExplainedPageV139(p,oldPage):
+     auditExplainedPageV126(p,oldPage,maps.get(p.id),
+      {onePassV135,strictSourceLinesV138:onePassV135});
     saved.set(p.id,pageWithSource(p,{...oldPage,review:check}));
     if(!check.ready){
      rejected.add(p.id);
@@ -229,7 +239,8 @@ export async function generateExplainedBookV126(book,{
    .sort((a,b)=>b[1]-a[1]).slice(0,5)
    .map(([code,pages])=>({code,pages}));
   const s={...snapshot,version:EXPLAINED_POLICY_V126,
-   onePassV135,qualityBlockCharsV136,
+   onePassV135,qualityBlockCharsV136,lengthOnlyV139:quickV139,
+   verificationScope:quickV139?'length-and-structure-only':'legacy-didactic-audit',
    localReadV135:onePassV135?{pages:source.length,total:source.length,
     method:'verified-local-source',semanticCertified:false}:null,
    comprehensionV126,complete:done,
@@ -298,7 +309,7 @@ export async function generateExplainedBookV126(book,{
     correctionMax:MAX_CORRECTIONS_V127});
    try{
     const {reply,response}=await requestPhaseV126(phase,pages,context,signal,
-    correction,modelCandidate,onePassV135);
+    correction,modelCandidate,onePassV135,quickV139);
    if(modelCandidate&&Number.isFinite(reply.status)){
     const reportedModel=response?.model||modelCandidate;
     const received=Array.isArray(response?.pages)?response.pages.length:0;
@@ -325,7 +336,8 @@ export async function generateExplainedBookV126(book,{
       lastError=code;break;
      }
      if(isCooldown(reply.status,code)){
-      const pause=providerPauseV128(providerRecoveryV128,{
+      const pause=(quickV139&&reply.status===503?
+       providerPauseV139:providerPauseV128)(providerRecoveryV128,{
        httpStatus:reply.status,code,
        retryAfterSeconds:response?.retryAfterSeconds??
         reply.headers?.get?.('Retry-After')??null
@@ -378,8 +390,9 @@ export async function generateExplainedBookV126(book,{
       if(!map.review.ready)markUnread(p,map.review.issues?.[0]);
       else readAttempts.delete(p.id);
      }else{
-      const review=auditExplainedPageV126(p,ans,maps.get(p.id),
-       {onePassV135,strictSourceLinesV138:onePassV135});
+      const review=quickV139?auditExplainedPageV139(p,ans):
+       auditExplainedPageV126(p,ans,maps.get(p.id),
+        {onePassV135,strictSourceLinesV138:onePassV135});
       if(saved.get(p.id)?.review?.ready===true&&!review.ready)continue;
       const candidate=pageWithSource(p,{...ans,review});
       const earlier=saved.get(p.id);
@@ -538,9 +551,9 @@ export async function generateExplainedBookV126(book,{
   correction:initial.every(p=>repairs.get(p.id)?.initial)});
  // A quality failure is recoverable locally, without making the user
  // tap the button or restarting the whole book. Only rejected pages return.
- for(let round=0;round<MAX_CORRECTIONS_V127&&!lastError;round++){
+ for(let round=0;round<correctionLimit&&!lastError;round++){
   const retry=pendingPages().filter(p=>correctionRemainingV127(
-   repairs.get(p.id))>0);
+   repairs.get(p.id))>0&&Number(repairs.get(p.id)?.corrections||0)<correctionLimit);
   if(!retry.length)break;
   await runStage('explain',retry.map(repairInput),{correction:true});
  }
