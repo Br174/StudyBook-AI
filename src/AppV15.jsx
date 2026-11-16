@@ -1362,8 +1362,10 @@ export default function AppV14() {
         const pageCount=result.canonicalBookMap.pageCount;
         const priorMatch=await findBestExplainedCheckpointV138({
           sourceFingerprint:result.canonicalBookMap.originalFingerprint,
-          pageCount,fileName:sourceName,profileId:activeProfileId,
-          excludeId:libraryId
+          // Include the CURRENT Library ID too. Opening the ORIGINAL tab
+          // of an already processed book sets studyBook=null in the UI, but
+          // the verified edition still exists under this exact record ID.
+          pageCount,fileName:sourceName,profileId:activeProfileId
         }).catch(()=>null);
         const priorEdition=priorMatch?.edition||null;
         const initialSnapshot=priorEdition||{
