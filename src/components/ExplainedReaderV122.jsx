@@ -3,6 +3,8 @@ import {composeExplainedSheetsV122} from '../lib/explainedLayoutV122.js';
 import {explainStudyPageOnDemandV49} from '../lib/pageSimpleV49.js';
 import {readSimplePageV50,saveSimplePageV50} from '../lib/simplePagesStoreV50.js';
 import {glossaryForExplainedPageV129} from '../lib/explainedMobileLayoutV129.js';
+import {glossaryCacheKeyV140,readLegacyGlossaryV140,
+ saveLegacyGlossaryV140,requestLegacyGlossaryV140} from '../lib/legacyGlossaryV140.js';
 import {requestPageReformulationV132,applyApprovedReformulationsV132} from '../lib/pageReformulationV132.js';
 import {readReformulationsV132,acceptReformulationV132} from '../lib/reformulationsStoreV132.js';
 import './ExplainedReaderV122.css';
@@ -43,7 +45,28 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   setIndex(Math.max(0,position));
  },[chapterIndex,book?.canonicalBookMap?.originalFingerprint]);
  const page=pages[Math.min(index,Math.max(0,pages.length-1))];
- const glossary=useMemo(()=>glossaryForExplainedPageV129(page?.rows),[page]);
+ const automaticGlossary=useMemo(()=>glossaryForExplainedPageV129(page?.rows),[page]);
+ const [manualGlossary,setManualGlossary]=useState(null);
+ const [glossaryBusy,setGlossaryBusy]=useState(false);
+ const [glossaryError,setGlossaryError]=useState('');
+ const glossaryRequest=useRef(null);
+ const explainedFullText=useMemo(()=>(readingBook?.editionsV36?.pages?.[page?.sourcePage-1]?.segments||[])
+  .map(part=>String(part.text||'')).join('\n'),[readingBook,page?.sourcePage]);
+ const glossaryKey=useMemo(()=>{
+  try{return glossaryCacheKeyV140(bookId,
+    book?.canonicalBookMap?.originalFingerprint,page?.sourcePage,explainedFullText);}
+  catch{return null;}
+ },[bookId,book?.canonicalBookMap?.originalFingerprint,page?.sourcePage,explainedFullText]);
+ const glossary=automaticGlossary.length?automaticGlossary:
+  manualGlossary?.key===glossaryKey?manualGlossary.glossary||[]:[];
+ useEffect(()=>{
+  if(!glossaryKey||automaticGlossary.length){setManualGlossary(null);return;}
+  let live=true;
+  void readLegacyGlossaryV140(glossaryKey).then(saved=>{
+   if(live)setManualGlossary(saved||null);
+  }).catch(()=>{});
+  return ()=>{live=false;};
+ },[glossaryKey,automaticGlossary.length]);
  useEffect(()=>{
   let active=true;
   setSimple(null);setError('');
@@ -55,6 +78,7 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
  useEffect(()=>()=>{
   activeRequest.current?.abort();
   rewriteRequest.current?.abort();
+  glossaryRequest.current?.abort();
  },[]);
  async function rewritePage(){
   if(!page?.ready||!bookId||rewriteBusy||busy)return;
@@ -92,10 +116,39 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   activeRequest.current?.abort();
   activeRequest.current=null;
   rewriteRequest.current?.abort();rewriteRequest.current=null;
+  glossaryRequest.current?.abort();glossaryRequest.current=null;
+  setGlossaryBusy(false);setGlossaryError('');setManualGlossary(null);
   setRewriteBusy(false);setCandidate(null);setRewriteError('');
   setBusy(false);setError('');rewriteVariant.current=0;
   setIndex(value);
   scrollRoot.current?.scrollTo?.({top:0,behavior:'instant'});
+ }
+ async function defineLegacyTerms(){
+  if(!page?.ready||!bookId||!glossaryKey||glossaryBusy)return;
+  const originalText=String(book?.canonicalBookMap?.pages?.[page.sourcePage-1]?.text||'');
+  if(!originalText.trim()||!explainedFullText.trim()){
+   setGlossaryError('La pagina originale o spiegata non è disponibile.');return;
+  }
+  glossaryRequest.current?.abort();
+  const controller=new AbortController();glossaryRequest.current=controller;
+  setGlossaryBusy(true);setGlossaryError('');
+  try{
+   const items=await requestLegacyGlossaryV140({
+    originalText,explainedText:explainedFullText,signal:controller.signal});
+   if(controller.signal.aborted)return;
+   const saved=await saveLegacyGlossaryV140(glossaryKey,items);
+   if(!controller.signal.aborted){
+    setManualGlossary(saved);
+    if(!saved.glossary.length)setGlossaryError('Nessun termine tecnico riconosciuto in questa pagina.');
+   }
+  }catch(error){
+   if(!controller.signal.aborted)
+    setGlossaryError(error?.message||'Definizioni non disponibili.');
+  }finally{
+   if(glossaryRequest.current===controller){
+    glossaryRequest.current=null;setGlossaryBusy(false);
+   }
+  }
  }
  async function explainAgain(){
   if(!page||busy)return;
@@ -121,6 +174,7 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
   finally{if(activeRequest.current===controller){activeRequest.current=null;setBusy(false);}}
  }
  if(!page)return <p role="status">La mappa delle pagine non è disponibile.</p>;
+ const showGlossarySidebar=glossary.length>0||Boolean(page.ready&&bookId);
  return <section className="sb-explained-reader" ref={scrollRoot} aria-label="Libro spiegato">
   <header className="sb-explained-toolbar">
    <div className="sb-explained-toolbar-top">
@@ -155,7 +209,7 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
     <button type="button" disabled={!page.ready||!bookId||rewriteBusy||busy}
      onClick={()=>void rewritePage()}>{rewriteBusy?'Riformulo…':'Riformula'}</button>
    </header>
-   <div className={'sb-explained-grid'+(glossary.length?'':' sb-explained-no-glossary')}>
+   <div className={'sb-explained-grid'+(showGlossarySidebar?'':' sb-explained-no-glossary')}>
     <div className="sb-explained-body">
      {page.rows.map((r,i)=><div key={page.label+'-'+i} className="sb-explained-paragraph">
       {r.kind==='chapter-title'?<h2>{r.text}</h2>:
@@ -163,12 +217,21 @@ export default function ExplainedReaderV122({book,bookId='',bookTitle='',chapter
        <p><RichText value={r.text}/></p>}
      </div>)}
     </div>
-    {glossary.length>0&&<aside className="sb-explained-sidebar"
+    {showGlossarySidebar&&<aside className="sb-explained-sidebar"
       aria-label={'Glossario, in ordine dall’alto: pagina '+page.label}>
      <strong className="sb-explained-sidebar-title">Termini utili</strong>
      {glossary.map((n,i)=><div key={n.term+'-'+i} className="sb-explained-definition">
       <strong>{n.term}</strong><p>{n.definition}</p>
      </div>)}
+     {glossary.length===0&&<div className="sb-explained-glossary-request">
+      <p>Questa pagina non ha definizioni salvate.</p>
+      <button type="button" disabled={glossaryBusy}
+       onClick={()=>void defineLegacyTerms()}>
+       {glossaryBusy?'Definizioni in corso…':'Definisci termini'}
+      </button>
+      <small>Solo su richiesta. Il riassunto e la sua velocità restano invariati.</small>
+     </div>}
+     {glossaryError&&<small role="alert" className="sb-explained-glossary-error">{glossaryError}</small>}
     </aside>}
    </div>
    <footer>Pagina originale {page.sourcePage}
