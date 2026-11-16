@@ -6,6 +6,15 @@ const TRANSIENT=['AI_TIMEOUT_OR_NETWORK','AI_PROVIDER_TIMEOUT','AI_PROVIDER_NETW
   'AI_NETWORK_REVIEW_REQUIRED','INVALID_EDITION_RESPONSE','AI_FORMAT_REVIEW_REQUIRED'];
 export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0){
   if(!snapshot||snapshot.complete)return null;
+  // LAB137: a persisted provider cooldown always takes precedence over
+  // quality correction. Even a stale quality-review label must never
+  // bypass the HTTP429/503 retry time after Android process restoration.
+  if(snapshot.version==='lab126-whole-book-comprehension-v1'&&
+     snapshot.quota?.automatic){
+    const at=Date.parse(String(snapshot.quota.retryAt||''));
+    return Number.isFinite(at)?{reason:'provider-cooldown',at:Math.max(now,at)}:null;
+  }
+
   // LAB125 single-edition: a quality-review is not terminal. The same
   // foreground scheduler performs bounded, targeted retries; no second timer.
   // Progress (more accepted pages) resets stalledAttempts in AppV15.
@@ -22,11 +31,6 @@ export function planStudyAutoResumeV45(snapshot,now=Date.now(),stalledAttempts=0
   // LAB127: retry only through the existing LAB45 foreground scheduler.
   // Readable source maps may be explained while other pages need recovery.
   if(snapshot.version==='lab126-whole-book-comprehension-v1'){
-    const quota=snapshot.quota;
-    if(quota?.automatic){
-      const at=Date.parse(String(quota.retryAt||''));
-      return Number.isFinite(at)?{reason:'provider-cooldown',at:Math.max(now,at)}:null;
-    }
     if(snapshot.status==='provider-blocked'&&
       ['V127_WORKER_UPDATE_REQUIRED','AI_NOT_CONFIGURED',
        'AI_MODEL_NOT_ALLOWLISTED'].includes(snapshot.diagnostics?.lastCode))return null;
