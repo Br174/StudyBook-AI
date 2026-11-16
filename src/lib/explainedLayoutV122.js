@@ -72,8 +72,9 @@ export function composeExplainedSheetsV122(book,{
   const record=records.get(original.id);
   const ready=isPrintable(original,record);
   const reserved=reserveAcceptedV127(original,record);
-  // Only conforming pages are readable/studiable; drafts remain in checkpoints.
-  const draft=false;
+  // LAB136: display complete Gemini drafts for immediate reading, but never
+  // promote them to verified pages or permit a final PDF to use them.
+  const draft=!ready&&hasReadableExplainedDraftV122(original,record);
   if(requireComplete&&!ready)
    throw Object.assign(new Error('Pagina '+original.label+' non verificata.'),{code:'V122_PAGE_NOT_READY'});
   const widthMm=Math.max(100,mm(original.widthPt)),heightMm=Math.max(140,mm(original.heightPt));
