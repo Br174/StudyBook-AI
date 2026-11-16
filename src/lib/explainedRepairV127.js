@@ -56,7 +56,8 @@ export function reservedExplainedPageV127(original,record,state){
   review:{...review,ready:false,sizeCompliant:false,
    issues:[...new Set(issues)],
    acceptedWithReserve:true,sourceTextFallback:!usable,
-   correctionAttempts:MAX_CORRECTIONS_V127,
+   correctionAttempts:Math.min(MAX_CORRECTIONS_V127,
+    Math.max(0,Number(state?.corrections??MAX_CORRECTIONS_V127))),
    lastCorrectionCode:state?.lastCode||null,
    semanticCertified:false}};
 }
