@@ -134,6 +134,10 @@ try{
  const oneTry={p42:{initial:true,corrections:1},
   p43:{initial:true,corrections:1},p44:{initial:true,corrections:1}};
  const book=makeBook(oneTry);
+ // All three drafts in this scenario still have exactly ONE real correction
+ // available; none has been finalized with reserve in its saved review.
+ book.editionsV36.pages[42].review.acceptedWithReserve=false;
+ book.editionsV36.pages[42].review.correctionAttempts=1;
  const routes=[];
  globalThis.fetch=async(url,options)=>{
   const payload=JSON.parse(options.body);
