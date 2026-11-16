@@ -11,6 +11,12 @@ import explainedV140Handler from '../api/explainedV140.js';
 import explainedV139Handler from '../api/explainedV139.js';
 import {composeExplainedSheetsV122} from '../src/lib/explainedLayoutV122.js';
 import {glossaryForExplainedPageV129} from '../src/lib/explainedMobileLayoutV129.js';
+import glossaryV140Handler from '../api/glossaryV140.js';
+import 'fake-indexeddb/auto';
+import {glossaryCacheKeyV140,readLegacyGlossaryV140,
+ saveLegacyGlossaryV140,requestLegacyGlossaryV140}
+ from '../src/lib/legacyGlossaryV140.js';
+import {readFileSync} from 'node:fs';
 
 assert.equal(glossaryTermMentionedV140(
  'La norma giuridica stabilisce obblighi.','norma giuridica'),true);
@@ -113,6 +119,52 @@ try{
  assert.equal(old.statusCode,200);
  assert.equal(old.data.focusedGlossaryV140,false);
  assert.ok(sent[1].messages[0].content.includes('Lascia glossary vuoto'));
+
+ // Previous LAB139 pages legitimately lack glossary. The optional button
+ // calls one small Gemini endpoint only on a direct user action.
+ const manualHead=fakeRes();
+ await glossaryV140Handler({method:'HEAD',env:{}},manualHead);
+ assert.equal(manualHead.statusCode,405);
+ assert.equal(manualHead.headers['X-StudyBook-Glossary-Manual-Contract'],
+  'lab140-glossary-manual-optional-v1');
+ let manualCalls=0;
+ globalThis.fetch=async(_url,options)=>{
+  manualCalls++;
+  assert.equal(JSON.parse(options.body).model,'gemini-3.1-flash-lite');
+  return {ok:true,status:200,headers:{get:()=>null},
+   json:async()=>({choices:[{finish_reason:'stop',message:{
+    content:JSON.stringify({glossary:[
+     ...glossary,{term:'inesistente',definition:'Termine non presente nel corpo.'}
+    ]})}}]})};
+ };
+ const manualRes=fakeRes();
+ await glossaryV140Handler({
+  method:'POST',env:{AI_API_KEY:'OFFLINE_TEST_ONLY'},
+  body:{originalText:text,explainedText:explanation}
+ },manualRes);
+ assert.equal(manualRes.statusCode,200);
+ assert.equal(manualRes.data.glossary.length,2);
+ assert.equal(manualCalls,1);
+ const key=glossaryCacheKeyV140('book-140','a'.repeat(64),1,explanation);
+ await saveLegacyGlossaryV140(key,manualRes.data.glossary);
+ assert.equal((await readLegacyGlossaryV140(key)).glossary.length,2);
+ assert.notEqual(key,glossaryCacheKeyV140('book-140','a'.repeat(64),1,
+  explanation+' cambiato'),'Edited text must never use a stale glossary');
+ let demandCalls=0;
+ globalThis.fetch=async(_url,options)=>{
+  demandCalls++;
+  return {ok:true,status:200,json:async()=>({glossary})};
+ };
+ const requested=await requestLegacyGlossaryV140({
+  originalText:text,explainedText:explanation});
+ assert.equal(requested.length,2);
+ assert.equal(demandCalls,1);
+ const component=readFileSync('src/components/ExplainedReaderV122.jsx','utf8');
+ assert.ok(component.includes('onClick={()=>void defineLegacyTerms()}'));
+ assert.ok(component.includes('readLegacyGlossaryV140(glossaryKey)'));
+ assert.ok(component.includes('requestLegacyGlossaryV140({'));
+ assert.ok(!component.includes('useEffect(()=>void defineLegacyTerms()'),
+  'No automatic Gemini glossary calls while importing or reading');
  console.log('LAB140 PASS: fast sidebar definitions, one Gemini call, adaptive targets,');
  console.log('legacy v139 isolation and PDF-visible glossary.');
 }finally{globalThis.fetch=oldFetch;}
