@@ -1,6 +1,6 @@
 import {EXPLAINED_POLICY_V122,originalExplainedPagesV122,isVerifiedExplainedPageV125} from './explainedPolicyV122.js';
 import {studyLetters,percentReduced} from './studyPillarV38.js';
-import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,COMPREHENSION_REVISION_V126,auditExplainedPageV126} from './explainedStagesV126.js';
+import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,COMPREHENSION_REVISION_V126,auditExplainedPageV126,auditExplainedPageV139} from './explainedStagesV126.js';
 import {reserveAcceptedV127} from './explainedRepairV127.js';
 const readAuditV126=new WeakMap();
 const PENDING='Pagina non ancora verificata: attendere il completamento del Libro spiegato.';
@@ -17,6 +17,12 @@ export function buildExplainedEditionViewV122(book){
   if(!original||!record)return false;
   if(s.version!==EXPLAINED_POLICY_V126)return isVerifiedExplainedPageV125(original,record);
   if(reserveAcceptedV127(original,record))return true;
+  if(s.lengthOnlyV139===true){
+   if(record.review?.ready!==true)return false;
+   if(readAuditV126.has(record))return readAuditV126.get(record);
+   const valid=auditExplainedPageV139(original,record).ready===true;
+   readAuditV126.set(record,valid);return valid;
+  }
   if(!original.segments.length)return record.review?.ready===true&&record.segments.length===0;
   if(record.review?.auditRevision!==EXPLAINED_AUDIT_V126||
     record.review?.comprehensionRevision!==COMPREHENSION_REVISION_V126||
