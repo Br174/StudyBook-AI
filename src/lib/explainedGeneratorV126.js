@@ -149,7 +149,11 @@ export async function generateExplainedBookV126(book,{
  let modelComparisonV133=modelComparisonStateV133(previous?.modelComparisonV133);
  // A low-yield HTTP-200 answer is not a provider outage. Replan only future
  // requests; the 40k transport cap and accepted checkpoints remain untouched.
- let qualityBlockCharsV136=Math.max(V136_MIN_QUALITY_BLOCK_CHARS,
+ // LAB139: retire an inherited QUALITY-YIELD shrink. Use the existing
+ // 40k-safe preflight; split only on real 413/422/truncation, not on
+ // subjective AI acceptance. Never change the provider transport cap.
+ let qualityBlockCharsV136=quickV139?MAX_STAGE_SOURCE:
+  Math.max(V136_MIN_QUALITY_BLOCK_CHARS,
    Math.min(MAX_STAGE_SOURCE,Number(previous?.qualityBlockCharsV136)||MAX_STAGE_SOURCE));
  const markUnread=(p,code='')=>{
   const tries=Number(readAttempts.get(p.id)?.tries||0)+1;
@@ -306,7 +310,7 @@ export async function generateExplainedBookV126(book,{
     pageStart:group[0].physicalPage,pageEnd:group.at(-1).physicalPage,
     pages:group.length,stage:phase,correctionCycle:correction?
      Math.max(1,...group.map(p=>Number(repairs.get(p.id)?.corrections||0)+1)):0,
-    correctionMax:MAX_CORRECTIONS_V127});
+    correctionMax:correctionLimit});
    try{
     const {reply,response}=await requestPhaseV126(phase,pages,context,signal,
     correction,modelCandidate,onePassV135,quickV139);
@@ -431,7 +435,7 @@ export async function generateExplainedBookV126(book,{
     // Persist a smaller cap for the very NEXT correction/resume even when
     // this was the only remaining block. This is an HTTP200 content-yield
     // adaptation, NEVER a reaction to 503 or a fabricated token limit.
-    if(phase==='explain'&&group.length>=2){
+    if(phase==='explain'&&group.length>=2&&!quickV139){
      const acceptedInBlock=group.filter(p=>saved.get(p.id)?.review?.ready===true).length;
      if(acceptedInBlock*4<group.length&&
          qualityBlockCharsV136>V136_MIN_QUALITY_BLOCK_CHARS){
