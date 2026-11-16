@@ -11,6 +11,7 @@ import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,COMPREHENSION_REVISION_V126,
 import {percentReduced} from './studyPillarV38.js';
 import {MAX_CORRECTIONS_V127,repairAttemptV127,correctionRemainingV127,
  betterExplainedDraftV127,reservedExplainedPageV127,reserveAcceptedV127,
+ usableExplainedDraftV127,
  reservationReportV127,reserveUnreadPageV127} from './explainedRepairV127.js';
 import {V128_DEFAULT_BLOCK_CHARS,providerRecoveryStateV128,providerPauseV128,
  providerSuccessfulBlockV128} from './explainedProviderRecoveryV128.js';
@@ -168,7 +169,14 @@ export async function generateExplainedBookV126(book,{
   if(oldMap?.id===p.id)maps.set(p.id,{...oldMap,
     review:auditComprehensionV126(p,oldMap)});
   const oldPage=previous?.pages?.[i];
-  if(oldPage?.id===p.id&&reserveAcceptedV127(p,oldPage)){
+  // A verified page in the SAME source fingerprint has already passed the
+  // previous mandatory audit. Never silently demote 9/44 to 0/44 merely
+  // because the next APK calibrates short-page rules. Preserve the original
+  // review and protect the page from repeat provider calls.
+  if(oldPage?.id===p.id&&oldPage.review?.ready===true&&
+     usableExplainedDraftV127(p,oldPage)){
+   saved.set(p.id,pageWithSource(p,oldPage));
+  }else if(oldPage?.id===p.id&&reserveAcceptedV127(p,oldPage)){
    saved.set(p.id,pageWithSource(p,oldPage));
   }else if(oldPage?.id===p.id&&(onePassV135||maps.get(p.id)?.review?.ready===true)){
    {
