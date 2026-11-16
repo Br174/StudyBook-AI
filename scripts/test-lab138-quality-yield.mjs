@@ -2,6 +2,7 @@
 // LAB138 no-cost regression: same-book checkpoint reuse, one-pass page
 // quality contracts and zero blind HTTP503 retries. No real Gemini/network.
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import 'fake-indexeddb/auto';
 import explainedV138Handler from '../api/explainedV138.js';
 import explainedV126Handler from '../api/explainedV126.js';
@@ -105,6 +106,19 @@ try{
   pageCount:44,fileName:'Scienze.pdf',profileId:'default',
   excludeId:'lab138-new-import'});
  assert.equal(exact.sourceId,'lab138-existing');
+ const sameId=await findBestExplainedCheckpointV138({sourceFingerprint:fp,
+  pageCount:44,fileName:'Scienze.pdf',profileId:'default'});
+ assert.equal(sameId.sourceId,'lab138-existing',
+  'Opening Originali must not reset the edition stored at the same ID');
+ const excludeSameId=await findBestExplainedCheckpointV138({sourceFingerprint:fp,
+  pageCount:44,fileName:'Scienze.pdf',profileId:'default',excludeId:'lab138-existing'});
+ assert.equal(excludeSameId,null,
+  'Excluding the current processed book would falsely reset 9/44 to zero');
+ const appSource=readFileSync('src/AppV15.jsx','utf8');
+ const reuseCall=appSource.slice(appSource.indexOf('findBestExplainedCheckpointV138({'),
+  appSource.indexOf('findBestExplainedCheckpointV138({')+400);
+ assert.ok(!reuseCall.includes('excludeId:libraryId'),
+  'The active Library ID is eligible for exact-source checkpoint reuse');
  assert.equal(exact.verifiedPages,9);
  assert.equal(exact.draftedPages,24);
  assert.equal((await getLibraryBook('lab138-existing'))
