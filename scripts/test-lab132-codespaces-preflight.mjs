@@ -57,10 +57,45 @@ assert.ok(build.includes('FileOpener')||build.includes('file-opener@8.0.1'));
 assert.ok(autobuild.includes('codespaces-lab132-riformula-worker.sh'));
 assert.ok(autobuild.includes('flock -n 9'),'Build lock must prevent duplicates');
 assert.ok(!autobuild.includes('gh workflow run'),'No GitHub Actions request permitted');
+// The historical LAB132 build scripts and security gates remain immutable.
+// The VS Code DEFAULT task, however, belongs to the CURRENT trial branch.
+// Before LAB141 it was LAB132 / folderOpen; LAB141 deliberately removed
+// that dangerous startup action after it launched on the wrong branch.
 assert.ok(Array.isArray(tasks.tasks)&&tasks.tasks.length===2);
-assert.equal(tasks.tasks[0].runOptions.runOn,'folderOpen');
-assert.ok(tasks.tasks[0].args[1]?.includes(branch));
-assert.equal(tasks.tasks[1].args.length,1,
- 'LAB132 manual build must not require deploy arguments.');
-console.log('LAB132 PASS: Codespaces syntax, source family, Worker contract,');
-console.log('original Android signing, no new Worker deploy or paid runner, Scudo360 and tasks.');
+const defaultBuild=tasks.tasks.filter(t=>t.group?.kind==='build'&&
+ t.group?.isDefault===true);
+assert.equal(defaultBuild.length,1,'Exactly one default Codespaces build task');
+const active=defaultBuild[0];
+if(active.label.startsWith('LAB132')){
+ assert.equal(active.runOptions.runOn,'folderOpen',
+  'Historical LAB132 auto-start contract changed');
+ assert.ok(active.args[1]?.includes(branch));
+ const manual=tasks.tasks.find(t=>t!==active);
+ assert.equal(manual?.args?.length,1,
+  'LAB132 manual build must not require deploy arguments.');
+}else{
+ // No automatic work on opening a remote Codespace. A manual build must
+ // select the explicitly pinned LAB141 script with a SINGLE safe argument.
+ assert.equal(active.label,'LAB141 — Compilazione APK+ZIP (Codespaces, manuale)');
+ assert.equal(active.type,'process');
+ assert.equal(active.command,'bash');
+ assert.deepEqual(active.args,['scripts/codespaces-lab141-autobuild.sh']);
+ assert.equal(active.options?.cwd,'${workspaceFolder}');
+ assert.equal(active.runOptions?.instanceLimit,1);
+ assert.equal(active.runOptions?.instancePolicy,'silent');
+ assert.ok(tasks.tasks.every(t=>t.runOptions?.runOn!=='folderOpen'),
+  'LAB141 must never auto-compile on Codespace folder open');
+ const regression=tasks.tasks.find(t=>t!==active);
+ assert.equal(regression?.label,
+  'LAB141 — Test del completamento 41/44 (nessun deploy)');
+ assert.equal(regression?.command,'npm');
+ assert.deepEqual(regression?.args,['run','test:lab141']);
+ assert.ok(regression.group==='test');
+ assert.ok(existsSync('scripts/codespaces-lab141-autobuild.sh'));
+ const live=readFileSync('scripts/codespaces-lab141-autobuild.sh','utf8');
+ assert.ok(live.includes('trial/studybook-lab141-final-tail-50pct-20261116'));
+ assert.ok(live.includes('flock -n 9'),'LAB141 build must retain its lock');
+ assert.ok(!live.includes('gh workflow run'),'No GitHub Actions');
+}
+console.log('LAB132 PASS: historical signing and Worker preflight intact;');
+console.log('current Codespaces build task checked against safe manual-only policy.');
