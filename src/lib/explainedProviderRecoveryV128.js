@@ -69,3 +69,25 @@ export function recoveryProgressV128(snapshot){
  const maps=Math.max(0,Number(snapshot?.comprehensionV126?.verifiedPages||0));
  return {total,verified,reserved,missing,understood:maps};
 }
+
+
+// LAB139 opt-in: remove the legacy artificial 90s FIRST 503 wait. Preserve
+// provider Retry-After/RetryInfo MINIMUM, 429 policy and existing single
+// foreground retry owner. Bounded exponential jitter prevents retry storms.
+// This does not guarantee that Google will have capacity on the next probe.
+export function providerPauseV139(previous,options={}){
+ const old=providerPauseV128(previous,options);
+ if(Number(options.httpStatus)!==503)return old;
+ const strikes=Math.max(1,Number(old.state.overloadStrikes)||1);
+ const estimated=Math.min(120,8*Math.pow(2,Math.min(4,strikes-1)))+
+  Math.floor(Math.random()*3);
+ const official=Number(options.retryAfterSeconds);
+ const hasOfficial=options.retryAfterSeconds!==null&&
+  options.retryAfterSeconds!==undefined&&
+  options.retryAfterSeconds!==''&&Number.isFinite(official)&&official>0;
+ const seconds=hasOfficial?Math.max(official,estimated):estimated;
+ const now=Number.isFinite(options.now)?options.now:Date.now();
+ return {...old,seconds,retryAt:new Date(now+seconds*1000).toISOString(),
+  source:hasOfficial?'provider-and-short-exponential-backoff':
+   'short-local-exponential-backoff'};
+}
