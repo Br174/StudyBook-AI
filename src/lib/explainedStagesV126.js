@@ -159,14 +159,24 @@ export function lessonInstructionOnePassV138(){
 export function lessonPayloadOnePassV138(pages,context=[]){
  const prior=lessonPayloadOnePassV135(pages,context);
  return {...prior,pages:prior.pages.map(page=>({...page,
+  // The didactic pillar exempts at most five ORIGINAL lines, not a guessed
+  // number of characters. This new rule is opt-in to LAB138 only.
+  shortSource:Number.isInteger(Number(page.sourceLineCount))?
+    Number(page.sourceLineCount)<=5:page.shortSource,
   segments:page.segments.map(segment=>({...segment,
    targetSegmentUnits:Math.max(1,Math.round(studyUnitsV126(segment.source)/2))}))}))};
 }
-export function auditExplainedPageV126(source,result,comprehension,{onePassV135=false}={}){
+export function auditExplainedPageV126(source,result,comprehension,{
+ onePassV135=false,strictSourceLinesV138=false
+}={}){
  const old=auditExplainedPageV122(source,result);
  const original=sourceBody(source),body=outputBody(result);
  const originalUnits=studyUnitsV126(original),outputUnits=studyUnitsV126(body);
- const shortSource=originalUnits<=SHORT_SOURCE_UNITS_V126;
+ const shortSource=strictSourceLinesV138?
+  (Number.isInteger(Number(source?.sourceLineCount))?
+    Number(source.sourceLineCount)<=5:
+    original.split(/\r?\n/gu).filter(line=>line.trim()).length<=5):
+  originalUnits<=SHORT_SOURCE_UNITS_V126;
  const actualReduction=originalUnits?(originalUnits-outputUnits)*100/originalUnits:0;
  // The old V125 audit used alphabetic letters and physical line counts:
  // remove only its obsolete quantitative codes, NOT any pedagogy/fidelity checks.
