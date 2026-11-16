@@ -105,6 +105,18 @@
 }
 .sb-explained-definition strong{display:block;color:#1c527e;font-weight:800}
 .sb-explained-definition p{margin:4px 0 0}
+
+.sb-explained-glossary-request{display:grid;gap:7px;margin:10px 0 14px}
+.sb-explained-glossary-request p{margin:0;font-size:.92em;color:#62778a}
+.sb-explained-glossary-request button{
+ border:1px solid #95bddd;border-radius:9px;padding:8px 6px;
+ background:#eef7ff;color:#19527d;font:inherit;font-weight:750;
+ cursor:pointer;white-space:normal;word-break:normal;
+}
+.sb-explained-glossary-request button:disabled{opacity:.6;cursor:wait}
+.sb-explained-glossary-request small{display:block;font-size:.82em;color:#637990}
+.sb-explained-glossary-error{display:block;color:#a12d35;margin-top:9px}
+
 .sb-explained-sheet footer{
   margin-top:18px;padding-top:10px;border-top:1px solid #d4e0ea;
   text-align:right;color:#526d81;font-size:11px;line-height:1.6;
