@@ -226,6 +226,18 @@ export async function generateExplainedBookV126(book,{
     (saved.get(p.id)?.segments||[]).map(s=>String(s?.text||''))
       .join('\n').replace(/\*\*/gu,'')),0);
   const accepted=source.filter(p=>saved.get(p.id)?.review?.ready===true).length;
+  // A factual precision KPI based only on accepted long pages. No semantic
+  // auditing, Gemini calls or regeneration, even for large textbooks.
+  const measuredReductions=focusedV140?source.map(p=>saved.get(p.id)?.review)
+   .filter(r=>r?.ready===true&&!r.shortPage&&Number.isFinite(r.exactReduction))
+   .map(r=>r.exactReduction):[];
+  const precisionV140=focusedV140?{
+   pagesMeasured:measuredReductions.length,
+   meanDeviation:measuredReductions.length?Math.round(
+    measuredReductions.reduce((a,v)=>a+Math.abs(v-50),0)/
+     measuredReductions.length*10)/10:null,
+   nearTargetPages:measuredReductions.filter(v=>Math.abs(v-50)<=5).length
+  }:null;
   const reserved=source.filter(p=>reserveAcceptedV127(p,saved.get(p.id))).length;
   const unread=source.filter(p=>p.segments.length&&
     maps.get(p.id)?.review?.ready!==true&&
@@ -249,7 +261,7 @@ export async function generateExplainedBookV126(book,{
    .map(([code,pages])=>({code,pages}));
   const s={...snapshot,version:EXPLAINED_POLICY_V126,
    onePassV135,qualityBlockCharsV136,lengthOnlyV139:quickV139,
-   glossaryPrecisionV140:focusedV140,lengthTargetScaleV140,
+   glossaryPrecisionV140:focusedV140,lengthTargetScaleV140,precisionV140,
    verificationScope:quickV139?'length-and-structure-only':'legacy-didactic-audit',
    localReadV135:onePassV135?{pages:source.length,total:source.length,
     method:'verified-local-source',semanticCertified:false}:null,
