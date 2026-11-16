@@ -36,3 +36,13 @@ LAB140 ha migliorato la velocità, ma si ferma vicino alla fine del libro: 41 de
 git fetch --no-tags origin "refs/heads/trial/studybook-lab141-final-tail-50pct-20261116:refs/remotes/origin/trial/studybook-lab141-final-tail-50pct-20261116" && (git switch trial/studybook-lab141-final-tail-50pct-20261116 || git switch --track origin/trial/studybook-lab141-final-tail-50pct-20261116) && git pull --ff-only origin trial/studybook-lab141-final-tail-50pct-20261116 && bash scripts/codespaces-lab141-autobuild.sh
 ```
 STOP se branch errato, modifiche locali conflittuali, Worker contratto non verificato, test falliti, signer diverso. Non usare reset --hard. Non fornire link APK LAB141 prima di effettiva GitHub Release. Non chiedere cancellazione memoria telefono; installare sopra LAB140.
+
+
+## Verifiche statiche/pure eseguite in questa chat
+- Diff GitHub rispetto al LAST_GOOD LAB140: ramo LAB141 **ahead** di 18 commit, 0 behind, 14 file coinvolti, nessuna modifica a main/produzione.
+- Controllo strutturale dei 14 file: presenza route V141, nuovo versionCode, commit base, script Worker isolato, test LAB141 e hook App corretti; nessun riferimento a ramo vecchio negli script.
+- Sintassi JS parsata in isolamento per `explainedRepairV127.js`, `explainedGeneratorV126.js`, `explainedTailV141.js`, `api/explainedV126.js`, `api/explainedV141.js` e `explainedStagesV126.js`; test `test-lab141-endgame.mjs` sintatticamente valido dopo rimozione degli import ESM/shebang per il controllo V8. Questo NON equivale a test Node integrativo.
+- Eseguita la funzione REALE `reservedExplainedPageV127` / `reserveAcceptedV127` in sandbox JS: con fast limit 2 accettazione con riserva TRUE e ready FALSE; con legacy limit 2 accettazione FALSE; legacy 5 TRUE; fallback originale esatto TRUE.
+- `scripts/test-lab141-endgame.mjs` include ora anche un terzo scenario in cui l'ultima correzione torna fuori fascia: una richiesta per le sole p42–44, chiusura 41 conformi+3 con riserva, niente risvegli in loop.
+- GitHub Releases verificato: **nessuna release LAB141 ancora pubblicata**; la più recente rimane LAB140. Impedito l'accesso diretto al repository privato dal container (DNS/network unavailable), perciò nessun test Node/Gradle reale viene dichiarato superato.
+- Prossima prova nel Codespace esistente: `npm run test:lab141` tramite `bash scripts/codespaces-lab141-autobuild.sh`. Se un test fallisce, arrestare deploy e APK e correggere **solo il test/bug reale** nel ramo isolato. Non distribuire la LAB141 prima che tutti i check passino.
