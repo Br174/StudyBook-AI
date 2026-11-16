@@ -1440,7 +1440,9 @@ export default function AppV14() {
           ?finalSnapshot.completeWithReservations?
             'Libro spiegato esportabile con '+finalSnapshot.reservedPagesV127.length+
               ' pagine accettate con riserva · rapporto nel PDF':
-            'Libro spiegato completo · pagine e glossario pronti per il PDF'
+            finalSnapshot.lengthOnlyV139?
+              'Libro al 50% completato · lunghezza verificata, significato non certificato':
+              'Libro spiegato completo · pagine e glossario pronti per il PDF'
           :explainedProgressMessageV122(finalSnapshot));
         navigateTo('studio');
         return explained;
@@ -1688,7 +1690,9 @@ export default function AppV14() {
           snapshot.completeWithReservations?
             'Libro spiegato esportabile con '+snapshot.reservedPagesV127.length+
               ' pagine accettate con riserva':
-            'Libro spiegato completo · PDF pronto':
+            snapshot.lengthOnlyV139?
+              'Libro al 50% completato · controllo lunghezza superato, significato non certificato':
+              'Libro spiegato completo · PDF pronto':
           explainedProgressMessageV122(snapshot));
       }catch(error){setError(error?.message||'Ripresa Libro spiegato non riuscita.');
         await persistBook(latest,targetSource,targetName,targetId);
