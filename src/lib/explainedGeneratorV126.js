@@ -23,6 +23,7 @@ const TIMEOUT=EXPLAINED_REQUEST_TIMEOUT_V122;
 const MAX_STAGE_INPUT_TOKENS=35000;
 const MAX_STAGE_OUTPUT_TOKENS=30000;
 const MAX_SPLITS=64; // isolate a failing page without stranding the remaining book
+const V136_MIN_QUALITY_BLOCK_CHARS=8000; // Only poor *content*, never 503, reduces a future batch
 const MAX_COMPREHENSION_TECH_ATTEMPTS=3; // initial + two targeted rereads
 const isCooldown=(status,code)=>status===429||(status===503&&
  !['AI_NOT_CONFIGURED','AI_MODEL_NOT_ALLOWLISTED'].includes(code))||
@@ -138,6 +139,10 @@ export async function generateExplainedBookV126(book,{
  const readAttempts=new Map(Object.entries(previous?.comprehensionAttemptsV127||{}));
  let providerRecoveryV128=providerRecoveryStateV128(previous?.providerRecoveryV128);
  let modelComparisonV133=modelComparisonStateV133(previous?.modelComparisonV133);
+ // A low-yield HTTP-200 answer is not a provider outage. Replan only future
+ // requests; the 40k transport cap and accepted checkpoints remain untouched.
+ let qualityBlockCharsV136=Math.max(V136_MIN_QUALITY_BLOCK_CHARS,
+   Math.min(MAX_STAGE_SOURCE,Number(previous?.qualityBlockCharsV136)||MAX_STAGE_SOURCE));
  const markUnread=(p,code='')=>{
   const tries=Number(readAttempts.get(p.id)?.tries||0)+1;
   readAttempts.set(p.id,{tries,lastCode:String(code||'').slice(0,150)});
@@ -211,7 +216,7 @@ export async function generateExplainedBookV126(book,{
    .sort((a,b)=>b[1]-a[1]).slice(0,5)
    .map(([code,pages])=>({code,pages}));
   const s={...snapshot,version:EXPLAINED_POLICY_V126,
-   onePassV135,
+   onePassV135,qualityBlockCharsV136,
    localReadV135:onePassV135?{pages:source.length,total:source.length,
     method:'verified-local-source',semanticCertified:false}:null,
    comprehensionV126,complete:done,
@@ -247,7 +252,7 @@ export async function generateExplainedBookV126(book,{
  const runStage=async(phase,initial,{correction=false}={})=>{
   const context=phase==='explain'?globalContextV126(source,maps):[];
   const queue=planStageBlocksV126(initial,{stage:phase,maps,context,
-   maxSourceChars:providerRecoveryV128.maxBlockChars});
+   maxSourceChars:Math.min(providerRecoveryV128.maxBlockChars,qualityBlockCharsV136)});
   diagnostics.stage=phase==='comprehend'?'comprehension':'explanation';
   diagnostics.plannedRequests=queue.length;
   diagnostics.plannedPagesPerRequest=queue.map(b=>b.length);
@@ -363,7 +368,8 @@ export async function generateExplainedBookV126(book,{
       const review=auditExplainedPageV126(p,ans,maps.get(p.id),{onePassV135});
       if(saved.get(p.id)?.review?.ready===true&&!review.ready)continue;
       const candidate=pageWithSource(p,{...ans,review});
-      const best=betterExplainedDraftV127(p,saved.get(p.id),candidate);
+      const earlier=saved.get(p.id);
+      const best=betterExplainedDraftV127(p,earlier,candidate);
       saved.set(p.id,best);
       if(review.ready){
        // Count a successful repair too; only failed fifth calls enter reserve.
@@ -372,8 +378,36 @@ export async function generateExplainedBookV126(book,{
        rejected.delete(p.id);
       }else{
        rejected.add(p.id);
-       markAttempt(p,review.issues?.[0]||'V127_REWRITE_NOT_VERIFIED');
+       const updated=markAttempt(p,review.issues?.[0]||'V127_REWRITE_NOT_VERIFIED');
+       const stagnated=earlier?.review?.ready===false&&best===earlier;
+       const consecutive=stagnated?Number(repairs.get(p.id)?.stagnantV136||0)+1:0;
+       repairs.set(p.id,{...updated,stagnantV136:consecutive});
+       // Two failed attempts with NO better draft should not make three more
+       // identical paid requests. Preserve best text explicitly WITH RESERVE.
+       if(consecutive>=2&&!reserveAcceptedV127(p,saved.get(p.id))){
+        const state={...repairs.get(p.id),corrections:MAX_CORRECTIONS_V127,
+          lastCode:'V136_NO_QUALITY_IMPROVEMENT'};
+        repairs.set(p.id,state);
+        saved.set(p.id,reservedExplainedPageV127(p,best,state));
+        rejected.delete(p.id);
+       }
       }
+     }
+    }
+    // An HTTP-200 batch with too few conforming pages is a content-yield
+    // problem. Reduce ONLY remaining blocks, never repeat already-sent pages.
+    if(phase==='explain'&&group.length>=2&&index+1<queue.length){
+     const acceptedInBlock=group.filter(p=>saved.get(p.id)?.review?.ready===true).length;
+     if(acceptedInBlock*4<group.length&&
+         qualityBlockCharsV136>V136_MIN_QUALITY_BLOCK_CHARS){
+      qualityBlockCharsV136=Math.max(V136_MIN_QUALITY_BLOCK_CHARS,
+        Math.floor(qualityBlockCharsV136*0.6));
+      const remaining=queue.slice(index+1).flat();
+      const replan=planStageBlocksV126(remaining,{stage:phase,maps,context,
+       maxSourceChars:Math.min(providerRecoveryV128.maxBlockChars,qualityBlockCharsV136)});
+      queue.splice(index+1,queue.length-index-1,...replan);
+      diagnostics.plannedRequests=queue.length;
+      diagnostics.qualityBackpressureV136=true;
      }
     }
     const blockLimitBefore=providerRecoveryV128.maxBlockChars;
@@ -383,7 +417,8 @@ export async function generateExplainedBookV126(book,{
      // increase packet sizes immediately rather than on the next restart.
      const remaining=queue.slice(index+1).flat();
      const replanned=planStageBlocksV126(remaining,{
-      stage:phase,maps,context,maxSourceChars:providerRecoveryV128.maxBlockChars
+      stage:phase,maps,context,
+      maxSourceChars:Math.min(providerRecoveryV128.maxBlockChars,qualityBlockCharsV136)
      });
      queue.splice(index+1,queue.length-index-1,...replanned);
      diagnostics.plannedRequests=queue.length;
