@@ -172,7 +172,8 @@ export async function generateExplainedBookV126(book,{
    saved.set(p.id,pageWithSource(p,oldPage));
   }else if(oldPage?.id===p.id&&(onePassV135||maps.get(p.id)?.review?.ready===true)){
    {
-    const check=auditExplainedPageV126(p,oldPage,maps.get(p.id),{onePassV135});
+    const check=auditExplainedPageV126(p,oldPage,maps.get(p.id),
+     {onePassV135,strictSourceLinesV138:onePassV135});
     saved.set(p.id,pageWithSource(p,{...oldPage,review:check}));
     if(!check.ready){
      rejected.add(p.id);
@@ -369,7 +370,8 @@ export async function generateExplainedBookV126(book,{
       if(!map.review.ready)markUnread(p,map.review.issues?.[0]);
       else readAttempts.delete(p.id);
      }else{
-      const review=auditExplainedPageV126(p,ans,maps.get(p.id),{onePassV135});
+      const review=auditExplainedPageV126(p,ans,maps.get(p.id),
+       {onePassV135,strictSourceLinesV138:onePassV135});
       if(saved.get(p.id)?.review?.ready===true&&!review.ready)continue;
       const candidate=pageWithSource(p,{...ans,review});
       const earlier=saved.get(p.id);
