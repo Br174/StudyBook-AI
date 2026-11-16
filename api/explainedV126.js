@@ -160,7 +160,7 @@ export default async function handler(req,res){
     return {...p,review:auditComprehensionV126(pages[i],p)};
    const normalized=normalizeExplainedAnchorsV122(p);
    return {...normalized,review:auditExplainedPageV126(pages[i],normalized,
-     pages[i].comprehension,{onePassV135})};
+     pages[i].comprehension,{onePassV135,strictSourceLinesV138:qualityStrategyV138})};
   });
   return res.status(200).json({engine:'ai',repairContractV127:'lab127-automatic-recovery-v1',
    version:EXPLAINED_POLICY_V126,
