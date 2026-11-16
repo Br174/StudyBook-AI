@@ -5,6 +5,7 @@ import {originalExplainedPagesV122,isVerifiedExplainedPageV125} from './explaine
 import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,
  auditExplainedPageV126,auditExplainedPageV139} from './explainedStagesV126.js';
 import {reserveAcceptedV127} from './explainedRepairV127.js';
+import {glossaryTermMentionedV140} from './explainedQualityV140.js';
 import {RIFORMULA_LENGTH_AUDIT_V132,auditRiformulaLengthV132} from './pageReformulationV132.js';
 const mm=pt=>Number(pt||0)*25.4/72;
 const clean=x=>String(x||'').replace(/\*\*/gu,'').trim();
@@ -108,8 +109,9 @@ export function composeExplainedSheetsV122(book,{
     const term=String(item.term||'').trim();
     const key=term.toLocaleLowerCase('it-IT');
     if(!term||emittedTerms.has(key))continue;
-    const marker='**('+term+')**';
-    if(!String(text||'').toLocaleLowerCase('it-IT').includes(marker.toLocaleLowerCase('it-IT')))continue;
+    // LAB140: accept ordinary exact term mentions, not only the legacy
+    // **(term)** marker. Preserve a single sidebar note per page.
+    if(!glossaryTermMentionedV140(text,term))continue;
     emittedTerms.add(key);
     result.push({term,definition:String(item.definition||'')});
    }
