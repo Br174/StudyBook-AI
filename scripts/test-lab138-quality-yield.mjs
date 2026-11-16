@@ -119,6 +119,15 @@ try{
   appSource.indexOf('findBestExplainedCheckpointV138({')+400);
  assert.ok(!reuseCall.includes('excludeId:libraryId'),
   'The active Library ID is eligible for exact-source checkpoint reuse');
+ const reopenStart=appSource.indexOf('async function prepareOriginalForStudy()');
+ const reopenEnd=appSource.indexOf('async function openOriginalNative()',reopenStart);
+ const reopen=reopenStart>=0&&reopenEnd>reopenStart?
+   appSource.slice(reopenStart,reopenEnd):'';
+ assert.ok(reopen.includes('getLibraryBook(libraryId)'));
+ assert.ok(reopen.includes('resumeGeminiEditions(prior)'));
+ assert.ok(reopen.indexOf('getLibraryBook(libraryId)')<
+   reopen.indexOf('createStudyBook(documentData, fileName)'),
+  'Originali must search the existing checkpoint BEFORE starting a new book');
  assert.equal(exact.verifiedPages,9);
  assert.equal(exact.draftedPages,24);
  assert.equal((await getLibraryBook('lab138-existing'))
