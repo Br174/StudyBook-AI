@@ -110,6 +110,9 @@ try{
   'Unverified drafts must never be counted as conforming');
  assert.equal(response.reservedPagesV127.length,44);
  assert.ok(response.pages.every(p=>p?.review?.acceptedWithReserve===true));
+ assert.ok(response.pages.every(p=>p.review.sourceTextFallback===true),
+  'A trivial one-line draft must fall back to the original, not masquerade as a study explanation');
+ assert.equal(response.pages[0].segments[0].text,source.canonicalBookMap.pages[0].text);
  assert.equal(response.repairStateV127.p1.corrections,5);
  assert.ok(calls.length<60,'Do not spin on five unchanged repairs per page');
  assert.ok(calls.every(c=>c.pages>=1));
