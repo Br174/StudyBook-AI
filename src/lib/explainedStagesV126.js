@@ -145,6 +145,23 @@ export function lessonPayloadOnePassV135(pages,context=[]){
  return {pages:full.pages.map(({comprehension,...rest})=>rest),
   bookContext:full.bookContext};
 }
+// LAB138: an independent, explicit contract for NEW Android trial requests.
+// The old /v126 pipeline and the pilastro (only the 50% target is model-visible)
+// remain completely unchanged for installed LAB136/LAB137 APKs.
+export function lessonInstructionOnePassV138(){
+ return lessonInstructionOnePassV135()+'\n'+[
+  'Per CIASCUN segmento in ingresso riscrivi TUTTI i suoi fatti in italiano chiaro e naturale. Non trasformare un intero segmento in una sola frase generica. Conserva sempre condizioni, negazioni, eccezioni, citazioni, numeri e riferimenti.',
+  'Ogni segmento contiene targetSegmentUnits: indica all’incirca la META delle lettere e dei segni di punteggiatura che dovrebbe avere il suo testo spiegato. Il target di pagina resta targetBodyUnits. Non menzionare i contatori nel testo di studio.',
+  'Un segmento lungo richiede più frasi complete e collegate: spiega le relazioni fra i concetti, senza slogan o elenchi di parole. Se il segmento è già breve, semplificalo senza perdere dettagli.',
+  'Non omettere pagine o segmenti per accorciare il JSON. Conserva nell’output tutte le pagine e gli ID nello stesso ordine e termina ogni frase; non interrompere a metà frase.'
+ ].join('\n');
+}
+export function lessonPayloadOnePassV138(pages,context=[]){
+ const prior=lessonPayloadOnePassV135(pages,context);
+ return {...prior,pages:prior.pages.map(page=>({...page,
+  segments:page.segments.map(segment=>({...segment,
+   targetSegmentUnits:Math.max(1,Math.round(studyUnitsV126(segment.source)/2))}))}))};
+}
 export function auditExplainedPageV126(source,result,comprehension,{onePassV135=false}={}){
  const old=auditExplainedPageV122(source,result);
  const original=sourceBody(source),body=outputBody(result);
