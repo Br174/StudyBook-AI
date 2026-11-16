@@ -1287,6 +1287,7 @@ export default function AppV14() {
         snapshot=await (working?.editionsV36?.version===EXPLAINED_POLICY_V126
           ?generateExplainedBookV126:generateExplainedBookV122)(working,{
           retryReviewed,signal:controller.signal,onProgress,
+          fastLengthV139:working?.editionsV36?.version===EXPLAINED_POLICY_V126,
           onActivity:info=>{
             geminiLastActivityRef.current=Date.now();
             setGeminiStalled(false);
@@ -1424,7 +1425,7 @@ export default function AppV14() {
                 (snapshot.comprehensionV126?.verifiedPages||0)+'/'+
                 (snapshot.comprehensionV126?.totalPages||0)+' pagine comprese · nessuna compressione avviata'
               :'Libro spiegato · '+(snapshot.verifiedChunkVariants||0)+'/'+
-                (snapshot.totalChunkVariants||0)+' pagine verificate · glossario incluso');
+                (snapshot.totalChunkVariants||0)+' pagine conformi per lunghezza · significato non certificato');
             await saveExplainedCheckpoint(savedId,explained);
           }
         });
@@ -1676,7 +1677,7 @@ export default function AppV14() {
                 (update.comprehensionV126?.verifiedPages||0)+'/'+
                 (update.comprehensionV126?.totalPages||0)+' pagine'
               :'Libro spiegato · '+(update.verifiedChunkVariants||0)+'/'+
-                (update.totalChunkVariants||0)+' pagine verificate');
+                (update.totalChunkVariants||0)+' pagine conformi per lunghezza');
             await saveExplainedCheckpoint(targetId,latest);
           }
         });
