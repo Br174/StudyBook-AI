@@ -105,7 +105,7 @@ try{
  assert.equal(calls.some(c=>c.phase==='explain'&&c.ids.includes('p9')),false);
  const correctionCalls=calls.filter(c=>c.phase==='explain'&&c.ids.includes('p5'));
  assert.deepEqual(correctionCalls.map(c=>c.cycles[c.ids.indexOf('p5')]),
-  [0,1,2,3,4,5],'No sixth Gemini correction call.');
+  [0,1,2],'LAB136 stops two corrections with no better draft; never loops five times.');
  const guided=correctionCalls.find(c=>c.cycles.includes(2));
  assert.ok(guided.payload.find(p=>p.id==='p5').repair?.previousDraft,
   'The previous incorrect draft must be delivered to Gemini.');
@@ -151,7 +151,7 @@ try{
  assert.equal(large.complete,true);
  assert.equal(reservationReportV127(large.pages).length,0);
  assert.ok(calls.length<200,'2000 short pages should be batched.');
- console.log('LAB127 PASS: 44-page automatic repair, five cycles, transparent fallback,');
+ console.log('LAB127+LAB136 PASS: 44-page targeted repair, stagnant early stop, reserve fallback,');
  console.log('429 cooldown/checkpoint, 2000-page batch traversal; no real Gemini calls.');
 }finally{
  globalThis.fetch=originalFetch;
