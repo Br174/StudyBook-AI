@@ -41,6 +41,9 @@ assert.equal(autoResumeRecheckDelayV137('too-early',upcoming,NOW),
 assert.equal(autoResumeWakeDecisionV54(upcoming,{now:LATER,visible:true,inFlight:false}),
  'ready');
 assert.equal(planStudyAutoResumeV45({...expired,complete:true},NOW,0),null);
+const overlay={...snapshot(LATER,'quality-review'),diagnostics:{qualityReview:35}};
+assert.equal(planStudyAutoResumeV45(overlay,NOW,0).reason,'provider-cooldown',
+ 'A quality review must not bypass a pending provider 503 cooldown');
 
 // Verify the app uses ONE existing owner, not a second scheduler, and
 // repairs BOTH missed Android wake events and missing in-memory book state.
