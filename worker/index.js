@@ -8,6 +8,7 @@ import editionsBulkV51Handler from '../api/editionsBulkV51.js';
 import explainedV122Handler from '../api/explainedV122.js';
 import explainedV126Handler from '../api/explainedV126.js';
 import explainedV138Handler from '../api/explainedV138.js';
+import explainedV139Handler from '../api/explainedV139.js';
 import studyToolsV130Handler from '../api/studyToolsV130.js';
 import manualRiformulaV132Handler from '../api/manualRiformulaV132.js';
 
@@ -22,6 +23,7 @@ const API_ROUTES = new Map([
   ['/api/explained/v122', explainedV122Handler],
   ['/api/explained/v126', explainedV126Handler],
   ['/api/explained/v138', explainedV138Handler],
+  ['/api/explained/v139', explainedV139Handler],
   ['/api/reformulate/v132', manualRiformulaV132Handler],
   ['/api/study-tools/v130', studyToolsV130Handler],
 ]);
