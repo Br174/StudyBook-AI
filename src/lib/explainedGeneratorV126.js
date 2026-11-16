@@ -9,6 +9,7 @@ import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,COMPREHENSION_REVISION_V126,
  auditComprehensionV126,auditExplainedPageV126,lessonPayloadV126,lessonInstructionV126,
  studyUnitsV126,auditExplainedPageV139} from './explainedStagesV126.js';
 import {percentReduced} from './studyPillarV38.js';
+import {nextLengthTargetScaleV140,targetScaleV140} from './explainedQualityV140.js';
 import {MAX_CORRECTIONS_V127,repairAttemptV127,correctionRemainingV127,
  betterExplainedDraftV127,reservedExplainedPageV127,reserveAcceptedV127,
  usableExplainedDraftV127,
@@ -41,7 +42,7 @@ const pageWithSource=(original,answer)=>({
 const totalSourceUnits=pages=>pages.reduce((n,p)=>n+studyUnitsV126(
  p.segments.map(s=>s.source).join('\n')),0);
 
-async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,modelCandidate=null,onePassV135=false,quickV139=false){
+async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,modelCandidate=null,onePassV135=false,quickV139=false,focusedV140=false,targetScale=1){
  const controller=new AbortController(),cancel=()=>controller.abort();
  signal?.addEventListener('abort',cancel,{once:true});
  if(signal?.aborted)cancel();
@@ -50,7 +51,8 @@ async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,
  try{
   // V138 is a separate Worker contract. All older v126 / comprehension
   // callers stay on the existing immutable route.
-  const route=phase==='explain'&&quickV139?'/api/explained/v139':
+  const route=phase==='explain'&&focusedV140?'/api/explained/v140':
+   phase==='explain'&&quickV139?'/api/explained/v139':
    phase==='explain'&&onePassV135?'/api/explained/v138':'/api/explained/v126';
   const reply=await fetch(apiEndpoint(route),{
    method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},
@@ -58,6 +60,7 @@ async function requestPhaseV126(phase,pages,bookContext,signal,correction=false,
      ...(phase==='explain'?{bookContext}:{}),
     modelCandidate:modelCandidate||STUDY_PRIMARY_MODEL_V134,
     ...(phase==='explain'&&onePassV135?{onePassV135:true}:{}),
+    ...(phase==='explain'&&focusedV140?{targetScaleV140:targetScale}:{}),
     timeoutMs:correction?90000:150000})
   });
   const response=await reply.json().catch(()=>null);
@@ -130,7 +133,7 @@ function contextCheckpoint(originalPages,records){
 
 export async function generateExplainedBookV126(book,{
  onProgress=async()=>{},onActivity=()=>{},signal=null,retryReviewed=false,
- fastLengthV139=false
+ fastLengthV139=false,glossaryPrecisionV140=false
 }={}){
  const source=originalExplainedPagesV122(book);
  const previous=book?.editionsV36?.version===EXPLAINED_POLICY_V126&&
@@ -140,6 +143,8 @@ export async function generateExplainedBookV126(book,{
  // Previous V126 checkpoints continue their exact two-stage path unless opted in.
  const onePassV135=previous?.onePassV135===true;
  const quickV139=Boolean(onePassV135&&fastLengthV139);
+ const focusedV140=quickV139&&glossaryPrecisionV140===true;
+ let lengthTargetScaleV140=targetScaleV140(previous?.lengthTargetScaleV140);
  const correctionLimit=quickV139?2:MAX_CORRECTIONS_V127;
  const maps=new Map(),saved=new Map(),rejected=new Set();
  // Persistent per-page correction state survives Android restarts.
@@ -244,6 +249,7 @@ export async function generateExplainedBookV126(book,{
    .map(([code,pages])=>({code,pages}));
   const s={...snapshot,version:EXPLAINED_POLICY_V126,
    onePassV135,qualityBlockCharsV136,lengthOnlyV139:quickV139,
+   glossaryPrecisionV140:focusedV140,lengthTargetScaleV140,
    verificationScope:quickV139?'length-and-structure-only':'legacy-didactic-audit',
    localReadV135:onePassV135?{pages:source.length,total:source.length,
     method:'verified-local-source',semanticCertified:false}:null,
@@ -313,7 +319,7 @@ export async function generateExplainedBookV126(book,{
     correctionMax:correctionLimit});
    try{
     const {reply,response}=await requestPhaseV126(phase,pages,context,signal,
-    correction,modelCandidate,onePassV135,quickV139);
+    correction,modelCandidate,onePassV135,quickV139,focusedV140,lengthTargetScaleV140);
    if(modelCandidate&&Number.isFinite(reply.status)){
     const reportedModel=response?.model||modelCandidate;
     const received=Array.isArray(response?.pages)?response.pages.length:0;
@@ -429,6 +435,11 @@ export async function generateExplainedBookV126(book,{
       }
      }
     }
+    // LAB140 learns from the length of pages ALREADY received. This is a
+    // pure scalar update, not a new Gemini call, semantic audit or rewrite.
+    if(phase==='explain'&&focusedV140)
+     lengthTargetScaleV140=nextLengthTargetScaleV140(lengthTargetScaleV140,
+      group.map(p=>saved.get(p.id)?.review));
     // An HTTP-200 batch with too few conforming pages is a content-yield
     // problem. Reduce ONLY remaining blocks, never repeat already-sent pages.
     // The first/last batch can itself have near-zero usable output.
