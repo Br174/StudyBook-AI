@@ -3,7 +3,7 @@
 import {continuationLabel} from './libroSpecchioV35.js';
 import {originalExplainedPagesV122,isVerifiedExplainedPageV125} from './explainedPolicyV122.js';
 import {EXPLAINED_POLICY_V126,EXPLAINED_AUDIT_V126,
- auditExplainedPageV126} from './explainedStagesV126.js';
+ auditExplainedPageV126,auditExplainedPageV139} from './explainedStagesV126.js';
 import {reserveAcceptedV127} from './explainedRepairV127.js';
 import {RIFORMULA_LENGTH_AUDIT_V132,auditRiformulaLengthV132} from './pageReformulationV132.js';
 const mm=pt=>Number(pt||0)*25.4/72;
@@ -58,6 +58,10 @@ export function composeExplainedSheetsV122(book,{
   if(snapshot?.version!==EXPLAINED_POLICY_V126)
    return isVerifiedExplainedPageV125(original,record);
   if(reserveAcceptedV127(original,record))return true;
+  if(snapshot?.lengthOnlyV139===true){
+   return record.review?.ready===true&&
+    auditExplainedPageV139(original,record).ready===true;
+  }
   if(!original.segments.length)return record.review?.ready===true;
   if(record.review?.auditRevision!==EXPLAINED_AUDIT_V126||
    record.review?.ready!==true)return false;
