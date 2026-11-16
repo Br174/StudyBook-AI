@@ -25,7 +25,8 @@
     "test:lab137": "node scripts/test-lab137-android-resume.mjs && npm run test:lab136",
     "test:lab138": "node scripts/test-lab138-quality-yield.mjs && npm run test:lab137",
     "test:lab139": "node scripts/test-lab139-fast-length.mjs && npm run test:lab138",
-    "test:lab140": "node scripts/test-lab140-glossary-precision.mjs && npm run test:lab139"
+    "test:lab140": "node scripts/test-lab140-glossary-precision.mjs && npm run test:lab139",
+    "test:lab141": "node scripts/test-lab141-endgame.mjs && npm run test:lab140"
   },
   "dependencies": {
     "@posthog/react": "^1.11.3",
