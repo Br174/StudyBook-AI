@@ -1040,6 +1040,21 @@ export default function AppV14() {
 
   async function reprocessLibraryItem(id) {
     if (libraryBusy || generating || importing || scanProcessing) return false;
+    // LAB142: Library "Rielabora" must NEVER dispatch an EPUB to the old
+    // six-edition reprocessStoredBook() owner. Reuse the identical single-50
+    // path as Studio and Home, with the original file and saved checkpoint.
+    const currentRecord=await getLibraryBook(id).catch(()=>null);
+    if(currentRecord?.sourceData?.sourceFormat==='epub'){
+      setLibraryId(id);setFileName(currentRecord.fileName);
+      setDocumentData(currentRecord.sourceData);
+      setSourceFile(currentRecord.originalFile||null);
+      const prior=currentRecord.studyBook?.editionsV36;
+      const migrated=await createStudyBook(currentRecord.sourceData,
+        currentRecord.fileName,{existingLibraryId:id,
+        sourceFileForEpub:currentRecord.originalFile||null,
+        legacyEditionBackup:prior?.version===EXPLAINED_POLICY_V126?null:prior});
+      return Boolean(migrated);
+    }
     setLibraryBusy(true);
     setGenerating(true);
     setError('');
