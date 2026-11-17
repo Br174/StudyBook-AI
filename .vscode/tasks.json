@@ -2,11 +2,11 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "LAB141 — Compilazione APK+ZIP (Codespaces, manuale)",
+      "label": "LAB142 — Compilazione APK+ZIP (Codespaces, manuale)",
       "type": "process",
       "command": "bash",
       "args": [
-        "scripts/codespaces-lab141-autobuild.sh"
+        "scripts/codespaces-lab142-autobuild.sh"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -29,12 +29,12 @@
       }
     },
     {
-      "label": "LAB141 — Test del completamento 41/44 (nessun deploy)",
+      "label": "LAB142 — Test EPUB e unica versione al 50% (senza deploy)",
       "type": "process",
       "command": "npm",
       "args": [
         "run",
-        "test:lab141"
+        "test:lab142"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
