@@ -26,7 +26,8 @@
     "test:lab138": "node scripts/test-lab138-quality-yield.mjs && npm run test:lab137",
     "test:lab139": "node scripts/test-lab139-fast-length.mjs && npm run test:lab138",
     "test:lab140": "node scripts/test-lab140-glossary-precision.mjs && npm run test:lab139",
-    "test:lab141": "node scripts/test-lab141-endgame.mjs && npm run test:lab140"
+    "test:lab141": "node scripts/test-lab141-endgame.mjs && npm run test:lab140",
+    "test:lab142": "node scripts/test-lab142-epub-single.mjs && npm run test:lab141"
   },
   "dependencies": {
     "@posthog/react": "^1.11.3",
