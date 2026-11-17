@@ -109,6 +109,14 @@ assert.throws(()=>buildEpubStudyShellV142(source),/non verificata/u);
 assert.ok(app.includes('ensureEpubLogicalPagesV142(sourceData'));
 assert.ok(app.includes("if(sourceData.sourceFormat==='epub'&&"));
 assert.ok(app.includes("legacySixBackupV142"));
+assert.ok(app.includes("currentRecord?.sourceData?.sourceFormat==='epub'"),
+ 'The Library reprocess action must never call the six-edition engine for EPUB');
+assert.ok(app.includes("sourceData.sourceFormat==='epub'?sourceFileForEpub||sourceFile:undefined"),
+ 'Resume must preserve original EPUB file bytes before React state settles');
+assert.ok(app.includes("sourceData=await readSourceFile(originalEpub"),
+ 'Old EPUBs with incompatible extracted chapters must reparse saved original locally');
+assert.ok(app.includes("existingLibraryId:id,"),
+ 'Library migration must reuse the original record ID');
 assert.ok(app.includes("targetSource?.sourceFormat==='epub'&&!isExplainedBookV122(current)"));
 const studio=readFileSync('src/components/AppScreens.jsx','utf8');
 assert.ok(studio.includes('legacyEpub'));
