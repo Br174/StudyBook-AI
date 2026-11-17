@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import {buildEpubLogicalPagesV142,sha256EpubV142} from './epubLogicalPagesV142.js';
 import {
   readSourceFile as readLegacySourceFile,
   splitIntoParagraphs,
@@ -216,7 +217,9 @@ function epubRows(table) {
 
 async function parseEpub(file, { onProgress } = {}) {
   onProgress?.({ phase: 'rich-open', format: 'EPUB' });
-  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  // Single read: the same original EPUB bytes feed JSZip and SHA-256.
+  const epubBytes=await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(epubBytes);
   const containerEntry = zip.file('META-INF/container.xml');
   if (!containerEntry) throw new Error('EPUB non valido: manca META-INF/container.xml.');
 
@@ -266,19 +269,18 @@ async function parseEpub(file, { onProgress } = {}) {
   const chapters = buildChaptersFromBlocks(blocks, title || 'Documento');
   const fullText = chapters.flatMap((item) => item.paragraphs).join('\n\n');
   if (!fullText) throw new Error('EPUB letto, ma non contiene testo utilizzabile.');
-  onProgress?.({ phase: 'complete', done: spine.length, total: spine.length });
-
-  return {
-    fullText,
-    pages: [],
-    chapters,
-    needsOcr: [],
-    ocrApplied: [],
-    removedRunningLines: [],
-    sourceFormat: 'epub',
-    sourceTitle: title,
-    structure: makeStructure(chapters, 0),
-  };
+  // EPUB has reflowable layout, never claim physical printed pages.
+  // Source-verified logical pages are mandatory for the one-edition engine.
+  const fingerprint=await sha256EpubV142(epubBytes);
+  const mapped=buildEpubLogicalPagesV142({
+    fullText,chapters,needsOcr:[],ocrApplied:[],
+    removedRunningLines:[],sourceFormat:'epub',sourceTitle:title,
+    structure:makeStructure(chapters,0)
+  },{fingerprint,fingerprintBasis:'original-file'});
+  onProgress?.({ phase: 'complete', done: mapped.canonicalBookMap.pageCount,
+    total: mapped.canonicalBookMap.pageCount, format:'EPUB',
+    paginationKind:'logical-not-printed' });
+  return mapped;
 }
 
 
