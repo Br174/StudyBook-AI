@@ -1,4 +1,5 @@
 import {EXPLAINED_POLICY_V122} from '../lib/explainedPolicyV122.js';
+import {EXPLAINED_POLICY_V126} from '../lib/explainedStagesV126.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StudyIcon } from './StudyUiIcons.jsx';
 import '../appShellV16.css';
@@ -63,7 +64,9 @@ export function HomeDashboardV16({
   const scannerActive = Boolean(scanContent);
   const activeBook=progressBookId===currentBookId?progressStudyBook:null;
   const edition=activeBook?.editionsV36||resumeCandidate?.edition;
-  const explained=edition?.version===EXPLAINED_POLICY_V122;
+  // Both V122 and the current V126 are one-edition books. LAB142 must
+  // distinguish them from the actual legacy six-level EPUB checkpoints.
+  const explained=[EXPLAINED_POLICY_V122,EXPLAINED_POLICY_V126].includes(edition?.version);
   const displayedBook=activeBook||(explained?{editionsV36:edition}:null);
   const legacyEpub=(sourceFormat==='epub'||/\.epub$/iu.test(String(progressBook?.fileName||resumeCandidate?.fileName||fileName||'')))&&!explained;
   const resumeWait=geminiResumeDisplayV55(resumeEdition||resumeCandidate?.edition);
