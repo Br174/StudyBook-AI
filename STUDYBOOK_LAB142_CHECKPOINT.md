@@ -1,0 +1,41 @@
+# StudyBook AI — MotorLab LAB142: EPUB single 50% and logical study pages
+Data: 2026-11-17. Stato: sorgenti su ramo isolato GitHub; Node suite, Scudo360, Gradle, APK/ZIP e prova smartphone PENDING.
+
+## Motivo della modifica (evidenza utente)
+- LAB141 APK verificata e già pubblicata: tag `studybook-trial141-codespaces-6d6f99e5b7d8`, commit `6d6f99e5b7d87bb14da14f37c8d9eff0185ded9f`.
+- Un EPUB di storia del diritto (Charles M. Radding) era importato ma mostrava `Fase 2 · Compressione`, `0/0 pagine salvate`, e le sei vecchie versioni Riassunto/50/40/30/20/10 anziché **un'unica versione al 50%**. L'utente ha precisato che la fonte è EPUB e autorizzato la correzione.
+- Causa PROVATA nel codice: `parseEpub` restituiva `pages:[]` e `structure.pageCount=0` (tutti i capitoli/testo presenti); `AppV15.jsx` avviava la nuova V126 solo se `result.canonicalBookMap?.pages?.length>0`, altrimenti ricadeva nel vecchio `generateGeminiEditionsV36` da sei versioni. Anche il wrapper V09 ricalcolava il sommario quando erano presenti pagine; Home non riconosceva `EXPLAINED_POLICY_V126` come versione singola.
+
+## Vincoli permanenti
+- Branch unico: `trial/studybook-lab142-epub-single-50-20261117`, base LAST_GOOD signed LAB141 `6d6f99e5b7d87bb14da14f37c8d9eff0185ded9f`.
+- MotorLab CORE centrale e satellite locale verificati alla release uguale `2026.10.29-r40`; coesistenza motore nativo Studio.
+- Package ID invariato `it.studybook.ai.lab.trial111`, certificato atteso SHA256 `D7BB9315C9C4351872495478610C484725086E2BABBC04BEC65EC823455FBDCC`; proposta `versionCode=2026114201`, `versionName=0.3.142-prova.1`.
+- Gemini **gemini-3.1-flash-lite**, Worker Cloudflare trial124 gratuito ESISTENTE, nessuna route nuova né deploy backend; nessuna GitHub Action/upgrade/€ aggiuntivi. La firma andrà verificata nello script Codespace.
+- La semplificazione accetta riduzione **40–60% per pagina** con target modello 50%; pagine sorgenti fino a 5 righe esenti solo come da pilastro, nessuna dichiarazione di qualità semantica certificata; glossario e recupero LAB141 invariati.
+- Originale immutato; capitoli e ordine protetti, nessuna nuova copia se lo stesso Library ID; vecchio output a sei versioni può rimanere sotto `legacySixBackupV142` come archivio storico (non visibile come opzione di studio).
+
+## Cambiamenti committati
+1. `src/lib/epubLogicalPagesV142.js`: funzione pura `buildEpubLogicalPagesV142` assegna pagine **logiche, non stampate**, stabili su ogni Android, ~3.200 caratteri e fino a 2.000 pagine, avanzamento per offset, spezzatura preferenziale a paragrafo/parola, mai troncare Unicode o perdere/duplicare caratteri. Copertura `pages.map(p=>p.text).join('')===fullText`. Numero logico, pagina originale verificata e offsets [start,end), metadati paragrafi e capitoli. SHA-256 dell'EPUB bytes originale se disponibile, oppure fingerprint **dichiarato derivato da testo estratto** per recuperi storici senza blob; non fingere impronta del file originale. `ensureEpubLogicalPagesV142` non ripagina mappa già verificata.
+2. `src/lib/documentParserText.js`: unica lettura originale `file.arrayBuffer()`, JSZip e SHA-256 da medesimi bytes, quindi `pages`, `canonicalBookMap`, `structure.pageCount` validi al posto di []/0; `sourceFormat=epub`, `paginationKind=logical-not-printed`.
+3. `documentParserV09.js` e `documentParserV10.js`: non ricalcolano i capitoli EPUB originali dallo slicing delle pagine appena creato, mantengono EPUB spine/heading hierarchy.
+4. `explainedPolicyV122.js`: `sourceLineCount` EPUB deriva da capacità logica deterministica, non solo dai `\n` fisici; altrimenti tutte le pagine lunghe potevano essere classificate erroneamente come brevi ed esentate dal 50%. PDF/scan invariati.
+5. `src/lib/epubStudyShellV142.js`: struttura Studio veloce a passaggio unico locale, mantiene paragrafi come testo originale e posizioni, prova `auditMirrorAgainstSource`, evita il pesante e ridondante `buildStudyBook` a sei livelli e controlli di fedeltà, senza finte certificazioni semantiche. Gemini V141 mantiene la sola spiegazione al 50% e le correzioni rapide.
+6. `src/AppV15.jsx`: prima di creare edizione EPUB deve generare/verificare pagine logiche, non può MAI cadere sul motore delle sei versioni se manca la mappa. Conserva il vecchio checkpoint per libro identico; `persistBook` può conservare File blob esplicito durante cambio stato React; recupera indici EPUB dai bytes originali salvati se i vecchi capitoli non corrispondono. Il resume Home/Studio e l'azione Libreria `reprocessLibraryItem` per EPUB migrano al nuovo percorso unico al 50%, non usano più `reprocessStoredBook` per EPUB. Gli altri formati/vecchi libri non EPUB hanno proprietari di motore separati e sono immutati.
+7. `src/components/HomeDashboardV16.jsx` e `AppScreens.jsx`: EPUB con vecchio checkpoint non mostra più le sei righe o le sei scelte: offre solo `Riprendi con un’unica versione al 50%`; mostra pagina LOGICA, non stampata. Home riconosce sia V122 sia la più recente V126, evitando falsa migrazione continua delle versioni EPUB nuove. Nessuna modifica globale alle UI degli altri formati.
+8. `scripts/test-lab142-epub-single.mjs`, `npm run test:lab142`: coverage test offline (440 paragrafi, ordine dei capitoli, offset, 2000 page cap, Unicode, immutabilità, SHA, recupero EPUB storico, differenza 5 righe, fast study shell, solo un passaggio Gemini mock su tutti i blocchi con 50% per pagina, etichette Home/Studio, reprocess Libreria e file originale). Esegue poi tutta suite LAB141/140/139/138/137/136.
+9. `.vscode/tasks.json` manual-only LAB142 per build e test. Aggiornato test legacy `test-lab132-codespaces-preflight.mjs` per controllare sia tasks manuali LAB141 sia LAB142 senza riattivare erroneamente `folderOpen`.
+10. `scripts/codespaces-lab142-worker.sh`: **READ ONLY** su Worker di prova già esistente V126/V138/V139/V140/V141 e glossario/Riformula. In LAB142 non fare deploy di alcun Worker. `codespaces-lab142-{autobuild,build,publish}.sh`: clone Codespace isolato, firma famiglia originale, Scudo360/Gradle/test, SHA256, APK/ZIP, GitHub Releases senza GitHub Actions; versione LAB142.
+
+## Prove realmente eseguite nella chat
+- GitHub ha confermato che i 17 file LAB142 della prima revisione esistono, i principali controlli statici hanno `issues:[]`, branch/version/signer/Worker impostati coerentemente.
+- Esecuzione reale in isolate V8 **delle funzioni pure** del nuovo paginatore e studio shell, usando il codice appena recuperato da GitHub: 440 paragrafi distribuiti con copertura 100%, capitoli invariati; `auditMirrorAgainstSource.valid=true`. Stress con testo di **5.400.002 caratteri**: **1.600 pagine logiche**, copertura esatta 100%, tutte <=120.000 caratteri, nessun Unicode surrogate spezzato; ~51 ms su isolate V8 (NON un benchmark su smartphone). Il file di test Node LAB142 ha passato controllo sintassi JS con `AsyncFunction` dopo isolamento degli import ESM.
+- Test Node reale con parsificazione JSZip/DOM EPUB, `npm run test:lab142`, Vite, Scudo360, Wrangler live, Gradle, firma Android, APK/ZIP e installazione: **NON ANCORA ESEGUITI NEL CODESPACE**. Nessuna release LAB142 verificata/presente al momento di questo checkpoint. Non presentare i test simulati come reali end-to-end.
+
+## Handoff Codespace operativo sicuro
+Non aprire nuovo Codespace; già esistente `super eureka`. Nel terminale:
+```bash
+git fetch --no-tags origin "refs/heads/trial/studybook-lab142-epub-single-50-20261117:refs/remotes/origin/trial/studybook-lab142-epub-single-50-20261117" && (git switch trial/studybook-lab142-epub-single-50-20261117 || git switch --track origin/trial/studybook-lab142-epub-single-50-20261117) && git pull --ff-only origin trial/studybook-lab142-epub-single-50-20261117 && bash scripts/codespaces-lab142-autobuild.sh
+```
+- Compilazione automatica Codespace esegue test/Scudo360, legge Worker V141 senza deploy, verifica certificato Android identico, genera APK/ZIP e GitHub Release se tutti i test superano. Nessuna Action.
+- Se blocco test, STOP senza alterare LAB141 installata; correggere il SOLO problema reale sul ramo LAB142.
+- Vietati `git reset --hard`, reinstallazione pulita o cancellazione EPUB, libreria, dati e checkpoint; su Android installare LAB142 sopra LAB141 solo dopo release verificata.
