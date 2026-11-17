@@ -889,7 +889,7 @@ export default function AppV14() {
     }
   }
 
-  async function persistBook(nextBook, nextSource = documentData, nextName = fileName, forcedId = libraryId) {
+  async function persistBook(nextBook, nextSource = documentData, nextName = fileName, forcedId = libraryId, originalFileOverride = undefined) {
     if (!nextBook || !nextSource) return null;
     try {
       const record = await saveLibraryBook({
@@ -899,7 +899,7 @@ export default function AppV14() {
         studyBook: nextBook,
         dsaMode,
         profileId: activeProfileId,
-        originalFile: sourceFile,
+        originalFile: originalFileOverride===undefined?sourceFile:originalFileOverride,
       });
       setLibraryId(record.id);
       await refreshLibrary();
@@ -1428,7 +1428,8 @@ export default function AppV14() {
            ' pagine conformi e '+(priorMatch.draftedPages||0)+' bozze; nessuna ricompressione da zero'
           :'Lettura originale completata localmente · avvio riscrittura al 50% con una sola chiamata Gemini per blocco');
         navigateTo('studio');
-        const firstSaved=await persistBook(explained,sourceData,sourceName,existingLibraryId||libraryId);
+        const firstSaved=await persistBook(explained,sourceData,sourceName,existingLibraryId||libraryId,
+          sourceData.sourceFormat==='epub'?sourceFileForEpub||sourceFile:undefined);
         if(!firstSaved){
           setStatus('Originale conservato · impossibile salvare il checkpoint iniziale');
           return explained;
@@ -1472,7 +1473,8 @@ export default function AppV14() {
         setStudyBook(explained);
         setProgress({done:finalSnapshot.verifiedChunkVariants||0,
           total:finalSnapshot.totalChunkVariants||1});
-        await persistBook(explained,sourceData,sourceName,savedId);
+        await persistBook(explained,sourceData,sourceName,savedId,
+          sourceData.sourceFormat==='epub'?sourceFileForEpub||sourceFile:undefined);
         setStatus(finalSnapshot.complete
           ?finalSnapshot.completeWithReservations?
             'Libro spiegato esportabile con '+finalSnapshot.reservedPagesV127.length+
