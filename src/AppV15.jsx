@@ -2574,7 +2574,7 @@ export default function AppV14() {
           onViewAll={() => { setLibraryInitialView('all'); navigateTo('library'); }}
           onRecentScan={restoreScannerArchiveSelection}
           onOpenOriginal={item => openLibraryItem(item.id, { original:true, openReader:false })}
-          documentData={documentData} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
+          documentData={documentData} sourceFormat={documentData?.sourceFormat} fileName={fileName} onCreateBook={generateBook} progressPercent={progressPercent}
           scanContent={scannerPanel} workPhase={workPhase} homeAction={homeAction}
           currentBookId={libraryId} acquisitionProgress={importAcquisition}
           resumeCandidate={resumeCandidate} resumeBusy={resumeBusy} geminiStalled={geminiStalled}
