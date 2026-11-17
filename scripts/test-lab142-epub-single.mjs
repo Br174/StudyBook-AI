@@ -117,6 +117,8 @@ assert.ok(studio.includes('Riprendi EPUB · unica versione al 50%'));
 const home=readFileSync('src/components/HomeDashboardV16.jsx','utf8');
 assert.ok(home.includes('legacyEpub'));
 assert.ok(home.includes('Riprendi con un’unica versione al 50%'));
+assert.ok(home.includes('[EXPLAINED_POLICY_V122,EXPLAINED_POLICY_V126].includes(edition?.version)'),
+ 'New V126 EPUB must never be misidentified as a legacy six-version checkpoint');
 assert.ok(!home.includes('LAB142 six editions'));
 
 // Real V141 single-version generation over the mapped EPUB, offline mock
