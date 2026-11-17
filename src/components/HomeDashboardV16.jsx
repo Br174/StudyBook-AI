@@ -12,7 +12,7 @@ export function HomeDashboardV16({
   status, libraryItems = [], archivedScans = [], importing, generating,
   onScanner, onImport, onScannerArchive, onCategory, onRecentScan,
   onOpenOriginal, onContinueBook, onViewAll, documentData, fileName,
-  scanContent, onCreateBook, progressPercent, workPhase='idle',homeAction='create',
+  scanContent, onCreateBook, progressPercent, workPhase='idle',homeAction='create',sourceFormat=null,
   resumeCandidate = null, resumeBusy = false, resumeEdition = null, onResumeProcessing = () => {},
   onManualRecovery = () => {}, progressStudyBook = null, geminiStalled = false,
   currentBookId='',acquisitionProgress=null,
@@ -65,6 +65,7 @@ export function HomeDashboardV16({
   const edition=activeBook?.editionsV36||resumeCandidate?.edition;
   const explained=edition?.version===EXPLAINED_POLICY_V122;
   const displayedBook=activeBook||(explained?{editionsV36:edition}:null);
+  const legacyEpub=(sourceFormat==='epub'||/\.epub$/iu.test(String(progressBook?.fileName||resumeCandidate?.fileName||fileName||'')))&&!explained;
   const resumeWait=geminiResumeDisplayV55(resumeEdition||resumeCandidate?.edition);
   const needsCorrection=requiresRecalibrationV79(resumeEdition||resumeCandidate?.edition);
 
@@ -101,15 +102,26 @@ export function HomeDashboardV16({
           <div className="sb-download-book-content">
             <strong>{activeTitle}</strong>
             <small>Pagine totali: {physical.total||'in rilevamento'}</small>
-            {(importing||generating||displayedBook)
-              ? <StudyPhaseProgressV59
-                  book={importing||workPhase==='preparing'?null:displayedBook}
-                  generating={generating} activeStatus={status}
-                  acquisition={{done:physical.acquired,total:physical.total}} />
-              : <small>Apri il libro per consultare la compressione e la verifica delle singole pagine.</small>}
+            {legacyEpub
+              ? <div className="sb-v122-page-progress" role="status">
+                  <strong>EPUB · un’unica versione al 50%</strong>
+                  <p>Il vecchio checkpoint a sei riduzioni è conservato.
+                    La LAB142 usa pagine logiche EPUB, non pagine fisiche, e non
+                    riprende il precedente motore.</p>
+                  {!importing&&!generating&&<button type="button"
+                    className="sb-resume-manual" onClick={onResumeProcessing}>
+                    Riprendi con un’unica versione al 50%
+                  </button>}
+                </div>
+              :(importing||generating||displayedBook)
+                ? <StudyPhaseProgressV59
+                    book={importing||workPhase==='preparing'?null:displayedBook}
+                    generating={generating} activeStatus={status}
+                    acquisition={{done:physical.acquired,total:physical.total}} />
+                : <small>Apri il libro per consultare la compressione e la verifica delle singole pagine.</small>}
           </div>
         </div>
-        {!importing && !explained && <div className="sb-resume-ia-details">
+        {!importing && !explained && !legacyEpub && <div className="sb-resume-ia-details">
           <small>{generating
             ? (workPhase==='preparing'?'Sto preparando la struttura del libro.'
               :'Elaborazione Gemini in corso; le pagine originali restano disponibili.')
