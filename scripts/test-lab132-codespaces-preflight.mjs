@@ -74,27 +74,34 @@ if(active.label.startsWith('LAB132')){
  assert.equal(manual?.args?.length,1,
   'LAB132 manual build must not require deploy arguments.');
 }else{
- // No automatic work on opening a remote Codespace. A manual build must
- // select the explicitly pinned LAB141 script with a SINGLE safe argument.
- assert.equal(active.label,'LAB141 — Compilazione APK+ZIP (Codespaces, manuale)');
+ // Manual-only is the invariant, not an obsolete LAB141 label.
+ // A subsequent safe LAB142 update must not re-enable LAB132 folderOpen.
+ const nextGeneration=active.label.startsWith('LAB142')?'142':'141';
+ const script='scripts/codespaces-lab'+nextGeneration+'-autobuild.sh';
+ assert.equal(active.label,nextGeneration==='142'?
+  'LAB142 — Compilazione APK+ZIP (Codespaces, manuale)':
+  'LAB141 — Compilazione APK+ZIP (Codespaces, manuale)');
  assert.equal(active.type,'process');
  assert.equal(active.command,'bash');
- assert.deepEqual(active.args,['scripts/codespaces-lab141-autobuild.sh']);
+ assert.deepEqual(active.args,[script]);
  assert.equal(active.options?.cwd,'${workspaceFolder}');
  assert.equal(active.runOptions?.instanceLimit,1);
  assert.equal(active.runOptions?.instancePolicy,'silent');
  assert.ok(tasks.tasks.every(t=>t.runOptions?.runOn!=='folderOpen'),
-  'LAB141 must never auto-compile on Codespace folder open');
+  'Remote Codespace must never auto-compile on folder open');
  const regression=tasks.tasks.find(t=>t!==active);
- assert.equal(regression?.label,
+ assert.equal(regression?.label,nextGeneration==='142'?
+  'LAB142 — Test EPUB e unica versione al 50% (senza deploy)':
   'LAB141 — Test del completamento 41/44 (nessun deploy)');
  assert.equal(regression?.command,'npm');
- assert.deepEqual(regression?.args,['run','test:lab141']);
+ assert.deepEqual(regression?.args,['run','test:lab'+nextGeneration]);
  assert.ok(regression.group==='test');
- assert.ok(existsSync('scripts/codespaces-lab141-autobuild.sh'));
- const live=readFileSync('scripts/codespaces-lab141-autobuild.sh','utf8');
- assert.ok(live.includes('trial/studybook-lab141-final-tail-50pct-20261116'));
- assert.ok(live.includes('flock -n 9'),'LAB141 build must retain its lock');
+ assert.ok(existsSync(script));
+ const live=readFileSync(script,'utf8');
+ assert.ok(live.includes(nextGeneration==='142'?
+  'trial/studybook-lab142-epub-single-50-20261117':
+  'trial/studybook-lab141-final-tail-50pct-20261116'));
+ assert.ok(live.includes('flock -n 9'),'Manual build must retain its lock');
  assert.ok(!live.includes('gh workflow run'),'No GitHub Actions');
 }
 console.log('LAB132 PASS: historical signing and Worker preflight intact;');
