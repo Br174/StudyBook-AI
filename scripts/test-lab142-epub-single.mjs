@@ -12,6 +12,7 @@ import {originalExplainedPagesV122,EXPLAINED_POLICY_V122}
 import {studyUnitsV126,EXPLAINED_POLICY_V126}
  from '../src/lib/explainedStagesV126.js';
 import {generateExplainedBookV126} from '../src/lib/explainedGeneratorV126.js';
+import {buildEpubStudyShellV142} from '../src/lib/epubStudyShellV142.js';
 
 globalThis.crypto??=webcrypto;
 const sha='a'.repeat(64);
@@ -51,6 +52,15 @@ assert.ok(mapped.chapters.every(c=>Number.isInteger(c.pageStart)&&
  c.pageEnd>=c.pageStart&&c.pageEnd<=mapped.pages.length));
 assert.ok(mapped.chapters.every(c=>c.paragraphMeta.every(m=>
  m.pageStart>0&&m.pageEnd>=m.pageStart)));
+const shell=buildEpubStudyShellV142(mapped);
+assert.equal(shell.studyShellV142,'lab142-epub-fast-original-shell-v1');
+assert.equal(shell.quality.mirrorStructureAudit.valid,true);
+assert.equal(shell.quality.fidelityGate.paragraphsChecked,0,
+ 'EPUB must not run the old costly paragraph-by-paragraph fidelity prepass');
+assert.deepEqual(shell.chapters.map(c=>c.title),chapters.map(c=>c.title));
+assert.ok(shell.chapters.every(c=>c.paragraphs.every(p=>
+ typeof p.original==='string'&&p.original===p.summary&&
+ p.sourcePageStart>=1&&p.sourcePageEnd>=p.sourcePageStart)));
 const originalPages=originalExplainedPagesV122({canonicalBookMap:mapped.canonicalBookMap});
 assert.equal(originalPages.length,mapped.pages.length);
 assert.equal(originalPages[0].sourceLineCount,mapped.pages[0].sourceLineCount);
@@ -93,6 +103,9 @@ const parser=readFileSync('src/lib/documentParserText.js','utf8');
 assert.ok(parser.includes('buildEpubLogicalPagesV142('));
 assert.ok(parser.includes('sha256EpubV142(epubBytes)'));
 const app=readFileSync('src/AppV15.jsx','utf8');
+assert.ok(app.includes("sourceData.sourceFormat==='epub'?"));
+assert.ok(app.includes('buildEpubStudyShellV142(sourceData)'));
+assert.throws(()=>buildEpubStudyShellV142(source),/non verificata/u);
 assert.ok(app.includes('ensureEpubLogicalPagesV142(sourceData'));
 assert.ok(app.includes("if(sourceData.sourceFormat==='epub'&&"));
 assert.ok(app.includes("legacySixBackupV142"));
@@ -113,7 +126,7 @@ const previous={version:EXPLAINED_POLICY_V126,sourceFingerprint:sha,
  onePassV135:true,complete:false,status:'partial',pages:[],
  originalPages:mapped.pages.length,totalChunkVariants:mapped.pages.length,
  verifiedChunkVariants:0};
-const book={...mapped,editionsV36:previous};
+const book={...shell,editionsV36:previous};
 const originalFetch=globalThis.fetch,requests=[];
 try{
  globalThis.fetch=async(url,options)=>{
