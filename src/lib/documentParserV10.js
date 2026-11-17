@@ -48,6 +48,12 @@ export function detectChapters(text = '') {
 export async function readSourceFile(file, options = {}) {
   const parsed = await readV09SourceFile(file, options);
   const pages = Array.isArray(parsed?.pages) ? parsed.pages : [];
+  // LAB142: keep the source EPUB spine rather than guessing new chapters
+  // from page slices which have no physical page boundaries.
+  if(parsed?.sourceFormat==='epub'&&
+     parsed?.canonicalBookMap?.paginationOwner==='lab142-epub-immutable-logical-pages-v1')
+    return {...parsed,structure:{...parsed.structure,
+     hierarchyEngine:'epub-spine-logical-v142',textFirst:true}};
 
   if (!pages.length) {
     return {
