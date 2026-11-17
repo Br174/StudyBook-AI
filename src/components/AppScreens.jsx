@@ -556,6 +556,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
   const v36Partial = Boolean(studyBook?.editionReadiness?.partial);
   const editionState=studyBook?.editionsV36;
   const explainedV122=Boolean(studyBook?.explainedV122);
+  const legacyEpub=sourceData?.sourceFormat==='epub'&&!explainedV122;
   const readyExplainedV125=Number.isInteger(studyBook?.editionReadiness?.readyPages)
     ?studyBook.editionReadiness.readyPages:(editionState?.verifiedChunkVariants||0);
   // LAB79: LAB78 numeric failure means "complete:false", yet all raw
@@ -611,7 +612,14 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             <p>{isOriginalOnly ? 'Scegli come utilizzare il libro. Il file originale resta invariato; potrai decidere se creare un testo di studio.' : 'Leggi, studia o porta con te il contenuto elaborato di questo libro.'}</p>
           </div>
         </div>
-        {!isOriginalOnly && studyBook && (v36Partial || !editionState?.complete) && (
+        {!isOriginalOnly && studyBook && legacyEpub && <div className="sb-studio-inline-progress" role="status">
+          <strong>EPUB · un’unica versione di studio al 50%</strong>
+          <p>Questo libro contiene un checkpoint delle vecchie sei versioni. La LAB142 conserva il lavoro precedente e lo sostituisce, per lo studio, con una sola riduzione basata su pagine logiche.</p>
+          <button type="button" className="sb-resume-manual" disabled={generating} onClick={onResumeGemini}>
+            {generating?'Preparazione EPUB in corso…':'Riprendi EPUB · unica versione al 50%'}
+          </button>
+        </div>}
+        {!isOriginalOnly && studyBook && !legacyEpub && (v36Partial || !editionState?.complete) && (
           <div className="sb-studio-inline-progress sb-studio-inline-progress-v68"
             aria-label="Avanzamento del libro in preparazione">
             <StudyPhaseProgressV59 book={studyBook} generating={generating} activeStatus={status}
@@ -638,7 +646,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
             : <button type="button" onClick={onStudy}><span className="sb-action-icon"><StudyIcon name="graduate" size={25} /></span><strong>Studia sul telefono</strong></button>}
           <button type="button" disabled={v36Partial&&!isOriginalOnly&&!explainedV122} className={exportOpen ? 'active' : ''} aria-expanded={exportOpen} onClick={() => setExportOpen((value) => !value)}><span className="sb-action-icon"><StudyIcon name="download" size={25} /></span><strong>{explainedV122&&v36Partial?'Scarica bozza PDF':'Scarica libro'}</strong></button>
         </div>
-        {!explainedV122&&canImprove&&improvementLeft&&
+        {!explainedV122&&!legacyEpub&&canImprove&&improvementLeft&&
           <div style={{marginTop:12,padding:'12px 14px',
             border:'1px solid #dce6f1',borderRadius:12}}>
             <button type="button" className="sb-resume-manual"
@@ -656,7 +664,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
               correzione soltanto quando desidera usare Gemini.
             </p>
           </div>}
-        {!explainedV122 && !isOriginalOnly && studyBook?.editionsV36 && <>
+        {!explainedV122 && !legacyEpub && !isOriginalOnly && studyBook?.editionsV36 && <>
           <button type="button" className="sb-resume-manual"
             style={{width:'100%',marginTop:12}}
             aria-expanded={draftInspectorOpen}
@@ -668,7 +676,7 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
         </>}
       </section>
 
-      {v36Partial && <div className="sb-mirror-warning" role="status">
+      {v36Partial && !legacyEpub && <div className="sb-mirror-warning" role="status">
         {!explainedV122&&geminiCause && <p><strong>Diagnosi elaborazione:</strong> {geminiCause.description}
           {geminiCause.halted ? ' Codice: '+geminiCause.halted+'.' : ''}
         </p>}
@@ -776,13 +784,13 @@ export function StudioScreen({ studyBook, fileName, onRead, onStudy, onExport, o
       ) : <article className="sb-quality-card">
         <h2>Controllo del libro</h2>
         <div><span>Capitoli</span><strong>{studyBook.chapters?.length || 0}</strong><StudyIcon name="book" size={19} /></div>
-        <div><span>Pagine del libro</span><strong>{totalBookPages || '—'}</strong><StudyIcon name="document" size={19} /></div>
+        <div><span>{sourceData?.sourceFormat==='epub'?'Pagine logiche EPUB':'Pagine del libro'}</span><strong>{totalBookPages || '—'}</strong><StudyIcon name="document" size={19} /></div>
         <div><span>Pagine elaborate</span><strong>{totalBookPages ? `${completedBookPages}/${totalBookPages}` : '—'}</strong><StudyIcon name="document" size={19} /></div>
         <div><span>Concetti individuati</span><strong>{fidelity?.conceptUnits || '—'}</strong><StudyIcon name="units" size={19} /></div>
         <div><span>Riduzione effettiva del libro</span><strong>{Number.isFinite(reductionMeta?.achievedLettersPercent) ? reductionMeta.achievedLettersPercent + '%' : '—'}</strong><StudyIcon name="compression" size={19} /></div>
         <div><span>Copertura media (testo base)</span><strong>{Number.isFinite(fidelity?.averageCoveragePercent) ? `${fidelity.averageCoveragePercent}%` : '—'}</strong><StudyIcon name="coverage" size={19} /></div>
       </article>}
-      {!isOriginalOnly && studyBook && !explainedV122 && (
+      {!isOriginalOnly && studyBook && !explainedV122 && !legacyEpub && (
           <div className="sb-edition-switcher-v68" role="group"
             aria-label="Scegli la riduzione del libro">
             <div className="sb-edition-switcher-heading-v68">
