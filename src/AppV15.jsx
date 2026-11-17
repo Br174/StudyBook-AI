@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { detectChaptersFromPages, readSourceFile } from './lib/documentParserV11.js';
 import {ensureEpubLogicalPagesV142} from './lib/epubLogicalPagesV142.js';
+import {buildEpubStudyShellV142} from './lib/epubStudyShellV142.js';
 import { buildStudyBook, refineParagraphWithAi, summaryLevels } from './lib/studyEngineV10.js';
 import { markResumeStatePublished } from './lib/resumeStore.js';
 import { exportDocx, exportEpub, exportHtml, exportJson, exportMarkdown, exportOdt, exportPdf, exportRtf, exportTxt, printStudyBook } from './lib/exporters.js';
@@ -1353,7 +1354,11 @@ export default function AppV14() {
       }
       // LAB36: prepare the source map locally; the SIX editions below are the only
       // Gemini requests. Avoid paying a second quota/time cost for throwaway summaries.
-      const generated = await buildStudyBook(sourceData, {
+      // EPUB pages already have trusted text and chapter anchors. Do not
+      // re-run the old six-edition paragraph preparation before the new
+      // single-pass 50% Gemini engine. Other source formats remain untouched.
+      const generated = sourceData.sourceFormat==='epub'?
+        buildEpubStudyShellV142(sourceData):await buildStudyBook(sourceData, {
         level,
         preferAi: false,
         onProgress(done, total, phase, meta) {
