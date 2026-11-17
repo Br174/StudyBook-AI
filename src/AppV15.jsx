@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { detectChaptersFromPages, readSourceFile } from './lib/documentParserV11.js';
+import {ensureEpubLogicalPagesV142} from './lib/epubLogicalPagesV142.js';
 import { buildStudyBook, refineParagraphWithAi, summaryLevels } from './lib/studyEngineV10.js';
 import { markResumeStatePublished } from './lib/resumeStore.js';
 import { exportDocx, exportEpub, exportHtml, exportJson, exportMarkdown, exportOdt, exportPdf, exportRtf, exportTxt, printStudyBook } from './lib/exporters.js';
@@ -1321,7 +1322,8 @@ export default function AppV14() {
     }
   }
 
-  async function createStudyBook(sourceData, sourceName, { fromScanner = false } = {}) {
+  async function createStudyBook(sourceData, sourceName, { fromScanner = false,
+    existingLibraryId=null,sourceFileForEpub=null,legacyEditionBackup=null } = {}) {
     if (!sourceData || generating) return null;
     let generatedDraft = null;
     setGenerating(true);
@@ -1333,6 +1335,22 @@ export default function AppV14() {
     setStatus(fromScanner ? 'MotorLab Runtime · scansione completa · preparo il libro…' : 'MotorLab Runtime · preparo il libro di studio…');
 
     try {
+      if(sourceData.sourceFormat==='epub'){
+        // LAB142: EPUB is reflowable: create source-verified LOGICAL pages
+        // locally before starting study. Reuse old imported EPUB chapters
+        // without asking Gemini to parse, and never silently enter six editions.
+        sourceData=await ensureEpubLogicalPagesV142(sourceData,{
+          originalFile:sourceFileForEpub||sourceFile});
+        const canonical=sourceData.canonicalBookMap;
+        if(!canonical?.exactTextCoverage||
+           !canonical.pages?.length||
+           canonical.pages.length!==canonical.pageCount)
+          throw Error('EPUB non paginato: nessuna delle sei versioni precedenti verrà avviata.');
+        setDocumentData(sourceData);
+        setProgress({done:canonical.pageCount,total:canonical.pageCount});
+        setStatus('EPUB acquisito · '+canonical.pageCount+
+          ' pagine LOGICHE verificate · un unico testo di studio al 50%');
+      }
       // LAB36: prepare the source map locally; the SIX editions below are the only
       // Gemini requests. Avoid paying a second quota/time cost for throwaway summaries.
       const generated = await buildStudyBook(sourceData, {
@@ -1352,12 +1370,24 @@ export default function AppV14() {
         },
       });
       const sourceIntegrity = auditBookSourceCoverage(sourceData, generated);
+      const historicalSix=legacyEditionBackup||(
+        sourceData.sourceFormat==='epub'&&(existingLibraryId||libraryId)?
+        (await getLibraryBook(existingLibraryId||libraryId).catch(()=>null))
+          ?.studyBook?.editionsV36:null);
       let result = { ...generated,
+        ...(historicalSix&&historicalSix.version!==EXPLAINED_POLICY_V126?
+          {legacySixBackupV142:historicalSix}:{}),
         studyPillarV38:STUDY_PILLAR_VERSION,
         canonicalBookMap: sourceData?.canonicalBookMap || generated.canonicalBookMap || null,
         quality: { ...(generated.quality || {}), sourceIntegrity } };
+      // LAB142: no legacy fallback is permitted for EPUB books. A failed
+      // canonical map stops safely; never fabricate 0/0 or six editions.
+      if(sourceData.sourceFormat==='epub'&&
+         (!result.canonicalBookMap?.pages?.length||
+          result.canonicalBookMap.paginationOwner!==
+            'lab142-epub-immutable-logical-pages-v1'))
+        throw Error('Pagine logiche EPUB mancanti: originale e checkpoint conservati.');
       // LAB122 NEW BOOKS: exactly one explained edition per original page.
-      // No legacy six-pass provider requests; old saved books keep their runner.
       if(result.canonicalBookMap?.pages?.length){
         // LAB138: an exact duplicate PDF may already have a 9/44, 24/44, or
         // richer unfinished checkpoint. Reuse it BEFORE the new-book 0/N
@@ -1393,7 +1423,7 @@ export default function AppV14() {
            ' pagine conformi e '+(priorMatch.draftedPages||0)+' bozze; nessuna ricompressione da zero'
           :'Lettura originale completata localmente · avvio riscrittura al 50% con una sola chiamata Gemini per blocco');
         navigateTo('studio');
-        const firstSaved=await persistBook(explained,sourceData,sourceName,libraryId);
+        const firstSaved=await persistBook(explained,sourceData,sourceName,existingLibraryId||libraryId);
         if(!firstSaved){
           setStatus('Originale conservato · impossibile salvare il checkpoint iniziale');
           return explained;
@@ -1653,6 +1683,20 @@ export default function AppV14() {
     const targetSource=record?.sourceData||documentData;
     const targetName=record?.fileName||fileName;
     const targetId=record?.id||libraryId;
+    // LAB142 migration: the old EPUB six-version runner can NEVER resume
+    // and publish more outdated levels. Preserve the old checkpoint as a
+    // read-only backup while preparing one 50% edition from saved original.
+    if(targetSource?.sourceFormat==='epub'&&!isExplainedBookV122(current)){
+      setLibraryId(targetId);
+      setFileName(targetName);setSourceFile(record?.originalFile||sourceFile);
+      setDocumentData(targetSource);
+      setStatus('Aggiorno il vecchio EPUB: un’unica versione al 50%, senza sei riduzioni');
+      await createStudyBook(targetSource,targetName,{
+        existingLibraryId:targetId,
+        sourceFileForEpub:record?.originalFile||sourceFile,
+        legacyEditionBackup:current.editionsV36});
+      return;
+    }
     if(isExplainedBookV122(current)){
       if(!targetSource||!targetId){setError('Fonte originale non presente.');return;}
       const retryAt=Date.parse(String(current.editionsV36?.quota?.retryAt||''));
@@ -1805,6 +1849,11 @@ export default function AppV14() {
         ? {id:libraryId,fileName,sourceData:documentData,studyBook}:null);
       if(!record?.studyBook?.editionsV36||record.studyBook.editionsV36.complete){
         setStatus('Nessun libro incompleto trovato nei checkpoint');
+        return;
+      }
+      if(record.sourceData?.sourceFormat==='epub'&&
+          !isExplainedBookV122(record.studyBook)){
+        await resumeGeminiEditions(record);
         return;
       }
       if(requiresRecalibrationV79(record.studyBook.editionsV36)){
