@@ -1340,8 +1340,18 @@ export default function AppV14() {
         // LAB142: EPUB is reflowable: create source-verified LOGICAL pages
         // locally before starting study. Reuse old imported EPUB chapters
         // without asking Gemini to parse, and never silently enter six editions.
-        sourceData=await ensureEpubLogicalPagesV142(sourceData,{
-          originalFile:sourceFileForEpub||sourceFile});
+        const originalEpub=sourceFileForEpub||sourceFile;
+        try{
+          sourceData=await ensureEpubLogicalPagesV142(sourceData,{
+            originalFile:originalEpub});
+        }catch(error){
+          // Some pre-LAB142 EPUBs were restructured by the obsolete chapter
+          // detector. If the ORIGINAL EPUB is preserved, parse it locally
+          // once instead of guessing chapter/page offsets or losing work.
+          if(!originalEpub?.arrayBuffer)throw error;
+          setStatus('Recupero l’indice EPUB dal file originale conservato · niente Gemini');
+          sourceData=await readSourceFile(originalEpub,{autoOcr:false,textOnly:true});
+        }
         const canonical=sourceData.canonicalBookMap;
         if(!canonical?.exactTextCoverage||
            !canonical.pages?.length||
