@@ -391,6 +391,12 @@ function structureStats(chapters, pages, previous = {}) {
 export async function readSourceFile(file, options = {}) {
   const parsed = await readTextSourceFile(file, options);
   const pages = Array.isArray(parsed.pages) ? parsed.pages.filter((page) => clean(page?.text)) : [];
+  // LAB142: EPUB headings and chapter order come from OPF/spine XHTML.
+  // Re-detecting headings in logical text pages destroys these exact links.
+  if(parsed.sourceFormat==='epub'&&
+      parsed.canonicalBookMap?.paginationOwner==='lab142-epub-immutable-logical-pages-v1')
+    return {...parsed,structure:{...parsed.structure,
+     hierarchyEngine:'epub-spine-logical-v142'}};
 
   let chapters = parsed.chapters || [];
   const shouldRebuild = pages.length > 0 || !chapters.length || (chapters.length === 1 && /^documento$/i.test(chapters[0]?.title || ''));
