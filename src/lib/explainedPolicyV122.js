@@ -70,7 +70,12 @@ export function originalExplainedPagesV122(book){
    ordered.push({kind:h.kind,text:h.text,position:0});
   const intro=ordered.sort((a,b)=>a.position-b.position);
   return {id:'p'+number,physicalPage:number,label:String(page.label||number),
-   sourceLineCount:lines.filter(line=>line.trim()).length,
+   // Reflowable EPUB pages have no physical lines. The deterministic page
+   // builder supplies an equivalent logical line count, so a 3200-character
+   // EPUB body is NOT incorrectly exempted as a <=5-line short source.
+   sourceLineCount:map.sourceFormat==='epub'&&page.logicalPage===true?
+    Math.max(1,Number(page.sourceLineCount)||Math.ceil(source.length/92)):
+    lines.filter(line=>line.trim()).length,
    widthPt:page.widthPt||595.28,heightPt:page.heightPt||841.89,
    source,segments,headings:intro,
    originalBodyLetters:segments.reduce((n,s)=>n+studyLetters(s.source),0)};
