@@ -1375,10 +1375,15 @@ export default function AppV14() {
         },
       });
       const sourceIntegrity = auditBookSourceCoverage(sourceData, generated);
+      const oldEpubRecord=sourceData.sourceFormat==='epub'&&
+        (existingLibraryId||libraryId)?
+        await getLibraryBook(existingLibraryId||libraryId).catch(()=>null):null;
+      // Never archive a six-level edition from a DIFFERENT book. A stale
+      // React libraryId after importing another EPUB is not enough proof.
       const historicalSix=legacyEditionBackup||(
-        sourceData.sourceFormat==='epub'&&(existingLibraryId||libraryId)?
-        (await getLibraryBook(existingLibraryId||libraryId).catch(()=>null))
-          ?.studyBook?.editionsV36:null);
+        oldEpubRecord?.sourceData?.sourceFormat==='epub'&&
+        oldEpubRecord.sourceData.fullText===sourceData.fullText?
+          oldEpubRecord?.studyBook?.editionsV36:null);
       let result = { ...generated,
         ...(historicalSix&&historicalSix.version!==EXPLAINED_POLICY_V126?
           {legacySixBackupV142:historicalSix}:{}),
